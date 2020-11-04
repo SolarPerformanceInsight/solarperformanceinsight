@@ -1,0 +1,43 @@
+[project]
+name = "solarperformanceinsight"
+description = "REST API to evaluate solar power plant performance"
+authors = [
+    "Tony Lorenzo <atlorenzo@arizona.edu>",
+    "Will Holmgren <holmgren@arizona.edu>",
+    "Leland Boeman <lboeman@arizona.edu>"
+]
+readme = "README.md"
+python = "^3.8"
+homepage = "https://solarperformanceinsight.org"
+repository = "https://github.com/solarperformanceinsight/solarperformanceinsight-api"
+
+[dependencies]
+
+[dev-dependencies]
+black = { version = "^20.8.b1", python = "^3.8" }
+pre-commit = { version = "^2.7.1"}
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "solarperformanceinsight-api/version.py"
+
+[tool.black]
+line-length = 88
+target-veresion = ['py38']
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
