@@ -1,5 +1,5 @@
 [project]
-name = "solarperformanceinsight"
+name = "solarperformanceinsight-api"
 description = "REST API to evaluate solar power plant performance"
 authors = [
     "Tony Lorenzo <atlorenzo@arizona.edu>",
