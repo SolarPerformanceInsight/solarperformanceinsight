@@ -1,0 +1,52 @@
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, jwk
+import httpx
+
+
+from . import settings
+
+
+bearer_scheme = HTTPBearer()
+
+
+async def set_auth_key():
+    if settings.auth_key is not None:
+        return
+    async with httpx.AsyncClient() as client:
+        req = await client.get(settings.auth_jwk_url, timeout=10.0)
+    req.raise_for_status()  # let this raise the error and fail app startup
+    key = req.json()
+    settings.auth_key = key
+
+
+async def get_user_id(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token = creds.credentials
+    try:
+        payload = jwt.decode(
+            token,
+            key=settings.auth_key,
+            audience=settings.auth_audience,
+            issuer=settings.auth_issuer,
+        )
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except (
+        jwt.JWTError,
+        jwk.JWKError,
+        jwt.ExpiredSignatureError,
+        jwt.JWTClaimsError,
+        AttributeError,
+        AssertionError,
+        IndexError,
+    ):
+        raise credentials_exception
+    return user_id
