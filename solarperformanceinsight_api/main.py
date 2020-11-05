@@ -1,3 +1,6 @@
+import logging
+
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -10,6 +13,26 @@ from .routers import plants
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[])
+
+
+@app.get("/ping", include_in_schema=False)
+async def ping() -> str:
+    return "pong"
+
+
+class PingFilter(logging.Filter):
+    def filter(record):
+        if hasattr(record, "scope"):
+            if record.scope.get("path") == "/ping":
+                return 0
+        return 1
+
+
+@app.on_event("startup")
+async def startup_event():
+    await auth.set_auth_key()
+    for handler in logging.getLogger("uvicorn.access").handlers:
+        handler.addFilter(PingFilter)
 
 
 def custom_openapi():
@@ -57,8 +80,3 @@ app.include_router(
     tags=["Power Plant"],
     dependencies=[Depends(auth.get_user_id)],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    await auth.set_auth_key()
