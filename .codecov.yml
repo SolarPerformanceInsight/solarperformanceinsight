@@ -22,6 +22,6 @@ coverage:
       tests:
         target: 95%
         paths:
-          - "solarperformanceinsight_api/**/tests/.*"
+          - "solarperformanceinsight_api/**/tests/"
 
 comment: off
