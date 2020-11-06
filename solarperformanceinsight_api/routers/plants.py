@@ -16,3 +16,8 @@ async def list_plants():
     whatever
     """
     return
+
+
+@router.get("/{plant_id}")
+async def get_plant(plant_id: str):
+    return
