@@ -33,7 +33,3 @@ def test_userstring_fail(inp):
 )
 def test_userstring_success(inp):
     assert UserString(name=inp).name == inp
-
-
-def test_failure():
-    raise TypeError()
