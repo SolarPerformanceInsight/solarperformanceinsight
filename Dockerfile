@@ -23,4 +23,4 @@ RUN pip install src/. && \
 EXPOSE 8000
 USER 1001
 
-CMD ["/opt/app-root/bin/uvicorn", "solarperformanceinsight.main:app"]
+CMD ["/opt/app-root/bin/uvicorn", "solarperformanceinsight_api.main:app"]
