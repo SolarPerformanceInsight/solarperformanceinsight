@@ -1,4 +1,9 @@
 from functools import partial
+import re
+
+
+from hypothesis import given, example, assume
+from hypothesis.strategies import floats, booleans, composite, from_regex
 from pydantic import BaseModel, ValidationError
 import pytest
 
@@ -38,6 +43,7 @@ class UserString(BaseModel):
         ",'",
         " ,'-()",
         "_",
+        "0:",
     ],
 )
 def test_userstring_fail(inp):
@@ -45,33 +51,76 @@ def test_userstring_fail(inp):
         UserString(name=inp)
 
 
-@pytest.mark.parametrize(
-    "inp",
-    ["A long but OK name", "A comma, is here", "a (mostly) ok - 99891", " ,'-() word_"],
+@given(
+    inp=from_regex(
+        re.compile(r"[a-z0-9 ,'\(\)_]+", re.IGNORECASE), fullmatch=True
+    ).filter(lambda x: re.search(r"[0-9a-z]+", x, re.IGNORECASE) is not None)
 )
 def test_userstring_success(inp):
     assert UserString(name=inp).name == inp
 
 
-@pytest.mark.parametrize(
-    "azimuth", [100, 0, 359.999, fail_param(360), fail_param(-138.00), fail_param("s")]
+@given(
+    azimuth=floats(min_value=0, max_value=360, exclude_max=True),
+    tilt=floats(min_value=0, max_value=90),
 )
-@pytest.mark.parametrize(
-    "tilt", [100, 0, 180, 99.83, fail_param(-19), fail_param("asd")]
-)
+@example(azimuth=359.999, tilt=90.0)
+@example(azimuth=33.9, tilt="2.33")
 def test_fixed_tracking(azimuth, tilt):
     out = models.FixedTracking(azimuth=azimuth, tilt=tilt)
     assert out.azimuth == azimuth
-    assert out.tilt == tilt
+    assert out.tilt == float(tilt)
 
 
-@pytest.mark.parametrize("azimuth", [0, 38.93, fail_param(360.0), fail_param("str")])
-@pytest.mark.parametrize(
-    "tilt", [0, 66, fail_param(99.9), fail_param(-1e-3), fail_param("fail")]
+@composite
+def outside_az_tilt(draw):
+    azimuth = draw(floats())
+    tilt = draw(floats())
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0))
+    return (azimuth, tilt)
+
+
+@given(azt=outside_az_tilt())
+@example(azt=(360.0, 2.0))
+@example(azt=(33.0, "s"))
+def test_fixed_tracking_outside(azt):
+    azimuth, tilt = azt
+    with pytest.raises(ValidationError):
+        models.FixedTracking(azimuth=azimuth, tilt=tilt)
+
+
+@given(
+    azimuth=floats(min_value=0, max_value=360, exclude_max=True),
+    tilt=floats(min_value=0, max_value=90),
+    gcr=floats(min_value=0),
+    backtracking=booleans(),
 )
-@pytest.mark.parametrize("gcr", [0, 3.023, "3.29", fail_param(-1.8)])
-def test_singleaxis_tracking(tilt, azimuth, gcr):
-    out = models.SingleAxisTracking(axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr)
-    assert out.axisTilt == tilt
-    assert out.axisAzimuth == azimuth
+@example(azimuth=0.0, tilt=0.0, gcr="0.0", backtracking="no")
+def test_singleaxis_tracking(tilt, azimuth, gcr, backtracking):
+    out = models.SingleAxisTracking(
+        axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr, backtracking=backtracking
+    )
+    assert out.axis_tilt == tilt
+    assert out.axis_azimuth == azimuth
     assert out.gcr == float(gcr)
+    assert out.backtracking == (False if backtracking == "no" else backtracking)
+
+
+@composite
+def outside_az_tilt_gcr(draw):
+    azimuth = draw(floats())
+    tilt = draw(floats())
+    gcr = draw(floats())
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0) or gcr < 0)
+    return (azimuth, tilt, gcr)
+
+
+@given(atg=outside_az_tilt_gcr(), backtracking=booleans())
+@example(atg=(9.0, 9.0, 0.0), backtracking="maybe")
+@example(atg=(360.0, 0, 0), backtracking=True)
+def test_singleaxis_tracking_outside(atg, backtracking):
+    azimuth, tilt, gcr = atg
+    with pytest.raises(ValidationError):
+        models.SingleAxisTracking(
+            axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr, backtracking=backtracking
+        )
