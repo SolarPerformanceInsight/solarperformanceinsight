@@ -70,8 +70,12 @@ def test_fixed_tracking(azimuth, tilt):
     "tilt", [0, 66, fail_param(99.9), fail_param(-1e-3), fail_param("fail")]
 )
 @pytest.mark.parametrize("gcr", [0, 3.023, "3.29", fail_param(-1.8)])
-def test_singleaxis_tracking(tilt, azimuth, gcr):
-    out = models.SingleAxisTracking(axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr)
-    assert out.axisTilt == tilt
-    assert out.axisAzimuth == azimuth
+@pytest.mark.parametrize("backtracking", [True, False, fail_param("s")])
+def test_singleaxis_tracking(tilt, azimuth, gcr, backtracking):
+    out = models.SingleAxisTracking(
+        axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr, backtracking=backtracking
+    )
+    assert out.axis_tilt == tilt
+    assert out.axis_azimuth == azimuth
     assert out.gcr == float(gcr)
+    assert out.backtracking == backtracking
