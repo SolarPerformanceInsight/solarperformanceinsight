@@ -40,3 +40,7 @@ class PVSystem(BaseModel):
 
 class NameSystem(BaseModel):
     name: userstring
+
+
+def not_covered():
+    return []
