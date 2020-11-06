@@ -1,10 +1,14 @@
+from typing import List
 from fastapi import APIRouter
+
+
+from ..models import PVSystem
 
 
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", response_model=List[PVSystem])
 async def list_plants():
     """These docs show up on openapi
 
@@ -18,6 +22,11 @@ async def list_plants():
     return
 
 
-@router.get("/{plant_id}")
+@router.get("/{plant_id}", response_model=PVSystem)
 async def get_plant(plant_id: str):
+    return
+
+
+@router.post("/")
+async def create_plant(system: PVSystem):
     return

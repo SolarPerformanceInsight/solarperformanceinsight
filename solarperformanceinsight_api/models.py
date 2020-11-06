@@ -1,42 +1,142 @@
-from typing import Union, List
-from pydantic import BaseModel, condecimal, constr
+from typing import Union, List, Optional
+from pydantic import BaseModel, confloat, constr, Field
+
+
+def to_camel(string: str) -> str:
+    return "".join(
+        w.capitalize() if i > 0 else w for i, w in enumerate(string.split("_"))
+    )
 
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, and underscore
 userstring = constr(regex=r"^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]+$", max_length=128)
 
-
-class FixedTracking(BaseModel):
-    """Shows up in openapi stuff"""
-
-    tilt: condecimal(ge=0, le=180)
-    azimuth: condecimal(ge=0, le=360)
+optuserstring = Optional[userstring]
 
 
-class SingleAxisTracking(BaseModel):
-    axisTilt: condecimal(ge=0, le=90)
-    axisAzimuth: condecimal(ge=0, le=360)
-    gcr: condecimal(ge=0)
+class AliasBase(BaseModel):
+    class Config:
+        alias_generator = to_camel
 
 
-class PVArray(BaseModel):
-    name: userstring
-    tracking: Union[FixedTracking, SingleAxisTracking]
+class FixedTracking(AliasBase):
+    """Parameters for a fixed tilt array"""
+
+    tilt: confloat(ge=0, le=180) = Field(
+        ..., description="Tilt of modules in degrees from horizontal"
+    )
+    azimuth: confloat(ge=0, lt=360) = Field(
+        ..., description="Azimuth of modules relative to North in degrees"
+    )
 
 
-class Inverter(BaseModel):
-    name: userstring
-    arrays: List[PVArray]
+class SingleAxisTracking(AliasBase):
+    """Parameters for a single axis tracking array"""
+
+    axis_tilt: confloat(ge=0, le=90) = Field(
+        ...,
+        title="Axis Tilt",
+        description="Tilt of single axis tracker in degrees from horizontal",
+    )
+    axis_azimuth: confloat(ge=0, lt=360) = Field(
+        ...,
+        title="Axis Azimiuth",
+        description="Azimuth of tracker axis from North in degrees",
+    )
+    gcr: confloat(ge=0) = Field(..., title="GCR", description="Ground coverage ratio")
+    backtracking: bool = Field(
+        ..., description="If the tracking system supports backtracking"
+    )
 
 
-class PVSystem(BaseModel):
-    name: userstring
-    latitude: condecimal(ge=-90, le=90)
-    longitude: condecimal(ge=-180, le=180)
-    elevation: condecimal(ge=-300)
-    albedo: condecimal(ge=0)
-    inverters: List[Inverter]
+class ModuleParameters(AliasBase):
+    """Parameters for the modules that make up an array"""
+
+    pass
 
 
-class NameSystem(BaseModel):
-    name: userstring
+class TemperatureParameters(AliasBase):
+    """Parameters for the temperature model of the modules"""
+
+    pass
+
+
+class PVArray(AliasBase):
+    """Parameters of a PV array that feeds into one inverter"""
+
+    name: optuserstring = Field(None, description="Name of this array")
+    make_model: optuserstring = Field(
+        None,
+        title="Make & Model",
+        description="Make and model of the PV modules in this array",
+    )
+    module_parameters: ModuleParameters = Field(
+        ...,
+        title="Module Parameters",
+        description="Parameters describing PV modules in this array",
+    )
+    temperature_model_parameters: TemperatureParameters = Field(
+        ...,
+        title="Temperature Model Parameters",
+        description=(
+            "Parameters describing the temperature characteristics of the modules"
+        ),
+    )
+    tracking: Union[FixedTracking, SingleAxisTracking] = Field(
+        ..., description="Parameters describing single-axis tracking or fixed mounting"
+    )
+    modules_per_string: Union[int, None] = Field(
+        ..., title="Modules Per String", description="Number of PV modules per string"
+    )
+    strings: Union[int, None] = Field(..., description="Number of Strings")
+
+
+class Losses(AliasBase):
+    """Parameters describing losses in the arrays and power conversion"""
+
+    pass
+
+
+class InverterParameters(AliasBase):
+    """Power conversion parameters of an inverter"""
+
+    pass
+
+
+class Inverter(AliasBase):
+    """Parameters for a single inverter feeding into a PV system"""
+
+    name: optuserstring = Field(None, description="Name of this inverter")
+    make_model: optuserstring = Field(
+        None, title="Make & Model", description="Make and model of the inverter"
+    )
+    arrays: List[PVArray] = Field(
+        ..., description="PV arrays that are connected to this inverter"
+    )
+    losses: Losses = Field(..., description="Parameters describing the array losses")
+    inverter_parameters: InverterParameters = Field(
+        ...,
+        title="Inverter Parameters",
+        description="Power conversion parameters for the inverter",
+    )
+
+
+class PVSystem(AliasBase):
+    """Parameters for an entire PV system at some location"""
+
+    name: userstring = Field(..., description="Name of the system")
+    latitude: confloat(ge=-90, le=90) = Field(
+        ..., description="Latitude of the system in degrees North"
+    )
+    longitude: confloat(ge=-180, le=180) = Field(
+        ..., description="Longitude of the system in degrees East"
+    )
+    elevation: confloat(ge=-300) = Field(
+        ..., description="Elevation of the system in meters"
+    )
+    albedo: confloat(ge=0) = Field(
+        ..., description="Albedo of the surface around the system"
+    )
+    inverters: List[Inverter] = Field(
+        ..., description="Inverters that are connected to make up this system"
+    )

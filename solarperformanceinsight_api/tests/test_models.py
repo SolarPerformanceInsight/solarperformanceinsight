@@ -1,8 +1,26 @@
+from functools import partial
 from pydantic import BaseModel, ValidationError
 import pytest
 
 
 from solarperformanceinsight_api import models
+
+
+fail_param = partial(
+    pytest.param, marks=pytest.mark.xfail(strict=True, raises=ValidationError)
+)
+
+
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ("axis_tilt", "axisTilt"),
+        ("tilt", "tilt"),
+        ("longer_string_name", "longerStringName"),
+    ],
+)
+def test_to_camel(inp, exp):
+    assert exp == models.to_camel(inp)
 
 
 class UserString(BaseModel):
@@ -33,3 +51,27 @@ def test_userstring_fail(inp):
 )
 def test_userstring_success(inp):
     assert UserString(name=inp).name == inp
+
+
+@pytest.mark.parametrize(
+    "azimuth", [100, 0, 359.999, fail_param(360), fail_param(-138.00), fail_param("s")]
+)
+@pytest.mark.parametrize(
+    "tilt", [100, 0, 180, 99.83, fail_param(-19), fail_param("asd")]
+)
+def test_fixed_tracking(azimuth, tilt):
+    out = models.FixedTracking(azimuth=azimuth, tilt=tilt)
+    assert out.azimuth == azimuth
+    assert out.tilt == tilt
+
+
+@pytest.mark.parametrize("azimuth", [0, 38.93, fail_param(360.0), fail_param("str")])
+@pytest.mark.parametrize(
+    "tilt", [0, 66, fail_param(99.9), fail_param(-1e-3), fail_param("fail")]
+)
+@pytest.mark.parametrize("gcr", [0, 3.023, "3.29", fail_param(-1.8)])
+def test_singleaxis_tracking(tilt, azimuth, gcr):
+    out = models.SingleAxisTracking(axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr)
+    assert out.axisTilt == tilt
+    assert out.axisAzimuth == azimuth
+    assert out.gcr == float(gcr)

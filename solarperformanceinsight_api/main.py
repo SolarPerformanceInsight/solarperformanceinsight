@@ -11,7 +11,7 @@ from .version import version
 from .routers import plants
 
 
-app = FastAPI()
+app = FastAPI(title="Solar Performance Insight")
 app.add_middleware(CORSMiddleware, allow_origins=[])
 
 
