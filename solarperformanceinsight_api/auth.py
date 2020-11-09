@@ -10,14 +10,15 @@ from . import settings
 bearer_scheme = HTTPBearer()
 
 
-async def set_auth_key():
+async def get_auth_key():
     if settings.auth_key is not None:
-        return
+        return settings.auth_key
     async with httpx.AsyncClient() as client:
         req = await client.get(settings.auth_jwk_url, timeout=10.0)
     req.raise_for_status()  # let this raise the error and fail app startup
     key = req.json()
     settings.auth_key = key
+    return key
 
 
 async def get_user_id(
@@ -29,10 +30,11 @@ async def get_user_id(
         headers={"WWW-Authenticate": "Bearer"},
     )
     token = creds.credentials
+    key = await get_auth_key()
     try:
         payload = jwt.decode(
             token,
-            key=settings.auth_key,
+            key=key,
             audience=settings.auth_audience,
             issuer=settings.auth_issuer,
         )

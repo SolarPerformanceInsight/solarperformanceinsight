@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     auth_key: Json
     auth_audience: str = "https://app.solarperformanceinsight.org/api"
     auth_issuer: str = "https://solarperformanceinsight.us.auth0.com/"
+    auth_client_id: str = "G1YyfLdseYn10RQo11Lqee2ThXj5l5fh"
 
     class Config:
         env_prefix = "spi"
