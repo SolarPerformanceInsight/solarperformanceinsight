@@ -66,6 +66,7 @@ def test_userstring_success(inp):
 )
 @example(azimuth=359.999, tilt=90.0)
 @example(azimuth=33.9, tilt="2.33")
+@example(azimuth=49.823, tilt=179.83)
 def test_fixed_tracking(azimuth, tilt):
     out = models.FixedTracking(azimuth=azimuth, tilt=tilt)
     assert out.azimuth == azimuth
@@ -76,7 +77,7 @@ def test_fixed_tracking(azimuth, tilt):
 def outside_az_tilt(draw):
     azimuth = draw(floats())
     tilt = draw(floats())
-    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0))
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 180 or tilt < 0))
     return (azimuth, tilt)
 
 
@@ -91,7 +92,7 @@ def test_fixed_tracking_outside(azt):
 
 @given(
     azimuth=floats(min_value=0, max_value=360, exclude_max=True),
-    tilt=floats(min_value=0, max_value=90),
+    tilt=floats(min_value=0, max_value=180),
     gcr=floats(min_value=0),
     backtracking=booleans(),
 )
@@ -111,7 +112,7 @@ def outside_az_tilt_gcr(draw):
     azimuth = draw(floats())
     tilt = draw(floats())
     gcr = draw(floats())
-    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0) or gcr < 0)
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 180 or tilt < 0) or gcr < 0)
     return (azimuth, tilt, gcr)
 
 
