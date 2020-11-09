@@ -27,11 +27,9 @@ jobs:
 
       - name: Test
         run: |
-          pytest solarperformanceinsight_api --cov --cov-report=xml
+          pytest solarperformanceinsight_api --cov=solarperformanceinsight_api --cov-report=xml
 
-      - name: coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
+      - name: Upload coverage
+        run: |
+          bash <(curl -s https://codecov.io/bash) -Z -c -f coverage.xml
         if: ${{ always() }}
