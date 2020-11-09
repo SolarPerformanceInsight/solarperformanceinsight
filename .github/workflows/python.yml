@@ -2,9 +2,13 @@ name: Test Python
 
 on:
   push:
+    paths:
+      - 'api/**'
     branches:
       - main
   pull_request:
+    paths:
+      - 'api/**'
     branches:
       - main
 
