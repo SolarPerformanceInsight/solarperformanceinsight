@@ -92,7 +92,7 @@ def test_fixed_tracking_outside(azt):
 
 @given(
     azimuth=floats(min_value=0, max_value=360, exclude_max=True),
-    tilt=floats(min_value=0, max_value=180),
+    tilt=floats(min_value=0, max_value=90),
     gcr=floats(min_value=0),
     backtracking=booleans(),
 )
@@ -112,7 +112,7 @@ def outside_az_tilt_gcr(draw):
     azimuth = draw(floats())
     tilt = draw(floats())
     gcr = draw(floats())
-    assume((azimuth >= 360 or azimuth < 0) or (tilt > 180 or tilt < 0) or gcr < 0)
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0) or gcr < 0)
     return (azimuth, tilt, gcr)
 
 
