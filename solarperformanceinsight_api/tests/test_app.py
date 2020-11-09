@@ -1,4 +1,5 @@
 import httpx
+from hypothesis import HealthCheck
 from hypothesis import settings as hypsettings
 from hypothesis import strategies as st
 import pytest
@@ -36,7 +37,7 @@ schema = schemathesis.from_asgi("/openapi.json", app)
 
 @schema.parametrize()
 @schema.given(data=st.data())
-@hypsettings(max_examples=30)
+@hypsettings(max_examples=30, suppress_health_check=HealthCheck.all())
 def test_api(data, case, auth_token):
     """Tests all endpoints in the OpenAPI Schema"""
     if data.draw(st.booleans()):
