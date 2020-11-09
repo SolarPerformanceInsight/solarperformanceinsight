@@ -24,4 +24,4 @@ coverage:
         paths:
           - "solarperformanceinsight_api/**/tests/"
 
-comment: off
+comment: on
