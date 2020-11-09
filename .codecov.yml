@@ -1,27 +1,15 @@
 codecov:
-  notify:
-    require_ci_to_pass: no
+  branch: main
 
 coverage:
   status:
     patch:
       default:
-        target: 100%
-        if_no_uploads: error
-        if_not_found: success
-        if_ci_failed: failure
+        target: '100'
     project:
-      default: false
-      library:
-        target: auto
-        if_no_uploads: error
-        if_not_found: success
-        if_ci_failed: failure
-        paths:
-          - "solarperformanceinsight_api/.*"
-      tests:
-        target: 95%
-        paths:
-          - "solarperformanceinsight_api/**/tests/"
+      default:
+        target: '95'
 
-comment: on
+comment: false
+github_checks:
+  annotations: false
