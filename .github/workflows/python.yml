@@ -1,4 +1,4 @@
-name: Test
+name: Test Python
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  python:
+  test-python:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,3 +35,11 @@ jobs:
         run: |
           bash <(curl -s https://codecov.io/bash) -Z -c -f api/coverage.xml
         if: ${{ always() }}
+
+  lint-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: psf/black@stable
