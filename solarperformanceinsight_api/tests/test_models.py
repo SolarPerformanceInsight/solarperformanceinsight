@@ -16,18 +16,6 @@ fail_param = partial(
 )
 
 
-@pytest.mark.parametrize(
-    "inp,exp",
-    [
-        ("axis_tilt", "axisTilt"),
-        ("tilt", "tilt"),
-        ("longer_string_name", "longerStringName"),
-    ],
-)
-def test_to_camel(inp, exp):
-    assert exp == models.to_camel(inp)
-
-
 class UserString(BaseModel):
     name: models.userstring
 
@@ -66,6 +54,7 @@ def test_userstring_success(inp):
 )
 @example(azimuth=359.999, tilt=90.0)
 @example(azimuth=33.9, tilt="2.33")
+@example(azimuth=49.823, tilt=179.83)
 def test_fixed_tracking(azimuth, tilt):
     out = models.FixedTracking(azimuth=azimuth, tilt=tilt)
     assert out.azimuth == azimuth
@@ -76,7 +65,7 @@ def test_fixed_tracking(azimuth, tilt):
 def outside_az_tilt(draw):
     azimuth = draw(floats())
     tilt = draw(floats())
-    assume((azimuth >= 360 or azimuth < 0) or (tilt > 90 or tilt < 0))
+    assume((azimuth >= 360 or azimuth < 0) or (tilt > 180 or tilt < 0))
     return (azimuth, tilt)
 
 
@@ -98,7 +87,7 @@ def test_fixed_tracking_outside(azt):
 @example(azimuth=0.0, tilt=0.0, gcr="0.0", backtracking="no")
 def test_singleaxis_tracking(tilt, azimuth, gcr, backtracking):
     out = models.SingleAxisTracking(
-        axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr, backtracking=backtracking
+        axis_tilt=tilt, axis_azimuth=azimuth, gcr=gcr, backtracking=backtracking
     )
     assert out.axis_tilt == tilt
     assert out.axis_azimuth == azimuth
@@ -122,5 +111,5 @@ def test_singleaxis_tracking_outside(atg, backtracking):
     azimuth, tilt, gcr = atg
     with pytest.raises(ValidationError):
         models.SingleAxisTracking(
-            axisTilt=tilt, axisAzimuth=azimuth, gcr=gcr, backtracking=backtracking
+            axis_tilt=tilt, axis_azimuth=azimuth, gcr=gcr, backtracking=backtracking
         )
