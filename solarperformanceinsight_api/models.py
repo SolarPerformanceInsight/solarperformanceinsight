@@ -2,24 +2,13 @@ from typing import Union, List, Optional
 from pydantic import BaseModel, confloat, constr, Field
 
 
-def to_camel(string: str) -> str:
-    return "".join(
-        w.capitalize() if i > 0 else w for i, w in enumerate(string.split("_"))
-    )
-
-
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, and underscore
 userstring = constr(regex=r"^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]+$", max_length=128)
 
 optuserstring = Optional[userstring]
 
 
-class AliasBase(BaseModel):
-    class Config:
-        alias_generator = to_camel
-
-
-class FixedTracking(AliasBase):
+class FixedTracking(BaseModel):
     """Parameters for a fixed tilt array"""
 
     tilt: confloat(ge=0, le=180) = Field(
@@ -30,7 +19,7 @@ class FixedTracking(AliasBase):
     )
 
 
-class SingleAxisTracking(AliasBase):
+class SingleAxisTracking(BaseModel):
     """Parameters for a single axis tracking array"""
 
     axis_tilt: confloat(ge=0, le=90) = Field(
@@ -49,19 +38,19 @@ class SingleAxisTracking(AliasBase):
     )
 
 
-class ModuleParameters(AliasBase):
+class ModuleParameters(BaseModel):
     """Parameters for the modules that make up an array"""
 
     pass
 
 
-class TemperatureParameters(AliasBase):
+class TemperatureParameters(BaseModel):
     """Parameters for the temperature model of the modules"""
 
     pass
 
 
-class PVArray(AliasBase):
+class PVArray(BaseModel):
     """Parameters of a PV array that feeds into one inverter"""
 
     name: optuserstring = Field(None, description="Name of this array")
@@ -91,19 +80,19 @@ class PVArray(AliasBase):
     strings: Union[int, None] = Field(..., description="Number of Strings")
 
 
-class Losses(AliasBase):
+class Losses(BaseModel):
     """Parameters describing losses in the arrays and power conversion"""
 
     pass
 
 
-class InverterParameters(AliasBase):
+class InverterParameters(BaseModel):
     """Power conversion parameters of an inverter"""
 
     pass
 
 
-class Inverter(AliasBase):
+class Inverter(BaseModel):
     """Parameters for a single inverter feeding into a PV system"""
 
     name: optuserstring = Field(None, description="Name of this inverter")
@@ -121,7 +110,7 @@ class Inverter(AliasBase):
     )
 
 
-class PVSystem(AliasBase):
+class PVSystem(BaseModel):
     """Parameters for an entire PV system at some location"""
 
     name: userstring = Field(..., description="Name of the system")
