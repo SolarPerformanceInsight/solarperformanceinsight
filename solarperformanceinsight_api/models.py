@@ -25,7 +25,7 @@ class FixedTracking(AliasBase):
     tilt: confloat(ge=0, le=180) = Field(
         ..., description="Tilt of modules in degrees from horizontal"
     )
-    azimuth: confloat(ge=0, lt=360) = Field(
+    azimuth: confloat(ge=0, lt=360.0) = Field(
         ..., description="Azimuth of modules relative to North in degrees"
     )
 
@@ -38,7 +38,7 @@ class SingleAxisTracking(AliasBase):
         title="Axis Tilt",
         description="Tilt of single axis tracker in degrees from horizontal",
     )
-    axis_azimuth: confloat(ge=0, lt=360) = Field(
+    axis_azimuth: confloat(ge=0, lt=360.0) = Field(
         ...,
         title="Axis Azimiuth",
         description="Azimuth of tracker axis from North in degrees",

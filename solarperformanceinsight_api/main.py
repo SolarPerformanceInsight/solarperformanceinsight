@@ -30,7 +30,7 @@ class PingFilter(logging.Filter):
 
 @app.on_event("startup")
 async def startup_event():
-    await auth.set_auth_key()
+    await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(PingFilter)
 
@@ -73,7 +73,6 @@ The backend RESTful API for Solar Performance Insight.
 
 
 app.openapi = custom_openapi
-
 app.include_router(
     plants.router,
     prefix="/powerplants",
