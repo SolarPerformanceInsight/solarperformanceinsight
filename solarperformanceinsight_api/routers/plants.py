@@ -23,11 +23,6 @@ async def list_plants():
     return []
 
 
-@router.get("/{plant_id}", response_model=PVSystem, responses=default_get_responses)
-async def get_plant(plant_id: str):
-    return {}
-
-
 @router.post("/", responses=default_get_responses)
 async def create_plant(system: PVSystem):
     return {}
