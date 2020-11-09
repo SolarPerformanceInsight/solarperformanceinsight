@@ -6,8 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 
-from . import auth
-from .version import version
+from . import auth, __version__
 from .routers import plants
 
 
@@ -49,7 +48,7 @@ The backend RESTful API for Solar Performance Insight.
 # Authentication
 
 """,
-        version=version,
+        version=__version__,
         routes=app.routes,
     )
 

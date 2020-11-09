@@ -128,4 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-solarperformanceinsight_api/version.py
+api/solarperformanceinsight_api/_version.py

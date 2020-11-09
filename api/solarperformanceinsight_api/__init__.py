@@ -1,4 +1,5 @@
 from pydantic import BaseSettings, Json
+from ._version import version as __version__  # NOQA
 
 
 class Settings(BaseSettings):
