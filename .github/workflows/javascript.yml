@@ -23,10 +23,14 @@ jobs:
           node-version: '14'
 
       - name: Install
-        run:  npm install
+        run:  |
+          cd dashboard
+          npm install
 
       - name: Test
-        run: npm run test:unit
+        run: |
+          cd dashboard
+          npm run test:unit
 
       - name: Upload coverage
         run: |
@@ -42,7 +46,11 @@ jobs:
         with:
           node-version: '14'
       - name: Install
-        run:  npm install
+        run:  |
+          cd dashboard
+          npm install
 
       - name: Lint
-        run: npm run lint
+        run: |
+          cd dashboard
+          npm run lint
