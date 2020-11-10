@@ -2,7 +2,7 @@ import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "./Tracking";
-import { PvsystTemperatureParameters } from "./TemperatureParameters";
+import { PVSystTemperatureParameters } from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
   PVWattsModuleParameters
@@ -12,7 +12,7 @@ export class PVArray {
   name: string;
   make_model: string;
   module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
-  temperature_model_parameters: Array<number> | PvsystTemperatureParameters;
+  temperature_model_parameters: Array<number> | PVSystTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   modules_per_string: number;
@@ -47,8 +47,8 @@ export class PVArray {
       this.tracking = new SingleAxisTrackingParameters(tracking);
     }
 
-    if (temperature_model_parameters instanceof PvsystTemperatureParameters) {
-      this.temperature_model_parameters = new PvsystTemperatureParameters(
+    if (temperature_model_parameters instanceof PVSystTemperatureParameters) {
+      this.temperature_model_parameters = new PVSystTemperatureParameters(
         temperature_model_parameters
       );
     } else {

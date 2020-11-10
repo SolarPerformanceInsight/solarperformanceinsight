@@ -1,4 +1,4 @@
-export class PvsystTemperatureParameters {
+export class PVSystTemperatureParameters {
   /* Currently only supports pvsyst model */
   uC: number; // pvlib "Freestanding" default insulated is 15.0
   uV: number; //        freestanding:00, insulated: 0.0
