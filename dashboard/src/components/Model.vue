@@ -14,16 +14,17 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import { System } from "@/types/System";
-import SystemView from "@/components/System";
-import FileUpload from "@/components/FileUpload";
+import SystemView from "@/components/System.vue";
+import FileUpload from "@/components/FileUpload.vue";
 
 Vue.component("system-view", SystemView);
 Vue.component("file-upload", FileUpload);
 
 @Component
 export default class Model extends Vue {
+  system!: System;
   data() {
     return {
       system: this.system ? this.system : new System(),
@@ -31,7 +32,7 @@ export default class Model extends Vue {
     };
   }
   components = ["system-view", "file-upload"];
-  uploadSuccess(fileMetadata) {
+  uploadSuccess(fileMetadata: string) {
     const metadata = JSON.parse(fileMetadata);
     const system = new System(metadata);
     this.system = system;

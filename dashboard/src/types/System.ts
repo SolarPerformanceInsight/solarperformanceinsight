@@ -6,7 +6,7 @@ export class System {
   longitude: number;
   elevation: number;
   albedo: number;
-  inverters: Array<Inverters>;
+  inverters: Array<Inverter>;
 
   constructor({
     name = "New System",

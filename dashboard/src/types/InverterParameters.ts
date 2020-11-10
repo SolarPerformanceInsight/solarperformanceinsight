@@ -1,4 +1,4 @@
-export class InverterParameters {
+export class PVSystInverterParameters {
   /* Class mimics the inverter parameters required for the pvsyst model
    * provided by the PVLib inverter database.
    * See: https://github.com/pvlib/pvlib-python/blob/3e25627e34bfd5aadea041da85a30626322b3a99/pvlib/pvsystem.py#L1355
@@ -45,7 +45,17 @@ export class InverterParameters {
     this.Pnt = Pnt;
   }
 
-  static fromPvlibDb(row) {
-    return new InverterParameters();
+  static fromPvlibDb() {
+    return new PVSystInverterParameters();
+  }
+}
+
+export class PVWattsInverterParameters {
+  param_1: number;
+  param_2: number;
+
+  constructor({ param_1 = 0, param_2 = 0 } = {}) {
+    this.param_1 = param_1;
+    this.param_2 = param_2;
   }
 }

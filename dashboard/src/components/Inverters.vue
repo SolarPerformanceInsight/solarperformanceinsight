@@ -13,6 +13,7 @@
           :key="index"
           :index="index"
           :inverter="inverter"
+          :model="model"
         />
       </ul>
     </div>
@@ -21,13 +22,14 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import InverterView from "@/components/Inverter";
+import InverterView from "@/components/Inverter.vue";
 import { Inverter } from "@/types/Inverter";
 
 Vue.component("inverter-view", InverterView);
 @Component
 export default class InvertersView extends Vue {
-  @Prop() inverters: Array<Inverter>;
+  @Prop() inverters!: Array<Inverter>;
+  @Prop() model!: string;
 
   components = ["inverter-view"];
 

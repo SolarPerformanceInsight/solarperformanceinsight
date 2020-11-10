@@ -19,35 +19,48 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
+
+interface HTMLInputEvent extends Event {
+  target: HTMLInputElement & EventTarget;
+}
 
 @Component
 export default class FileUpload extends Vue {
+  errors!: Array<string>;
+  isLoading!: boolean;
+
   data() {
     return {
       isLoading: false,
       errors: []
     };
   }
-  setLoading(fileStatus) {
+
+  setLoading(fileStatus: boolean) {
     this.isLoading = fileStatus;
   }
-  processFile(e) {
+
+  processFile(e: HTMLInputEvent) {
     this.setLoading(true);
 
-    const fileList = e.target.files;
-    if (fileList.length > 1) {
-      this.errors.push("Can only accept one file at a time.");
-    } else {
-      const file = e.target.files[0];
-      const reader = new FileReader();
+    if (e.target.files !== null) {
+      const fileList = e.target.files;
+      if (fileList.length > 1) {
+        this.errors.push("Can only accept one file at a time.");
+      } else {
+        const file = e.target.files[0];
+        const reader = new FileReader();
 
-      reader.onload = f => this.$emit("uploadSuccess", f.target.result);
-      reader.readAsText(file);
+        // Typescript complains about f possibly being null, cant use a regular
+        // function becasue need access to this.
+        //@ts-ignore
+        reader.onload = f => this.$emit("uploadSuccess", f.target.result);
+        reader.readAsText(file);
 
-      this.errors = [];
+        this.errors = [];
+      }
     }
-
     this.setLoading(false);
   }
 }
