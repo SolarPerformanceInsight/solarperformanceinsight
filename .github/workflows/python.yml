@@ -37,7 +37,7 @@ jobs:
 
       - name: Upload coverage
         run: |
-          bash <(curl -s https://codecov.io/bash) -Z -c -f coverage.xml
+          bash <(curl -s https://codecov.io/bash) -Z -c -f coverage.xml -F python
         if: ${{ always() }}
 
   lint-python:
