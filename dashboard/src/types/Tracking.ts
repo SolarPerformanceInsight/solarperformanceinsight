@@ -9,13 +9,13 @@ export class FixedTrackingParameters {
 }
 
 export class SingleAxisTrackingParameters {
-  axisTilt: number;
-  axisAzimuth: number;
+  axis_tilt: number;
+  axis_azimuth: number;
   gcr: number;
 
-  constructor({ axisTilt = 0, axisAzimuth = 0, gcr = 0 } = {}) {
-    this.axisTilt = axisTilt;
-    this.axisAzimuth = axisAzimuth;
+  constructor({ axis_tilt = 0, axis_azimuth = 0, gcr = 0 } = {}) {
+    this.axis_tilt = axis_tilt;
+    this.axis_azimuth = axis_azimuth;
     this.gcr = gcr;
   }
 }

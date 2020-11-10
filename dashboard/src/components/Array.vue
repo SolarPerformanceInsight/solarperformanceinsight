@@ -2,10 +2,14 @@
   <li class="array">
     <b>Inverter Name: </b> {{ $parent.$parent.inverter.name }} <br />
     <b>Name: </b><input v-model="pvarray.name" /><br />
-    <b>Make and Model: </b><input v-model="pvarray.makeModel" /><br />
+    <b>Make and Model: </b><input v-model="pvarray.make_model" /><br />
     <b>Module Parameters: </b><br />
+    <b>Tracking: </b>
+    <input v-model="tracking" type="radio" value="fixed" />Fixed
+    <input type="radio" v-model="tracking" value="singleAxis" />Single Axis
+    <tracking-parameters :tracking="tracking" :parameters="pvarray.tracking" />
     <module-parameters-view
-      :parameters="pvarray.moduleParameters"
+      :parameters="pvarray.module_parameters"
       :model="model"
     />
     <button @click="removeArray">Remove Array</button><br />
@@ -22,8 +26,10 @@ import {
 } from "@/types/ModuleParameters";
 
 import ModuleParametersView from "@/components/ModuleParameters.vue";
+import TrackingParametersView from "@/components/TrackingParameters.vue";
 
 Vue.component("module-parameters-view", ModuleParametersView);
+Vue.component("tracking-parameters", TrackingParametersView);
 
 @Component
 export default class ArrayView extends Vue {
@@ -31,12 +37,17 @@ export default class ArrayView extends Vue {
   @Prop() index!: number;
   @Prop() model!: string;
 
+  data() {
+    return {
+      tracking: "fixed"
+    };
+  }
   @Watch("model")
-  changeModel(newModel: string, oldModel: string) {
+  changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.pvarray.moduleParameters = new PVSystModuleParameters();
+      this.pvarray.module_parameters = new PVSystModuleParameters();
     } else if (newModel == "pvwatts") {
-      this.pvarray.moduleParameters = new PVWattsModuleParameters();
+      this.pvarray.module_parameters = new PVWattsModuleParameters();
     }
   }
 

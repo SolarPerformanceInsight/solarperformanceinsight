@@ -10,35 +10,35 @@ import {
 
 export class PVArray {
   name: string;
-  makeModel: string;
-  moduleParameters: PVSystModuleParameters | PVWattsModuleParameters;
-  temperatureModelParameters: Array<number> | PvsystTemperatureParameters;
+  make_model: string;
+  module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
+  temperature_model_parameters: Array<number> | PvsystTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
-  modulesPerString: number;
+  modules_per_string: number;
   strings: number;
-  lossesParameters: any;
+  losses_parameters: any;
 
   constructor({
     name = "New Array",
-    makeModel = "ABC 123",
-    moduleParameters = new PVSystModuleParameters(),
-    temperatureModelParameters = [],
+    make_model = "ABC 123",
+    module_parameters = new PVSystModuleParameters(),
+    temperature_model_parameters = [],
     tracking = new FixedTrackingParameters(),
-    modulesPerString = 0,
+    modules_per_string = 0,
     strings = 0,
-    lossesParameters = {}
+    losses_parameters = {}
   } = {}) {
     this.name = name;
-    this.makeModel = makeModel;
-    this.modulesPerString = modulesPerString;
+    this.make_model = make_model;
+    this.modules_per_string = modules_per_string;
     this.strings = strings;
-    this.lossesParameters = lossesParameters;
+    this.losses_parameters = losses_parameters;
 
-    if (moduleParameters instanceof PVWattsModuleParameters) {
-      this.moduleParameters = new PVWattsModuleParameters(moduleParameters);
+    if (module_parameters instanceof PVWattsModuleParameters) {
+      this.module_parameters = new PVWattsModuleParameters(module_parameters);
     } else {
-      this.moduleParameters = new PVSystModuleParameters(moduleParameters);
+      this.module_parameters = new PVSystModuleParameters(module_parameters);
     }
 
     if (tracking instanceof FixedTrackingParameters) {
@@ -47,12 +47,12 @@ export class PVArray {
       this.tracking = new SingleAxisTrackingParameters(tracking);
     }
 
-    if (temperatureModelParameters instanceof PvsystTemperatureParameters) {
-      this.temperatureModelParameters = new PvsystTemperatureParameters(
-        temperatureModelParameters
+    if (temperature_model_parameters instanceof PvsystTemperatureParameters) {
+      this.temperature_model_parameters = new PvsystTemperatureParameters(
+        temperature_model_parameters
       );
     } else {
-      this.temperatureModelParameters = temperatureModelParameters;
+      this.temperature_model_parameters = temperature_model_parameters;
     }
   }
 }
