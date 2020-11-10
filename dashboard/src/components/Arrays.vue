@@ -4,7 +4,7 @@
       <h2>Arrays</h2>
       <button @click="addArray">Add Array</button>
       <div class="msg warning" v-if="pvarrays.length == 0">
-        System requires at least one inverter.
+        Inverter requires at least one array.
       </div>
       <ul>
         <array-view

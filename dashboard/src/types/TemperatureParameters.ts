@@ -8,3 +8,11 @@ export class PVSystTemperatureParameters {
     this.uV = uV;
   }
 }
+
+export class PVWattsTemperatureParameters {
+  a: number;
+
+  constructor({ a = 0 } = {}) {
+    this.a = a;
+  }
+}

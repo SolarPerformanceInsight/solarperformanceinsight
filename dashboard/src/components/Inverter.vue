@@ -1,5 +1,5 @@
 <template>
-  <li class="inverter">
+  <li>
     <b>System Name: </b> {{ $parent.$parent.system.name }}<br />
     <b>Name: </b><input v-model="inverter.name" /><br />
     <b>Make and Model: </b><input v-model="inverter.make_model" /><br />
@@ -34,7 +34,7 @@ export default class InverterView extends Vue {
   @Prop() model!: string;
 
   @Watch("model")
-  changeModel(newModel: string, oldModel: string) {
+  changeModel(newModel: string) {
     if (newModel == "pvsyst") {
       this.inverter.inverter_parameters = new PVSystInverterParameters();
     } else if (newModel == "pvwatts") {

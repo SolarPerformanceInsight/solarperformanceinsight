@@ -2,7 +2,7 @@
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
       <b>Tilt: </b><input v-model="parameters.tilt" /><br />
-      <b>Azimuth: </b><input v-model="parameters.tilt" /><br />
+      <b>Azimuth: </b><input v-model="parameters.azimuth" /><br />
     </div>
     <div v-if="tracking == 'singleAxis'">
       <b>Axis Tilt: </b><input v-model="parameters.axis_tilt" /><br />
@@ -35,7 +35,7 @@ ul {
   list-style-type: none;
   padding: 0;
 }
-div.module-parameters {
+div.tracking-parameters {
   margin: 0.5em;
   padding: 0.5em;
   border: 1px solid #000;

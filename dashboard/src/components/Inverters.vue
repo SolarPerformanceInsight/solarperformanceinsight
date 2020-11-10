@@ -6,7 +6,7 @@
       <div class="msg warning" v-if="inverters.length == 0">
         System requires at least one inverter.
       </div>
-      <ul>
+      <ul class="inverters">
         <inverter-view
           class="inverter"
           v-for="(inverter, index) in inverters"
@@ -44,6 +44,8 @@ export default class InvertersView extends Vue {
 ul {
   list-style-type: none;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
 }
 li.inverter {
   margin: 0.5em;

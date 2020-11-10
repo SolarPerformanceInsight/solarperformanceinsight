@@ -1,17 +1,19 @@
 <template>
-  <li class="array">
+  <li>
     <b>Inverter Name: </b> {{ $parent.$parent.inverter.name }} <br />
     <b>Name: </b><input v-model="pvarray.name" /><br />
     <b>Make and Model: </b><input v-model="pvarray.make_model" /><br />
-    <b>Module Parameters: </b><br />
     <b>Tracking: </b>
     <input v-model="tracking" type="radio" value="fixed" />Fixed
     <input type="radio" v-model="tracking" value="singleAxis" />Single Axis
     <tracking-parameters :tracking="tracking" :parameters="pvarray.tracking" />
-    <module-parameters-view
-      :parameters="pvarray.module_parameters"
+    <b>Temperature Model Parameters:</b><br />
+    <temperature-parameters
       :model="model"
+      :parameters="pvarray.temperature_model_parameters"
     />
+    <b>Module Parameters: </b><br />
+    <module-parameters :parameters="pvarray.module_parameters" :model="model" />
     <button @click="removeArray">Remove Array</button><br />
     <button @click="duplicateArray">Duplicate Array</button>
   </li>
@@ -25,11 +27,18 @@ import {
   PVWattsModuleParameters
 } from "@/types/ModuleParameters";
 
+import {
+  FixedTrackingParameters,
+  SingleAxisTrackingParameters
+} from "@/types/Tracking";
+
 import ModuleParametersView from "@/components/ModuleParameters.vue";
 import TrackingParametersView from "@/components/TrackingParameters.vue";
+import TemperatureParametersView from "@/components/TemperatureParameters.vue";
 
-Vue.component("module-parameters-view", ModuleParametersView);
+Vue.component("module-parameters", ModuleParametersView);
 Vue.component("tracking-parameters", TrackingParametersView);
+Vue.component("temperature-parameters", TemperatureParametersView);
 
 @Component
 export default class ArrayView extends Vue {
@@ -48,6 +57,14 @@ export default class ArrayView extends Vue {
       this.pvarray.module_parameters = new PVSystModuleParameters();
     } else if (newModel == "pvwatts") {
       this.pvarray.module_parameters = new PVWattsModuleParameters();
+    }
+  }
+  @Watch("tracking")
+  changeTracking(tracking: string) {
+    if (tracking == "fixed") {
+      this.pvarray.tracking = new FixedTrackingParameters();
+    } else {
+      this.pvarray.tracking = new SingleAxisTrackingParameters();
     }
   }
 
