@@ -22,7 +22,8 @@ requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "solarperformanceinsight_api/version.py"
+write_to = "api/solarperformanceinsight_api/_version.py"
+root = "api/../.."
 
 [tool.black]
 line-length = 88

@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 if __name__ == "__main__":
     setup(
         name="solarperformanceinsight-api",
@@ -11,6 +12,9 @@ if __name__ == "__main__":
             "httpx",
             "python-jose",
         ],
-        use_scm_version={"write_to": "solarperformanceinsight_api/version.py"},
+        use_scm_version={
+            "write_to": "api/solarperformanceinsight_api/_version.py",
+            "root": "api/../..",
+        },
         setup_requires=["setuptools_scm"],
     )

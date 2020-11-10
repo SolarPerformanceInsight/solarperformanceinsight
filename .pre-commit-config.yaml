@@ -9,7 +9,10 @@ repos:
     hooks:
       - id: black
         language_version: python3
+        files: ^api/
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.1
     hooks:
       - id: flake8
+        files: ^api/
+        args: [--config=api/.flake8]

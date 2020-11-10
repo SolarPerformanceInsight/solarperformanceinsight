@@ -1,0 +1,56 @@
+name: Test Javascript
+
+on:
+  push:
+    paths:
+      - 'dashboard/**'
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'dashboard/**'
+    branches:
+      - main
+
+jobs:
+  test-javascript:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+
+      - name: Install
+        run:  |
+          cd dashboard
+          npm install
+
+      - name: Test
+        run: |
+          cd dashboard
+          npm run test:unit
+
+      - name: Upload coverage
+        run: |
+          bash <(curl -s https://codecov.io/bash) -Z -c -F javascript
+        if: ${{ always() }}
+
+  lint-javascript:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+      - name: Install
+        run:  |
+          cd dashboard
+          npm install
+
+      - name: Lint
+        run: |
+          cd dashboard
+          npm run lint

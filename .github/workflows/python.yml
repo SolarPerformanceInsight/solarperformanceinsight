@@ -1,15 +1,19 @@
-name: Test
+name: Test Python
 
 on:
   push:
+    paths:
+      - 'api/**'
     branches:
       - main
   pull_request:
+    paths:
+      - 'api/**'
     branches:
       - main
 
 jobs:
-  test:
+  test-python:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +24,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          cd api
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-test.txt
@@ -28,9 +33,17 @@ jobs:
 
       - name: Test
         run: |
-          pytest solarperformanceinsight_api --cov=solarperformanceinsight_api --cov-report=term-missing --cov-report=xml
+          pytest api/solarperformanceinsight_api --cov=solarperformanceinsight_api --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage
         run: |
-          bash <(curl -s https://codecov.io/bash) -Z -c -f coverage.xml
+          bash <(curl -s https://codecov.io/bash) -Z -c -f coverage.xml -F python
         if: ${{ always() }}
+
+  lint-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: psf/black@stable
