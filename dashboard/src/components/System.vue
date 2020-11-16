@@ -7,8 +7,8 @@
     <b>Albedo: </b><input v-model="system.albedo" /><br />
     <b>Model: </b>
     <select v-model="model">
-      <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
-    </select><br />
+      <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option> </select
+    ><br />
     <a
       href="#"
       :class="displayAdvanced ? 'open' : ''"

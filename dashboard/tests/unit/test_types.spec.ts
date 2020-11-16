@@ -11,6 +11,70 @@ test("Instantiate base system", () => {
   expect(system instanceof System).toBeTruthy();
   const inverters = system.inverters;
   expect(inverters instanceof Array).toBeTruthy();
+  expect(inverters.length).toBe(0);
+});
+
+
+const test_system = {
+  "name": "Test System",
+  "latitude": 0,
+  "longitude": 0,
+  "elevation": 0,
+  "albedo": 0,
+  "inverters": [
+    {
+      "name": "New Inverter",
+      "make_model": "ABC 520",
+      "inverter_parameters": {
+        "Paco": 0,
+        "Pdco": 0,
+        "Vdco": 0,
+        "Pso": 0,
+        "C0": 0,
+        "C1": 0,
+        "C2": 0,
+        "C3": 0,
+        "Pnt": 0
+      },
+      "losses_parameters": {},
+      "arrays": [
+        {
+          "name": "New Array",
+          "make_model": "ABC 123",
+          "modules_per_string": 0,
+          "strings": 0,
+          "losses_parameters": {},
+          "module_parameters": {
+            "gamma_ref": 0,
+            "mu_gamma": 0,
+            "I_L_ref": 0,
+            "I_o_ref": 0,
+            "R_sh_ref": 0,
+            "R_sh_0": 0,
+            "R_s": 0,
+            "alpha_sc": 0,
+            "EgRef": 0,
+            "cells_in_series": 0
+          },
+          "tracking": {
+            "tilt": 0,
+            "azimuth": 0
+          },
+          "temperature_model_parameters": {
+            "uC": 29,
+            "uV": 0
+          }
+        }
+      ]
+    }
+  ]
+}
+
+test("Instantiate system from object", () => {
+  const system = new System(test_system);
+  expect(system instanceof System).toBeTruthy();
+  const inverters = system.inverters;
+  expect(inverters instanceof Array).toBeTruthy();
   for (let i = 0; i < inverters.length; i++) {
     const inverter = inverters[i];
     expect(inverter instanceof Inverter).toBeTruthy();
