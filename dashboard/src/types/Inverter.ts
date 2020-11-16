@@ -24,7 +24,7 @@ export class Inverter {
     this.losses_parameters = losses_parameters;
 
     if (arrays.length == 0) {
-      this.arrays = [new PVArray()];
+      this.arrays = [];
     } else {
       this.arrays = arrays.map(a => new PVArray(a));
     }

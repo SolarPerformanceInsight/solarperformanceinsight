@@ -5,7 +5,9 @@
       <b>uV: </b><input v-model="parameters.uV" /><br />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>TODO</b>
+      <b>a: </b><input v-model="parameters.a" /><br />
+      <b>b: </b><input v-model="parameters.b" /><br />
+      <b>deltaT: </b><input v-model="parameters.deltaT" /><br />
     </div>
   </div>
 </template>

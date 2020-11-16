@@ -11,8 +11,12 @@ export class PVSystTemperatureParameters {
 
 export class PVWattsTemperatureParameters {
   a: number;
+  b: number;
+  deltaT: number;
 
-  constructor({ a = 0 } = {}) {
+  constructor({ a = 0, b = 0, deltaT = 0 } = {}) {
     this.a = a;
+    this.b = b;
+    this.deltaT = deltaT;
   }
 }

@@ -28,6 +28,11 @@ import {
 } from "@/types/ModuleParameters";
 
 import {
+  PVSystTemperatureParameters,
+  PVWattsTemperatureParameters
+} from "@/types/TemperatureParameters";
+
+import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "@/types/Tracking";
@@ -55,8 +60,10 @@ export default class ArrayView extends Vue {
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
       this.pvarray.module_parameters = new PVSystModuleParameters();
+      this.pvarray.temperature_model_parameters = new PVSystTemperatureParameters();
     } else if (newModel == "pvwatts") {
       this.pvarray.module_parameters = new PVWattsModuleParameters();
+      this.pvarray.temperature_model_parameters = new PVWattsTemperatureParameters();
     }
   }
   @Watch("tracking")

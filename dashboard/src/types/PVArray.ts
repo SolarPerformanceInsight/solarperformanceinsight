@@ -2,7 +2,10 @@ import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "./Tracking";
-import { PVSystTemperatureParameters } from "./TemperatureParameters";
+import {
+  PVSystTemperatureParameters,
+  PVWattsTemperatureParameters
+} from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
   PVWattsModuleParameters
@@ -12,7 +15,10 @@ export class PVArray {
   name: string;
   make_model: string;
   module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
-  temperature_model_parameters: Array<number> | PVSystTemperatureParameters;
+  temperature_model_parameters:
+    | Array<number>
+    | PVSystTemperatureParameters
+    | PVWattsTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   modules_per_string: number;
@@ -23,7 +29,7 @@ export class PVArray {
     name = "New Array",
     make_model = "ABC 123",
     module_parameters = new PVSystModuleParameters(),
-    temperature_model_parameters = [],
+    temperature_model_parameters = new PVSystTemperatureParameters(),
     tracking = new FixedTrackingParameters(),
     modules_per_string = 0,
     strings = 0,
@@ -52,7 +58,9 @@ export class PVArray {
         temperature_model_parameters
       );
     } else {
-      this.temperature_model_parameters = temperature_model_parameters;
+      this.temperature_model_parameters = new PVWattsTemperatureParameters(
+        temperature_model_parameters
+      );
     }
   }
 }
