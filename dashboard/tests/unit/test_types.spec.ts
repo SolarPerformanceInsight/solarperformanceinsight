@@ -71,7 +71,7 @@ const test_system = {
 }
 
 test("Instantiate system from object", () => {
-  const system = new System(test_system);
+  const system : System = new System(test_system);
   expect(system instanceof System).toBeTruthy();
   const inverters = system.inverters;
   expect(inverters instanceof Array).toBeTruthy();
@@ -88,7 +88,7 @@ test("Instantiate system from object", () => {
         array.module_parameters instanceof PVSystModuleParameters
       ).toBeTruthy();
       expect(array.tracking instanceof FixedTrackingParameters).toBeTruthy();
-      expect(array.temperature_model_parameters instanceof Array).toBeTruthy();
+      expect(array.temperature_model_parameters instanceof PVSystTemperatureParameters).toBeTruthy();
     }
   }
 });

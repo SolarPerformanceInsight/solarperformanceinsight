@@ -22,7 +22,7 @@ export class System {
     this.elevation = elevation;
     this.albedo = albedo;
     if (inverters.length == 0) {
-      this.inverters = [];
+      this.inverters = inverters as Inverter[];
     } else {
       this.inverters = inverters.map(i => new Inverter(i));
     }

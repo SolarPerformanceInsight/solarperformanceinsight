@@ -7,6 +7,11 @@ export class PVSystTemperatureParameters {
     this.uC = uC;
     this.uV = uV;
   }
+  static isInstance(obj: any): obj is PVSystTemperatureParameters {
+      let maybe = obj as PVSystTemperatureParameters;
+      return maybe.uC != undefined
+             && maybe.uV != undefined;
+  }
 }
 
 export class PVWattsTemperatureParameters {
@@ -18,5 +23,11 @@ export class PVWattsTemperatureParameters {
     this.a = a;
     this.b = b;
     this.deltaT = deltaT;
+  }
+  static isInstance(obj: any): obj is PVWattsTemperatureParameters {
+      let maybe = obj as PVWattsTemperatureParameters;
+      return maybe.a != undefined
+             && maybe.b != undefined
+             && maybe.deltaT != undefined;
   }
 }

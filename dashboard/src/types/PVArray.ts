@@ -23,7 +23,7 @@ export class PVArray {
   // PVSyst parameters
   modules_per_string: number;
   strings: number;
-  losses_parameters: any;
+  losses_parameters: Object;
 
   constructor({
     name = "New Array",
@@ -47,13 +47,13 @@ export class PVArray {
       this.module_parameters = new PVSystModuleParameters(module_parameters);
     }
 
-    if (tracking instanceof FixedTrackingParameters) {
+    if (FixedTrackingParameters.isInstance(tracking)) {
       this.tracking = new FixedTrackingParameters(tracking);
     } else {
       this.tracking = new SingleAxisTrackingParameters(tracking);
     }
 
-    if (temperature_model_parameters instanceof PVSystTemperatureParameters) {
+    if (PVSystTemperatureParameters.isInstance(temperature_model_parameters)) {
       this.temperature_model_parameters = new PVSystTemperatureParameters(
         temperature_model_parameters
       );

@@ -8,7 +8,7 @@ export class Inverter {
   name: string;
   make_model: string;
   inverter_parameters: PVSystInverterParameters | PVWattsInverterParameters;
-  losses_parameters: any;
+  losses_parameters: Object;
   arrays: Array<PVArray>;
 
   constructor({
@@ -24,7 +24,7 @@ export class Inverter {
     this.losses_parameters = losses_parameters;
 
     if (arrays.length == 0) {
-      this.arrays = [];
+      this.arrays = arrays as PVArray[];
     } else {
       this.arrays = arrays.map(a => new PVArray(a));
     }

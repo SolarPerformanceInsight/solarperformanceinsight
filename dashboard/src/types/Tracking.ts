@@ -6,6 +6,10 @@ export class FixedTrackingParameters {
     this.tilt = tilt;
     this.azimuth = azimuth;
   }
+  static isInstance(obj: any): obj is FixedTrackingParameters{
+    let maybe = obj as FixedTrackingParameters;
+    return maybe.tilt !== undefined && maybe.azimuth !== undefined;
+  }
 }
 
 export class SingleAxisTrackingParameters {
@@ -17,5 +21,11 @@ export class SingleAxisTrackingParameters {
     this.axis_tilt = axis_tilt;
     this.axis_azimuth = axis_azimuth;
     this.gcr = gcr;
+  }
+  static isInstance(obj: any): obj is SingleAxisTrackingParameters{
+    let maybe = obj as SingleAxisTrackingParameters;
+    return maybe.axis_tilt !== undefined
+           && maybe.axis_azimuth !== undefined
+           && maybe.gcr !== undefined;
   }
 }
