@@ -1,9 +1,13 @@
 import logging
+import os
+from pathlib import Path
 
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import RedirectResponse
 
 
 from . import auth, __version__
@@ -77,4 +81,22 @@ app.include_router(
     prefix="/powerplants",
     tags=["Power Plant"],
     dependencies=[Depends(auth.get_user_id)],
+)
+
+
+dev_app = FastAPI()
+
+
+@dev_app.get("/")
+def index():
+    return RedirectResponse(url="/index.html")
+
+
+dev_app.mount("/api", app)
+dev_app.mount(
+    "/",
+    StaticFiles(
+        directory=os.getenv("STATIC_DIRECTORY", Path("../dashboard/dist/").absolute())
+    ),
+    name="static",
 )
