@@ -27,8 +27,10 @@
       <b>Pnt: </b><input v-model="parameters.Pnt" /><br />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>Param 1: </b><input v-model="parameters.param_1" /><br />
-      <b>Param 2: </b><input v-model="parameters.param_2" /><br />
+      <b>pdc: </b><input v-model="parameters.pdc" /><br />
+      <b>pdc0: </b><input v-model="parameters.pdc0" /><br />
+      <b>eta_inv_nom: </b><input v-model="parameters.eta_inv_nom" /><br />
+      <b>eta_inv_ref: </b><input v-model="parameters.eta_inv_ref" /><br />
     </div>
   </div>
 </template>

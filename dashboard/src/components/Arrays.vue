@@ -24,6 +24,15 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import ArrayView from "@/components/Array.vue";
 import { PVArray } from "@/types/PVArray";
+import {
+  PVWattsModuleParameters,
+  PVSystModuleParameters,
+} from "@/types/ModuleParameters";
+import {
+  PVWattsTemperatureParameters,
+  PVSystTemperatureParameters,
+} from "@/types/TemperatureParameters";
+
 
 Vue.component("array-view", ArrayView);
 @Component
@@ -32,7 +41,16 @@ export default class ArraysView extends Vue {
   @Prop() model!: string;
 
   addArray() {
-    this.pvarrays.push(new PVArray());
+    let modParamClass: any = PVWattsModuleParameters;
+    let tempParamClass: any = PVWattsTemperatureParameters;
+    if (this.model == 'pvsyst'){
+        modParamClass = PVSystModuleParameters;
+        tempParamClass = PVSystTemperatureParameters;
+    }
+    this.pvarrays.push(new PVArray({
+        module_parameters: new modParamClass({}),
+        temperature_model_parameters: new tempParamClass({})
+    }));
   }
 }
 </script>

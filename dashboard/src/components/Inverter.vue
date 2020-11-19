@@ -36,9 +36,9 @@ export default class InverterView extends Vue {
   @Watch("model")
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.inverter.inverter_parameters = new PVSystInverterParameters();
+      this.inverter.inverter_parameters = new PVSystInverterParameters({});
     } else if (newModel == "pvwatts") {
-      this.inverter.inverter_parameters = new PVWattsInverterParameters();
+      this.inverter.inverter_parameters = new PVWattsInverterParameters({});
     }
   }
 

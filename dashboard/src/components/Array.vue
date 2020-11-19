@@ -59,19 +59,19 @@ export default class ArrayView extends Vue {
   @Watch("model")
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.pvarray.module_parameters = new PVSystModuleParameters();
-      this.pvarray.temperature_model_parameters = new PVSystTemperatureParameters();
+      this.pvarray.module_parameters = new PVSystModuleParameters({});
+      this.pvarray.temperature_model_parameters = new PVSystTemperatureParameters({});
     } else if (newModel == "pvwatts") {
-      this.pvarray.module_parameters = new PVWattsModuleParameters();
-      this.pvarray.temperature_model_parameters = new PVWattsTemperatureParameters();
+      this.pvarray.module_parameters = new PVWattsModuleParameters({});
+      this.pvarray.temperature_model_parameters = new PVWattsTemperatureParameters({});
     }
   }
   @Watch("tracking")
   changeTracking(tracking: string) {
     if (tracking == "fixed") {
-      this.pvarray.tracking = new FixedTrackingParameters();
+      this.pvarray.tracking = new FixedTrackingParameters({});
     } else {
-      this.pvarray.tracking = new SingleAxisTrackingParameters();
+      this.pvarray.tracking = new SingleAxisTrackingParameters({});
     }
   }
 

@@ -24,6 +24,10 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import InverterView from "@/components/Inverter.vue";
 import { Inverter } from "@/types/Inverter";
+import {
+  PVWattsInverterParameters,
+  PVSystInverterParameters
+} from "@/types/InverterParameters";
 
 Vue.component("inverter-view", InverterView);
 @Component
@@ -34,7 +38,13 @@ export default class InvertersView extends Vue {
   components = ["inverter-view"];
 
   addInverter() {
-    this.inverters.push(new Inverter());
+    let paramClass: any = PVWattsInverterParameters;
+    if (this.model == 'pvsyst'){
+        paramClass = PVSystInverterParameters;
+    }
+    this.inverters.push(new Inverter({
+      inverter_parameters: new paramClass({})
+    }));
   }
 }
 </script>
