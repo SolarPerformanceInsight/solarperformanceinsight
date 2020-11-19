@@ -4,8 +4,18 @@
     <b>Name: </b><input v-model="pvarray.name" /><br />
     <b>Make and Model: </b><input v-model="pvarray.make_model" /><br />
     <b>Tracking: </b>
-    <input v-model="tracking" type="radio" value="fixed" />Fixed
-    <input type="radio" v-model="tracking" value="singleAxis" />Single Axis
+    <input
+      v-model="tracking"
+      type="radio"
+      v-on:change="changeTracking"
+      value="fixed"
+    />Fixed
+    <input
+      v-model="tracking"
+      type="radio"
+      v-on:change="changeTracking"
+      value="singleAxis"
+    />Single Axis
     <tracking-parameters :tracking="tracking" :parameters="pvarray.tracking" />
     <b>Temperature Model Parameters:</b><br />
     <temperature-parameters
@@ -45,16 +55,31 @@ Vue.component("module-parameters", ModuleParametersView);
 Vue.component("tracking-parameters", TrackingParametersView);
 Vue.component("temperature-parameters", TemperatureParametersView);
 
+interface HTMLInputEvent extends Event {
+  target: HTMLInputElement & EventTarget;
+}
+
 @Component
 export default class ArrayView extends Vue {
   @Prop() pvarray!: PVArray;
   @Prop() index!: number;
   @Prop() model!: string;
+  tracking!: string;
 
   data() {
     return {
-      tracking: "fixed"
+      tracking: this.inferTracking()
     };
+  }
+  created() {
+    this.tracking = this.inferTracking();
+  }
+  inferTracking() {
+    if (FixedTrackingParameters.isInstance(this.pvarray.tracking)) {
+      return "fixed";
+    } else {
+      return "singleAxis";
+    }
   }
   @Watch("model")
   changeModel(newModel: string) {
@@ -70,13 +95,22 @@ export default class ArrayView extends Vue {
       );
     }
   }
-  @Watch("tracking")
-  changeTracking(tracking: string) {
+
+  changeTracking(e: HTMLInputEvent) {
+    const tracking = e.target.value;
     if (tracking == "fixed") {
       this.pvarray.tracking = new FixedTrackingParameters({});
     } else {
       this.pvarray.tracking = new SingleAxisTrackingParameters({});
     }
+  }
+  @Watch("pvarray.tracking")
+  ensureTracking() {
+    // Ensure tracking stays consistent when the tracking parameters change
+    // commonly fired an array is removed, so tha the component updates with
+    // the new object. This does not trigger when fields on the tracking
+    // object are changed.
+    this.tracking = this.inferTracking();
   }
 
   removeArray() {
