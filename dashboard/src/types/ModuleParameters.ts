@@ -53,10 +53,7 @@ export class PVWattsModuleParameters {
   pdc0: number;
   gamma_pdc: number;
 
-  constructor({
-    pdc0 = 0,
-    gamma_pdc = 0
-  }: Partial<PVWattsModuleParameters>){
+  constructor({ pdc0 = 0, gamma_pdc = 0 }: Partial<PVWattsModuleParameters>) {
     this.pdc0 = pdc0;
     this.gamma_pdc = gamma_pdc;
   }

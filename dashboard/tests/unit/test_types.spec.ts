@@ -14,7 +14,6 @@ test("Instantiate base system", () => {
   expect(inverters.length).toBe(0);
 });
 
-
 const pvsyst_test_system = {
   name: "Test System",
   latitude: 0,
@@ -71,10 +70,11 @@ const pvsyst_test_system = {
 };
 test("PVArray Instance", () => {
   const array: PVArray = new PVArray(
-      pvsyst_test_system['inverters'][0]['arrays'][0]);
+    pvsyst_test_system["inverters"][0]["arrays"][0]
+  );
 });
 test("Inverter Instance", () => {
-  const inverter: Inverter = new Inverter(pvsyst_test_system['inverters'][0]);
+  const inverter: Inverter = new Inverter(pvsyst_test_system["inverters"][0]);
 });
 
 test("Instantiate system from object", () => {

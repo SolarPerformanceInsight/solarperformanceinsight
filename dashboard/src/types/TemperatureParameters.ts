@@ -3,10 +3,7 @@ export class PVSystTemperatureParameters {
   uC: number; // pvlib "Freestanding" default insulated is 15.0
   uV: number; //        freestanding:00, insulated: 0.0
 
-  constructor({
-    uC = 29.0,
-    uV = 0.0
-  }: Partial<PVSystTemperatureParameters>){
+  constructor({ uC = 29.0, uV = 0.0 }: Partial<PVSystTemperatureParameters>) {
     this.uC = uC;
     this.uV = uV;
   }
@@ -25,7 +22,7 @@ export class PVWattsTemperatureParameters {
     a = 0,
     b = 0,
     deltaT = 0
-  }: Partial<PVWattsTemperatureParameters>){
+  }: Partial<PVWattsTemperatureParameters>) {
     this.a = a;
     this.b = b;
     this.deltaT = deltaT;

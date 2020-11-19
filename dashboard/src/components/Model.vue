@@ -35,7 +35,7 @@
     </div>
 
     <div>
-      <system-view :system="system" :model="model"/>
+      <system-view :system="system" :model="model" />
     </div>
   </div>
 </template>

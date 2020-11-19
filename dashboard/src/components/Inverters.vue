@@ -39,12 +39,14 @@ export default class InvertersView extends Vue {
 
   addInverter() {
     let paramClass: any = PVWattsInverterParameters;
-    if (this.model == 'pvsyst'){
-        paramClass = PVSystInverterParameters;
+    if (this.model == "pvsyst") {
+      paramClass = PVSystInverterParameters;
     }
-    this.inverters.push(new Inverter({
-      inverter_parameters: new paramClass({})
-    }));
+    this.inverters.push(
+      new Inverter({
+        inverter_parameters: new paramClass({})
+      })
+    );
   }
 }
 </script>

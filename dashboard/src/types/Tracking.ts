@@ -2,10 +2,7 @@ export class FixedTrackingParameters {
   tilt: number;
   azimuth: number;
 
-  constructor({
-    tilt = 0,
-    azimuth = 0
-  }: Partial<FixedTrackingParameters>) {
+  constructor({ tilt = 0, azimuth = 0 }: Partial<FixedTrackingParameters>) {
     this.tilt = tilt;
     this.azimuth = azimuth;
   }

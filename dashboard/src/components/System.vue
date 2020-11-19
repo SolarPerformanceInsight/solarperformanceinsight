@@ -25,7 +25,6 @@ export default class SystemView extends Vue {
   @Prop() model!: string;
 
   components = ["inverters-view"];
-
 }
 </script>
 
@@ -33,5 +32,4 @@ export default class SystemView extends Vue {
 div {
   text-align: left;
 }
-
 </style>

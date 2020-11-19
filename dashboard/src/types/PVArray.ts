@@ -15,7 +15,10 @@ export class PVArray {
   name: string;
   make_model: string;
   module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
-  temperature_model_parameters: Array<number> | PVSystTemperatureParameters | PVWattsTemperatureParameters;
+  temperature_model_parameters:
+    | Array<number>
+    | PVSystTemperatureParameters
+    | PVWattsTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   modules_per_string: number;
@@ -40,7 +43,7 @@ export class PVArray {
 
     if (PVWattsModuleParameters.isInstance(module_parameters)) {
       this.module_parameters = new PVWattsModuleParameters(module_parameters);
-    } else if(PVSystModuleParameters.isInstance(module_parameters)) {
+    } else if (PVSystModuleParameters.isInstance(module_parameters)) {
       this.module_parameters = new PVSystModuleParameters(module_parameters);
     } else {
       // TODO: raise error/provide warning
@@ -57,7 +60,9 @@ export class PVArray {
       this.temperature_model_parameters = new PVSystTemperatureParameters(
         temperature_model_parameters
       );
-    } else if (PVWattsTemperatureParameters.isInstance(temperature_model_parameters)) {
+    } else if (
+      PVWattsTemperatureParameters.isInstance(temperature_model_parameters)
+    ) {
       this.temperature_model_parameters = new PVWattsTemperatureParameters(
         temperature_model_parameters
       );

@@ -15,7 +15,7 @@ export class System {
     elevation = 0,
     albedo = 0,
     inverters = []
-  }: Partial<System>){
+  }: Partial<System>) {
     this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;
