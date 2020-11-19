@@ -43,11 +43,8 @@ export class PVArray {
 
     if (PVWattsModuleParameters.isInstance(module_parameters)) {
       this.module_parameters = new PVWattsModuleParameters(module_parameters);
-    } else if (PVSystModuleParameters.isInstance(module_parameters)) {
-      this.module_parameters = new PVSystModuleParameters(module_parameters);
     } else {
-      // TODO: raise error/provide warning
-      this.module_parameters = new PVWattsModuleParameters({});
+      this.module_parameters = new PVSystModuleParameters(module_parameters);
     }
 
     if (FixedTrackingParameters.isInstance(tracking)) {
@@ -72,12 +69,15 @@ export class PVArray {
   }
   static isInstance(obj: any): obj is PVArray {
     const maybe = obj as PVArray;
-    return maybe.name != undefined;
-    maybe.make_model != undefined;
-    maybe.module_parameters != undefined;
-    maybe.temperature_model_parameters != undefined;
-    maybe.tracking != undefined;
-    maybe.modules_per_string != undefined;
-    maybe.strings != undefined, maybe.losses_parameters != undefined;
+    return (
+      maybe.name != undefined &&
+      maybe.make_model != undefined &&
+      maybe.module_parameters != undefined &&
+      maybe.temperature_model_parameters != undefined &&
+      maybe.tracking != undefined &&
+      maybe.modules_per_string != undefined &&
+      maybe.strings != undefined &&
+      maybe.losses_parameters != undefined
+    );
   }
 }

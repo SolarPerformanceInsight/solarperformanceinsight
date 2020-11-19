@@ -39,6 +39,7 @@ export class PVSystModuleParameters {
       maybe.gamma_ref != undefined &&
       maybe.mu_gamma != undefined &&
       maybe.I_L_ref != undefined &&
+      maybe.I_o_ref != undefined &&
       maybe.R_sh_ref != undefined &&
       maybe.R_sh_0 != undefined &&
       maybe.R_s != undefined &&

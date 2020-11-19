@@ -20,7 +20,15 @@ export class Inverter {
   }: Partial<Inverter>) {
     this.name = name;
     this.make_model = make_model;
-    this.inverter_parameters = inverter_parameters;
+    if (PVWattsInverterParameters.isInstance(inverter_parameters)) {
+      this.inverter_parameters = new PVWattsInverterParameters(
+        inverter_parameters
+      );
+    } else {
+      this.inverter_parameters = new PVSystInverterParameters(
+        inverter_parameters
+      );
+    }
     this.losses_parameters = losses_parameters;
 
     if (arrays.length == 0) {

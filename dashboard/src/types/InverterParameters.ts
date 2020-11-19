@@ -59,10 +59,6 @@ export class PVSystInverterParameters {
       maybe.Pnt != undefined
     );
   }
-
-  static fromPvlibDb() {
-    return new PVSystInverterParameters({});
-  }
 }
 
 export class PVWattsInverterParameters {
