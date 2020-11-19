@@ -76,7 +76,7 @@ export class PVWattsInverterParameters {
     pdc0 = 0,
     eta_inv_nom = 0.96,
     eta_inv_ref = 0.9637
-  }: PVWattsInverterParameters) {
+  }: Partial<PVWattsInverterParameters>) {
     this.pdc = pdc;
     this.pdc0 = pdc0;
     this.eta_inv_nom = eta_inv_nom;
