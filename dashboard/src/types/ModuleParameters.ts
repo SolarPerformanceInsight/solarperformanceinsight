@@ -21,7 +21,7 @@ export class PVSystModuleParameters {
     alpha_sc = 0,
     EgRef = 0,
     cells_in_series = 0
-  } = {}) {
+  }: Partial<PVSystModelingParameters>) {
     this.gamma_ref = gamma_ref;
     this.mu_gamma = mu_gamma;
     this.I_L_ref = I_L_ref;
@@ -33,14 +33,35 @@ export class PVSystModuleParameters {
     this.EgRef = EgRef;
     this.cells_in_series = cells_in_series;
   }
+  static isInstance(obj: any): obj is PVSystModuleParameters {
+    const maybe = obj as PVSystModuleParameters;
+    return (
+      maybe.gamma_ref != undefined &&
+      maybe.mu_gamma != undefined &&
+      maybe.I_L_ref != undefined &&
+      maybe.R_sh_ref != undefined &&
+      maybe.R_sh_0 != undefined &&
+      maybe.R_s != undefined &&
+      maybe.alpha_sc != undefined &&
+      maybe.EgRef != undefined &&
+      maybe.cells_in_series != undefined
+    );
+  }
 }
 
 export class PVWattsModuleParameters {
   pdc0: number;
   gamma_pdc: number;
 
-  constructor({ pdc0 = 0, gamma_pdc = 0 } = {}) {
+  constructor({
+    pdc0 = 0,
+    gamma_pdc = 0
+  }: Partial<PVwattsModuleParameters>){
     this.pdc0 = pdc0;
     this.gamma_pdc = gamma_pdc;
+  }
+  static isInstance(obj: any): obj is PVWattsModuleParameters {
+    const maybe = obj as PVWattsModuleParameters;
+    return maybe.pdc0 != undefined && maybe.gamma_pdc != undefined;
   }
 }
