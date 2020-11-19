@@ -33,7 +33,7 @@ export class PVSystInverterParameters {
     C2 = 0,
     C3 = 0,
     Pnt = 0
-  } = {}) {
+  }: Partial<PVSystInverterParameters>) {
     this.Paco = Paco;
     this.Pdco = Pdco;
     this.Vdco = Vdco;
@@ -45,17 +45,50 @@ export class PVSystInverterParameters {
     this.Pnt = Pnt;
   }
 
+  static isInstance(obj: any): obj is PVSystInverterParameters {
+    const maybe = obj as PVSystInverterParameters;
+    return (
+      maybe.Paco != undefined &&
+      maybe.Pdco != undefined &&
+      maybe.Vdco != undefined &&
+      maybe.Pso != undefined &&
+      maybe.C0 != undefined &&
+      maybe.C1 != undefined &&
+      maybe.C2 != undefined &&
+      maybe.C3 != undefined &&
+      maybe.Pnt != undefined
+    );
+  }
+
   static fromPvlibDb() {
-    return new PVSystInverterParameters();
+    return new PVSystInverterParameters({});
   }
 }
 
 export class PVWattsInverterParameters {
-  param_1: number;
-  param_2: number;
+  pdc: number;
+  pdc0: number;
+  eta_inv_nom: number;
+  eta_inv_ref: number;
 
-  constructor({ param_1 = 0, param_2 = 0 } = {}) {
-    this.param_1 = param_1;
-    this.param_2 = param_2;
+  constructor({
+    pdc = 0,
+    pdc0 = 0,
+    eta_inv_nom = 0.96,
+    eta_inv_ref = 0.9637
+  }: PVWattsInverterParameters) {
+    this.pdc = pdc;
+    this.pdc0 = pdc0;
+    this.eta_inv_nom = eta_inv_nom;
+    this.eta_inv_ref = eta_inv_ref;
+  }
+  static isInstance(obj: any): obj is PVWattsInverterParameters {
+    const maybe = obj as PVWattsInverterParameters;
+    return (
+      maybe.pdc !== undefined &&
+      maybe.pdc0 !== undefined &&
+      maybe.eta_inv_nom != undefined &&
+      maybe.eta_inv_ref != undefined
+    );
   }
 }
