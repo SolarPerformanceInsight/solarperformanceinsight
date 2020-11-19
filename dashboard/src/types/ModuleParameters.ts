@@ -21,7 +21,7 @@ export class PVSystModuleParameters {
     alpha_sc = 0,
     EgRef = 0,
     cells_in_series = 0
-  }: Partial<PVSystModelingParameters>) {
+  }: Partial<PVSystModuleParameters>) {
     this.gamma_ref = gamma_ref;
     this.mu_gamma = mu_gamma;
     this.I_L_ref = I_L_ref;
@@ -56,7 +56,7 @@ export class PVWattsModuleParameters {
   constructor({
     pdc0 = 0,
     gamma_pdc = 0
-  }: Partial<PVwattsModuleParameters>){
+  }: Partial<PVWattsModuleParameters>){
     this.pdc0 = pdc0;
     this.gamma_pdc = gamma_pdc;
   }
