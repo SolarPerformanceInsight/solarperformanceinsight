@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 FROM node:14-buster as jsbuild
 COPY ./dashboard js
 RUN cd js && \
-    npm install --production && \
+    npm install && \
     npm run build
 
 FROM basepython as wheelbuild
