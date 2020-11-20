@@ -8,7 +8,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  docker:
+  publish-image:
     runs-on: ubuntu-latest
     # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
     steps:
@@ -40,3 +40,36 @@ jobs:
           push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+
+  update-deployment:
+    runs-on: ubuntu-latest
+    # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    needs:
+      - publish-image
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: alorenzo175/spi-deploy
+
+      - uses: imranismail/setup-kustomize@v1
+        with:
+          kustomize-version: 3.8.1
+
+      - name: Set ref
+        id: sharef
+        run: |
+          echo "::set-output name=ref::$(echo ${GITHUB_SHA} | cut -b -12)"
+
+      - name: Make PR
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b deploy/${REF}
+          echo 'kustomize' > newfile
+          git add .
+          git commit -m 'Update '${IMG}' to '${REF}
+          git push origin deploy/${REF}
+          gh pr create --fill
+        env:
+          REF: ${{ steps.sharef.outputs.ref }}
+          IMG: image
