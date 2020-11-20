@@ -10,7 +10,7 @@ on:
 jobs:
   publish-image:
     runs-on: ubuntu-latest
-    # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -44,8 +44,8 @@ jobs:
   update-deployment:
     runs-on: ubuntu-latest
     # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
-    needs:
-      - publish-image
+    #needs:
+    #  - publish-image
     steps:
       - uses: actions/checkout@v2
         with:
@@ -54,7 +54,7 @@ jobs:
 
       - uses: imranismail/setup-kustomize@v1
         with:
-          kustomize-version: 3.8.1
+          kustomize-version: 3.8.7
 
       - name: Set ref
         id: sharef
@@ -66,12 +66,14 @@ jobs:
           git config user.name spi-bot
           git config user.email gh@solarperformanceinsight.org
           git checkout -b deploy/${REF}
-          echo 'kustomize' > newfile
-          git add .
+          cd overlays/development
+          kustomize edit set image ${IMG}@${DIGEST}
+          git add kustomization.yaml
           git commit -m 'Update '${IMG}' to '${REF}
           git push origin deploy/${REF}
           gh pr create --fill
         env:
           GITHUB_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
           REF: ${{ steps.sharef.outputs.ref }}
-          IMG: image
+          IMG: quay.io/solarperformanceinsight/solarperformanceinsight
+          DIGEST: "sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"
