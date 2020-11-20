@@ -38,4 +38,4 @@ COPY --from=jsbuild /js/dist /opt/app-root/static
 EXPOSE 8000
 USER 1001
 
-CMD ["sh", "-c", "STATIC_DIRECTORY=/opt/app-root/static /opt/app-root/bin/uvicorn solarperformanceinsight_api.main:dev_app"]
+CMD ["sh", "-c", "STATIC_DIRECTORY=/opt/app-root/static /opt/app-root/bin/python -m solarperformanceinsight_api.devapp"]
