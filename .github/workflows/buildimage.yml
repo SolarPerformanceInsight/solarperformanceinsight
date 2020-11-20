@@ -3,14 +3,14 @@ name: build
 on:
   push:
     branches:
-      - '**'
+      - main
     tags:
       - 'v*.*.*'
 
 jobs:
   publish-image:
     runs-on: ubuntu-latest
-    # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
     outputs:
       imgdigest: ${{ steps.build.outputs.digest }}
     steps:
@@ -46,13 +46,13 @@ jobs:
 
   update-deployment:
     runs-on: ubuntu-latest
-    # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
     needs:
       - publish-image
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: alorenzo175/spi-deploy
+          repository: solarperformanceinsight/spi-deploy
           token: ${{ secrets.DEPLOY_TOKEN }}
 
       - uses: imranismail/setup-kustomize@v1
