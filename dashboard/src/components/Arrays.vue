@@ -4,7 +4,7 @@
       <h2>Arrays</h2>
       <button @click="addArray">Add Array</button>
       <div class="msg warning" v-if="pvarrays.length == 0">
-        System requires at least one inverter.
+        Inverter requires at least one array.
       </div>
       <ul>
         <array-view
@@ -13,6 +13,7 @@
           :key="index"
           :index="index"
           :pvarray="pvarray"
+          :model="model"
         />
       </ul>
     </div>
@@ -21,16 +22,36 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ArrayView from "@/components/Array";
+import ArrayView from "@/components/Array.vue";
 import { PVArray } from "@/types/PVArray";
+import {
+  PVWattsModuleParameters,
+  PVSystModuleParameters
+} from "@/types/ModuleParameters";
+import {
+  PVWattsTemperatureParameters,
+  PVSystTemperatureParameters
+} from "@/types/TemperatureParameters";
 
 Vue.component("array-view", ArrayView);
 @Component
 export default class ArraysView extends Vue {
-  @Prop() pvarrays: Array<PVArray>;
+  @Prop() pvarrays!: Array<PVArray>;
+  @Prop() model!: string;
 
   addArray() {
-    this.pvarrays.push(new PVArray());
+    let modParamClass: any = PVWattsModuleParameters;
+    let tempParamClass: any = PVWattsTemperatureParameters;
+    if (this.model == "pvsyst") {
+      modParamClass = PVSystModuleParameters;
+      tempParamClass = PVSystTemperatureParameters;
+    }
+    this.pvarrays.push(
+      new PVArray({
+        module_parameters: new modParamClass({}),
+        temperature_model_parameters: new tempParamClass({})
+      })
+    );
   }
 }
 </script>

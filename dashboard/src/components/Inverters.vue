@@ -6,13 +6,14 @@
       <div class="msg warning" v-if="inverters.length == 0">
         System requires at least one inverter.
       </div>
-      <ul>
+      <ul class="inverters">
         <inverter-view
           class="inverter"
           v-for="(inverter, index) in inverters"
           :key="index"
           :index="index"
           :inverter="inverter"
+          :model="model"
         />
       </ul>
     </div>
@@ -21,18 +22,31 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import InverterView from "@/components/Inverter";
+import InverterView from "@/components/Inverter.vue";
 import { Inverter } from "@/types/Inverter";
+import {
+  PVWattsInverterParameters,
+  PVSystInverterParameters
+} from "@/types/InverterParameters";
 
 Vue.component("inverter-view", InverterView);
 @Component
 export default class InvertersView extends Vue {
-  @Prop() inverters: Array<Inverter>;
+  @Prop() inverters!: Array<Inverter>;
+  @Prop() model!: string;
 
   components = ["inverter-view"];
 
   addInverter() {
-    this.inverters.push(new Inverter());
+    let paramClass: any = PVWattsInverterParameters;
+    if (this.model == "pvsyst") {
+      paramClass = PVSystInverterParameters;
+    }
+    this.inverters.push(
+      new Inverter({
+        inverter_parameters: new paramClass({})
+      })
+    );
   }
 }
 </script>
@@ -42,6 +56,8 @@ export default class InvertersView extends Vue {
 ul {
   list-style-type: none;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
 }
 li.inverter {
   margin: 0.5em;

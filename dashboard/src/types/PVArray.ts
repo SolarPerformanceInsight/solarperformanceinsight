@@ -2,36 +2,82 @@ import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "./Tracking";
-import { ModuleParameters } from "./Module";
+import {
+  PVSystTemperatureParameters,
+  PVWattsTemperatureParameters
+} from "./TemperatureParameters";
+import {
+  PVSystModuleParameters,
+  PVWattsModuleParameters
+} from "./ModuleParameters";
 
 export class PVArray {
   name: string;
-  makeModel: string;
-  moduleParameters: ModuleParamters;
-  temperatureModelParameters: Array<number>;
+  make_model: string;
+  module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
+  temperature_model_parameters:
+    | Array<number>
+    | PVSystTemperatureParameters
+    | PVWattsTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
-  modulesPerString: number;
+  modules_per_string: number;
   strings: number;
-  lossesParameters: any;
+  losses_parameters: object; // eslint-disable-line
 
   constructor({
     name = "New Array",
-    makeModel = "ABC 123",
-    moduleParameters = {},
-    temperatureModuleParameters = [],
-    tracking = new FixedTrackingParameters(),
-    modulesPerString = 0,
+    make_model = "ABC 123",
+    module_parameters = new PVSystModuleParameters({}),
+    temperature_model_parameters = new PVSystTemperatureParameters({}),
+    tracking = new FixedTrackingParameters({}),
+    modules_per_string = 0,
     strings = 0,
-    lossesParameters = {}
-  } = {}) {
+    losses_parameters = {}
+  }: Partial<PVArray>) {
     this.name = name;
-    this.makeModel = makeModel;
-    this.moduleParameters = moduleParameters;
-    this.temperatureModuleParameters = temperatureModuleParameters;
-    this.tracking = tracking;
-    this.modulesPerString = modulesPerString;
+    this.make_model = make_model;
+    this.modules_per_string = modules_per_string;
     this.strings = strings;
-    this.lossesParameters = lossesParameters;
+    this.losses_parameters = losses_parameters;
+
+    if (PVWattsModuleParameters.isInstance(module_parameters)) {
+      this.module_parameters = new PVWattsModuleParameters(module_parameters);
+    } else {
+      this.module_parameters = new PVSystModuleParameters(module_parameters);
+    }
+
+    if (FixedTrackingParameters.isInstance(tracking)) {
+      this.tracking = new FixedTrackingParameters(tracking);
+    } else {
+      this.tracking = new SingleAxisTrackingParameters(tracking);
+    }
+
+    if (PVSystTemperatureParameters.isInstance(temperature_model_parameters)) {
+      this.temperature_model_parameters = new PVSystTemperatureParameters(
+        temperature_model_parameters
+      );
+    } else if (
+      PVWattsTemperatureParameters.isInstance(temperature_model_parameters)
+    ) {
+      this.temperature_model_parameters = new PVWattsTemperatureParameters(
+        temperature_model_parameters
+      );
+    } else {
+      this.temperature_model_parameters = temperature_model_parameters;
+    }
+  }
+  static isInstance(obj: any): obj is PVArray {
+    const maybe = obj as PVArray;
+    return (
+      maybe.name != undefined &&
+      maybe.make_model != undefined &&
+      maybe.module_parameters != undefined &&
+      maybe.temperature_model_parameters != undefined &&
+      maybe.tracking != undefined &&
+      maybe.modules_per_string != undefined &&
+      maybe.strings != undefined &&
+      maybe.losses_parameters != undefined
+    );
   }
 }

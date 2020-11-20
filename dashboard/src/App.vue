@@ -2,7 +2,6 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Model</router-link>
-      <!--<router-link to="/model">Model</router-link>-->
     </div>
     <router-view />
   </div>

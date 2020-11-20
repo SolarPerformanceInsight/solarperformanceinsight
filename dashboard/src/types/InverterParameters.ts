@@ -1,4 +1,4 @@
-export class InverterParameters {
+export class PVSystInverterParameters {
   /* Class mimics the inverter parameters required for the pvsyst model
    * provided by the PVLib inverter database.
    * See: https://github.com/pvlib/pvlib-python/blob/3e25627e34bfd5aadea041da85a30626322b3a99/pvlib/pvsystem.py#L1355
@@ -33,7 +33,7 @@ export class InverterParameters {
     C2 = 0,
     C3 = 0,
     Pnt = 0
-  } = {}) {
+  }: Partial<PVSystInverterParameters>) {
     this.Paco = Paco;
     this.Pdco = Pdco;
     this.Vdco = Vdco;
@@ -45,7 +45,46 @@ export class InverterParameters {
     this.Pnt = Pnt;
   }
 
-  static fromPvlibDb(row) {
-    return new InverterParameters();
+  static isInstance(obj: any): obj is PVSystInverterParameters {
+    const maybe = obj as PVSystInverterParameters;
+    return (
+      maybe.Paco != undefined &&
+      maybe.Pdco != undefined &&
+      maybe.Vdco != undefined &&
+      maybe.Pso != undefined &&
+      maybe.C0 != undefined &&
+      maybe.C1 != undefined &&
+      maybe.C2 != undefined &&
+      maybe.C3 != undefined &&
+      maybe.Pnt != undefined
+    );
+  }
+}
+
+export class PVWattsInverterParameters {
+  pdc: number;
+  pdc0: number;
+  eta_inv_nom: number;
+  eta_inv_ref: number;
+
+  constructor({
+    pdc = 0,
+    pdc0 = 0,
+    eta_inv_nom = 0.96,
+    eta_inv_ref = 0.9637
+  }: Partial<PVWattsInverterParameters>) {
+    this.pdc = pdc;
+    this.pdc0 = pdc0;
+    this.eta_inv_nom = eta_inv_nom;
+    this.eta_inv_ref = eta_inv_ref;
+  }
+  static isInstance(obj: any): obj is PVWattsInverterParameters {
+    const maybe = obj as PVWattsInverterParameters;
+    return (
+      maybe.pdc !== undefined &&
+      maybe.pdc0 !== undefined &&
+      maybe.eta_inv_nom != undefined &&
+      maybe.eta_inv_ref != undefined
+    );
   }
 }
