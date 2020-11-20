@@ -10,7 +10,9 @@ on:
 jobs:
   publish-image:
     runs-on: ubuntu-latest
-    if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
+    outputs:
+      imgdigest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -33,6 +35,7 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -44,8 +47,8 @@ jobs:
   update-deployment:
     runs-on: ubuntu-latest
     # if: github.repository == 'solarperformanceinsight/solarperformanceinsight'
-    #needs:
-    #  - publish-image
+    needs:
+      - publish-image
     steps:
       - uses: actions/checkout@v2
         with:
@@ -69,11 +72,11 @@ jobs:
           cd overlays/development
           kustomize edit set image ${IMG}@${DIGEST}
           git add kustomization.yaml
-          git commit -m 'Update '${IMG}' to '${REF}
+          git commit -m 'Update '${IMG}' built from '${REF}
           git push origin deploy/${REF}
           gh pr create --fill
         env:
           GITHUB_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
           REF: ${{ steps.sharef.outputs.ref }}
           IMG: quay.io/solarperformanceinsight/solarperformanceinsight
-          DIGEST: "sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"
+          DIGEST: ${{ needs.publish-image.outputs.imgdigest }}
