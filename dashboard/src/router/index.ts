@@ -1,7 +1,6 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Model from "../views/Model.vue";
-import InverterView from "../components/Inverter.vue";
 
 Vue.use(VueRouter);
 

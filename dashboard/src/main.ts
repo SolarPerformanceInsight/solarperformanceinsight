@@ -3,7 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
-
+import { APIValidator } from "./types/validation/Validator";
 Vue.config.productionTip = false;
 
 if (process.env.NODE_ENV == "production") {
@@ -21,6 +21,14 @@ if (process.env.NODE_ENV == "production") {
     }
   });
 }
+
+
+Vue.config.productionTip = false;
+
+const validator = new APIValidator();
+validator.init();
+
+Vue.prototype.$validator = validator;
 
 new Vue({
   router,
