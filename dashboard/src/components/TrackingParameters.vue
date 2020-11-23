@@ -1,19 +1,18 @@
 <template>
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
-      <b>Tilt: </b
-      ><input type="number" v-model.number="parameters.tilt" />
+      <b>Tilt: </b><input type="number" v-model.number="parameters.tilt" />
       <span v-if="'tilt' in this.definitions.properties">
-        {{ this.definitions.properties.tilt.description }}
-      </span><br />
+        {{ this.definitions.properties.tilt.description }} </span
+      ><br />
       <span style="color:#F00;" v-if="'tilt' in this.errors"
         >{{ this.errors.tilt }}<br
       /></span>
       <b>Azimuth: </b
       ><input type="number" v-model.number="parameters.azimuth" />
       <span v-if="'azimuth' in this.definitions.properties">
-        {{ this.definitions.properties.azimuth.description }}
-      </span><br />
+        {{ this.definitions.properties.azimuth.description }} </span
+      ><br />
       <span style="color:#F00;" v-if="'azimuth' in this.errors"
         >{{ this.errors.azimuth }}<br
       /></span>
@@ -44,12 +43,12 @@ export default class TrackingParametersView extends Vue {
   @Prop() tracking!: string;
   errors: Record<string, any> = {};
 
-  get definitions(){
+  get definitions() {
     /* Get the api definition of this object */
     return this.$validator.getComponentSpec(this.apiComponentName);
   }
 
-  get apiComponentName(){
+  get apiComponentName() {
     //Select the correct key from the api spec based on current tracking type
     let componentName: string;
     console.log("The tracking: ", this.tracking);
@@ -71,7 +70,7 @@ export default class TrackingParametersView extends Vue {
       params = newParams as FixedTrackingParameters;
     }
 
-   this.$validator
+    this.$validator
       .validate(this.apiComponentName, params)
       .then(this.setValidationResult);
   }
