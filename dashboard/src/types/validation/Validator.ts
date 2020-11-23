@@ -1,3 +1,15 @@
+/* APIVAlidator class for creating a validator based on the OpenAPI spec served
+ * by the api. The object uses Ajv to create validators based on schema in the
+ * specs `components` field.
+ * The class provides two main functions.
+ *
+ * - Validate objects based on the property name in the spec's
+ *   `components.schemas` field. See `validate` function.
+ * - Provide access to the original component specification (as provided in the
+ *   OpenAPI spec JSON object. This is primarily for printing static schema
+ *   fields, e.g. `description` in Vue components. See `getComponentSpec` function.
+ *
+ */
 import Ajv from "ajv";
 
 const apiUrl = process.env.VUE_APP_API_URL;
