@@ -45,7 +45,6 @@ export class APIValidator {
   }
 
   async validate(componentName: string, data: Record<string, any>) {
-    console.log(this.getComponentSpec(componentName));
     const res = this.ajv.validate(
       { $ref: `spi#/components/schemas/${componentName}` },
       data

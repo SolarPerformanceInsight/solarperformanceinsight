@@ -51,13 +51,11 @@ export default class TrackingParametersView extends Vue {
   get apiComponentName() {
     //Select the correct key from the api spec based on current tracking type
     let componentName: string;
-    console.log("The tracking: ", this.tracking);
     if (this.tracking == "fixed") {
       componentName = "FixedTracking";
     } else {
       componentName = "SingleAxisTracking";
     }
-    console.log(componentName);
     return componentName;
   }
 
