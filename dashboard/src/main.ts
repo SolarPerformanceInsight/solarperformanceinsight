@@ -7,7 +7,8 @@ import { Vue as VueIntegration } from "@sentry/integrations";
 Vue.config.productionTip = false;
 
 Sentry.init({
-  dsn: process.env.VUE_APP_SENTRY_DSN,
+  dsn:
+    "https://624f863de69b4b1dabddc48e04329c5e@o481024.ingest.sentry.io/5528970",
   integrations: [new VueIntegration({ Vue })],
   // eslint-disable-next-line no-unused-vars
   beforeSend(event, hint) {
