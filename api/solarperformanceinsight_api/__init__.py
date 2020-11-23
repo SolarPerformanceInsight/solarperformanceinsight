@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseSettings, Json
 from ._version import version as __version__  # NOQA
 
@@ -11,6 +12,8 @@ class Settings(BaseSettings):
     auth_audience: str = "https://app.solarperformanceinsight.org/api"
     auth_issuer: str = "https://solarperformanceinsight.us.auth0.com/"
     auth_client_id: str = "G1YyfLdseYn10RQo11Lqee2ThXj5l5fh"
+
+    traces_sample_rate: Optional[float] = None
 
     class Config:
         env_prefix = "spi"
