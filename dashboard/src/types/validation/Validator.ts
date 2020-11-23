@@ -12,7 +12,6 @@
  */
 import Ajv from "ajv";
 
-const apiUrl = process.env.VUE_APP_API_URL;
 
 export class APIValidator {
   ajv: any;
@@ -29,7 +28,6 @@ export class APIValidator {
   }
 
   async init() {
-    console.log("API_URL", apiUrl);
     const spec = await this.getAPISpec();
     this.components = spec.components.schemas;
     this.ajv.addSchema(spec, "spi");
@@ -37,7 +35,7 @@ export class APIValidator {
   }
 
   async getAPISpec() {
-    return fetch(`${apiUrl}/openapi.json`).then(response => response.json());
+    return fetch(`/api/openapi.json`).then(response => response.json());
   }
 
   getComponentSpec(componentName: string) {
