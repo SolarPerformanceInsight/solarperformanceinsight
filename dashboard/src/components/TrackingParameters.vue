@@ -2,12 +2,18 @@
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
       <b>Tilt: </b
-      ><input type="number" v-model.number="parameters.tilt" /><br />
+      ><input type="number" v-model.number="parameters.tilt" />
+      <span v-if="'tilt' in this.definitions.properties">
+        {{ this.definitions.properties.tilt.description }}
+      </span><br />
       <span style="color:#F00;" v-if="'tilt' in this.errors"
         >{{ this.errors.tilt }}<br
       /></span>
       <b>Azimuth: </b
-      ><input type="number" v-model.number="parameters.azimuth" /><br />
+      ><input type="number" v-model.number="parameters.azimuth" />
+      <span v-if="'azimuth' in this.definitions.properties">
+        {{ this.definitions.properties.azimuth.description }}
+      </span><br />
       <span style="color:#F00;" v-if="'azimuth' in this.errors"
         >{{ this.errors.azimuth }}<br
       /></span>
@@ -38,20 +44,35 @@ export default class TrackingParametersView extends Vue {
   @Prop() tracking!: string;
   errors: Record<string, any> = {};
 
+  get definitions(){
+    /* Get the api definition of this object */
+    return this.$validator.getComponentSpec(this.apiComponentName);
+  }
+
+  get apiComponentName(){
+    //Select the correct key from the api spec based on current tracking type
+    let componentName: string;
+    console.log("The tracking: ", this.tracking);
+    if (this.tracking == "fixed") {
+      componentName = "FixedTracking";
+    } else {
+      componentName = "SingleAxisTracking";
+    }
+    console.log(componentName);
+    return componentName;
+  }
+
   @Watch("parameters", { deep: true })
   validate(newParams: Record<string, any>) {
     let params: Record<string, any>;
-    let componentName: string;
     if (this.tracking == "fixed") {
       params = newParams as FixedTrackingParameters;
-      componentName = "FixedTracking";
     } else {
       params = newParams as FixedTrackingParameters;
-      componentName = "SingleAxisTracking";
     }
 
-    this.$validator
-      .validate(componentName, params)
+   this.$validator
+      .validate(this.apiComponentName, params)
       .then(this.setValidationResult);
   }
   setValidationResult(validity: boolean) {
