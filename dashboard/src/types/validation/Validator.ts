@@ -1,6 +1,6 @@
 import Ajv from "ajv";
 
-const apiUrl = "http://localhost:8888";
+const apiUrl = process.env.VUE_APP_API_URL;
 
 export class APIValidator {
   ajv: any;
@@ -17,6 +17,7 @@ export class APIValidator {
   }
 
   async init() {
+    console.log("API_URL", apiUrl);
     const spec = await this.getAPISpec();
     this.components = spec.components.schemas;
     this.ajv.addSchema(spec, "spi");
