@@ -34,6 +34,7 @@ async def get_user_id(
     try:
         payload = jwt.decode(
             token,
+            algorithms=["RS256"],
             key=key,
             audience=settings.auth_audience,
             issuer=settings.auth_issuer,
