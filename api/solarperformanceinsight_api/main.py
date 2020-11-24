@@ -4,14 +4,19 @@ import logging
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
-from . import auth, __version__
+from . import auth, __version__, settings
 from .routers import plants
 
 
 app = FastAPI(title="Solar Performance Insight")
 app.add_middleware(CORSMiddleware, allow_origins=[])
+
+sentry_sdk.init(traces_sample_rate=settings.traces_sample_rate)
+app.add_middleware(SentryAsgiMiddleware)
 
 
 @app.get("/ping", include_in_schema=False)
