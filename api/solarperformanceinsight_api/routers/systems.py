@@ -3,7 +3,7 @@ import uuid
 
 
 from typing import List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, Request
 from pydantic.types import UUID
 
 
@@ -89,12 +89,13 @@ async def list_systems():
     responses=default_get_responses,
     status_code=201,
 )
-async def create_system(system: models.PVSystem):
+async def create_system(system: models.PVSystem, response: Response, request: Request):
     """Create a new PV System"""
     global PVSYSTEMS
     id_ = _gen_uuid()
     created = models.StoredPVSystem(uuid=id_, **system.dict())
     PVSYSTEMS[id_] = created
+    response.headers["Location"] = request.url_for("get_system", system_id=id_)
     return created
 
 
