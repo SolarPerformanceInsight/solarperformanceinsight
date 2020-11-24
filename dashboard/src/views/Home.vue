@@ -1,15 +1,21 @@
 <template>
-  <div class="model">
-    <h1>All Dem Systems</h1>
-    <router-link :to="{name: 'Model'}">Create new System</router-link>
-    <ul>
-      <li v-for="(s, index) in systems" :key="s.name">
-        {{ s.name }}
-        <router-link :to="{name: 'Update System', params: {systemId: index}}">
-          Edit
-        </router-link>
-      </li>
-    </ul>
+  <div class="home">
+    <div v-if="!$auth.loading">
+      <!-- show login when not authenticated -->
+      <button v-if="!$auth.isAuthenticated" @click="login">Log in</button>
+      <!-- show logout when authenticated -->
+      <button v-if="$auth.isAuthenticated" @click="logout">Log out</button>
+    <div v-if="!$auth.isAuthenticated">
+      <p>Welcome to the solarperformance insight dashboard. Other information
+         about the project.
+      </p>
+    </div>
+    <div v-if="$auth.isAuthenticated">
+      <p>Successfully logged in.
+      </p>
+    </div>
+
+    </div>
   </div>
 </template>
 
@@ -27,6 +33,14 @@ export default class Home extends Vue {
     return {
       systems: this.$store.state.systems,
     }
+  }
+  login(){
+    this.$auth.loginWithRedirect();
+  }
+  logout(){
+    this.$auth.logout({
+	  returnTo: window.location.origin,
+	});
   }
 }
 </script>

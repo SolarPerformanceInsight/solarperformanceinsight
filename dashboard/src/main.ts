@@ -9,6 +9,24 @@ import { spiStore } from "./store/store";
 import { System } from "./types/System";
 import  DemoSystems from "./types/demo/systems";
 
+// Auth0 configuration
+import { domain, clientId, audience } from "../auth_config.json";
+
+import { Auth0Plugin } from "./auth/auth0";
+
+Vue.use(Auth0Plugin, {
+  domain,
+  clientId,
+  audience,
+  onredirectCallback: appState => {
+    router.push(
+      appState && appState.targetUrl
+      ? appState.targetUrl
+      : window.location.pathname
+    );
+  }
+});
+
 
 Vue.config.productionTip = false;
 
@@ -39,8 +57,12 @@ const store = new Vuex.Store(spiStore);
 
 Vue.prototype.$validator = validator;
 
+if (process.env.NODE_ENV == "production"){
+  console.log('were in production');
+}
+
 new Vue({
   router,
   render: h => h(App),
-  store: store
+  store
 }).$mount("#app");

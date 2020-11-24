@@ -103,7 +103,6 @@ export default class Model extends Vue {
     }
   }
   saveMetadata() {
-    // TODO: make post request with auth
     console.log(this.system);
   }
   get modelSpec() {

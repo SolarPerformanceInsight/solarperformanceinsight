@@ -4,8 +4,7 @@ import { System } from "../types/System";
 import { state, State } from "./state";
 
 export const mutations = {
-  upadeSystemsList(state: State){
-    // TODO: get a fresh system list from the api
-    console.log("Should update systems list");
+  updateSystemsList(state: State, systems: Array<System>){
+    state.systems = systems;
   }
 };

@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Systems</router-link>
+      <router-link to="/">Home</router-link> |
+      <router-link v-if="$auth.isAuthenticated" to="/systems">Systems</router-link>
     </div>
     <router-view />
   </div>
