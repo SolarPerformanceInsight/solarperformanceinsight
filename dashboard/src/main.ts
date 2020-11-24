@@ -6,19 +6,21 @@ import { Vue as VueIntegration } from "@sentry/integrations";
 
 Vue.config.productionTip = false;
 
-Sentry.init({
-  dsn:
-    "https://624f863de69b4b1dabddc48e04329c5e@o481024.ingest.sentry.io/5528970",
-  integrations: [new VueIntegration({ Vue })],
-  // eslint-disable-next-line no-unused-vars
-  beforeSend(event, hint) {
-    // Check if it is an exception, and if so, show the report dialog
-    if (event.exception) {
-      Sentry.showReportDialog({ eventId: event.event_id });
+if (process.env.NODE_ENV == "production") {
+  Sentry.init({
+    dsn:
+      "https://624f863de69b4b1dabddc48e04329c5e@o481024.ingest.sentry.io/5528970",
+    integrations: [new VueIntegration({ Vue })],
+    // eslint-disable-next-line no-unused-vars
+    beforeSend(event, hint) {
+      // Check if it is an exception, and if so, show the report dialog
+      if (event.exception) {
+        Sentry.showReportDialog({ eventId: event.event_id });
+      }
+      return event;
     }
-    return event;
-  }
-});
+  });
+}
 
 new Vue({
   router,
