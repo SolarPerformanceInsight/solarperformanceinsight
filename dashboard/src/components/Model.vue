@@ -1,5 +1,6 @@
 <template>
   <div class="model">
+    <h1 v-if="systemId == null">New System</h1>
     <button @click="displaySummary = !displaySummary">Display Summary</button>
     <button @click="downloadMetadata">Download Metadata</button>
     <div v-if="displaySummary" class="model-summary">
@@ -41,7 +42,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 
 import { System } from "@/types/System";
 import { modelSpecs } from "@/types/ModelSpecification";
@@ -58,9 +59,15 @@ Vue.component("file-upload", FileUpload);
 
 @Component
 export default class Model extends Vue {
+  @Prop({default: null}) systemId!: number | null;
   system!: System;
   model!: string;
 
+  created() {
+    if (this.systemId != undefined) {
+      this.system = this.$store.state.systems[this.systemId];
+    }
+  }
   data() {
     return {
       system: this.system ? this.system : new System({}),

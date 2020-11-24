@@ -1,9 +1,15 @@
 import Vue from "vue";
+import Vuex from "vuex";
 import App from "./App.vue";
 import router from "./router";
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
 import { APIValidator } from "./types/validation/Validator";
+import { spiStore } from "./store/store";
+import { System } from "./types/System";
+import  DemoSystems from "./types/demo/systems";
+
+
 Vue.config.productionTip = false;
 
 if (process.env.NODE_ENV == "production") {
@@ -22,15 +28,19 @@ if (process.env.NODE_ENV == "production") {
   });
 }
 
+Vue.use(Vuex);
 
 Vue.config.productionTip = false;
 
 const validator = new APIValidator();
 validator.init();
 
+const store = new Vuex.Store(spiStore);
+
 Vue.prototype.$validator = validator;
 
 new Vue({
   router,
-  render: h => h(App)
+  render: h => h(App),
+  store: store
 }).$mount("#app");
