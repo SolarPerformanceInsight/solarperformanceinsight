@@ -2,8 +2,6 @@ name: Test Javascript
 
 on:
   push:
-    paths:
-      - 'dashboard/**'
     branches:
       - main
   pull_request:
