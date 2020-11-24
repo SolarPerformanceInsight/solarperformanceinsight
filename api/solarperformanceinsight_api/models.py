@@ -172,9 +172,9 @@ class PVArray(BaseModel):
         ..., description="Parameters describing single-axis tracking or fixed mounting"
     )
     modules_per_string: Optional[conint(gt=0)] = Field(
-        ..., title="Modules Per String", description="Number of PV modules per string"
+        None, title="Modules Per String", description="Number of PV modules per string"
     )
-    strings: Optional[conint(gt=0)] = Field(..., description="Number of Strings")
+    strings: Optional[conint(gt=0)] = Field(None, description="Number of Strings")
 
 
 class PVWattsLosses(BaseModel):
@@ -274,7 +274,7 @@ class Inverter(BaseModel):
         ..., description="PV arrays that are connected to this inverter"
     )
     losses: Optional[PVWattsLosses] = Field(
-        ..., description="Parameters describing the array losses"
+        {}, description="Parameters describing the array losses"
     )
     inverter_parameters: Union[
         PVWattsInverterParameters, SandiaInverterParameters
