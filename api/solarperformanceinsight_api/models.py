@@ -1,5 +1,6 @@
 from typing import Union, List, Optional
 from pydantic import BaseModel, confloat, constr, Field, conint
+from pydantic.types import UUID
 
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, and underscore
@@ -303,3 +304,7 @@ class PVSystem(BaseModel):
     inverters: List[Inverter] = Field(
         ..., description="Inverters that are connected to make up this system"
     )
+
+
+class StoredPVSystem(PVSystem):
+    uuid: UUID = Field(..., description="Unique identifier of the system")
