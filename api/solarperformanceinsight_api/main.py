@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
@@ -18,16 +19,22 @@ app.add_middleware(CORSMiddleware, allow_origins=[])
 sentry_sdk.init(traces_sample_rate=settings.traces_sample_rate)
 app.add_middleware(SentryAsgiMiddleware)
 
+Instrumentator(
+    should_respect_env_var=True,
+    env_var_name="ENABLE_METRICS",
+    excluded_handlers=["/metrics", "/ping"],
+).instrument(app).expose(app, include_in_schema=False, should_gzip=True)
+
 
 @app.get("/ping", include_in_schema=False)
 async def ping() -> str:
     return "pong"
 
 
-class PingFilter(logging.Filter):
+class LogFilter(logging.Filter):
     def filter(record):
         if hasattr(record, "scope"):
-            if record.scope.get("path") == "/ping":
+            if record.scope.get("path") in ("/ping", "/metrics"):
                 return 0
         return 1
 
@@ -36,7 +43,7 @@ class PingFilter(logging.Filter):
 async def startup_event():
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
-        handler.addFilter(PingFilter)
+        handler.addFilter(LogFilter)
 
 
 def custom_openapi():
