@@ -18,11 +18,11 @@ Vue.use(Auth0Plugin, {
   domain,
   clientId,
   audience,
-  onredirectCallback: (appState: {targetUrl: string} ) => {
+  onredirectCallback: (appState: { targetUrl: string }) => {
     router.push(
       appState && appState.targetUrl
-      ? appState.targetUrl
-      : window.location.pathname
+        ? appState.targetUrl
+        : window.location.pathname
     );
   }
 });
@@ -56,10 +56,6 @@ validator.init();
 const store = new Vuex.Store(spiStore);
 
 Vue.prototype.$validator = validator;
-
-if (process.env.NODE_ENV == "production"){
-  console.log('were in production');
-}
 
 new Vue({
   router,

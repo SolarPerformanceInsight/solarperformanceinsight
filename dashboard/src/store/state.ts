@@ -1,7 +1,7 @@
 import DemoSystems from "../types/demo/systems";
 
 export const state = {
-  systems: DemoSystems,
-}
+  systems: DemoSystems
+};
 
 export type State = typeof state;

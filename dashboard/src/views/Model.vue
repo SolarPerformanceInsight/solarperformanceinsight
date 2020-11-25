@@ -60,7 +60,7 @@ Vue.component("file-upload", FileUpload);
 
 @Component
 export default class Model extends Vue {
-  @Prop({default: null}) systemId!: number | null;
+  @Prop({ default: null }) systemId!: number | null;
   system!: System;
   model!: string;
 

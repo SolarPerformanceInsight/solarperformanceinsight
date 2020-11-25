@@ -5,7 +5,6 @@ import Systems from "../views/Systems.vue";
 import Home from "../views/Home.vue";
 import { authGuard } from "../auth/authGuard";
 
-
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
@@ -32,7 +31,7 @@ const routes: Array<RouteConfig> = [
     component: Model,
     props: true,
     beforeEnter: authGuard
-  },
+  }
 ];
 
 const router = new VueRouter({

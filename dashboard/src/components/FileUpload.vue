@@ -54,7 +54,7 @@ export default class FileUpload extends Vue {
 
         // Typescript complains about f possibly being null, cant use a regular
         // function becasue need access to this.
-        //@ts-ignore
+        // @ts-expect-error
         reader.onload = f => this.$emit("uploadSuccess", f.target.result);
         reader.readAsText(file);
 

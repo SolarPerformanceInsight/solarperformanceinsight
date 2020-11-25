@@ -1,14 +1,16 @@
 <template>
   <div class="systems">
     <h1>Systems</h1>
-    <router-link :to="{name: 'Model'}">Create new System</router-link>
+    <router-link :to="{ name: 'Model' }">Create new System</router-link>
     <button @click="refreshSystems">Refresh System List</button><br />
     <p v-if="loading">Loading...</p>
     <ul v-if="!loading">
       <li v-if="systems.length == 0">No available systems</li>
       <li v-for="(s, index) in systems" :key="s.name">
         {{ s.name }}
-        <router-link :to="{name: 'Update System', params: {systemId: index}}">
+        <router-link
+          :to="{ name: 'Update System', params: { systemId: index } }"
+        >
           Edit
         </router-link>
       </li>
@@ -19,23 +21,18 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 
-import { System } from "@/types/System";
-import { modelSpecs } from "@/types/ModelSpecification";
-import  DemoSystems from "@/types/demo/systems";
-
-
 @Component
 export default class Systems extends Vue {
-  data(){
+  data() {
     return {
       loading: false,
       response: ""
-    }
+    };
   }
   refreshSystems() {
     this.$store.dispatch("fetchSystems");
   }
-  get systems(){
+  get systems() {
     // computed property returns the list of systems
     return this.$store.state.systems;
   }

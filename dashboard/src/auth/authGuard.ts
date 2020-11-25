@@ -20,7 +20,7 @@ export const authGuard: NavigationGuard = (to, from, next) => {
   }
 
   // Watch for the loading property to change before we check isAuthenticated
-  authService.$watch("loading", (loading: boolean ) => {
+  authService.$watch("loading", (loading: boolean) => {
     if (loading === false) {
       return fn();
     }

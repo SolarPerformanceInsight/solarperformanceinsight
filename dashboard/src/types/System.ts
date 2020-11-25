@@ -18,8 +18,8 @@ export class System {
     albedo = 0,
     inverters = []
   }: Partial<System>) {
-    if (uuid != null){
-      this.uuid = uuid
+    if (uuid != null) {
+      this.uuid = uuid;
     }
     this.name = name;
     this.latitude = latitude;
