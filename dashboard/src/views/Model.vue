@@ -3,7 +3,10 @@
     <div v-if="loading">
       Fetching System...
     </div>
-    <div v-if="!loading">
+    <div v-if="errorState">
+      An error occured.
+    </div>
+    <div v-if="!loading && !errorState">
       <h1 v-if="systemId == null">New System</h1>
       <button @click="displaySummary = !displaySummary">Display Summary</button>
       <button @click="downloadSystem">Download System</button>
@@ -75,7 +78,8 @@ export default class Model extends Vue {
   @Prop({ default: null }) systemId!: number | null;
   system!: System;
   model!: string;
-  loading = true;
+  loading!: boolean;
+  errorState!: boolean;
 
   created() {
     if (this.systemId != undefined) {
@@ -91,7 +95,9 @@ export default class Model extends Vue {
       modelPresetOptions: ["pvsyst", "pvwatts"],
       model: "pvsyst",
       displaySummary: false,
-      displayAdvanced: false
+      displayAdvanced: false,
+      loading: true,
+      errorState: false
     };
   }
   components = ["system-view", "file-upload"];
@@ -101,6 +107,7 @@ export default class Model extends Vue {
     this.system = system;
     this.inferModel();
   }
+
   downloadSystem() {
     const contents = new Blob([JSON.stringify(this.system, null, 2)], {
       type: "application/json;charset=utf-8;"
@@ -118,12 +125,11 @@ export default class Model extends Vue {
       link.remove();
     }
   }
-  saveSystem() {
-    console.log(this.system);
-  }
+
   get modelSpec() {
     return modelSpecs[this.model];
   }
+
   inferModel() {
     if (this.system.inverters.length > 0) {
       const firstParams = this.system.inverters[0].inverter_parameters;
@@ -135,16 +141,42 @@ export default class Model extends Vue {
       }
     }
   }
+
   async loadSystem(){
     const token = await this.$auth.getTokenSilently();
-    const system = await fetch(
+    const response = await fetch(
       `/api/systems/${this.systemId}`, {
       headers: new Headers({
         Authorization: `Bearer ${token}`
       })
-    }).then(response => response.json());
-    this.system = system as System;
-    this.loading = false;
+    });
+    if (response.ok){
+      const system: System =  await response.json()
+      this.system = system;
+      this.loading = false;
+    } else {
+      this.loading = false;
+      this.errorState = true;
+    }
+  }
+
+  async saveSystem() {
+    const token = await this.$auth.getTokenSilently();
+    console.log("Posting system to api");
+    const response = await fetch(`/api/systems/`, {
+      method: "post",
+      body: JSON.stringify(this.system),
+      headers: new Headers({
+        Authorization: `Bearer ${token}`
+      })
+    });
+    if (response.ok) {
+      this.$router.push("/systems");
+    } else {
+      console.log("post borked");
+      this.loading = false;
+      this.errorState = true;
+    }
   }
 }
 </script>

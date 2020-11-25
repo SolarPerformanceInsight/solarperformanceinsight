@@ -7,10 +7,10 @@
     <p v-if="loading">Loading...</p>
     <ul v-if="!loading">
       <li v-if="systems.length == 0">No available systems</li>
-      <li v-for="(s, index) in systems" :key="s.name">
-        {{ s.name }} {{ s.latitude }} {{ s.longitude }}
+      <li v-for="(system, uuid) in systems" :key="uuid">
+        {{ system.name }} {{ system.latitude }} {{ system.longitude }}
         <router-link
-          :to="{ name: 'Update System', params: { systemId: index } }"
+          :to="{ name: 'Update System', params: { systemId: uuid } }"
         >
           Edit
         </router-link>
