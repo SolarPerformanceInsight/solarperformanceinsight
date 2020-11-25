@@ -307,4 +307,4 @@ class PVSystem(BaseModel):
 
 
 class StoredPVSystem(PVSystem):
-    uuid: UUID = Field(..., description="Unique identifier of the system")
+    system_id: UUID = Field(..., description="Unique identifier of the system")

@@ -23,7 +23,7 @@ def _gen_uuid():
 
 PVSYSTEMS = {
     uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"): models.StoredPVSystem(
-        uuid=uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"),
+        system_id=uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"),
         name="Test PV System",
         latitude=33.98,
         longitude=-115.323,
@@ -86,14 +86,24 @@ async def list_systems():
 @router.post(
     "/",
     response_model=models.StoredPVSystem,
-    responses=default_get_responses,
+    responses={
+        **default_get_responses,
+        201: {
+            "links": {
+                "Get System": {
+                    "operationId": "get_system_systems__system_id__get",
+                    "parameters": {"system_id": "$response.body#/system_id"},
+                }
+            }
+        },
+    },
     status_code=201,
 )
 async def create_system(system: models.PVSystem, response: Response, request: Request):
     """Create a new PV System"""
     global PVSYSTEMS
     id_ = _gen_uuid()
-    created = models.StoredPVSystem(uuid=id_, **system.dict())
+    created = models.StoredPVSystem(system_id=id_, **system.dict())
     PVSYSTEMS[id_] = created
     response.headers["Location"] = request.url_for("get_system", system_id=id_)
     return created
