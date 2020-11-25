@@ -34,12 +34,13 @@ async def get_user_id(
     try:
         payload = jwt.decode(
             token,
+            algorithms=["RS256"],
             key=key,
             audience=settings.auth_audience,
             issuer=settings.auth_issuer,
         )
         user_id: str = payload.get("sub")
-        if user_id is None:
+        if user_id is None:  # pragma: no cover
             raise credentials_exception
     except (
         jwt.JWTError,
