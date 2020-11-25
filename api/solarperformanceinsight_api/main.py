@@ -10,7 +10,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
 from . import auth, __version__, settings
-from .routers import plants
+from .routers import systems
 
 
 app = FastAPI(title="Solar Performance Insight")
@@ -85,8 +85,8 @@ The backend RESTful API for Solar Performance Insight.
 
 app.openapi = custom_openapi
 app.include_router(
-    plants.router,
-    prefix="/powerplants",
-    tags=["Power Plant"],
+    systems.router,
+    prefix="/systems",
+    tags=["PV Systems"],
     dependencies=[Depends(auth.get_user_id)],
 )
