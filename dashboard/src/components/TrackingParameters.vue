@@ -3,26 +3,26 @@
     <div v-if="tracking == 'fixed'">
       <b>Tilt: </b><input type="number" v-model.number="parameters.tilt" />
       <span v-if="'tilt' in this.definitions.properties">
-        {{ this.definitions.properties.tilt.description }} </span
-      ><br />
-      <span style="color:#F00;" v-if="'tilt' in this.errors"
-        >{{ this.errors.tilt }}<br
-      /></span>
-      <b>Azimuth: </b
-      ><input type="number" v-model.number="parameters.azimuth" />
+        {{ this.definitions.properties.tilt.description }} </span>
+      <br />
+      <span style="color:#F00;" v-if="'tilt' in this.errors">
+        {{ this.errors.tilt }}<br />
+      </span>
+      <b>Azimuth: </b>
+      <input type="number" v-model.number="parameters.azimuth" />
       <span v-if="'azimuth' in this.definitions.properties">
-        {{ this.definitions.properties.azimuth.description }} </span
-      ><br />
-      <span style="color:#F00;" v-if="'azimuth' in this.errors"
-        >{{ this.errors.azimuth }}<br
-      /></span>
+        {{ this.definitions.properties.azimuth.description }} </span>
+      <br />
+      <span style="color:#F00;" v-if="'azimuth' in this.errors">
+        {{ this.errors.azimuth }}<br />
+      </span>
     </div>
     <div v-if="tracking == 'singleAxis'">
       <b>Axis Tilt: </b><input v-model.number="parameters.axis_tilt" /><br />
-      <b>Axis Azimuth: </b
-      ><input v-model.number="parameters.axis_azimuth" /><br />
-      <b>Ground Coverage Ratio: </b
-      ><input v-model.number="parameters.gcr" /><br />
+      <b>Axis Azimuth: </b>
+      <input v-model.number="parameters.axis_azimuth" /><br />
+      <b>Ground Coverage Ratio: </b>
+      <input v-model.number="parameters.gcr" /><br />
     </div>
   </div>
 </template>
