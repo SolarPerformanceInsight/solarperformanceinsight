@@ -3,13 +3,14 @@ from fastapi.security import HTTPAuthorizationCredentials
 import pytest
 
 
-from solarperformanceinsight_api import auth
+from solarperformanceinsight_api import auth, settings
 
 
 pytestmark = pytest.mark.asyncio
 
 
 async def test_get_auth_key(mocker):
+    settings.auth_key = None
     client = mocker.spy(auth.httpx.AsyncClient, "get")
     key0 = await auth.get_auth_key()
     key1 = await auth.get_auth_key()
