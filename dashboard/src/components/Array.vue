@@ -50,7 +50,7 @@ import {
 
 import {
   PVSystTemperatureParameters,
-  PVWattsTemperatureParameters
+  SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
 import {
@@ -101,7 +101,7 @@ export default class ArrayView extends Vue {
       );
     } else if (newModel == "pvwatts") {
       this.pvarray.module_parameters = new PVWattsModuleParameters({});
-      this.pvarray.temperature_model_parameters = new PVWattsTemperatureParameters(
+      this.pvarray.temperature_model_parameters = new SAPMTemperatureParameters(
         {}
       );
     }

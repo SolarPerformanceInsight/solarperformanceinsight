@@ -1,19 +1,19 @@
 export class PVSystTemperatureParameters {
   /* Currently only supports pvsyst model */
-  uC: number; // pvlib "Freestanding" default insulated is 15.0
-  uV: number; //        freestanding:00, insulated: 0.0
+  u_c: number; // pvlib "Freestanding" default insulated is 15.0
+  u_v: number; //        freestanding:00, insulated: 0.0
 
-  constructor({ uC = 29.0, uV = 0.0 }: Partial<PVSystTemperatureParameters>) {
-    this.uC = uC;
-    this.uV = uV;
+  constructor({ u_c = 29.0, u_v = 0.0 }: Partial<PVSystTemperatureParameters>) {
+    this.u_c = u_c;
+    this.u_v = u_v;
   }
   static isInstance(obj: any): obj is PVSystTemperatureParameters {
     const maybe = obj as PVSystTemperatureParameters;
-    return maybe.uC != undefined && maybe.uV != undefined;
+    return maybe.u_c != undefined && maybe.u_v != undefined;
   }
 }
 
-export class PVWattsTemperatureParameters {
+export class SAPMTemperatureParameters {
   a: number;
   b: number;
   deltaT: number;
@@ -22,13 +22,13 @@ export class PVWattsTemperatureParameters {
     a = 0,
     b = 0,
     deltaT = 0
-  }: Partial<PVWattsTemperatureParameters>) {
+  }: Partial<SAPMTemperatureParameters>) {
     this.a = a;
     this.b = b;
     this.deltaT = deltaT;
   }
-  static isInstance(obj: any): obj is PVWattsTemperatureParameters {
-    const maybe = obj as PVWattsTemperatureParameters;
+  static isInstance(obj: any): obj is SAPMTemperatureParameters {
+    const maybe = obj as SAPMTemperatureParameters;
     return (
       maybe.a != undefined && maybe.b != undefined && maybe.deltaT != undefined
     );

@@ -3,19 +3,22 @@ import {
   PVSystInverterParameters,
   PVWattsInverterParameters
 } from "./InverterParameters";
+import {
+  PVWattsLosses
+} from "./Losses";
 
 export class Inverter {
   name: string;
   make_model: string;
   inverter_parameters: PVSystInverterParameters | PVWattsInverterParameters;
-  losses_parameters: object; // eslint-disable-line
+  losses: PVWattsLosses | null;
   arrays: Array<PVArray>;
 
   constructor({
     name = "New Inverter",
     make_model = "ABC 520",
     inverter_parameters = new PVSystInverterParameters({}),
-    losses_parameters = {},
+    losses = null,
     arrays = []
   }: Partial<Inverter>) {
     this.name = name;
@@ -29,8 +32,11 @@ export class Inverter {
         inverter_parameters
       );
     }
-    this.losses_parameters = losses_parameters;
-
+    if (PVWattsLosses.isInstance(losses)){
+        this.losses = new PVWattsLosses(losses)
+    } else {
+        this.losses = losses;
+    }
     if (arrays.length == 0) {
       this.arrays = [];
     } else {
@@ -44,7 +50,7 @@ export class Inverter {
       maybe.name != undefined &&
       maybe.make_model != undefined &&
       maybe.inverter_parameters != undefined &&
-      maybe.losses_parameters != undefined &&
+      maybe.losses != undefined &&
       maybe.arrays != undefined
     );
   }

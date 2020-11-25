@@ -28,14 +28,14 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 // choosing a display.
 import {
   PVSystTemperatureParameters,
-  PVWattsTemperatureParameters
+  SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
 @Component
 export default class TemperatureParametersView extends Vue {
   @Prop() parameters!:
     | PVSystTemperatureParameters
-    | PVWattsTemperatureParameters;
+    | SAPMTemperatureParameters;
 
   @Prop() model!: string;
 }

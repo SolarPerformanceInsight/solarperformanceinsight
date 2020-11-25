@@ -1,4 +1,4 @@
-export class PVSystInverterParameters {
+export class SandiaInverterParameters {
   /* Class mimics the inverter parameters required for the pvsyst model
    * provided by the PVLib inverter database.
    * See: https://github.com/pvlib/pvlib-python/blob/3e25627e34bfd5aadea041da85a30626322b3a99/pvlib/pvsystem.py#L1355
@@ -22,7 +22,6 @@ export class PVSystInverterParameters {
   //DC voltage input. [1/V]
   Pnt: number; //AC power consumed by the inverter at night (night tare). [W]
 
-  // TODO: fix defaults?
   constructor({
     Paco = 0,
     Pdco = 0,
@@ -62,18 +61,15 @@ export class PVSystInverterParameters {
 }
 
 export class PVWattsInverterParameters {
-  pdc: number;
   pdc0: number;
   eta_inv_nom: number;
   eta_inv_ref: number;
 
   constructor({
-    pdc = 0,
     pdc0 = 0,
     eta_inv_nom = 0.96,
     eta_inv_ref = 0.9637
   }: Partial<PVWattsInverterParameters>) {
-    this.pdc = pdc;
     this.pdc0 = pdc0;
     this.eta_inv_nom = eta_inv_nom;
     this.eta_inv_ref = eta_inv_ref;
@@ -81,7 +77,6 @@ export class PVWattsInverterParameters {
   static isInstance(obj: any): obj is PVWattsInverterParameters {
     const maybe = obj as PVWattsInverterParameters;
     return (
-      maybe.pdc !== undefined &&
       maybe.pdc0 !== undefined &&
       maybe.eta_inv_nom != undefined &&
       maybe.eta_inv_ref != undefined

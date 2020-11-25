@@ -1,7 +1,6 @@
 import { Inverter } from "./Inverter";
 
 export class System {
-  uuid?: string;
   name: string;
   latitude: number;
   longitude: number;
@@ -10,7 +9,6 @@ export class System {
   inverters: Inverter[];
 
   constructor({
-    uuid,
     name = "New System",
     latitude = 0,
     longitude = 0,
@@ -18,9 +16,6 @@ export class System {
     albedo = 0,
     inverters = []
   }: Partial<System>) {
-    if (uuid != null) {
-      this.uuid = uuid;
-    }
     this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;

@@ -29,7 +29,7 @@ import {
   PVSystModuleParameters
 } from "@/types/ModuleParameters";
 import {
-  PVWattsTemperatureParameters,
+  SAPMTemperatureParameters,
   PVSystTemperatureParameters
 } from "@/types/TemperatureParameters";
 
@@ -41,7 +41,7 @@ export default class ArraysView extends Vue {
 
   addArray() {
     let modParamClass: any = PVWattsModuleParameters;
-    let tempParamClass: any = PVWattsTemperatureParameters;
+    let tempParamClass: any = SAPMTemperatureParameters;
     if (this.model == "pvsyst") {
       modParamClass = PVSystModuleParameters;
       tempParamClass = PVSystTemperatureParameters;
