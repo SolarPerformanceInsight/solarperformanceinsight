@@ -3,9 +3,9 @@ from pydantic import BaseModel, confloat, constr, Field, conint
 from pydantic.types import UUID
 
 
-# allows word chars, space, comma, apostrophe, hyphen, parentheses, and underscore
-userstring = constr(regex=r"^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]+$", max_length=128)
-optuserstring = Optional[userstring]
+# allows word chars, space, comma, apostrophe, hyphen, parentheses, underscore
+# and empty string
+userstring = constr(regex=r"^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]*$", max_length=128)
 
 
 class FixedTracking(BaseModel):
@@ -145,9 +145,9 @@ class SAPMTemperatureParameters(BaseModel):
 class PVArray(BaseModel):
     """Parameters of a PV array that feeds into one inverter"""
 
-    name: optuserstring = Field(..., description="Name of this array")
-    make_model: optuserstring = Field(
-        ...,
+    name: userstring = Field("", description="Name of this array")
+    make_model: userstring = Field(
+        "",
         title="Make & Model",
         description="Make and model of the PV modules in this array",
     )
@@ -169,9 +169,9 @@ class PVArray(BaseModel):
         ..., description="Parameters describing single-axis tracking or fixed mounting"
     )
     modules_per_string: conint(gt=0) = Field(
-        None, title="Modules Per String", description="Number of PV modules per string"
+        ..., title="Modules Per String", description="Number of PV modules per string"
     )
-    strings: Optional[conint(gt=0)] = Field(..., description="Number of Strings")
+    strings: conint(gt=0) = Field(..., description="Number of Strings")
 
 
 class PVWattsLosses(BaseModel):
@@ -263,14 +263,14 @@ class SandiaInverterParameters(BaseModel):
 class Inverter(BaseModel):
     """Parameters for a single inverter feeding into a PV system"""
 
-    name: optuserstring = Field(..., description="Name of this inverter")
-    make_model: optuserstring = Field(
-        ..., title="Make & Model", description="Make and model of the inverter"
+    name: userstring = Field("", description="Name of this inverter")
+    make_model: userstring = Field(
+        "", title="Make & Model", description="Make and model of the inverter"
     )
     arrays: List[PVArray] = Field(
         ..., description="PV arrays that are connected to this inverter"
     )
-    losses: Union[PVWattsLosses, dict] = Field(
+    losses: Optional[PVWattsLosses] = Field(
         {}, description="Parameters describing the array losses"
     )
     inverter_parameters: Union[

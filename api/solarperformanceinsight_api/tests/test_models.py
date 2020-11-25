@@ -39,6 +39,10 @@ def test_userstring_fail(inp):
         UserString(name=inp)
 
 
+def test_userstring_empty():
+    assert UserString(name="").name == ""
+
+
 @given(
     inp=from_regex(
         re.compile(r"[a-z0-9 ,'\(\)_]+", re.IGNORECASE), fullmatch=True
