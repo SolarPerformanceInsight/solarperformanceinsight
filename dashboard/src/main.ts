@@ -6,8 +6,6 @@ import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
 import { APIValidator } from "./types/validation/Validator";
 import { spiStore } from "./store/store";
-import { System } from "./types/System";
-import  DemoSystems from "./types/demo/systems";
 
 // Auth0 configuration
 import { domain, clientId, audience } from "../auth_config.json";
@@ -26,7 +24,6 @@ Vue.use(Auth0Plugin, {
     );
   }
 });
-
 
 Vue.config.productionTip = false;
 
