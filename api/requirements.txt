@@ -22,3 +22,5 @@ uvicorn==0.12.2
 uvloop==0.14.0
 aiofiles==0.6.0
 sentry-sdk==0.19.4
+prometheus-client==0.8.0
+prometheus-fastapi-instrumentator==5.5.1
