@@ -12,13 +12,13 @@ import  DemoSystems from "./types/demo/systems";
 // Auth0 configuration
 import { domain, clientId, audience } from "../auth_config.json";
 
-import { Auth0Plugin } from "./auth/auth0";
+import { Auth0Plugin } from "./auth/auth";
 
 Vue.use(Auth0Plugin, {
   domain,
   clientId,
   audience,
-  onredirectCallback: appState => {
+  onredirectCallback: (appState: {targetUrl: string} ) => {
     router.push(
       appState && appState.targetUrl
       ? appState.targetUrl

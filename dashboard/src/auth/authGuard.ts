@@ -1,6 +1,7 @@
-import { getInstance } from "./auth0";
+import { getInstance } from "./auth";
+import { NavigationGuard } from "vue-router";
 
-export const authGuard = (to, from, next) => {
+export const authGuard: NavigationGuard = (to, from, next) => {
   const authService = getInstance();
 
   const fn = () => {
@@ -19,7 +20,7 @@ export const authGuard = (to, from, next) => {
   }
 
   // Watch for the loading property to change before we check isAuthenticated
-  authService.$watch("loading", loading => {
+  authService.$watch("loading", (loading: boolean ) => {
     if (loading === false) {
       return fn();
     }

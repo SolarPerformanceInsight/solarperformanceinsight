@@ -1,7 +1,9 @@
+import Store from "vuex";
 import { System } from "../types/System";
 
 export const actions = {
-  async fetchSystems(context){
+  async fetchSystems(context: any){
+    // @ts-ignore
     const token = await this._vm.$auth.getTokenSilently();
     const systemlist = await fetch("/api/systems/", {
       headers: new Headers({
@@ -9,6 +11,5 @@ export const actions = {
         })
     }).then(response => response.json());
     context.commit('updateSystemsList', systemlist as Array<System>);
-    this.loading = false;
   }
 }

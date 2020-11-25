@@ -10,3 +10,5 @@ export const spiStore = {
   mutations: mutations,
   actions: actions,
 };
+
+export type SpiStore = typeof spiStore;
