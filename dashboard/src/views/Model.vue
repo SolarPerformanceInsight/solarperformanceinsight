@@ -1,50 +1,55 @@
 <template>
   <div class="model">
-    <h1 v-if="systemId == null">New System</h1>
-    <button @click="displaySummary = !displaySummary">Display Summary</button>
-    <button @click="downloadMetadata">Download System</button>
-    <button @click="saveMetadata">Save System</button>
-    <div v-if="displaySummary" class="model-summary">
-      <h1>Model Summary</h1>
-      <pre>{{ JSON.stringify(system, null, 2) }}</pre>
+    <div v-if="loading">
+      Fetching System...
     </div>
-    <file-upload @uploadSuccess="uploadSuccess" />
+    <div v-if="!loading">
+      <h1 v-if="systemId == null">New System</h1>
+      <button @click="displaySummary = !displaySummary">Display Summary</button>
+      <button @click="downloadSystem">Download System</button>
+      <button @click="saveSystem">Save System</button>
+      <div v-if="displaySummary" class="model-summary">
+        <h1>Model Summary</h1>
+        <pre>{{ JSON.stringify(system, null, 2) }}</pre>
+      </div>
+      <file-upload @uploadSuccess="uploadSuccess" />
 
-    <b>Model:</b>
-    <select v-model="model">
-      <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
-    </select>
-    <br />
-    <a
-      href="#"
-      :class="displayAdvanced ? 'open' : ''"
-      @click.prevent="displayAdvanced = !displayAdvanced"
-    >
-      Advanced
-    </a>
-    <div class="advanced-model-params" v-if="displayAdvanced">
-      <b>Transposition Model:</b>
-      <input disabled v-model="modelSpec.transposition_model" />
+      <b>Model:</b>
+      <select v-model="model">
+        <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
+      </select>
       <br />
-      <b>DC Model:</b>
-      <input disabled v-model="modelSpec.dc_model" />
-      <br />
-      <b>AC Model:</b>
-      <input disabled v-model="modelSpec.ac_model" />
-      <br />
-      <b>AOI Model:</b>
-      <input disabled v-model="modelSpec.aoi_model" />
-      <br />
-      <b>Spectral Model:</b>
-      <input disabled v-model="modelSpec.spectral_model" />
-      <br />
-      <b>Temperature Model:</b>
-      <input disabled v-model="modelSpec.temperature_model" />
-      <br />
-    </div>
+      <a
+        href="#"
+        :class="displayAdvanced ? 'open' : ''"
+        @click.prevent="displayAdvanced = !displayAdvanced"
+      >
+        Advanced
+      </a>
+      <div class="advanced-model-params" v-if="displayAdvanced">
+        <b>Transposition Model:</b>
+        <input disabled v-model="modelSpec.transposition_model" />
+        <br />
+        <b>DC Model:</b>
+        <input disabled v-model="modelSpec.dc_model" />
+        <br />
+        <b>AC Model:</b>
+        <input disabled v-model="modelSpec.ac_model" />
+        <br />
+        <b>AOI Model:</b>
+        <input disabled v-model="modelSpec.aoi_model" />
+        <br />
+        <b>Spectral Model:</b>
+        <input disabled v-model="modelSpec.spectral_model" />
+        <br />
+        <b>Temperature Model:</b>
+        <input disabled v-model="modelSpec.temperature_model" />
+        <br />
+      </div>
 
-    <div>
-      <system-view :system="system" :model="model" />
+      <div>
+        <system-view :system="system" :model="model" />
+      </div>
     </div>
   </div>
 </template>
@@ -70,10 +75,14 @@ export default class Model extends Vue {
   @Prop({ default: null }) systemId!: number | null;
   system!: System;
   model!: string;
+  loading = true;
 
   created() {
     if (this.systemId != undefined) {
-      this.system = new System(this.$store.state.systems[this.systemId]);
+      this.loadSystem();
+    } else {
+      this.system = new System({});
+      this.loading = false;
     }
   }
   data() {
@@ -92,7 +101,7 @@ export default class Model extends Vue {
     this.system = system;
     this.inferModel();
   }
-  downloadMetadata() {
+  downloadSystem() {
     const contents = new Blob([JSON.stringify(this.system, null, 2)], {
       type: "application/json;charset=utf-8;"
     });
@@ -109,7 +118,7 @@ export default class Model extends Vue {
       link.remove();
     }
   }
-  saveMetadata() {
+  saveSystem() {
     console.log(this.system);
   }
   get modelSpec() {
@@ -125,6 +134,17 @@ export default class Model extends Vue {
         this.model = "pvwatts";
       }
     }
+  }
+  async loadSystem(){
+    const token = await this.$auth.getTokenSilently();
+    const system = await fetch(
+      `/api/systems/${this.systemId}`, {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`
+      })
+    }).then(response => response.json());
+    this.system = system as System;
+    this.loading = false;
   }
 }
 </script>

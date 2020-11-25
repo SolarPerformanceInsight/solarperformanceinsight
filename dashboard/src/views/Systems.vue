@@ -8,7 +8,7 @@
     <ul v-if="!loading">
       <li v-if="systems.length == 0">No available systems</li>
       <li v-for="(s, index) in systems" :key="s.name">
-        {{ s.name }}
+        {{ s.name }} {{ s.latitude }} {{ s.longitude }}
         <router-link
           :to="{ name: 'Update System', params: { systemId: index } }"
         >
@@ -29,6 +29,9 @@ export default class Systems extends Vue {
       loading: false,
       response: ""
     };
+  }
+  created() {
+    this.refreshSystems();
   }
   refreshSystems() {
     this.$store.dispatch("fetchSystems");
