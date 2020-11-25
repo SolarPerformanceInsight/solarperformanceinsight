@@ -33,7 +33,7 @@ async def test_get_user_id_invalid(token):
     assert err.value.status_code == 401
 
 
-async def test_get_user_id(valid_token):
-    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=valid_token)
+async def test_get_user_id(auth_token):
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_token)
     user_id = await auth.get_user_id(creds)
     assert user_id.startswith("auth0")

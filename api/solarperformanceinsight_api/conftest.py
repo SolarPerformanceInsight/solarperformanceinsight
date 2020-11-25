@@ -2,17 +2,21 @@ import httpx
 import pytest
 
 
+from solarperformanceinsight_api import settings
+
+
 @pytest.fixture(scope="session")
-def valid_token():
+def auth_token():
     token_req = httpx.post(
-        "https://solarperformanceinsight.us.auth0.com/oauth/token",
+        settings.auth_token_url,
         headers={"content-type": "application/json"},
         data=(
             '{"grant_type": "password", '
             '"username": "testing@solarperformanceinsight.org",'
             '"password": "Thepassword123!", '
-            '"audience": "https://app.solarperformanceinsight.org/api", '
-            '"client_id": "G1YyfLdseYn10RQo11Lqee2ThXj5l5fh"}'
+            f'"audience": "{settings.auth_audience}", '
+            f'"client_id": "{settings.auth_client_id}"'
+            "}"
         ),
     )
     if token_req.status_code != 200:  # pragma: no cover
