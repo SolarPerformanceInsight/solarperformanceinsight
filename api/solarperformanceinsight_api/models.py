@@ -5,7 +5,6 @@ from pydantic.types import UUID
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, and underscore
 userstring = constr(regex=r"^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]+$", max_length=128)
-
 optuserstring = Optional[userstring]
 
 
@@ -81,10 +80,10 @@ class PVsystModuleParameters(BaseModel):
     cells_in_series: conint(ge=0) = Field(
         ..., description="Number of cells connected in series"
     )
-    R_sh_exp: Optional[confloat()] = Field(
+    R_sh_exp: confloat() = Field(
         5.5, description="Exponent in the equation for shunt resistance, unitless"
     )
-    EgRef: Optional[confloat(gt=0)] = Field(
+    EgRef: confloat(gt=0) = Field(
         1.121,
         description=(
             "Energy bandgap at reference temperatures in units of eV. "
@@ -113,21 +112,19 @@ class PVsystTemperatureParameters(BaseModel):
     """Parameters for the cell temperature model of the modules in a
     PVSyst-like model"""
 
-    u_c: Optional[confloat()] = Field(
+    u_c: confloat() = Field(
         29.0, description="Combined heat loss factor coefficient, units of W/m^2/C"
     )
-    u_v: Optional[confloat()] = Field(
+    u_v: confloat() = Field(
         0.0,
         description=(
             "Combined heat loss factor influenced by wind, units of (W/m^2)/(C m/s)"
         ),
     )
-    eta_m: Optional[confloat()] = Field(
+    eta_m: confloat() = Field(
         0.1, description="Module external efficiency as a fraction"
     )
-    alpha_absorption: Optional[confloat()] = Field(
-        0.9, description="Absorption coefficient"
-    )
+    alpha_absorption: confloat() = Field(0.9, description="Absorption coefficient")
 
 
 class SAPMTemperatureParameters(BaseModel):
@@ -148,9 +145,9 @@ class SAPMTemperatureParameters(BaseModel):
 class PVArray(BaseModel):
     """Parameters of a PV array that feeds into one inverter"""
 
-    name: optuserstring = Field(None, description="Name of this array")
+    name: optuserstring = Field(..., description="Name of this array")
     make_model: optuserstring = Field(
-        None,
+        ...,
         title="Make & Model",
         description="Make and model of the PV modules in this array",
     )
@@ -171,10 +168,10 @@ class PVArray(BaseModel):
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
     )
-    modules_per_string: Optional[conint(gt=0)] = Field(
+    modules_per_string: conint(gt=0) = Field(
         None, title="Modules Per String", description="Number of PV modules per string"
     )
-    strings: Optional[conint(gt=0)] = Field(None, description="Number of Strings")
+    strings: Optional[conint(gt=0)] = Field(..., description="Number of Strings")
 
 
 class PVWattsLosses(BaseModel):
@@ -196,10 +193,10 @@ class PVWattsInverterParameters(BaseModel):
     """DC-AC power conversion parameters of an inverter for the PVWatts model"""
 
     pdc0: confloat() = Field(..., description="DC input limit of the inverter")
-    eta_inv_nom: Optional[confloat()] = Field(
+    eta_inv_nom: confloat() = Field(
         0.96, description="Nominal inverter efficiency, unitless"
     )
-    eta_inv_ref: Optional[confloat()] = Field(
+    eta_inv_ref: confloat() = Field(
         0.9637, description="Reference inverter efficiency, unitless"
     )
 
@@ -266,14 +263,14 @@ class SandiaInverterParameters(BaseModel):
 class Inverter(BaseModel):
     """Parameters for a single inverter feeding into a PV system"""
 
-    name: optuserstring = Field(None, description="Name of this inverter")
+    name: optuserstring = Field(..., description="Name of this inverter")
     make_model: optuserstring = Field(
-        None, title="Make & Model", description="Make and model of the inverter"
+        ..., title="Make & Model", description="Make and model of the inverter"
     )
     arrays: List[PVArray] = Field(
         ..., description="PV arrays that are connected to this inverter"
     )
-    losses: Optional[PVWattsLosses] = Field(
+    losses: Union[PVWattsLosses, dict] = Field(
         {}, description="Parameters describing the array losses"
     )
     inverter_parameters: Union[
