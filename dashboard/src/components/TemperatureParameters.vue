@@ -1,13 +1,23 @@
 <template>
   <div class="temperature-parameters">
     <div v-if="model == 'pvsyst'">
-      <b>uC: </b><input v-model="parameters.uC" /><br />
-      <b>uV: </b><input v-model="parameters.uV" /><br />
+      <b>uC:</b>
+      <input v-model="parameters.uC" />
+      <br />
+      <b>uV:</b>
+      <input v-model="parameters.uV" />
+      <br />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>a: </b><input v-model="parameters.a" /><br />
-      <b>b: </b><input v-model="parameters.b" /><br />
-      <b>deltaT: </b><input v-model="parameters.deltaT" /><br />
+      <b>a:</b>
+      <input v-model="parameters.a" />
+      <br />
+      <b>b:</b>
+      <input v-model="parameters.b" />
+      <br />
+      <b>deltaT:</b>
+      <input v-model="parameters.deltaT" />
+      <br />
     </div>
   </div>
 </template>
