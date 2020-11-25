@@ -10,10 +10,11 @@
     </div>
     <file-upload @uploadSuccess="uploadSuccess" />
 
-    <b>Model: </b>
+    <b>Model:</b>
     <select v-model="model">
-      <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option> </select
-    ><br />
+      <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
+    </select>
+    <br />
     <a
       href="#"
       :class="displayAdvanced ? 'open' : ''"
@@ -22,18 +23,24 @@
       Advanced
     </a>
     <div class="advanced-model-params" v-if="displayAdvanced">
-      <b>Transposition Model: </b>
-      <input disabled v-model="modelSpec.transposition_model" /><br />
-      <b>DC Model: </b>
-      <input disabled v-model="modelSpec.dc_model" /><br />
-      <b>AC Model: </b>
-      <input disabled v-model="modelSpec.ac_model" /><br />
-      <b>AOI Model: </b>
-      <input disabled v-model="modelSpec.aoi_model" /><br />
-      <b>Spectral Model: </b>
-      <input disabled v-model="modelSpec.spectral_model" /><br />
-      <b>Temperature Model: </b>
-      <input disabled v-model="modelSpec.temperature_model" /><br />
+      <b>Transposition Model:</b>
+      <input disabled v-model="modelSpec.transposition_model" />
+      <br />
+      <b>DC Model:</b>
+      <input disabled v-model="modelSpec.dc_model" />
+      <br />
+      <b>AC Model:</b>
+      <input disabled v-model="modelSpec.ac_model" />
+      <br />
+      <b>AOI Model:</b>
+      <input disabled v-model="modelSpec.aoi_model" />
+      <br />
+      <b>Spectral Model:</b>
+      <input disabled v-model="modelSpec.spectral_model" />
+      <br />
+      <b>Temperature Model:</b>
+      <input disabled v-model="modelSpec.temperature_model" />
+      <br />
     </div>
 
     <div>

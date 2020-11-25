@@ -2,7 +2,8 @@
   <div class="systems">
     <h1>Systems</h1>
     <router-link :to="{ name: 'Model' }">Create new System</router-link>
-    <button @click="refreshSystems">Refresh System List</button><br />
+    <button @click="refreshSystems">Refresh System List</button>
+    <br />
     <p v-if="loading">Loading...</p>
     <ul v-if="!loading">
       <li v-if="systems.length == 0">No available systems</li>

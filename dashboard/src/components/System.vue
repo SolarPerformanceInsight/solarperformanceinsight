@@ -1,10 +1,20 @@
 <template>
   <div class="system">
-    <b>Name: </b><input v-model="system.name" /><br />
-    <b>Latitude: </b><input v-model="system.latitude" /><br />
-    <b>Longitude: </b><input v-model="system.longitude" /><br />
-    <b>Elevation: </b><input v-model="system.elevation" /><br />
-    <b>Albedo: </b><input v-model="system.albedo" /><br />
+    <b>Name:</b>
+    <input v-model="system.name" />
+    <br />
+    <b>Latitude:</b>
+    <input v-model="system.latitude" />
+    <br />
+    <b>Longitude:</b>
+    <input v-model="system.longitude" />
+    <br />
+    <b>Elevation:</b>
+    <input v-model="system.elevation" />
+    <br />
+    <b>Albedo:</b>
+    <input v-model="system.albedo" />
+    <br />
     <inverters-view :inverters="system.inverters" :model="model" />
   </div>
 </template>
