@@ -15,7 +15,7 @@ def valid_token():
             '"client_id": "G1YyfLdseYn10RQo11Lqee2ThXj5l5fh"}'
         ),
     )
-    if token_req.status_code != 200:
+    if token_req.status_code != 200:  # pragma: no cover
         pytest.skip("Cannot retrieve valid Auth0 token")
     else:
         token = token_req.json()["access_token"]
