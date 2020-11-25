@@ -1,7 +1,7 @@
-import DemoSystems from "../types/demo/systems";
+import { System } from "../types/System";
 
 export const state = {
-  systems: DemoSystems
+  systems: [] as Array<System>
 };
 
 export type State = typeof state;
