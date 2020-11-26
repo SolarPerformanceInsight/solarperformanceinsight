@@ -22,7 +22,7 @@ export class SingleAxisTrackingParameters {
     axis_tilt = 0,
     axis_azimuth = 0,
     gcr = 0,
-    backtracking = false;
+    backtracking = false
   }: Partial<SingleAxisTrackingParameters>) {
     this.axis_tilt = axis_tilt;
     this.axis_azimuth = axis_azimuth;

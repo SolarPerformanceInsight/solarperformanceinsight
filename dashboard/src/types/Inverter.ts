@@ -1,23 +1,21 @@
 import { PVArray } from "./PVArray";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "./InverterParameters";
-import {
-  PVWattsLosses
-} from "./Losses";
+import { PVWattsLosses } from "./Losses";
 
 export class Inverter {
   name: string;
   make_model: string;
-  inverter_parameters: PVSystInverterParameters | PVWattsInverterParameters;
+  inverter_parameters: SandiaInverterParameters | PVWattsInverterParameters;
   losses: PVWattsLosses | null;
   arrays: Array<PVArray>;
 
   constructor({
     name = "New Inverter",
     make_model = "ABC 520",
-    inverter_parameters = new PVSystInverterParameters({}),
+    inverter_parameters = new SandiaInverterParameters({}),
     losses = null,
     arrays = []
   }: Partial<Inverter>) {
@@ -28,14 +26,14 @@ export class Inverter {
         inverter_parameters
       );
     } else {
-      this.inverter_parameters = new PVSystInverterParameters(
+      this.inverter_parameters = new SandiaInverterParameters(
         inverter_parameters
       );
     }
-    if (PVWattsLosses.isInstance(losses)){
-        this.losses = new PVWattsLosses(losses)
+    if (PVWattsLosses.isInstance(losses)) {
+      this.losses = new PVWattsLosses(losses);
     } else {
-        this.losses = losses;
+      this.losses = losses;
     }
     if (arrays.length == 0) {
       this.arrays = [];

@@ -47,9 +47,6 @@
       <br />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>pdc:</b>
-      <input v-model="parameters.pdc" />
-      <br />
       <b>pdc0:</b>
       <input v-model="parameters.pdc0" />
       <br />
@@ -67,7 +64,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import ArraysView from "@/components/Arrays.vue";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 
@@ -75,7 +72,7 @@ Vue.component("arrays-view", ArraysView);
 @Component
 export default class InverterParametersView extends Vue {
   // extend acceptable types for InverterParameters to include a PVWatts class
-  @Prop() parameters!: PVSystInverterParameters | PVWattsInverterParameters;
+  @Prop() parameters!: SandiaInverterParameters | PVWattsInverterParameters;
   @Prop() model!: string;
   @Prop({ default: null }) selectedInverter!: string;
 

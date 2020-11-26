@@ -32,7 +32,7 @@ export class SandiaInverterParameters {
     C2 = 0,
     C3 = 0,
     Pnt = 0
-  }: Partial<PVSystInverterParameters>) {
+  }: Partial<SandiaInverterParameters>) {
     this.Paco = Paco;
     this.Pdco = Pdco;
     this.Vdco = Vdco;
@@ -44,8 +44,8 @@ export class SandiaInverterParameters {
     this.Pnt = Pnt;
   }
 
-  static isInstance(obj: any): obj is PVSystInverterParameters {
-    const maybe = obj as PVSystInverterParameters;
+  static isInstance(obj: any): obj is SandiaInverterParameters {
+    const maybe = obj as SandiaInverterParameters;
     return (
       maybe.Paco != undefined &&
       maybe.Pdco != undefined &&

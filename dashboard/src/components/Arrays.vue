@@ -34,6 +34,7 @@ import {
 } from "@/types/TemperatureParameters";
 
 Vue.component("array-view", ArrayView);
+
 @Component
 export default class ArraysView extends Vue {
   @Prop() pvarrays!: Array<PVArray>;

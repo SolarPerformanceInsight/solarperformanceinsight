@@ -24,7 +24,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import InvertersView from "@/components/Inverters.vue";
 import { System } from "@/types/System";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 

@@ -2,10 +2,10 @@
   <div class="temperature-parameters">
     <div v-if="model == 'pvsyst'">
       <b>uC:</b>
-      <input v-model="parameters.uC" />
+      <input v-model="parameters.u_c" />
       <br />
       <b>uV:</b>
-      <input v-model="parameters.uV" />
+      <input v-model="parameters.u_v" />
       <br />
     </div>
     <div v-if="model == 'pvwatts'">
@@ -24,6 +24,9 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+
+import HelpPopup from "@/components/Help";
+
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
 import {
@@ -31,11 +34,11 @@ import {
   SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
+Vue.component("help", HelpPopup);
+
 @Component
 export default class TemperatureParametersView extends Vue {
-  @Prop() parameters!:
-    | PVSystTemperatureParameters
-    | SAPMTemperatureParameters;
+  @Prop() parameters!: PVSystTemperatureParameters | SAPMTemperatureParameters;
 
   @Prop() model!: string;
 }

@@ -63,7 +63,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { modelSpecs } from "@/types/ModelSpecification";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 
@@ -134,7 +134,7 @@ export default class Model extends Vue {
     if (this.system.inverters.length > 0) {
       const firstParams = this.system.inverters[0].inverter_parameters;
 
-      if (PVSystInverterParameters.isInstance(firstParams)) {
+      if (SandiaInverterParameters.isInstance(firstParams)) {
         this.model = "pvsyst";
       } else if (PVWattsInverterParameters.isInstance(firstParams)) {
         this.model = "pvwatts";
@@ -142,16 +142,15 @@ export default class Model extends Vue {
     }
   }
 
-  async loadSystem(){
+  async loadSystem() {
     const token = await this.$auth.getTokenSilently();
-    const response = await fetch(
-      `/api/systems/${this.systemId}`, {
+    const response = await fetch(`/api/systems/${this.systemId}`, {
       headers: new Headers({
         Authorization: `Bearer ${token}`
       })
     });
-    if (response.ok){
-      const system: System =  await response.json()
+    if (response.ok) {
+      const system: System = await response.json();
       this.system = system;
       this.loading = false;
     } else {

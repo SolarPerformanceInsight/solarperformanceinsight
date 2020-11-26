@@ -29,7 +29,7 @@ import InverterParametersView from "@/components/InverterParameters.vue";
 import ArraysView from "@/components/Arrays.vue";
 import { Inverter } from "@/types/Inverter";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 
@@ -45,7 +45,7 @@ export default class InverterView extends Vue {
   @Watch("model")
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.inverter.inverter_parameters = new PVSystInverterParameters({});
+      this.inverter.inverter_parameters = new SandiaInverterParameters({});
     } else if (newModel == "pvwatts") {
       this.inverter.inverter_parameters = new PVWattsInverterParameters({});
     }
