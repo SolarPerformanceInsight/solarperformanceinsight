@@ -2,8 +2,6 @@ name: Test Database
 
 on:
   push:
-    branches:
-      - main
   pull_request:
     paths:
       - 'db/**'
