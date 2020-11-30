@@ -35,7 +35,8 @@ jobs:
         uses: docker://amacneil/dbmate:v1.11.0
         with:
           DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/spi_data
-          args: "dbmate --wait up"
+          entrypoint: "dbmate"
+          args: "--wait up"
 
       - name: Test
         run: pytest db
