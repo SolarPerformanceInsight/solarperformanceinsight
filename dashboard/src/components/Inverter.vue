@@ -5,10 +5,20 @@
     <br />
     <b>Name:</b>
     <input v-model="inverter.name" />
+    <help :helpText ="this.definitions.properties.name.description" />
     <br />
+    <span style="color:#F00;" v-if="'name' in this.errors">
+      {{ this.errors.name }}
+      <br />
+    </span>
     <b>Make and Model:</b>
     <input v-model="inverter.make_model" />
+    <help :helpText ="this.definitions.properties.make_model.description" />
     <br />
+    <span style="color:#F00;" v-if="'make_model' in this.errors">
+      {{ this.errors.make_model }}
+      <br />
+    </span>
     <b>Inverter Parameters:</b>
     <br />
     <inverter-parameters
@@ -24,6 +34,9 @@
 </template>
 
 <script lang="ts">
+import SchemaBase from "@/components/SchemaBase.vue";
+import HelpPopup from "@/components/Help.vue";
+
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import InverterParametersView from "@/components/InverterParameters.vue";
 import ArraysView from "@/components/Arrays.vue";
@@ -35,9 +48,10 @@ import {
 
 Vue.component("arrays-view", ArraysView);
 Vue.component("inverter-parameters", InverterParametersView);
+Vue.component("help", HelpPopup);
 
 @Component
-export default class InverterView extends Vue {
+export default class InverterView extends SchemaBase {
   @Prop() inverter!: Inverter;
   @Prop() index!: number;
   @Prop() model!: string;
@@ -58,6 +72,17 @@ export default class InverterView extends Vue {
   duplicateInverter() {
     // @ts-expect-error
     this.$parent.inverters.push(new Inverter(this.inverter));
+  }
+  get apiComponentName() {
+    return "Inverter";
+  }
+
+  @Watch("inverter", { deep: true })
+  validate(newInverter: Record<string, any>) {
+    const inverter = newInverter as Inverter;
+    this.$validator
+      .validate(this.apiComponentName, inverter)
+      .then(this.setValidationResult);
   }
 }
 </script>

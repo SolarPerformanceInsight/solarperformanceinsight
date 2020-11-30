@@ -2,6 +2,7 @@
  * validation. Components should implement a getter for apiComponentName that
  * returns the string name of the schema found in the OpenAPI "components"
  * field.
+ * 
  */
 <script lang="ts">
   import { Component, Vue } from "vue-property-decorator";
