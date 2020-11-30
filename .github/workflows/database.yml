@@ -32,12 +32,12 @@ jobs:
           pip list
 
       - name: Migrate database
-        uses: docker://amacneil/dbmate:v1.11.0
         env:
           DATABASE_URL: "mysql://root:testpassword@127.0.0.1:3306/spi_data"
-        with:
-          entrypoint: "dbmate"
-          args: "--wait up"
+        run: |
+          curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x dbmate
+          dbmate --wait up
 
       - name: Test
         run: pytest db
