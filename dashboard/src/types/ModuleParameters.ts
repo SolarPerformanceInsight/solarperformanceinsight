@@ -35,6 +35,7 @@ export class PVSystModuleParameters {
     this.EgRef = EgRef;
     this.cells_in_series = cells_in_series;
   }
+
   static isInstance(obj: any): obj is PVSystModuleParameters {
     const maybe = obj as PVSystModuleParameters;
     return (
