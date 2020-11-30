@@ -16,7 +16,7 @@ export class SingleAxisTrackingParameters {
   axis_tilt: number;
   axis_azimuth: number;
   gcr: number;
-  backtracking: bool;
+  backtracking: boolean;
 
   constructor({
     axis_tilt = 0,

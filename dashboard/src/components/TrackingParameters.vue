@@ -37,7 +37,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import HelpPopup from "@/components/Help";
+import HelpPopup from "@/components/Help.vue";
 import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters

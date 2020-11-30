@@ -3,7 +3,7 @@ import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/types/Tracking";
 import {
   PVSystTemperatureParameters,
-  PVWattsTemperatureParameters
+  SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
 test("Instantiate base system", () => {
@@ -48,7 +48,7 @@ const pvsyst_test_system = {
         C3: 0,
         Pnt: 0
       },
-      losses_parameters: {},
+      losses: null,
       arrays: [
         {
           name: "New Array",
@@ -66,15 +66,16 @@ const pvsyst_test_system = {
             R_s: 0,
             alpha_sc: 0,
             EgRef: 0,
-            cells_in_series: 0
+            cells_in_series: 0,
+            R_sh_exp: 0,
           },
           tracking: {
             tilt: 0,
             azimuth: 0
           },
           temperature_model_parameters: {
-            uC: 29,
-            uV: 0
+            u_c: 29,
+            u_v: 0
           }
         }
       ]
@@ -91,7 +92,7 @@ test("Instantiate pvsyst system from object", () => {
     const inverter = inverters[i];
     expect(inverter instanceof Inverter).toBeTruthy();
     expect(
-      inverter.inverter_parameters instanceof PVSystInverterParameters
+      inverter.inverter_parameters instanceof SandiaInverterParameters
     ).toBeTruthy();
     expect(typeof inverter.make_model).toBe("string");
     const arrays = inverter.arrays;
@@ -127,7 +128,18 @@ const pvwatts_test_system = {
         eta_inv_nom: 0.96,
         eta_inv_ref: 0.9637
       },
-      losses_parameters: {},
+      losses: {
+        soiling: 0,
+        shading: 0,
+        snow: 0,
+        mismatch: 0,
+        wiring: 0,
+        connections: 0,
+        lid: 0,
+        nameplate_rating: 0,
+        age: 0,
+        availability: 0
+      },
       arrays: [
         {
           name: "The Array",
@@ -175,7 +187,7 @@ test("Instantiate pvwatts system from object", () => {
       expect(array.tracking instanceof FixedTrackingParameters).toBeTruthy();
       expect(
         array.temperature_model_parameters instanceof
-          PVWattsTemperatureParameters
+          SAPMTemperatureParameters
       ).toBeTruthy();
     }
   }
@@ -207,7 +219,8 @@ test("Instantiate Single Axis tracking", () => {
   const tracking_params = {
     axis_tilt: 30.0,
     axis_azimuth: 180.0,
-    gcr: 0.5
+    gcr: 0.5,
+    backtracking: false
   };
   const tracking = new SingleAxisTrackingParameters(tracking_params);
   expect(tracking instanceof SingleAxisTrackingParameters).toBeTruthy();
@@ -222,21 +235,20 @@ test("Empty Inverter init", () => {
   const inverter = new Inverter({});
   expect(inverter.name).toBe("New Inverter");
   expect(inverter.make_model).toBe("ABC 520");
-  expect(inverter.inverter_parameters instanceof PVSystInverterParameters);
-  expect(inverter.losses_parameters).toStrictEqual({});
+  expect(inverter.inverter_parameters instanceof SandiaInverterParameters);
+  expect(inverter.losses).toStrictEqual(null);
   expect(inverter.arrays).toStrictEqual([]);
 });
 
 test("Empty pvwatts inverter parameters init", () => {
   const ip = new PVWattsInverterParameters({});
-  expect(ip.pdc).toBe(0);
   expect(ip.pdc0).toBe(0);
   expect(ip.eta_inv_nom).toBe(0.96);
   expect(ip.eta_inv_ref).toBe(0.9637);
 });
 
 test("Empty pvsyst inverter parameters init", () => {
-  const ip = new PVSystInverterParameters({});
+  const ip = new SandiaInverterParameters({});
   expect(ip.Paco).toBe(0);
   expect(ip.Pdco).toBe(0);
   expect(ip.Vdco).toBe(0);
@@ -293,14 +305,14 @@ describe("Inverter typeguard", () => {
     "name",
     "make_model",
     "inverter_parameters",
-    "losses_parameters",
+    "losses",
     "arrays"
   ])("Inverter typeguard missing %p", missing => {
     const anon_inv: { [key: string]: any } = {
       name: "name",
       make_model: "mk_model",
       inverter_parameters: {},
-      losses_parameters: {},
+      losses: {},
       arrays: []
     };
     anon_inv[missing] = undefined;
@@ -324,7 +336,7 @@ describe("PVSyst inverter parameters typeguard", () => {
         Pnt: 0
       };
       anon_params[missing] = undefined;
-      expect(PVSystInverterParameters.isInstance(anon_params)).toBeFalsy();
+      expect(SandiaInverterParameters.isInstance(anon_params)).toBeFalsy();
     }
   );
 });
@@ -340,7 +352,7 @@ describe("PVWatts inverter parameters typeguard", () => {
         eta_inv_ref: 0
       };
       anon_params[missing] = undefined;
-      expect(PVSystInverterParameters.isInstance(anon_params)).toBeFalsy();
+      expect(SandiaInverterParameters.isInstance(anon_params)).toBeFalsy();
     }
   );
 });
@@ -367,7 +379,8 @@ describe("PVSyst module parameters typeguard", () => {
       R_s: 0,
       alpha_sc: 0,
       EgRef: 0,
-      cells_in_series: 0
+      cells_in_series: 0,
+      R_sh_exp: 0
     };
     anon_params[missing] = undefined;
     expect(PVSystModuleParameters.isInstance(anon_params)).toBeFalsy();
@@ -396,7 +409,8 @@ test("Empty pvsyst module parameters init", () => {
   expect(mp.R_sh_0).toBe(0);
   expect(mp.R_s).toBe(0);
   expect(mp.alpha_sc).toBe(0);
-  expect(mp.EgRef).toBe(0);
+  expect(mp.EgRef).toBe(1.121);
+  expect(mp.R_sh_exp).toBe(5.5);
   expect(mp.cells_in_series).toBe(0);
 });
 
@@ -424,7 +438,7 @@ test("Empty pvarray init", () => {
 test("PVWatts array init", () => {
   const array = new PVArray({});
   array.module_parameters = new PVWattsModuleParameters({});
-  array.temperature_model_parameters = new PVWattsTemperatureParameters({});
+  array.temperature_model_parameters = new SAPMTemperatureParameters({});
   array.tracking = new SingleAxisTrackingParameters({});
 
   const pvwattsArray = new PVArray(array);
@@ -438,7 +452,7 @@ test("PVWatts array init", () => {
   ).toBeTruthy();
   expect(
     pvwattsArray.temperature_model_parameters instanceof
-      PVWattsTemperatureParameters
+      SAPMTemperatureParameters
   ).toBeTruthy();
   expect(pvwattsArray.modules_per_string).toBe(0);
   expect(pvwattsArray.strings).toBe(0);

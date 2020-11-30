@@ -25,7 +25,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 
-import HelpPopup from "@/components/Help";
+import HelpPopup from "@/components/Help.vue";
 
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.

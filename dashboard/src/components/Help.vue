@@ -13,22 +13,28 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 
+// extend HTMLElement interface to tell typescript our custom event is expected
+interface HTMLElement {
+  clickAway: () => void;
+}
 Vue.directive("click-away", {
-  bind(el, binding, vnode) {
-    el.clickAway = function(event) {
+  bind(el: any, binding: any, vnode: any) {
+    el.clickAway = function(event: any) {
       if (!(el == event.target || el.contains(event.target))) {
         vnode.context[binding.expression](event);
       }
     };
     document.body.addEventListener("click", el.clickAway);
   },
-  unbind(el) {
+  unbind(el: any) {
     document.body.removeEventListener("click", el.clickAway);
   }
 });
 
 @Component
 export default class HelpPopup extends Vue {
+  show!: boolean;
+
   @Prop() helpText?: string;
   data() {
     return {

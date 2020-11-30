@@ -34,6 +34,7 @@ export class PVSystModuleParameters {
     this.R_s = R_s;
     this.EgRef = EgRef;
     this.cells_in_series = cells_in_series;
+    this.R_sh_exp = R_sh_exp;
   }
 
   static isInstance(obj: any): obj is PVSystModuleParameters {
