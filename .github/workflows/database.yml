@@ -1,0 +1,43 @@
+name: Test Database
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'db/**'
+    branches:
+      - main
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - uses: mirromutth/mysql-actions@v1.1
+        with:
+          mysql version: '8.0.21'
+          mysql database: 'spi_data'
+          mysql root password: 'testpassword'
+
+      - name: Install Dependencies
+        run: |
+          cd db
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+          pip list
+
+      - name: Migrate database
+        uses: docker://amacneil/dbmate:v1.11.0
+        with:
+          DATABASE_URL: mysql://root:testpassword@127.0.0.1:3306/spi_data
+          args: "up --wait"
+
+      - name: Test
+        run: pytest db
