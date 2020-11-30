@@ -30,10 +30,12 @@ CREATE TABLE `schema_migrations` (
 CREATE TABLE `systems` (
   `id` binary(16) NOT NULL DEFAULT (uuid_to_bin(uuid(),1)),
   `user_id` binary(16) NOT NULL,
+  `name` varchar(128) NOT NULL,
   `definition` json NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `system_user_name_key` (`user_id`,`name`),
   KEY `systems_user_id_key` (`user_id`),
   CONSTRAINT `systems_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=COMPRESSED;
@@ -66,12 +68,33 @@ CREATE TABLE `users` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` FUNCTION `check_users_system`(auth0id varchar(32), systemid char(36)) RETURNS tinyint(1)
+    READS SQL DATA
+    COMMENT 'Check if the system exists and belongs to user'
+begin
+    return exists(select 1 from systems where id = uuid_to_bin(systemid, 1)
+                                          and user_id = get_user_binid(auth0id));
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`select_objects`@`localhost` FUNCTION `does_user_exist`(auth0id varchar(32)) RETURNS tinyint(1)
     READS SQL DATA
     COMMENT 'Check if a user exists or not'
 begin
-      return exists(select 1 from users where auth0_id = auth0id);
-    end ;;
+    return exists(select 1 from users where auth0_id = auth0id);
+  end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -126,6 +149,30 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`insert_objects`@`localhost` PROCEDURE `create_system`(auth0id varchar(32), name varchar(128), system_def JSON)
+    MODIFIES SQL DATA
+    COMMENT 'Create a new system'
+begin
+    declare sysid char(36) default (uuid());
+    declare binid binary(16) default (uuid_to_bin(sysid, 1));
+    insert into systems (id, user_id, name, definition) values (
+      binid, get_user_binid(auth0id), name, system_def);
+    select sysid as system_id;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`insert_objects`@`localhost` PROCEDURE `create_user_if_not_exists`(in auth0id varchar(32))
     MODIFIES SQL DATA
     COMMENT 'Creates a user if nonexistent and returns the user id'
@@ -137,6 +184,35 @@ begin
       select bin_to_uuid(userid, 1) as user_id;
     else
       select get_user_id(auth0id) as user_id;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`delete_objects`@`localhost` PROCEDURE `delete_system`(auth0id varchar(32), systemid char(36))
+    MODIFIES SQL DATA
+    COMMENT 'Delete a system'
+begin
+    declare binid binary(16) default (uuid_to_bin(systemid, 1));
+    declare allowed boolean default (check_users_system(auth0id, systemid));
+    declare uid binary(16) default get_user_binid(auth0id);
+
+    if allowed then
+      delete from systems where id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'Deleting system not allowed',
+        mysql_errno = 1142;
     end if;
   end ;;
 DELIMITER ;
@@ -179,6 +255,39 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_system`(auth0id varchar(32), systemid char(36))
+    READS SQL DATA
+    COMMENT 'Get the definition for a system'
+begin
+    declare binid binary(16);
+    declare allowed boolean default false;
+
+    set binid = uuid_to_bin(systemid, 1);
+    set allowed = exists(
+      select 1 from systems where id = binid and user_id = get_user_binid(auth0id));
+
+    if allowed then
+      select bin_to_uuid(id, 1) as system_id, bin_to_uuid(user_id, 1) as user_id,
+      name, definition, created_at, modified_at from systems where id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'System unaccessible',
+        mysql_errno = 1142;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_user`(in auth0id varchar(32))
     READS SQL DATA
     COMMENT 'Get a user by auth0 id'
@@ -187,6 +296,57 @@ begin
       select bin_to_uuid(id, 1) as user_id, auth0_id, created_at from users where auth0_id = auth0id;
     else
       signal sqlstate '42000' set message_text = 'User does not exist',
+        mysql_errno = 1142;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `list_systems`(auth0id varchar(32))
+    READS SQL DATA
+    COMMENT 'List all user systems'
+begin
+    select bin_to_uuid(id, 1) as system_id, bin_to_uuid(user_id, 1) as user_id,
+           name, definition, created_at, modified_at from systems
+     where user_id = get_user_binid(auth0id);
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`update_objects`@`localhost` PROCEDURE `update_system`(auth0id varchar(32), systemid char(36), system_def JSON)
+    MODIFIES SQL DATA
+    COMMENT 'Update a system definition'
+begin
+    declare binid binary(16) default (uuid_to_bin(systemid, 1));
+    declare allowed boolean default (check_users_system(auth0id, systemid));
+    declare uid binary(16) default get_user_binid(auth0id);
+
+    if allowed then
+      update systems set definition = system_def where id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'Updating system not allowed',
         mysql_errno = 1142;
     end if;
   end ;;

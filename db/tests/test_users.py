@@ -66,7 +66,7 @@ def test_get_user(cursor, auth0_id, user_id):
     assert len(res) == 3
     assert res[0] == user_id
     assert res[1] == auth0_id
-    assert isinstance(res[2], dt.datetime)
+    assert res[2] <= dt.datetime.utcnow()
 
 
 def test_get_user_dne(cursor):

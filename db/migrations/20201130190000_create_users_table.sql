@@ -13,9 +13,9 @@ create definer = 'select_objects'@'localhost'
     returns boolean
     comment 'Check if a user exists or not'
     reads sql data sql security definer
-    begin
-      return exists(select 1 from users where auth0_id = auth0id);
-    end;
+  begin
+    return exists(select 1 from users where auth0_id = auth0id);
+  end;
 
 grant select on users to 'select_objects'@'localhost';
 grant execute on function `does_user_exist` to 'select_objects'@'localhost';
