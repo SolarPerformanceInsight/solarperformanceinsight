@@ -35,9 +35,9 @@ jobs:
         env:
           DATABASE_URL: "mysql://root:testpassword@127.0.0.1:3306/spi_data"
         run: |
-          curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
-          chmod +x dbmate
-          dbmate --wait up
+          curl -fsSL -o ./dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x ./dbmate
+          ./dbmate --wait up
 
       - name: Test
         run: pytest db
