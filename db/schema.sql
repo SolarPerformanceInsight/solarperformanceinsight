@@ -259,18 +259,14 @@ CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_system`(auth0id varch
     READS SQL DATA
     COMMENT 'Get the definition for a system'
 begin
-    declare binid binary(16);
-    declare allowed boolean default false;
-
-    set binid = uuid_to_bin(systemid, 1);
-    set allowed = exists(
-      select 1 from systems where id = binid and user_id = get_user_binid(auth0id));
+    declare binid binary(16) default (uuid_to_bin(systemid, 1));
+    declare allowed boolean default (check_users_system(auth0id, systemid));
 
     if allowed then
       select bin_to_uuid(id, 1) as system_id, bin_to_uuid(user_id, 1) as user_id,
       name, definition, created_at, modified_at from systems where id = binid;
     else
-      signal sqlstate '42000' set message_text = 'System unaccessible',
+      signal sqlstate '42000' set message_text = 'System inaccessible',
         mysql_errno = 1142;
     end if;
   end ;;

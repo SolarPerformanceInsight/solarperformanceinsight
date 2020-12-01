@@ -15,18 +15,26 @@ create table systems (
 ) engine=innodb row_format=compressed;
 
 
+create definer = 'select_objects'@'localhost'
+  function check_users_system (auth0id varchar(32), systemid char(36))
+    returns boolean
+    comment 'Check if the system exists and belongs to user'
+    reads sql data sql security definer
+  begin
+    return exists(select 1 from systems where id = uuid_to_bin(systemid, 1)
+                                          and user_id = get_user_binid(auth0id));
+  end;
+
+grant execute on function `check_users_system` to 'select_objects'@'localhost';
+
 -- get system
 create definer = 'select_objects'@'localhost'
   procedure get_system (auth0id varchar(32), systemid char(36))
     comment 'Get the definition for a system'
     reads sql data sql security definer
   begin
-    declare binid binary(16);
-    declare allowed boolean default false;
-
-    set binid = uuid_to_bin(systemid, 1);
-    set allowed = exists(
-      select 1 from systems where id = binid and user_id = get_user_binid(auth0id));
+    declare binid binary(16) default (uuid_to_bin(systemid, 1));
+    declare allowed boolean default (check_users_system(auth0id, systemid));
 
     if allowed then
       select bin_to_uuid(id, 1) as system_id, bin_to_uuid(user_id, 1) as user_id,
@@ -73,18 +81,6 @@ grant execute on function `get_user_binid` to 'insert_objects'@'localhost';
 grant execute on procedure `create_system` to 'insert_objects'@'localhost';
 grant execute on procedure `create_system` to 'apiuser'@'%';
 
-
-create definer = 'select_objects'@'localhost'
-  function check_users_system (auth0id varchar(32), systemid char(36))
-    returns boolean
-    comment 'Check if the system exists and belongs to user'
-    reads sql data sql security definer
-  begin
-    return exists(select 1 from systems where id = uuid_to_bin(systemid, 1)
-                                          and user_id = get_user_binid(auth0id));
-  end;
-
-grant execute on function `check_users_system` to 'select_objects'@'localhost';
 
 -- update system
 create definer = 'update_objects'@'localhost'
@@ -137,8 +133,8 @@ grant execute on procedure `delete_system` to 'apiuser'@'%';
 -- migrate:down
 drop procedure delete_system;
 drop procedure update_system;
-drop function check_users_system;
 drop procedure create_system;
 drop procedure list_systems;
 drop procedure get_system;
+drop function check_users_system;
 drop table systems;
