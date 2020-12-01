@@ -32,7 +32,7 @@ create definer = 'select_objects'@'localhost'
       select bin_to_uuid(id, 1) as system_id, bin_to_uuid(user_id, 1) as user_id,
       name, definition, created_at, modified_at from systems where id = binid;
     else
-      signal sqlstate '42000' set message_text = 'System unaccessible',
+      signal sqlstate '42000' set message_text = 'System inaccessible',
         mysql_errno = 1142;
     end if;
   end;
