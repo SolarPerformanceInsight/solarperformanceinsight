@@ -1,3 +1,4 @@
+import datetime as dt
 from typing import Union, List, Optional
 from pydantic import BaseModel, confloat, constr, Field, conint
 from pydantic.types import UUID
@@ -303,5 +304,11 @@ class PVSystem(BaseModel):
     )
 
 
-class StoredPVSystem(PVSystem):
+class CreatedPVSystemID(BaseModel):
     system_id: UUID = Field(..., description="Unique identifier of the system")
+
+
+class StoredPVSystem(CreatedPVSystemID):
+    created_at: dt.datetime = Field(..., description="Datetime system was created")
+    modified_at: dt.datetime = Field(..., description="Datetime system last modified")
+    definition: PVSystem

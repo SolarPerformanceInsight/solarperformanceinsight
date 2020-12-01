@@ -9,7 +9,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
-from . import auth, __version__, settings
+from . import auth, __version__, settings, storage
 from .routers import systems
 
 
@@ -41,6 +41,7 @@ class LogFilter(logging.Filter):
 
 @app.on_event("startup")
 async def startup_event():
+    storage.engine.connect()
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(LogFilter)
