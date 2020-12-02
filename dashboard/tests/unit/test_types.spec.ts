@@ -18,9 +18,7 @@ import {
   PVSystTemperatureParameters,
   SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
-import {
-  PVWattsLosses
-} from "@/types/Losses";
+import { PVWattsLosses } from "@/types/Losses";
 
 test("Instantiate base system", () => {
   const system = new System({});
@@ -70,7 +68,7 @@ const pvsyst_test_system = {
             alpha_sc: 0,
             EgRef: 0,
             cells_in_series: 0,
-            R_sh_exp: 0,
+            R_sh_exp: 0
           },
           tracking: {
             tilt: 0,
@@ -191,8 +189,7 @@ test("Instantiate pvwatts system from object", () => {
       ).toBeTruthy();
       expect(array.tracking instanceof FixedTrackingParameters).toBeTruthy();
       expect(
-        array.temperature_model_parameters instanceof
-          SAPMTemperatureParameters
+        array.temperature_model_parameters instanceof SAPMTemperatureParameters
       ).toBeTruthy();
     }
   }
@@ -306,23 +303,20 @@ describe("Array typeguard", () => {
   });
 });
 describe("Inverter typeguard", () => {
-  test.each([
-    "name",
-    "make_model",
-    "inverter_parameters",
-    "losses",
-    "arrays"
-  ])("Inverter typeguard missing %p", missing => {
-    const anon_inv: { [key: string]: any } = {
-      name: "name",
-      make_model: "mk_model",
-      inverter_parameters: {},
-      losses: {},
-      arrays: []
-    };
-    anon_inv[missing] = undefined;
-    expect(Inverter.isInstance(anon_inv)).toBeFalsy();
-  });
+  test.each(["name", "make_model", "inverter_parameters", "losses", "arrays"])(
+    "Inverter typeguard missing %p",
+    missing => {
+      const anon_inv: { [key: string]: any } = {
+        name: "name",
+        make_model: "mk_model",
+        inverter_parameters: {},
+        losses: {},
+        arrays: []
+      };
+      anon_inv[missing] = undefined;
+      expect(Inverter.isInstance(anon_inv)).toBeFalsy();
+    }
+  );
 });
 
 describe("PVSyst inverter parameters typeguard", () => {
@@ -470,15 +464,15 @@ test("PVarray init with array temperature", () => {
 });
 
 test("Empty Losses init", () => {
-    const losses = new PVWattsLosses({});
-    expect(losses.soiling).toBe(2.0);
-    expect(losses.shading).toBe(3.0);
-    expect(losses.snow).toBe(0.0);
-    expect(losses.mismatch).toBe(2.0);
-    expect(losses.wiring).toBe(2.0);
-    expect(losses.connections).toBe(0.5);
-    expect(losses.lid).toBe(1.5);
-    expect(losses.nameplate_rating).toBe(1.0);
-    expect(losses.age).toBe(0.0);
-    expect(losses.availability).toBe(3.0);
+  const losses = new PVWattsLosses({});
+  expect(losses.soiling).toBe(2.0);
+  expect(losses.shading).toBe(3.0);
+  expect(losses.snow).toBe(0.0);
+  expect(losses.mismatch).toBe(2.0);
+  expect(losses.wiring).toBe(2.0);
+  expect(losses.connections).toBe(0.5);
+  expect(losses.lid).toBe(1.5);
+  expect(losses.nameplate_rating).toBe(1.0);
+  expect(losses.age).toBe(0.0);
+  expect(losses.availability).toBe(3.0);
 });

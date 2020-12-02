@@ -47,9 +47,7 @@ import ArraysView from "@/components/model/Arrays.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { Inverter } from "@/types/Inverter";
-import {
-  PVWattsLosses
-} from "@/types/Losses";
+import { PVWattsLosses } from "@/types/Losses";
 import {
   SandiaInverterParameters,
   PVWattsInverterParameters

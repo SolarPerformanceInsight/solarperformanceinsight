@@ -64,7 +64,6 @@ import HelpPopup from "@/components/Help.vue";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
 
-
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
 import {

@@ -28,9 +28,7 @@ import {
   PVWattsInverterParameters,
   SandiaInverterParameters
 } from "@/types/InverterParameters";
-import {
-  PVWattsLosses
-} from "@/types/Losses";
+import { PVWattsLosses } from "@/types/Losses";
 
 Vue.component("inverter-view", InverterView);
 @Component
@@ -42,7 +40,7 @@ export default class InvertersView extends Vue {
 
   addInverter() {
     let paramClass: any = PVWattsInverterParameters;
-    let lossClass:any = PVWattsLosses;
+    let lossClass: any = PVWattsLosses;
     if (this.model == "pvsyst") {
       paramClass = SandiaInverterParameters;
       lossClass = null;

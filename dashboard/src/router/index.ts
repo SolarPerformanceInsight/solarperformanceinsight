@@ -11,7 +11,7 @@ const routes: Array<RouteConfig> = [
   {
     path: "/",
     name: "Home",
-    component: HomeContent,
+    component: HomeContent
   },
   {
     path: "/systems",

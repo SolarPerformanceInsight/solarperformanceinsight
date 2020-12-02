@@ -8,15 +8,15 @@
         <div id="nav">
           <!-- Always display home link -->
           <router-link to="/">
-          Home
+            Home
           </router-link>
 
           <!-- Router links to dispalay for authenticated users go in this
                span -->
-          <span  v-if="$auth.isAuthenticated">
-          <router-link v-if="$auth.isAuthenticated" to="/systems">
-          Systems
-          </router-link>
+          <span v-if="$auth.isAuthenticated">
+            <router-link v-if="$auth.isAuthenticated" to="/systems">
+              Systems
+            </router-link>
           </span>
         </div>
         <div id="account-menu">
@@ -32,7 +32,9 @@
     </div>
     <div id="site-footer">
       <div class="project-link">
-        <a href="https://solarperformanceinsight.org">Solar Performance Insight</a>
+        <a href="https://solarperformanceinsight.org">
+          Solar Performance Insight
+        </a>
       </div>
     </div>
   </div>
@@ -61,7 +63,6 @@ export default class Home extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 h3 {
   margin: 40px 0 0;
 }
@@ -81,7 +82,8 @@ div.advanced-model-params {
   width: fit-content;
 }
 
-#site-header, #site-footer{
+#site-header,
+#site-footer {
   display: flex;
 }
 #site-header {
@@ -93,7 +95,8 @@ div.advanced-model-params {
   margin-top: 1em;
 }
 
-#nav, #account-menu {
+#nav,
+#account-menu {
   padding: 30px;
   display: inline-flex;
 }

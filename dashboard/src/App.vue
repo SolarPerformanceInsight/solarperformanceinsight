@@ -7,11 +7,10 @@
 import { Component, Vue } from "vue-property-decorator";
 import Home from "@/views/Home.vue";
 
-Vue.component('home', Home);
+Vue.component("home", Home);
 
 @Component
-export default class App extends Vue {
-}
+export default class App extends Vue {}
 </script>
 <style>
 #app {
@@ -20,6 +19,4 @@ export default class App extends Vue {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-
-
 </style>
