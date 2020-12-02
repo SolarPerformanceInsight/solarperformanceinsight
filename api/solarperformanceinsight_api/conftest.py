@@ -47,7 +47,7 @@ def auth0_id():
 
 
 @pytest.fixture(scope="module")
-def user_id():
+def user_id():  # pragma: no cover
     return "17fbf1c6-34bd-11eb-af43-f4939feddd82"
 
 
