@@ -40,8 +40,8 @@ import pandas as pd
 import pymysql
 from pymysql import converters
 import pytz
-from sqlalchemy.engine import create_engine
-from sqlalchemy.pool import QueuePool
+from sqlalchemy.engine import create_engine  # type: ignore
+from sqlalchemy.pool import QueuePool  # type: ignore
 
 
 from . import settings, models
