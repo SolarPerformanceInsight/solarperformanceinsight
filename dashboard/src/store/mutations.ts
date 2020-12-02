@@ -1,6 +1,5 @@
-import Vuex from "vuex";
 import { System } from "../types/System";
-import { state, State } from "./state";
+import { State } from "./state";
 
 export const mutations = {
   updateSystemsList(state: State, systems: Record<string, System>) {
