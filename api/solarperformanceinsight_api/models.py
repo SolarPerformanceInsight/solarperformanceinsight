@@ -33,12 +33,13 @@ class SingleAxisTracking(BaseModel):
         description="Azimuth of tracker axis clockwise from North in degrees",
     )
     gcr: confloat(ge=0) = Field(
-        ..., title="GCR",
+        ...,
+        title="GCR",
         description=(
             "Ground coverage ratio: ratio of module length to the spacing"
             " between trackers"
-            ),
-        )
+        ),
+    )
     backtracking: bool = Field(
         ..., description="True if the tracking system supports backtracking"
     )
@@ -273,7 +274,7 @@ class SandiaInverterParameters(BaseModel):
         description=(
             "AC power consumed by the inverter when no AC power is exported "
             " (i.e., night tare), W"
-            ),
+        ),
     )
 
 
