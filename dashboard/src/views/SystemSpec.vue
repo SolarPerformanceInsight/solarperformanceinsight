@@ -76,7 +76,7 @@ Vue.component("system-view", SystemView);
 Vue.component("file-upload", FileUpload);
 
 @Component
-export default class Model extends Vue {
+export default class SystemSpec extends Vue {
   @Prop({ default: null }) systemId!: number | null;
   system!: System;
   model!: string;

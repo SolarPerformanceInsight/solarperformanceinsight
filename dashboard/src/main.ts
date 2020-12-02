@@ -9,7 +9,6 @@ import { spiStore } from "./store/store";
 
 // Auth0 configuration
 import { domain, clientId, audience } from "../auth_config.json";
-
 import { Auth0Plugin } from "./auth/auth";
 
 import "./assets/css/styles.css";
