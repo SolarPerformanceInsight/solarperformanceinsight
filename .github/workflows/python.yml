@@ -2,8 +2,6 @@ name: Test Python
 
 on:
   push:
-    branches:
-      - main
   pull_request:
     paths:
       - 'api/**'
@@ -20,6 +18,12 @@ jobs:
         with:
           python-version: 3.8
 
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: '8.0.21'
+          mysql database: 'spi_data'
+          mysql root password: 'testpassword'
+
       - name: Install Dependencies
         run: |
           cd api
@@ -28,6 +32,14 @@ jobs:
           pip install -r requirements-test.txt
           pip install -e .
           pip list
+
+      - name: Migrate database
+        env:
+          DATABASE_URL: "mysql://root:testpassword@127.0.0.1:3306/spi_data"
+        run: |
+          curl -fsSL -o ./dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x ./dbmate
+          ./dbmate --wait up
 
       - name: Test
         run: |
