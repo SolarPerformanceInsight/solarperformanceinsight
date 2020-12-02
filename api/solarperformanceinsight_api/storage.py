@@ -36,6 +36,7 @@ from uuid import UUID
 
 
 from fastapi import Depends, HTTPException
+import pandas as pd
 import pymysql
 from pymysql import converters
 import pytz
@@ -73,7 +74,9 @@ def convert_datetime_utc(obj):
     return pytz.utc.localize(unlocalized)
 
 
-def _make_sql_connection_partial():
+def _make_sql_connection_partial(
+    host=None, port=None, user=None, password=None, database=None
+):
     # adapted from the SolarForecastArbiter API under the above MIT license
     conv = converters.conversions.copy()
     # either convert decimals to floats, or add decimals to schema
@@ -83,14 +86,14 @@ def _make_sql_connection_partial():
     conv[converters.FIELD_TYPE.DATETIME] = convert_datetime_utc
     conv[converters.FIELD_TYPE.JSON] = json.loads
     conv[UUID] = converters.escape_str
-    # conv[pd.Timestamp] = escape_timestamp
+    conv[pd.Timestamp] = escape_timestamp
     conv[dt.datetime] = escape_datetime
     connect_kwargs = {
-        "host": settings.mysql_host,
-        "port": settings.mysql_port,
-        "user": settings.mysql_user,
-        "password": settings.mysql_password,
-        "database": settings.mysql_database,
+        "host": host or settings.mysql_host,
+        "port": port or settings.mysql_port,
+        "user": user or settings.mysql_user,
+        "password": password or settings.mysql_password,
+        "database": database or settings.mysql_database,
         "binary_prefix": True,
         "conv": conv,
         "use_unicode": True,
@@ -113,25 +116,33 @@ engine = create_engine(
 
 
 class StorageInterface:
-    def __init__(self, user: str = Depends(get_user_id)):
+    def __init__(self, user: str = Depends(get_user_id), *, commit_transactions=True):
         self.user = user
-        self.cursor = None
+        self._cursor = None
+        self.commit = commit_transactions
+
+    @property
+    def cursor(self):
+        if self._cursor is None:
+            raise AttributeError("Cursor is only available within `start_transaction`")
+        return self._cursor
 
     @contextmanager
-    def start_transaction(self, commit=True):
+    def start_transaction(self):
         connection = engine.connect()
         cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
-        self.cursor = cursor
+        self._cursor = cursor
         try:
             yield self
         except Exception:
             connection.rollback()
             raise
         else:
-            if commit:
+            if self.commit:
                 connection.commit()
         finally:
             connection.close()
+        self._cursor = None
 
     def try_query(self, query, args):
         # adapted from the SolarForecastArbiter API under the above MIT license
@@ -142,14 +153,15 @@ class StorageInterface:
             pymysql.err.IntegrityError,
             pymysql.err.InternalError,
             pymysql.err.DataError,
-        ) as e:
-            ecode = e.args[0]
+        ) as err:
+            ecode = err.args[0]
+            msg = err.args[1]
             if ecode == 1142:
-                raise HTTPException(status_code=404, detail=e.args[1])
+                raise HTTPException(status_code=404, detail=msg)
             elif ecode == 1062:
                 raise HTTPException(status_code=409)
             elif ecode == 3140 or ecode == 1406 or ecode == 1048:
-                raise HTTPException(status_code=400, detail=e.args[1])
+                raise HTTPException(status_code=400, detail=msg)
             else:
                 raise
 
@@ -196,11 +208,11 @@ class StorageInterface:
         out = [models.StoredPVSystem(**d) for d in systems]
         return out
 
-    def create_system(
-        self, name: str, system_def: models.PVSystem
-    ) -> models.CreatedPVSystemID:
-        return models.CreatedPVSystemID(
-            **self._call_procedure_for_single("create_system", name, system_def.json())
+    def create_system(self, system_def: models.PVSystem) -> models.PVSystemID:
+        return models.PVSystemID(
+            **self._call_procedure_for_single(
+                "create_system", system_def.name, system_def.json()
+            )
         )
 
     def get_system(self, system_id: UUID) -> models.StoredPVSystem:
@@ -209,3 +221,9 @@ class StorageInterface:
 
     def delete_system(self, system_id: UUID):
         self._call_procedure("delete_system", system_id)
+
+    def update_system(
+        self, system_id: UUID, system_def: models.PVSystem
+    ) -> models.PVSystemID:
+        self._call_procedure("update_system", system_id, system_def.json())
+        return models.PVSystemID(system_id=system_id)

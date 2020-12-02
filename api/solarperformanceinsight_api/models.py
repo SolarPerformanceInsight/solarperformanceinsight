@@ -326,11 +326,11 @@ class PVSystem(BaseModel):
     )
 
 
-class CreatedPVSystemID(BaseModel):
+class PVSystemID(BaseModel):
     system_id: UUID = Field(..., description="Unique identifier of the system")
 
 
-class StoredPVSystem(CreatedPVSystemID):
+class StoredPVSystem(PVSystemID):
     created_at: dt.datetime = Field(..., description="Datetime system was created")
     modified_at: dt.datetime = Field(..., description="Datetime system last modified")
     definition: PVSystem
