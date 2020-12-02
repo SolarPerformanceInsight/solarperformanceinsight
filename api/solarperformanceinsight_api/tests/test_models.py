@@ -16,8 +16,8 @@ fail_param = partial(
 )
 
 
-class UserString(BaseModel):
-    name: models.userstring
+class UserStringModel(BaseModel):
+    name: str = models.UserString(...)
 
 
 @pytest.mark.parametrize(
@@ -36,11 +36,11 @@ class UserString(BaseModel):
 )
 def test_userstring_fail(inp):
     with pytest.raises(ValidationError):
-        UserString(name=inp)
+        UserStringModel(name=inp)
 
 
 def test_userstring_empty():
-    assert UserString(name="").name == ""
+    assert UserStringModel(name="").name == ""
 
 
 @given(
@@ -49,7 +49,7 @@ def test_userstring_empty():
     ).filter(lambda x: re.search(r"[0-9a-z]+", x, re.IGNORECASE) is not None)
 )
 def test_userstring_success(inp):
-    assert UserString(name=inp).name == inp
+    assert UserStringModel(name=inp).name == inp
 
 
 @given(
