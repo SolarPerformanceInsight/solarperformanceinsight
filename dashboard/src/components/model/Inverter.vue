@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
@@ -61,7 +61,7 @@ Vue.component("loss-parameters", LossParametersView);
 Vue.component("help", HelpPopup);
 
 @Component
-export default class InverterView extends SchemaBase {
+export default class InverterView extends ModelBase {
   @Prop() inverter!: Inverter;
   @Prop() index!: number;
   @Prop() model!: string;

@@ -6,7 +6,7 @@ returns the string name of the schema found in the OpenAPI "components" * field.
 import { Component, Vue } from "vue-property-decorator";
 
 @Component
-export default class SchemaBase extends Vue {
+export default class ModelBase extends Vue {
   errors: Record<string, any> = {};
 
   get definitions() {

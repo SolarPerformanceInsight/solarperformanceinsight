@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
 
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
@@ -60,7 +60,7 @@ Vue.component("inverters-view", InvertersView);
 Vue.component("help", HelpPopup);
 
 @Component
-export default class SystemView extends SchemaBase {
+export default class SystemView extends ModelBase {
   @Prop() system!: System;
   @Prop() model!: string;
 

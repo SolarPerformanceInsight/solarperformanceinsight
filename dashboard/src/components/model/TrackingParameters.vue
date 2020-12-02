@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import HelpPopup from "@/components/Help.vue";
 import {
@@ -47,7 +47,7 @@ import {
 Vue.component("help", HelpPopup);
 
 @Component
-export default class TrackingParametersView extends SchemaBase {
+export default class TrackingParametersView extends ModelBase {
   @Prop() parameters!: FixedTrackingParameters | SingleAxisTrackingParameters;
 
   @Prop() tracking!: string;

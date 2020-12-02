@@ -125,7 +125,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
 
 import {
@@ -136,7 +136,7 @@ import {
 Vue.component("help", HelpPopup);
 
 @Component
-export default class ModuleParametersView extends SchemaBase {
+export default class ModuleParametersView extends ModelBase {
   @Prop() parameters!: PVSystModuleParameters | PVWattsModuleParameters;
 
   @Prop({ default: "pvsyst" }) model!: string;

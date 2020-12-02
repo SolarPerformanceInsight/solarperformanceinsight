@@ -59,7 +59,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 import HelpPopup from "@/components/Help.vue";
@@ -74,7 +74,7 @@ import {
 Vue.component("help", HelpPopup);
 
 @Component
-export default class TemperatureParametersView extends SchemaBase {
+export default class TemperatureParametersView extends ModelBase {
   @Prop() parameters!: PVSystTemperatureParameters | SAPMTemperatureParameters;
 
   @Prop() model!: string;

@@ -121,7 +121,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
 import ArraysView from "@/components/Arrays.vue";
 
@@ -135,7 +135,7 @@ Vue.component("arrays-view", ArraysView);
 Vue.component("help", HelpPopup);
 
 @Component
-export default class InverterParametersView extends SchemaBase {
+export default class InverterParametersView extends ModelBase {
   // extend acceptable types for InverterParameters to include a PVWatts class
   @Prop() parameters!: SandiaInverterParameters | PVWattsInverterParameters;
   @Prop() model!: string;

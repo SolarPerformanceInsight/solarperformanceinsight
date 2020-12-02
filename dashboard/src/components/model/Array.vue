@@ -68,7 +68,7 @@ import {
   SingleAxisTrackingParameters
 } from "@/types/Tracking";
 
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
 import ModuleParametersView from "@/components/ModuleParameters.vue";
 import TrackingParametersView from "@/components/TrackingParameters.vue";
@@ -84,7 +84,7 @@ interface HTMLInputEvent extends Event {
 }
 
 @Component
-export default class ArrayView extends SchemaBase {
+export default class ArrayView extends ModelBase {
   @Prop() pvarray!: PVArray;
   @Prop() index!: number;
   @Prop() model!: string;

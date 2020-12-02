@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import SchemaBase from "@/components/SchemaBase.vue";
+import ModelBase from "@/components/ModelBase.vue";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 import HelpPopup from "@/components/Help.vue";
@@ -100,7 +100,7 @@ import { PVWattsLosses } from "@/types/Losses";
 Vue.component("help", HelpPopup);
 
 @Component
-export default class LossParametersView extends SchemaBase {
+export default class LossParametersView extends ModelBase {
   @Prop() parameters!: PVWattsLosses | null;
 
   @Prop() model!: string;
