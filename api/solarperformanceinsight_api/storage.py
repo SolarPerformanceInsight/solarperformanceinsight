@@ -116,10 +116,10 @@ engine = create_engine(
 
 
 class StorageInterface:
-    def __init__(self, user: str = Depends(get_user_id), *, commit_transactions=True):
+    def __init__(self, user: str = Depends(get_user_id)):
         self.user = user
         self._cursor = None
-        self.commit = commit_transactions
+        self.commit = True
 
     @property
     def cursor(self):

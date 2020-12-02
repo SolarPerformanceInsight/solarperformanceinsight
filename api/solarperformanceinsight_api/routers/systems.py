@@ -105,10 +105,10 @@ async def update_system(
     request: Request,
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.PVSystemID:
-    """Create a new PV System"""
+    """Update a PV System"""
     with storage.start_transaction() as st:
-        st.update_system(system_id, system)
+        out = st.update_system(system_id, system)
         response.headers["Location"] = request.url_for(
             "get_system", system_id=system_id
         )
-        return system_id
+        return out

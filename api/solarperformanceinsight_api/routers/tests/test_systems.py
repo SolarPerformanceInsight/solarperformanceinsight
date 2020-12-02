@@ -9,7 +9,7 @@ import pytest
 
 
 from solarperformanceinsight_api.main import app
-from solarperformanceinsight_api import models
+from solarperformanceinsight_api import models, storage
 
 
 @pytest.fixture(scope="module")
@@ -49,6 +49,19 @@ def test_get_other_system(client, add_example_db_data, other_system_id):
 def test_delete_other_system(client, add_example_db_data, other_system_id):
     response = client.delete(f"/systems/{other_system_id}")
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize("alter", [0, 1])
+def test_update_system(
+    client, add_example_db_data, system_def, system_id, mocker, alter
+):
+    if alter:
+        system_def.albedo = 999
+    update = mocker.spy(storage.StorageInterface, "update_system")
+    response = client.post(f"/systems/{system_id}", data=system_def.json())
+    assert response.status_code == 201
+    assert response.json()["system_id"] == system_id
+    update.assert_called()
 
 
 def test_update_other_system(client, add_example_db_data, other_system_id, system_def):

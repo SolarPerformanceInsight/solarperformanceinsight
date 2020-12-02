@@ -13,7 +13,8 @@ from solarperformanceinsight_api import storage
 
 @pytest.fixture(scope="module")
 def storage_interface(auth0_id):
-    out = storage.StorageInterface(commit_transactions=False)
+    out = storage.StorageInterface()
+    out.commit = False
     out.user = auth0_id
     return out
 
@@ -82,7 +83,8 @@ def test_start_transaction_commit(mocker):
 
 
 def test_start_transaction_no_commit(mocker):
-    si = storage.StorageInterface(commit_transactions=False)
+    si = storage.StorageInterface()
+    si.commit = False
     conn = mocker.MagicMock()
     mocker.patch.object(storage.engine, "connect", return_value=conn)
     with si.start_transaction() as st:
