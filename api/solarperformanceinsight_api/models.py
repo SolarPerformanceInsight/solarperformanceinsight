@@ -5,6 +5,59 @@ from pydantic.fields import Undefined
 from pydantic.types import UUID
 
 
+SYSTEM_EXAMPLE = dict(
+    name="Test PV System",
+    latitude=33.98,
+    longitude=-115.323,
+    elevation=2300,
+    albedo=0.2,
+    inverters=[
+        dict(
+            name="Inverter 1",
+            make_model="ABB__MICRO_0_25_I_OUTD_US_208__208V_",
+            inverter_parameters=dict(
+                Pso=2.08961,
+                Paco=250,
+                Pdco=259.589,
+                Vdco=40,
+                C0=-4.1e-05,
+                C1=-9.1e-05,
+                C2=0.000494,
+                C3=-0.013171,
+                Pnt=0.075,
+            ),
+            losses={},
+            arrays=[
+                dict(
+                    name="Array 1",
+                    make_model="Canadian_Solar_Inc__CS5P_220M",
+                    modules_per_string=7,
+                    strings=5,
+                    tracking=dict(
+                        tilt=20.0,
+                        azimuth=180.0,
+                    ),
+                    temperature_model_parameters=dict(
+                        u_c=29.0, u_v=0.0, eta_m=0.1, alpha_absorption=0.9
+                    ),
+                    module_parameters=dict(
+                        alpha_sc=0.004539,
+                        gamma_ref=1.2,
+                        mu_gamma=-0.003,
+                        I_L_ref=5.11426,
+                        I_o_ref=8.10251e-10,
+                        R_sh_ref=381.254,
+                        R_s=1.06602,
+                        R_sh_0=400.0,
+                        cells_in_series=96,
+                    ),
+                )
+            ],
+        )
+    ],
+)
+
+
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, underscore
 # and empty string
 def UserString(default: Any = Undefined, *, title: str = None, description: str = None):
@@ -325,12 +378,30 @@ class PVSystem(BaseModel):
         ..., description="Inverters that are connected to make up this system"
     )
 
+    class Config:
+        schema_extra = {"example": SYSTEM_EXAMPLE}
+
 
 class PVSystemID(BaseModel):
     system_id: UUID = Field(..., description="Unique identifier of the system")
+
+    class Config:
+        schema_extra = {
+            "example": {"system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"}
+        }
 
 
 class StoredPVSystem(PVSystemID):
     created_at: dt.datetime = Field(..., description="Datetime system was created")
     modified_at: dt.datetime = Field(..., description="Datetime system last modified")
     definition: PVSystem
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "created_at": "2020-12-01T01:23:00+00:00",
+                "modified_at": "2020-12-01T01:23:00+00:00",
+                "definition": SYSTEM_EXAMPLE,
+            }
+        }
