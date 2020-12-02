@@ -9,6 +9,7 @@ import schemathesis
 from solarperformanceinsight_api.main import app
 
 
+pytestmark = pytest.mark.usefixtures("add_example_db_data")
 schemathesis.fixups.install()
 schema = schemathesis.from_asgi("/openapi.json", app)
 
@@ -28,7 +29,12 @@ def test_api(data, case, auth_token):
 
 
 @pytest.fixture()
-def auth_state_machine(auth_token):
+def new_settings():
+    return {"stateful_step_count": 5}
+
+
+@pytest.fixture()
+def auth_state_machine(auth_token, new_settings):
     schema = schemathesis.from_asgi("/openapi.json", app)
 
     class APIWorkflow(schema.as_state_machine()):
@@ -40,13 +46,19 @@ def auth_state_machine(auth_token):
         def get_call_kwargs(self, case):
             return {"headers": self.headers}
 
+    APIWorkflow.TestCase.settings = hypsettings(
+        APIWorkflow.TestCase.settings, **new_settings
+    )
+
     return APIWorkflow
 
 
 @pytest.fixture()
-def noauth_state_machine():
+def noauth_state_machine(new_settings):
     schema = schemathesis.from_asgi("/openapi.json", app)
-    return schema.as_state_machine()
+    out = schema.as_state_machine()
+    out.TestCase.settings = hypsettings(out.TestCase.settings, **new_settings)
+    return out
 
 
 def test_statefully_with_auth(auth_state_machine):
