@@ -163,7 +163,6 @@ export default class SystemSpec extends Vue {
 
   async saveSystem() {
     const token = await this.$auth.getTokenSilently();
-    console.log("Posting system to api");
     const response = await fetch(`/api/systems/`, {
       method: "post",
       body: JSON.stringify(this.system),
@@ -174,7 +173,6 @@ export default class SystemSpec extends Vue {
     if (response.ok) {
       this.$router.push("/systems");
     } else {
-      console.log("post borked");
       this.loading = false;
       this.errorState = true;
     }

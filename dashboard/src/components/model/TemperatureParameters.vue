@@ -87,7 +87,6 @@ export default class TemperatureParametersView extends ModelBase {
     } else {
       componentName = "SAPMTemperatureParameters";
     }
-    console.log(componentName);
     return componentName;
   }
 }

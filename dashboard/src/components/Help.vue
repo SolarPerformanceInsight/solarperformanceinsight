@@ -1,3 +1,8 @@
+<!--
+Component that displays a button to toggle a help button pop up button. When
+used multiple times, only one help button will be shown at a time. Help pop
+ups will close when the user clicks away.
+-->
 <template>
   <div class="help">
     <span v-if="helpText != undefined">
