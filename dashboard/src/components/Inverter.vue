@@ -5,7 +5,7 @@
     <br />
     <b>Name:</b>
     <input v-model="inverter.name" />
-    <help :helpText ="this.definitions.properties.name.description" />
+    <help :helpText="this.definitions.properties.name.description" />
     <br />
     <span style="color:#F00;" v-if="'name' in this.errors">
       {{ this.errors.name }}
@@ -13,7 +13,7 @@
     </span>
     <b>Make and Model:</b>
     <input v-model="inverter.make_model" />
-    <help :helpText ="this.definitions.properties.make_model.description" />
+    <help :helpText="this.definitions.properties.make_model.description" />
     <br />
     <span style="color:#F00;" v-if="'make_model' in this.errors">
       {{ this.errors.make_model }}
@@ -25,6 +25,11 @@
       :parameters="inverter.inverter_parameters"
       :model="model"
     />
+    <span v-if="model == 'pvwatts'">
+      <b>Loss Parameters:</b>
+      <br />
+      <loss-parameters :parameters="inverter.losses" :model="model" />
+    </span>
     <arrays-view :pvarrays="inverter.arrays" :model="model" />
     <br />
     <button @click="removeInverter">Remove Inverter</button>
@@ -39,8 +44,12 @@ import HelpPopup from "@/components/Help.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import InverterParametersView from "@/components/InverterParameters.vue";
+import LossParametersView from "@/components/LossParameters.vue";
 import ArraysView from "@/components/Arrays.vue";
 import { Inverter } from "@/types/Inverter";
+import {
+  PVWattsLosses
+} from "@/types/Losses";
 import {
   SandiaInverterParameters,
   PVWattsInverterParameters
@@ -48,6 +57,7 @@ import {
 
 Vue.component("arrays-view", ArraysView);
 Vue.component("inverter-parameters", InverterParametersView);
+Vue.component("loss-parameters", LossParametersView);
 Vue.component("help", HelpPopup);
 
 @Component
@@ -60,8 +70,10 @@ export default class InverterView extends SchemaBase {
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
       this.inverter.inverter_parameters = new SandiaInverterParameters({});
+      this.inverter.losses = null;
     } else if (newModel == "pvwatts") {
       this.inverter.inverter_parameters = new PVWattsInverterParameters({});
+      this.inverter.losses = new PVWattsLosses({});
     }
   }
 

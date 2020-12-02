@@ -12,6 +12,8 @@ import { domain, clientId, audience } from "../auth_config.json";
 
 import { Auth0Plugin } from "./auth/auth";
 
+import "./assets/css/styles.css";
+
 Vue.use(Auth0Plugin, {
   domain,
   clientId,

@@ -34,8 +34,8 @@ export class PVWattsLosses {
     this.availability = availability;
   }
   static isInstance(obj: any): obj is PVWattsLosses {
-    if (obj == null){
-        return false;
+    if (obj == null) {
+      return false;
     }
     const maybe = obj as PVWattsLosses;
     return (

@@ -2,7 +2,7 @@
   <div class="system">
     <b>Name:</b>
     <input v-model="system.name" />
-    <help :helpText ="this.definitions.properties.name.description" />
+    <help :helpText="this.definitions.properties.name.description" />
     <br />
     <span style="color:#F00;" v-if="'name' in this.errors">
       {{ this.errors.name }}
@@ -10,7 +10,7 @@
     </span>
     <b>Latitude:</b>
     <input type="number" v-model.number="system.latitude" />
-    <help :helpText ="this.definitions.properties.latitude.description" />
+    <help :helpText="this.definitions.properties.latitude.description" />
     <br />
     <span style="color:#F00;" v-if="'latitude' in this.errors">
       {{ this.errors.latitude }}
@@ -18,7 +18,7 @@
     </span>
     <b>Longitude:</b>
     <input type="number" v-model.number="system.longitude" />
-    <help :helpText ="this.definitions.properties.longitude.description" />
+    <help :helpText="this.definitions.properties.longitude.description" />
     <br />
     <span style="color:#F00;" v-if="'longitude' in this.errors">
       {{ this.errors.longitude }}
@@ -26,7 +26,7 @@
     </span>
     <b>Elevation:</b>
     <input type="number" v-model.number="system.elevation" />
-    <help :helpText ="this.definitions.properties.elevation.description" />
+    <help :helpText="this.definitions.properties.elevation.description" />
     <br />
     <span style="color:#F00;" v-if="'elevation' in this.errors">
       {{ this.errors.elevation }}
@@ -34,7 +34,7 @@
     </span>
     <b>Albedo:</b>
     <input type="number" v-model.number="system.albedo" />
-    <help :helpText ="this.definitions.properties.albedo.description" />
+    <help :helpText="this.definitions.properties.albedo.description" />
     <br />
     <span style="color:#F00;" v-if="'albedo' in this.errors">
       {{ this.errors.albedo }}
@@ -76,8 +76,6 @@ export default class SystemView extends SchemaBase {
       .validate(this.apiComponentName, system)
       .then(this.setValidationResult);
   }
-
-
 }
 </script>
 

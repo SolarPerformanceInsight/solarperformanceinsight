@@ -1,10 +1,15 @@
 <template>
   <div class="help">
     <span v-if="helpText != undefined">
-      <button @click.stop="showHelp">
+      <button @click="toggleHelp" @hideHelp="hideHelp">
         ?
       </button>
-      <div v-if="show" v-click-away="hideHelp" class="help-wrapper">
+      <div
+        v-if="show"
+        v-on:hide-help="hideHelp"
+        v-click-away="hideHelp"
+        class="help-wrapper"
+      >
         {{ helpText }}
       </div>
     </span>
@@ -20,7 +25,9 @@ interface HTMLElement {
 Vue.directive("click-away", {
   bind(el: any, binding: any, vnode: any) {
     el.clickAway = function(event: any) {
-      if (!(el == event.target || el.contains(event.target))) {
+      if (
+        !(el == event.target.nextElementSibling || el.contains(event.target))
+      ) {
         vnode.context[binding.expression](event);
       }
     };
@@ -41,8 +48,8 @@ export default class HelpPopup extends Vue {
       show: false
     };
   }
-  showHelp() {
-    this.show = true;
+  toggleHelp() {
+    this.show = !this.show;
   }
   hideHelp() {
     this.show = false;

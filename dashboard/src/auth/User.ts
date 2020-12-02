@@ -1,3 +1,4 @@
+// Copyright (c) 2020 RisingStack
 export class User {
   sub!: string;
   names!: string;

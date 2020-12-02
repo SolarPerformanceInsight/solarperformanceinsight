@@ -17,7 +17,9 @@
       </span>
       <b>Alpha absorption:</b>
       <input v-model="parameters.alpha_absorption" />
-      <help :helpText="this.definitions.properties.alpha_absorption.description" />
+      <help
+        :helpText="this.definitions.properties.alpha_absorption.description"
+      />
       <br />
       <span style="color: #F00;" v-if="'alpha_absorption' in this.errors">
         {{ this.errors.alpha_absorption }}
@@ -52,7 +54,6 @@
       <span style="color: #F00;" v-if="'deltaT' in this.errors">
         {{ this.errors.deltaT }}
       </span>
-
     </div>
   </div>
 </template>
@@ -81,7 +82,7 @@ export default class TemperatureParametersView extends SchemaBase {
 
   get apiComponentName() {
     let componentName: string;
-    if (this.model == "pvsyst"){
+    if (this.model == "pvsyst") {
       componentName = "PVsystTemperatureParameters";
     } else {
       componentName = "SAPMTemperatureParameters";

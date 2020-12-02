@@ -8,8 +8,10 @@
     </div>
     <div v-if="!loading && !errorState">
       <h1 v-if="systemId == null">New System</h1>
-      <button @click="displaySummary = !displaySummary">Display Summary</button>
-      <button @click="downloadSystem">Download System</button>
+      <button @click="displaySummary = !displaySummary">
+        Display JSON Summary
+      </button>
+      <button @click="downloadSystem">Download System JSON</button>
       <button @click="saveSystem">Save System</button>
       <div v-if="displaySummary" class="model-summary">
         <h1>Model Summary</h1>

@@ -18,6 +18,9 @@ import {
   PVSystTemperatureParameters,
   SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
+import {
+  PVWattsLosses
+} from "@/types/Losses";
 
 test("Instantiate base system", () => {
   const system = new System({});
@@ -75,7 +78,9 @@ const pvsyst_test_system = {
           },
           temperature_model_parameters: {
             u_c: 29,
-            u_v: 0
+            u_v: 0,
+            eta_m: 0,
+            alpha_absorption: 0
           }
         }
       ]
@@ -367,7 +372,8 @@ describe("PVSyst module parameters typeguard", () => {
     "R_s",
     "alpha_sc",
     "EgRef",
-    "cells_in_series"
+    "cells_in_series",
+    "R_sh_exp"
   ])("pvwatts mp typeguard missing %p", missing => {
     const anon_params: { [key: string]: any } = {
       gamma_ref: 0,
@@ -461,4 +467,18 @@ test("PVWatts array init", () => {
 test("PVarray init with array temperature", () => {
   const pvarray = new PVArray({ temperature_model_parameters: [1, 2, 3] });
   expect(pvarray.temperature_model_parameters).toStrictEqual([1, 2, 3]);
+});
+
+test("Empty Losses init", () => {
+    const losses = new PVWattsLosses({});
+    expect(losses.soiling).toBe(2.0);
+    expect(losses.shading).toBe(3.0);
+    expect(losses.snow).toBe(0.0);
+    expect(losses.mismatch).toBe(2.0);
+    expect(losses.wiring).toBe(2.0);
+    expect(losses.connections).toBe(0.5);
+    expect(losses.lid).toBe(1.5);
+    expect(losses.nameplate_rating).toBe(1.0);
+    expect(losses.age).toBe(0.0);
+    expect(losses.availability).toBe(3.0);
 });
