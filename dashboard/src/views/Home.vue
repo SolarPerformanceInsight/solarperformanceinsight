@@ -3,8 +3,8 @@
 -->
 <template>
   <div class="home">
-    <div v-if="!$auth.loading">
-      <div id="site-header">
+    <header>
+      <template v-if="!$auth.loading">
         <div id="nav">
           <!-- Always display home link -->
           <router-link to="/">
@@ -25,18 +25,18 @@
           <!-- show logout when authenticated -->
           <button v-if="$auth.isAuthenticated" @click="logout">Log out</button>
         </div>
-      </div>
-      <div class="body">
-        <router-view />
-      </div>
-    </div>
-    <div id="site-footer">
+      </template>
+    </header>
+    <main class="body">
+      <router-view />
+    </main>
+    <footer>
       <div class="project-link">
         <a href="https://solarperformanceinsight.org">
           Solar Performance Insight
         </a>
       </div>
-    </div>
+    </footer>
   </div>
 </template>
 
@@ -82,15 +82,15 @@ div.advanced-model-params {
   width: fit-content;
 }
 
-#site-header,
-#site-footer {
+header,
+footer {
   display: flex;
 }
-#site-header {
+header {
   border-bottom: 1px solid black;
   margin-bottom: 1em;
 }
-#site-footer {
+footer {
   border-top: 1px solid black;
   margin-top: 1em;
 }
@@ -118,5 +118,13 @@ div.advanced-model-params {
 }
 .project-link {
   padding: 30px;
+}
+div.home {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+main {
+  flex: 1;
 }
 </style>
