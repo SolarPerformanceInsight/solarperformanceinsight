@@ -36,7 +36,8 @@ class SingleAxisTracking(BaseModel):
         ..., title="GCR",
         description=(
             "Ground coverage ratio: ratio of module length to the spacing"
-            " between trackers"),
+            " between trackers"
+            ),
         )
     backtracking: bool = Field(
         ..., description="True if the tracking system supports backtracking"
@@ -176,7 +177,9 @@ class PVArray(BaseModel):
     modules_per_string: conint(gt=0) = Field(
         ..., title="Modules Per String", description="Number of PV modules per string"
     )
-    strings: conint(gt=0) = Field(..., description="Number of parallel strings in the array")
+    strings: conint(gt=0) = Field(
+        ..., description="Number of parallel strings in the array"
+    )
 
 
 class PVWattsLosses(BaseModel):
@@ -201,8 +204,9 @@ class PVWattsInverterParameters(BaseModel):
         ...,
         description=(
             "DC power input which produces the rated AC output power at the "
-            "nominal DC voltage of the inverter")
-        )
+            "nominal DC voltage of the inverter"
+        ),
+    )
     eta_inv_nom: confloat() = Field(
         0.96, description="Nominal inverter efficiency, unitless"
     )
@@ -265,7 +269,8 @@ class SandiaInverterParameters(BaseModel):
         ),
     )
     Pnt: confloat() = Field(
-        ..., description=(
+        ...,
+        description=(
             "AC power consumed by the inverter when no AC power is exported "
             " (i.e., night tare), W"
             ),
@@ -311,7 +316,7 @@ class PVSystem(BaseModel):
         ..., description="Albedo of the surface around the system"
     )
     inverters: List[Inverter] = Field(
-        ..., description="Names of the inverters that are connected to make up this system"
+        ..., description="Names of the inverters that make up this system"
     )
 
 
