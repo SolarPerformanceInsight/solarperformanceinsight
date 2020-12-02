@@ -47,9 +47,9 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
+import InvertersView from "@/components/model/Inverters.vue";
 
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import InvertersView from "@/components/Inverters.vue";
 import { System } from "@/types/System";
 import {
   SandiaInverterParameters,

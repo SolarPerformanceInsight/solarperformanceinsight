@@ -123,7 +123,7 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
-import ArraysView from "@/components/Arrays.vue";
+import ArraysView from "@/components/model/Arrays.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import {

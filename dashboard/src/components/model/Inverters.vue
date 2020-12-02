@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import InverterView from "@/components/Inverter.vue";
+import InverterView from "@/components/model/Inverter.vue";
 import { Inverter } from "@/types/Inverter";
 import {
   PVWattsInverterParameters,

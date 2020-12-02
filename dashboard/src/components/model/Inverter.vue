@@ -41,11 +41,11 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
+import InverterParametersView from "@/components/model/InverterParameters.vue";
+import LossParametersView from "@/components/model/LossParameters.vue";
+import ArraysView from "@/components/model/Arrays.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import InverterParametersView from "@/components/InverterParameters.vue";
-import LossParametersView from "@/components/LossParameters.vue";
-import ArraysView from "@/components/Arrays.vue";
 import { Inverter } from "@/types/Inverter";
 import {
   PVWattsLosses

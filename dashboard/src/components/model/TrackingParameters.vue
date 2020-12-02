@@ -37,8 +37,9 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import HelpPopup from "@/components/Help.vue";
+
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters

@@ -69,7 +69,7 @@ import {
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 
-import SystemView from "@/components/System.vue";
+import SystemView from "@/components/model/System.vue";
 import FileUpload from "@/components/FileUpload.vue";
 
 Vue.component("system-view", SystemView);

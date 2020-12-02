@@ -70,9 +70,9 @@ import {
 
 import ModelBase from "@/components/ModelBase.vue";
 import HelpPopup from "@/components/Help.vue";
-import ModuleParametersView from "@/components/ModuleParameters.vue";
-import TrackingParametersView from "@/components/TrackingParameters.vue";
-import TemperatureParametersView from "@/components/TemperatureParameters.vue";
+import ModuleParametersView from "@/components/model/ModuleParameters.vue";
+import TrackingParametersView from "@/components/model/TrackingParameters.vue";
+import TemperatureParametersView from "@/components/model/TemperatureParameters.vue";
 
 Vue.component("module-parameters", ModuleParametersView);
 Vue.component("tracking-parameters", TrackingParametersView);

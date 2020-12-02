@@ -60,9 +60,10 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
+import HelpPopup from "@/components/Help.vue";
+
 import { Component, Prop, Vue } from "vue-property-decorator";
 
-import HelpPopup from "@/components/Help.vue";
 
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
