@@ -84,9 +84,10 @@ export class VueAuth extends Vue {
     // Create a new instance of the SDK client using members of the given options object
     this.auth0Client = await createAuth0Client({
       domain: auth0Options.domain,
-      client_id: auth0Options.clientId, // eslint-disable-line @typescript-eslint/camelcase
+      client_id: auth0Options.clientId,
       audience: auth0Options.audience,
-      redirect_uri: redirectUri // eslint-disable-line @typescript-eslint/camelcase
+      useRefreshTokens: true,
+      redirect_uri: redirectUri
     });
 
     try {
