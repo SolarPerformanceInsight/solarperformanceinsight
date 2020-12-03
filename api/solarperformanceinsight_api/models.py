@@ -382,24 +382,34 @@ class PVSystem(BaseModel):
         schema_extra = {"example": SYSTEM_EXAMPLE}
 
 
-class PVSystemID(BaseModel):
-    system_id: UUID = Field(..., description="Unique identifier of the system")
+class StoredObject(BaseModel):
+    object_id: UUID = Field(..., description="Unique identifier of the object")
+    object_type: str = Field("system", description="Type of the object")
+    created_at: dt.datetime = Field(..., description="Datetime the object was created")
+    modified_at: dt.datetime = Field(
+        ..., description="Datetime the object was last modified"
+    )
 
     class Config:
         schema_extra = {
-            "example": {"system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"}
+            "example": {
+                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_type": "system",
+                "created_at": "2020-12-01T01:23:00+00:00",
+                "modified_at": "2020-12-01T01:23:00+00:00",
+            }
         }
 
 
-class StoredPVSystem(PVSystemID):
-    created_at: dt.datetime = Field(..., description="Datetime system was created")
-    modified_at: dt.datetime = Field(..., description="Datetime system last modified")
+class StoredPVSystem(StoredObject):
+
     definition: PVSystem
 
     class Config:
         schema_extra = {
             "example": {
-                "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_type": "system",
                 "created_at": "2020-12-01T01:23:00+00:00",
                 "modified_at": "2020-12-01T01:23:00+00:00",
                 "definition": SYSTEM_EXAMPLE,

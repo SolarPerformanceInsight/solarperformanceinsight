@@ -24,7 +24,7 @@ def _gen_uuid():
 
 PVSYSTEMS = {
     uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"): models.StoredPVSystem(
-        system_id=uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"),
+        object_id=uuid.UUID("6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"),
         created_at="2020-12-01T01:23:00+00:00",
         modified_at="2020-12-01T01:23:00+00:00",
         definition=models.SYSTEM_EXAMPLE,
@@ -49,7 +49,7 @@ async def list_systems():
             "links": {
                 "Get System": {
                     "operationId": "get_system_systems__system_id__get",
-                    "parameters": {"system_id": "$response.body#/system_id"},
+                    "parameters": {"system_id": "$response.body#/object_id"},
                 }
             }
         },
@@ -62,7 +62,7 @@ async def create_system(system: models.PVSystem, response: Response, request: Re
     id_ = _gen_uuid()
     now = dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc, microsecond=0)
     created = models.StoredPVSystem(
-        system_id=id_, created_at=now, modified_at=now, definition=system
+        object_id=id_, created_at=now, modified_at=now, definition=system
     )
     PVSYSTEMS[id_] = created
     response.headers["Location"] = request.url_for("get_system", system_id=id_)
