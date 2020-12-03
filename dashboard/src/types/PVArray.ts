@@ -4,7 +4,7 @@ import {
 } from "./Tracking";
 import {
   PVSystTemperatureParameters,
-  PVWattsTemperatureParameters
+  SAPMTemperatureParameters
 } from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
@@ -18,7 +18,7 @@ export class PVArray {
   temperature_model_parameters:
     | Array<number>
     | PVSystTemperatureParameters
-    | PVWattsTemperatureParameters;
+    | SAPMTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   modules_per_string: number;
@@ -58,9 +58,9 @@ export class PVArray {
         temperature_model_parameters
       );
     } else if (
-      PVWattsTemperatureParameters.isInstance(temperature_model_parameters)
+      SAPMTemperatureParameters.isInstance(temperature_model_parameters)
     ) {
-      this.temperature_model_parameters = new PVWattsTemperatureParameters(
+      this.temperature_model_parameters = new SAPMTemperatureParameters(
         temperature_model_parameters
       );
     } else {
