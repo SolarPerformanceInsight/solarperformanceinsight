@@ -1,8 +1,11 @@
+/* Primary router for the dashboard. Any routes that require authentication
+ * should be registered with `beforeEnter: authGuard`.
+ */
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Model from "../views/Model.vue";
+import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
-import Home from "../views/Home.vue";
+import HomeContent from "../views/HomeContent.vue";
 import { authGuard } from "../auth/authGuard";
 
 Vue.use(VueRouter);
@@ -11,7 +14,7 @@ const routes: Array<RouteConfig> = [
   {
     path: "/",
     name: "Home",
-    component: Home
+    component: HomeContent
   },
   {
     path: "/systems",
@@ -22,13 +25,13 @@ const routes: Array<RouteConfig> = [
   {
     path: "/system/new",
     name: "Model",
-    component: Model,
+    component: SystemSpec,
     beforeEnter: authGuard
   },
   {
     path: "/system/:systemId",
     name: "Update System",
-    component: Model,
+    component: SystemSpec,
     props: true,
     beforeEnter: authGuard
   }

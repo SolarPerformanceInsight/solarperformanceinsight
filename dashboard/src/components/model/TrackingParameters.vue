@@ -3,9 +3,7 @@
     <div v-if="tracking == 'fixed'">
       <b>Tilt:</b>
       <input type="number" v-model.number="parameters.tilt" />
-      <span v-if="'tilt' in this.definitions.properties">
-        {{ this.definitions.properties.tilt.description }}
-      </span>
+      <help :helpText="this.definitions.properties.tilt.description" />
       <br />
       <span style="color:#F00;" v-if="'tilt' in this.errors">
         {{ this.errors.tilt }}
@@ -13,9 +11,7 @@
       </span>
       <b>Azimuth:</b>
       <input type="number" v-model.number="parameters.azimuth" />
-      <span v-if="'azimuth' in this.definitions.properties">
-        {{ this.definitions.properties.azimuth.description }}
-      </span>
+      <help :helpText="this.definitions.properties.azimuth.description" />
       <br />
       <span style="color:#F00;" v-if="'azimuth' in this.errors">
         {{ this.errors.azimuth }}
@@ -25,37 +21,38 @@
     <div v-if="tracking == 'singleAxis'">
       <b>Axis Tilt:</b>
       <input v-model.number="parameters.axis_tilt" />
+      <help :helpText="this.definitions.properties.axis_tilt.description" />
       <br />
       <b>Axis Azimuth:</b>
       <input v-model.number="parameters.axis_azimuth" />
+      <help :helpText="this.definitions.properties.axis_azimuth.description" />
       <br />
       <b>Ground Coverage Ratio:</b>
       <input v-model.number="parameters.gcr" />
+      <help :helpText="this.definitions.properties.gcr.description" />
       <br />
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import ModelBase from "@/components/ModelBase.vue";
+import HelpPopup from "@/components/Help.vue";
+
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-// Update with many classes of inverter parameters to check for type before
-// choosing a display.
 import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "@/types/Tracking";
 
+Vue.component("help", HelpPopup);
+
 @Component
-export default class TrackingParametersView extends Vue {
+export default class TrackingParametersView extends ModelBase {
   @Prop() parameters!: FixedTrackingParameters | SingleAxisTrackingParameters;
 
   @Prop() tracking!: string;
   errors: Record<string, any> = {};
-
-  get definitions() {
-    /* Get the api definition of this object */
-    return this.$validator.getComponentSpec(this.apiComponentName);
-  }
 
   get apiComponentName() {
     //Select the correct key from the api spec based on current tracking type
@@ -80,20 +77,6 @@ export default class TrackingParametersView extends Vue {
     this.$validator
       .validate(this.apiComponentName, params)
       .then(this.setValidationResult);
-  }
-  setValidationResult(validity: boolean) {
-    if (!validity) {
-      const errors = this.$validator.getErrors();
-      const currentErrors: Record<string, any> = {};
-      errors.forEach(function(error: Record<string, any>) {
-        const field = error.dataPath.split("/").pop();
-        const message = error.message;
-        currentErrors[field] = message;
-      });
-      this.errors = currentErrors;
-    } else {
-      this.errors = {};
-    }
   }
 }
 </script>

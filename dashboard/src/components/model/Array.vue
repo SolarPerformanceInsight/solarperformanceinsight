@@ -5,10 +5,20 @@
     <br />
     <b>Name:</b>
     <input v-model="pvarray.name" />
+    <help :helpText="this.definitions.properties.name.description" />
     <br />
+    <span style="color:#F00;" v-if="'name' in this.errors">
+      {{ this.errors.name }}
+      <br />
+    </span>
     <b>Make and Model:</b>
     <input v-model="pvarray.make_model" />
+    <help :helpText="this.definitions.properties.make_model.description" />
     <br />
+    <span style="color:#F00;" v-if="'make_model' in this.errors">
+      {{ this.errors.make_model }}
+      <br />
+    </span>
     <b>Tracking:</b>
     <input
       v-model="tracking"
@@ -50,7 +60,7 @@ import {
 
 import {
   PVSystTemperatureParameters,
-  PVWattsTemperatureParameters
+  SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
 import {
@@ -58,20 +68,23 @@ import {
   SingleAxisTrackingParameters
 } from "@/types/Tracking";
 
-import ModuleParametersView from "@/components/ModuleParameters.vue";
-import TrackingParametersView from "@/components/TrackingParameters.vue";
-import TemperatureParametersView from "@/components/TemperatureParameters.vue";
+import ModelBase from "@/components/ModelBase.vue";
+import HelpPopup from "@/components/Help.vue";
+import ModuleParametersView from "@/components/model/ModuleParameters.vue";
+import TrackingParametersView from "@/components/model/TrackingParameters.vue";
+import TemperatureParametersView from "@/components/model/TemperatureParameters.vue";
 
 Vue.component("module-parameters", ModuleParametersView);
 Vue.component("tracking-parameters", TrackingParametersView);
 Vue.component("temperature-parameters", TemperatureParametersView);
+Vue.component("help", HelpPopup);
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
 @Component
-export default class ArrayView extends Vue {
+export default class ArrayView extends ModelBase {
   @Prop() pvarray!: PVArray;
   @Prop() index!: number;
   @Prop() model!: string;
@@ -101,7 +114,7 @@ export default class ArrayView extends Vue {
       );
     } else if (newModel == "pvwatts") {
       this.pvarray.module_parameters = new PVWattsModuleParameters({});
-      this.pvarray.temperature_model_parameters = new PVWattsTemperatureParameters(
+      this.pvarray.temperature_model_parameters = new SAPMTemperatureParameters(
         {}
       );
     }
@@ -131,6 +144,17 @@ export default class ArrayView extends Vue {
   duplicateArray() {
     // @ts-expect-error
     this.$parent.pvarrays.push(new PVArray(this.pvarray));
+  }
+  get apiComponentName() {
+    return "PVArray";
+  }
+
+  @Watch("pvarray", { deep: true })
+  validate(newArray: Record<string, any>) {
+    const arr = newArray as PVArray;
+    this.$validator
+      .validate(this.apiComponentName, arr)
+      .then(this.setValidationResult);
   }
 }
 </script>

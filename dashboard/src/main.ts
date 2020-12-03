@@ -9,8 +9,9 @@ import { spiStore } from "./store/store";
 
 // Auth0 configuration
 import { domain, clientId, audience } from "../auth_config.json";
-
 import { Auth0Plugin } from "./auth/auth";
+
+import "./assets/css/styles.css";
 
 Vue.use(Auth0Plugin, {
   domain,
@@ -24,8 +25,6 @@ Vue.use(Auth0Plugin, {
     );
   }
 });
-
-Vue.config.productionTip = false;
 
 if (process.env.NODE_ENV == "production") {
   Sentry.init({
@@ -43,16 +42,17 @@ if (process.env.NODE_ENV == "production") {
   });
 }
 
-Vue.use(Vuex);
-
 Vue.config.productionTip = false;
 
+/* Instantiate a validator object and make it globally available via the
+ * this.$validator.
+ */
 const validator = new APIValidator();
 validator.init();
-
-const store = new Vuex.Store(spiStore);
-
 Vue.prototype.$validator = validator;
+
+Vue.use(Vuex);
+const store = new Vuex.Store(spiStore);
 
 new Vue({
   router,
