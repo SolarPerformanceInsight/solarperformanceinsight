@@ -1,3 +1,4 @@
+// Copyright (c) 2020 RisingStack
 import { Vue, Component } from "vue-property-decorator";
 import createAuth0Client, {
   PopupLoginOptions,

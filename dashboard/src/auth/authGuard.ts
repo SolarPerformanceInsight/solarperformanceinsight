@@ -1,3 +1,4 @@
+// Copyright (c) 2020 RisingStack
 import { getInstance } from "./auth";
 import { NavigationGuard } from "vue-router";
 
