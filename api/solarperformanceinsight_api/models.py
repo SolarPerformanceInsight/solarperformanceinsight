@@ -286,7 +286,7 @@ class Inverter(BaseModel):
         "", title="Make & Model", description="Make and model of the inverter"
     )
     arrays: List[PVArray] = Field(
-        ..., description="Names of the PV arrays that are connected to this inverter"
+        ..., description="List of PV arrays that are connected to this inverter"
     )
     losses: Optional[PVWattsLosses] = Field(
         {}, description="Parameters describing the array losses"
@@ -317,7 +317,7 @@ class PVSystem(BaseModel):
         ..., description="Albedo of the surface around the system"
     )
     inverters: List[Inverter] = Field(
-        ..., description="Names of the inverters that make up this system"
+        ..., description="List of inverters that make up this system"
     )
 
 
