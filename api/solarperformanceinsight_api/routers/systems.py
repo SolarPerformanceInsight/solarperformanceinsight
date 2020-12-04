@@ -75,6 +75,7 @@ async def create_system(
 async def get_system(
     system_id: UUID, storage: StorageInterface = Depends(StorageInterface)
 ) -> models.StoredPVSystem:
+    """Get a single PV System"""
     with storage.start_transaction() as st:
         return st.get_system(system_id)
 
@@ -85,6 +86,7 @@ async def get_system(
 async def delete_system(
     system_id: UUID, storage: StorageInterface = Depends(StorageInterface)
 ):
+    """Delete a PV system"""
     with storage.start_transaction() as st:
         st.delete_system(system_id)
 
