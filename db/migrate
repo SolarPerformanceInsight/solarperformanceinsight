@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+MYSQL_USER=${MYSQL_USER:-'root'}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-'testpassword'}
+MYSQL_HOST=${MYSQL_HOST:-'127.0.0.1'}
+MYSQL_PORT=${MYSQL_PORT:-'3306'}
+MYSQL_DATABASE=${MYSQL_DATABASE:-'spi_data'}
+
+/opt/app-root/bin/dbmate --url "mysql://$MYSQL_USER:$MYSQL_PASSWORD@$MYSQL_HOST:$MYSQL_PORT/$MYSQL_DATABASE" --no-dump-schema --migrations-dir /opt/app-root/migrations up
+
+mysql -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD -P $MYSQL_PORT -e "ALTER USER 'apiuser'@'%' IDENTIFIED BY '$ALTER_USER_PASSWORD' REQUIRE SSL"
