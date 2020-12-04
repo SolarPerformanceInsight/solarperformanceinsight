@@ -203,6 +203,9 @@ class StorageInterface:
             raise HTTPException(status_code=404)
         return result
 
+    def ensure_user_exists(self) -> str:
+        return self._call_procedure_for_single("create_user_if_not_exists")["user_id"]
+
     def list_systems(self) -> List[models.StoredPVSystem]:
         systems = self._call_procedure("list_systems")
         out = []
@@ -234,3 +237,8 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
+
+
+def ensure_user(storage: StorageInterface = Depends(StorageInterface)):
+    with storage.start_transaction() as st:
+        st.ensure_user_exists()
