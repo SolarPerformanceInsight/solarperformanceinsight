@@ -1,9 +1,30 @@
 import Vue from "vue";
+import Vuex from "vuex";
 import App from "./App.vue";
 import router from "./router";
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
 import { APIValidator } from "./types/validation/Validator";
+import { spiStore } from "./store/store";
+
+// Auth0 configuration
+import { domain, clientId, audience } from "../auth_config.json";
+
+import { Auth0Plugin } from "./auth/auth";
+
+Vue.use(Auth0Plugin, {
+  domain,
+  clientId,
+  audience,
+  onredirectCallback: (appState: { targetUrl: string }) => {
+    router.push(
+      appState && appState.targetUrl
+        ? appState.targetUrl
+        : window.location.pathname
+    );
+  }
+});
+
 Vue.config.productionTip = false;
 
 if (process.env.NODE_ENV == "production") {
@@ -22,15 +43,19 @@ if (process.env.NODE_ENV == "production") {
   });
 }
 
+Vue.use(Vuex);
 
 Vue.config.productionTip = false;
 
 const validator = new APIValidator();
 validator.init();
 
+const store = new Vuex.Store(spiStore);
+
 Vue.prototype.$validator = validator;
 
 new Vue({
   router,
-  render: h => h(App)
+  render: h => h(App),
+  store
 }).$mount("#app");

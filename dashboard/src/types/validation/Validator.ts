@@ -12,7 +12,6 @@
  */
 import Ajv from "ajv";
 
-
 export class APIValidator {
   ajv: any;
   components: Record<string, any>;

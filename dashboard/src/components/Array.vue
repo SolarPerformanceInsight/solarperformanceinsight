@@ -114,11 +114,11 @@ export default class ArrayView extends Vue {
   }
 
   removeArray() {
-    //@ts-ignore
+    // @ts-expect-error
     this.$parent.pvarrays.splice(this.index, 1);
   }
   duplicateArray() {
-    //@ts-ignore
+    // @ts-expect-error
     this.$parent.pvarrays.push(new PVArray(this.pvarray));
   }
 }
