@@ -89,5 +89,5 @@ app.include_router(
     systems.router,
     prefix="/systems",
     tags=["PV Systems"],
-    dependencies=[Depends(auth.get_user_id), Depends(storage.ensure_user)],
+    dependencies=[Depends(auth.get_user_id)],
 )

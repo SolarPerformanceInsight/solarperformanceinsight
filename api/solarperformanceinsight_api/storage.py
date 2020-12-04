@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List
+from typing import List, Type, TypeVar
 from uuid import UUID
 
 
@@ -113,6 +113,17 @@ engine = create_engine(
     pool_recycle=3600,
     pool_pre_ping=True,
 ).pool
+
+
+T = TypeVar("T")
+
+
+def ensure_user_exists(f: Type[T]) -> Type[T]:
+    def wrapper(cls, *args, **kwargs):
+        cls.create_user_if_not_exists()
+        return f(cls, *args, **kwargs)
+
+    return wrapper
 
 
 class StorageInterface:
@@ -203,7 +214,7 @@ class StorageInterface:
             raise HTTPException(status_code=404)
         return result
 
-    def ensure_user_exists(self) -> str:
+    def create_user(self) -> str:
         return self._call_procedure_for_single("create_user_if_not_exists")["user_id"]
 
     def list_systems(self) -> List[models.StoredPVSystem]:
@@ -215,6 +226,7 @@ class StorageInterface:
             out.append(models.StoredPVSystem(**sys))
         return out
 
+    @ensure_user_exists
     def create_system(self, system_def: models.PVSystem) -> models.StoredObjectID:
         created = self._call_procedure_for_single(
             "create_system", system_def.name, system_def.json()
@@ -237,8 +249,3 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
-
-
-def ensure_user(storage: StorageInterface = Depends(StorageInterface)):
-    with storage.start_transaction() as st:
-        st.ensure_user_exists()
