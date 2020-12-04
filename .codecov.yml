@@ -1,5 +1,6 @@
 codecov:
   branch: main
+  require_ci_to_pass: no
 
 coverage:
   status:
@@ -8,7 +9,25 @@ coverage:
         target: '100'
     project:
       default:
+        target: '90'
+      api:
         target: '95'
+        flags:
+          - python
+      dashboard:
+        target: '80'
+        flags:
+          - javascript
+
+  flags:
+    python:
+      paths:
+        - api
+      carryforward: true
+    javascript:
+      paths:
+        - dashboard
+      carryforward: true
 
 comment: false
 github_checks:

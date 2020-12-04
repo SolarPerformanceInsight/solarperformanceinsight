@@ -15,8 +15,15 @@ class Settings(BaseSettings):
 
     traces_sample_rate: Optional[float] = None
 
+    mysql_host: str = "127.0.0.1"
+    mysql_port: int = 3306
+    mysql_user: str = "apiuser"
+    mysql_password: str = "terriblepasswordtochange"
+    mysql_database: str = "spi_data"
+    mysql_use_ssl: bool = True
+
     class Config:
-        env_prefix = "spi"
+        env_prefix = "spi_"
 
 
 settings = Settings()

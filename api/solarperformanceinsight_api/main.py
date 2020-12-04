@@ -9,7 +9,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
-from . import auth, __version__, settings
+from . import auth, __version__, settings, storage
 from .routers import systems
 
 
@@ -27,12 +27,12 @@ Instrumentator(
 
 
 @app.get("/ping", include_in_schema=False)
-async def ping() -> str:
+async def ping() -> str:  # pragma: no cover
     return "pong"
 
 
 class LogFilter(logging.Filter):
-    def filter(record):
+    def filter(record):  # pragma: no cover
         if hasattr(record, "scope"):
             if record.scope.get("path") in ("/ping", "/metrics"):
                 return 0
@@ -40,7 +40,8 @@ class LogFilter(logging.Filter):
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event():  # pragma: no cover
+    storage.engine.connect()
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(LogFilter)

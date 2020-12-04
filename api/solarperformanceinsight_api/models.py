@@ -401,9 +401,20 @@ class PVSystem(BaseModel):
         schema_extra = {"example": SYSTEM_EXAMPLE}
 
 
-class StoredObject(BaseModel):
+class StoredObjectID(BaseModel):
     object_id: UUID = Field(..., description="Unique identifier of the object")
     object_type: str = Field("system", description="Type of the object")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_type": "system",
+            }
+        }
+
+
+class StoredObject(StoredObjectID):
     created_at: dt.datetime = Field(..., description="Datetime the object was created")
     modified_at: dt.datetime = Field(
         ..., description="Datetime the object was last modified"
