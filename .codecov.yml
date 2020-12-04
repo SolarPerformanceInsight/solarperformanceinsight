@@ -9,11 +9,13 @@ coverage:
         target: '100'
     project:
       default:
-        target: '95'
+        target: '90'
       api:
+        target: '95'
         flags:
           - python
       dashboard:
+        target: '80'
         flags:
           - javascript
 
