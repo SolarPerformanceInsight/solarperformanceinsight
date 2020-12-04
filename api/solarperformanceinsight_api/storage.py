@@ -205,18 +205,25 @@ class StorageInterface:
 
     def list_systems(self) -> List[models.StoredPVSystem]:
         systems = self._call_procedure("list_systems")
-        out = [models.StoredPVSystem(**d) for d in systems]
+        out = []
+        for sys in systems:
+            sys["object_id"] = sys.pop("system_id")
+            sys["object_type"] = "system"
+            out.append(models.StoredPVSystem(**sys))
         return out
 
-    def create_system(self, system_def: models.PVSystem) -> models.PVSystemID:
-        return models.PVSystemID(
-            **self._call_procedure_for_single(
-                "create_system", system_def.name, system_def.json()
-            )
+    def create_system(self, system_def: models.PVSystem) -> models.StoredObjectID:
+        created = self._call_procedure_for_single(
+            "create_system", system_def.name, system_def.json()
+        )
+        return models.StoredObjectID(
+            object_id=created["system_id"], object_type="system"
         )
 
     def get_system(self, system_id: UUID) -> models.StoredPVSystem:
         system = self._call_procedure_for_single("get_system", system_id)
+        system["object_id"] = system.pop("system_id")
+        system["object_type"] = "system"
         return models.StoredPVSystem(**system)
 
     def delete_system(self, system_id: UUID):
@@ -224,6 +231,6 @@ class StorageInterface:
 
     def update_system(
         self, system_id: UUID, system_def: models.PVSystem
-    ) -> models.PVSystemID:
+    ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
-        return models.PVSystemID(system_id=system_id)
+        return models.StoredObjectID(object_id=system_id, object_type="system")

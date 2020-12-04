@@ -26,22 +26,22 @@ async def list_systems(
 system_links = {
     "Get System": {
         "operationId": "get_system_systems__system_id__get",
-        "parameters": {"system_id": "$response.body#/system_id"},
+        "parameters": {"system_id": "$response.body#/object_id"},
     },
     "Delete System": {
         "operationId": "delete_system_systems__system_id__delete",
-        "parameters": {"system_id": "$response.body#/system_id"},
+        "parameters": {"system_id": "$response.body#/object_id"},
     },
     "Update System": {
         "operationId": "update_system_systems__system_id__post",
-        "parameters": {"system_id": "$response.body#/system_id"},
+        "parameters": {"system_id": "$response.body#/object_id"},
     },
 }
 
 
 @router.post(
     "/",
-    response_model=models.PVSystemID,
+    response_model=models.StoredObjectID,
     responses={
         **default_get_responses,
         409: {},
@@ -54,12 +54,12 @@ async def create_system(
     response: Response,
     request: Request,
     storage: StorageInterface = Depends(StorageInterface),
-) -> models.PVSystemID:
+) -> models.StoredObjectID:
     """Create a new PV System"""
     with storage.start_transaction() as st:
         id_ = st.create_system(system)
         response.headers["Location"] = request.url_for(
-            "get_system", system_id=id_.system_id
+            "get_system", system_id=id_.object_id
         )
         return id_
 
@@ -91,7 +91,7 @@ async def delete_system(
 
 @router.post(
     "/{system_id}",
-    response_model=models.PVSystemID,
+    response_model=models.StoredObjectID,
     responses={
         **default_get_responses,
         201: {"links": system_links},
@@ -104,7 +104,7 @@ async def update_system(
     response: Response,
     request: Request,
     storage: StorageInterface = Depends(StorageInterface),
-) -> models.PVSystemID:
+) -> models.StoredObjectID:
     """Update a PV System"""
     with storage.start_transaction() as st:
         out = st.update_system(system_id, system)

@@ -70,7 +70,8 @@ def system_def():
 def stored_system(system_def, system_id):
     extime = dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
     return models.StoredPVSystem(
-        system_id=system_id,
+        object_id=system_id,
+        object_type="system",
         created_at=extime,
         modified_at=extime,
         definition=system_def,

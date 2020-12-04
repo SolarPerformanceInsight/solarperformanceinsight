@@ -60,7 +60,7 @@ def test_update_system(
     update = mocker.spy(storage.StorageInterface, "update_system")
     response = client.post(f"/systems/{system_id}", data=system_def.json())
     assert response.status_code == 201
-    assert response.json()["system_id"] == system_id
+    assert response.json()["object_id"] == system_id
     update.assert_called()
 
 

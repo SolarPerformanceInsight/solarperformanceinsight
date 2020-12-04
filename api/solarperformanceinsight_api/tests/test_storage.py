@@ -180,7 +180,7 @@ def test_create_system(storage_interface, add_example_db_data, system_def):
     system_def.name = "New System"
     with storage_interface.start_transaction() as st:
         sysid = st.create_system(system_def)
-        out = st.get_system(sysid.system_id)
+        out = st.get_system(sysid.object_id)
     assert out.definition == system_def
 
 
