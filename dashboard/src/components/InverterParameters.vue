@@ -1,36 +1,64 @@
 <template>
   <div class="inverter-parameters">
-    <b>Parameter source: </b>
+    <b>Parameter source:</b>
     <select v-model="parameterSource" name="parameter-source">
       <option>User Supplied</option>
-      <option>Browse Database</option> </select
-    ><br />
+      <option>Browse Database</option>
+    </select>
+    <br />
     <!-- If user selects something other than User Supplied, display the
          list of inverters from the db. This should probably be it's own
          component with some search functionality built in
      -->
     <div v-if="parameterSource !== 'User Supplied'">
-      <b>Select an Inverter: </b>
+      <b>Select an Inverter:</b>
       <select @change="loadInverter" name="inverter-list">
-        <option v-for="p in parameterOptions" :key="p">{{ p }}</option> </select
-      ><br />
+        <option v-for="p in parameterOptions" :key="p">{{ p }}</option>
+      </select>
+      <br />
     </div>
     <div v-if="model == 'pvsyst'">
-      <b>AC Power Rating: </b><input v-model="parameters.Paco" /><br />
-      <b>DC Power Rating: </b><input v-model="parameters.Pdco" /><br />
-      <b>Vdco: </b><input v-model="parameters.Vdco" /><br />
-      <b>Pso: </b><input v-model="parameters.Pso" /><br />
-      <b>C0: </b><input v-model="parameters.C0" /><br />
-      <b>C1: </b><input v-model="parameters.C1" /><br />
-      <b>C2: </b><input v-model="parameters.C2" /><br />
-      <b>C3: </b><input v-model="parameters.C3" /><br />
-      <b>Pnt: </b><input v-model="parameters.Pnt" /><br />
+      <b>AC Power Rating:</b>
+      <input v-model="parameters.Paco" />
+      <br />
+      <b>DC Power Rating:</b>
+      <input v-model="parameters.Pdco" />
+      <br />
+      <b>Vdco:</b>
+      <input v-model="parameters.Vdco" />
+      <br />
+      <b>Pso:</b>
+      <input v-model="parameters.Pso" />
+      <br />
+      <b>C0:</b>
+      <input v-model="parameters.C0" />
+      <br />
+      <b>C1:</b>
+      <input v-model="parameters.C1" />
+      <br />
+      <b>C2:</b>
+      <input v-model="parameters.C2" />
+      <br />
+      <b>C3:</b>
+      <input v-model="parameters.C3" />
+      <br />
+      <b>Pnt:</b>
+      <input v-model="parameters.Pnt" />
+      <br />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>pdc: </b><input v-model="parameters.pdc" /><br />
-      <b>pdc0: </b><input v-model="parameters.pdc0" /><br />
-      <b>eta_inv_nom: </b><input v-model="parameters.eta_inv_nom" /><br />
-      <b>eta_inv_ref: </b><input v-model="parameters.eta_inv_ref" /><br />
+      <b>pdc:</b>
+      <input v-model="parameters.pdc" />
+      <br />
+      <b>pdc0:</b>
+      <input v-model="parameters.pdc0" />
+      <br />
+      <b>eta_inv_nom:</b>
+      <input v-model="parameters.eta_inv_nom" />
+      <br />
+      <b>eta_inv_ref:</b>
+      <input v-model="parameters.eta_inv_ref" />
+      <br />
     </div>
   </div>
 </template>

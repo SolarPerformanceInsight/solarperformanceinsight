@@ -1,13 +1,14 @@
 <template>
   <div id="file-upload">
     <form enctype="multipart/form-data">
-      <b>Upload System Metadata: </b>
+      <b>Upload System Metadata:</b>
       <input
         type="file"
         :disabled="isLoading"
         accept="application/*"
         @change="processFile"
-      /><br />
+      />
+      <br />
     </form>
     <span v-if="isLoading">Uploading file...</span>
     <div v-if="errors">

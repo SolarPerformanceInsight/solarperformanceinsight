@@ -1,30 +1,41 @@
 <template>
   <li>
-    <b>Inverter Name: </b> {{ $parent.$parent.inverter.name }} <br />
-    <b>Name: </b><input v-model="pvarray.name" /><br />
-    <b>Make and Model: </b><input v-model="pvarray.make_model" /><br />
-    <b>Tracking: </b>
+    <b>Inverter Name:</b>
+    {{ $parent.$parent.inverter.name }}
+    <br />
+    <b>Name:</b>
+    <input v-model="pvarray.name" />
+    <br />
+    <b>Make and Model:</b>
+    <input v-model="pvarray.make_model" />
+    <br />
+    <b>Tracking:</b>
     <input
       v-model="tracking"
       type="radio"
       v-on:change="changeTracking"
       value="fixed"
-    />Fixed
+    />
+    Fixed
     <input
       v-model="tracking"
       type="radio"
       v-on:change="changeTracking"
       value="singleAxis"
-    />Single Axis
+    />
+    Single Axis
     <tracking-parameters :tracking="tracking" :parameters="pvarray.tracking" />
-    <b>Temperature Model Parameters:</b><br />
+    <b>Temperature Model Parameters:</b>
+    <br />
     <temperature-parameters
       :model="model"
       :parameters="pvarray.temperature_model_parameters"
     />
-    <b>Module Parameters: </b><br />
+    <b>Module Parameters:</b>
+    <br />
     <module-parameters :parameters="pvarray.module_parameters" :model="model" />
-    <button @click="removeArray">Remove Array</button><br />
+    <button @click="removeArray">Remove Array</button>
+    <br />
     <button @click="duplicateArray">Duplicate Array</button>
   </li>
 </template>
