@@ -1,4 +1,5 @@
 import Vue from "vue";
+import VueRouter from "vue-router";
 import Vuex from "vuex";
 import App from "./App.vue";
 import router from "./router";
@@ -12,6 +13,8 @@ import { domain, clientId, audience } from "../auth_config.json";
 import { Auth0Plugin } from "./auth/auth";
 
 import "./assets/css/styles.css";
+
+Vue.use(VueRouter);
 
 Vue.use(Auth0Plugin, {
   domain,

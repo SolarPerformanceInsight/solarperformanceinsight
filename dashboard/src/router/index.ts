@@ -8,8 +8,6 @@ import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
 import { authGuard } from "../auth/authGuard";
 
-Vue.use(VueRouter);
-
 const routes: Array<RouteConfig> = [
   {
     path: "/",
