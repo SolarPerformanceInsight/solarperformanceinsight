@@ -15,7 +15,7 @@ class FixedTracking(BaseModel):
         ..., description="Tilt of modules in degrees from horizontal"
     )
     azimuth: confloat(ge=0, lt=360.0) = Field(
-        ..., description="Azimuth of modules relative to North in degrees"
+        ..., description="Azimuth of modules clockwise from North in degrees"
     )
 
 
@@ -25,16 +25,23 @@ class SingleAxisTracking(BaseModel):
     axis_tilt: confloat(ge=0, le=90) = Field(
         ...,
         title="Axis Tilt",
-        description="Tilt of single axis tracker in degrees from horizontal",
+        description="Tilt of tracker axis in degrees from horizontal",
     )
     axis_azimuth: confloat(ge=0, lt=360.0) = Field(
         ...,
         title="Axis Azimiuth",
-        description="Azimuth of tracker axis from North in degrees",
+        description="Azimuth of tracker axis clockwise from North in degrees",
     )
-    gcr: confloat(ge=0) = Field(..., title="GCR", description="Ground coverage ratio")
+    gcr: confloat(ge=0) = Field(
+        ...,
+        title="GCR",
+        description=(
+            "Ground coverage ratio: ratio of module length to the spacing"
+            " between trackers"
+        ),
+    )
     backtracking: bool = Field(
-        ..., description="If the tracking system supports backtracking"
+        ..., description="True if the tracking system supports backtracking"
     )
 
 
@@ -78,7 +85,7 @@ class PVsystModuleParameters(BaseModel):
         ..., description="Series resistance at reference conditions, in ohms"
     )
     cells_in_series: conint(ge=0) = Field(
-        ..., description="Number of cells connected in series"
+        ..., description="Number of cells connected in series in a module"
     )
     R_sh_exp: confloat() = Field(
         5.5, description="Exponent in the equation for shunt resistance, unitless"
@@ -86,7 +93,7 @@ class PVsystModuleParameters(BaseModel):
     EgRef: confloat(gt=0) = Field(
         1.121,
         description=(
-            "Energy bandgap at reference temperatures in units of eV. "
+            "Energy bandgap at reference temperature in units of eV. "
             "1.121 eV for crystsalline silicon."
         ),
     )
@@ -102,7 +109,7 @@ class PVWattsModuleParameters(BaseModel):
     gamma_pdc: confloat() = Field(
         ...,
         description=(
-            "Temperature coefficient in units of 1/C. "
+            "Temperature coefficient of power in units of 1/C. "
             "Typically -0.002 to -0.005 per degree C"
         ),
     )
@@ -171,7 +178,9 @@ class PVArray(BaseModel):
     modules_per_string: conint(gt=0) = Field(
         ..., title="Modules Per String", description="Number of PV modules per string"
     )
-    strings: conint(gt=0) = Field(..., description="Number of Strings")
+    strings: conint(gt=0) = Field(
+        ..., description="Number of parallel strings in the array"
+    )
 
 
 class PVWattsLosses(BaseModel):
@@ -192,7 +201,13 @@ class PVWattsLosses(BaseModel):
 class PVWattsInverterParameters(BaseModel):
     """DC-AC power conversion parameters of an inverter for the PVWatts model"""
 
-    pdc0: confloat() = Field(..., description="DC input limit of the inverter")
+    pdc0: confloat() = Field(
+        ...,
+        description=(
+            "DC power input which produces the rated AC output power at the "
+            "nominal DC voltage of the inverter"
+        ),
+    )
     eta_inv_nom: confloat() = Field(
         0.96, description="Nominal inverter efficiency, unitless"
     )
@@ -209,22 +224,21 @@ class SandiaInverterParameters(BaseModel):
     Pdco: confloat() = Field(
         ...,
         description=(
-            "DC power rating of the inverter, typically assumed to be equal to the "
-            "PV array maximum power, W"
+            "DC power which produces the rated AC output power at the "
+            "nominal DC voltage of the inverter, W"
         ),
     )
     Vdco: confloat() = Field(
         ...,
         description=(
-            "DC voltage at which the AC power rating is achieved at reference "
-            "operating conditions, V"
+            "Nominal DC voltage at which the AC power rating is determined, V"
         ),
     )
     Pso: confloat() = Field(
         ...,
         description=(
-            "DC power required to start the inversion process or self consumption "
-            "by the inverter, W"
+            "DC power required to start the inversion process, assumed equal "
+            "to self consumption by the inverter, W"
         ),
     )
     C0: confloat() = Field(
@@ -256,7 +270,11 @@ class SandiaInverterParameters(BaseModel):
         ),
     )
     Pnt: confloat() = Field(
-        ..., description="AC power consumed by the inverter at night (night tare), W"
+        ...,
+        description=(
+            "AC power consumed by the inverter when no AC power is exported "
+            " (i.e., night tare), W"
+        ),
     )
 
 
@@ -268,7 +286,7 @@ class Inverter(BaseModel):
         "", title="Make & Model", description="Make and model of the inverter"
     )
     arrays: List[PVArray] = Field(
-        ..., description="PV arrays that are connected to this inverter"
+        ..., description="List of PV arrays that are connected to this inverter"
     )
     losses: Optional[PVWattsLosses] = Field(
         {}, description="Parameters describing the array losses"
@@ -293,13 +311,13 @@ class PVSystem(BaseModel):
         ..., description="Longitude of the system in degrees East"
     )
     elevation: confloat(ge=-300) = Field(
-        ..., description="Elevation of the system in meters"
+        ..., description="Elevation of the system above sea level in meters"
     )
     albedo: confloat(ge=0) = Field(
         ..., description="Albedo of the surface around the system"
     )
     inverters: List[Inverter] = Field(
-        ..., description="Inverters that are connected to make up this system"
+        ..., description="List of inverters that make up this system"
     )
 
 
