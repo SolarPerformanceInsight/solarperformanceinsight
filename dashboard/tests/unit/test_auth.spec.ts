@@ -17,16 +17,12 @@ import { authGuard } from "../../src/auth/authGuard";
 import * as auth from "../../src/auth/auth";
 
 const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
 
 const user = {
   email: "testing@solaforecastarbiter.org",
   email_verified: true,
   sub: "auth0|5fa9596ccf64f9006e841a3a"
 };
-
-const localVue = createLocalVue();
 
 const $auth = {
   isAuthenticated: true,
@@ -35,6 +31,11 @@ const $auth = {
   logout: jest.fn(),
   loginWithRedirect: jest.fn()
 };
+
+// @ts-expect-error
+mockedAuthInstance.mockImplementation(() => $auth);
+
+const localVue = createLocalVue();
 
 const $validator = {
   getComponentSpec: (n: string) => {
