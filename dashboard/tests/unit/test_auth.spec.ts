@@ -1,12 +1,24 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import VueRouter from "vue-router";
+
 import { createLocalVue, mount } from "@vue/test-utils";
-import { SpiStore } from "@/store/store";
+
 import Home from "@/views/Home.vue";
-import Model from "@/views/Model.vue";
+import HomeContent from "@/views/HomeContent.vue";
+import Systems from "@/views/Systems.vue";
+import SystemSpec from "@/views/SystemSpec.vue";
 import App from "@/App.vue";
+import router from "@/router";
+
+import { SpiStore } from "@/store/store";
 import { domain, clientId, audience } from "../../auth_config.json";
+import { authGuard } from "../../src/auth/authGuard";
+import * as auth from "../../src/auth/auth";
+
+const mockedAuthInstance = jest.spyOn(auth, "getInstance");
+// @ts-expect-error
+mockedAuthInstance.mockImplementation(() => $auth);
 
 const user = {
   email: "testing@solaforecastarbiter.org",
@@ -24,10 +36,16 @@ const $auth = {
   loginWithRedirect: jest.fn()
 };
 
-function resetAuthMocks() {
-  $auth.logout.mockClear();
-  $auth.loginWithRedirect.mockClear();
-}
+const $validator = {
+  getComponentSpec: (n: string) => {
+    "thing";
+  }
+};
+
+const mocks = {
+  $auth,
+  $validator
+};
 
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -49,14 +67,14 @@ describe("Tests authenticated routes", () => {
     });
     $auth.isAuthenticated = false;
     jest.clearAllMocks();
+    router.push({ name: "Home" });
   });
   it("unauthenticated home", async () => {
     const home = mount(Home, {
       store,
       localVue,
-      mocks: {
-        $auth
-      }
+      router,
+      mocks
     });
     expect(home.find("p").text()).toMatch(/Welcome to the solar/);
     const button = home.find("button");
@@ -86,14 +104,14 @@ describe("Tests authenticated routes", () => {
     });
     $auth.isAuthenticated = true;
     jest.clearAllMocks();
+    router.push;
   });
   it("authenticated home", async () => {
     const home = mount(Home, {
       store,
       localVue,
-      mocks: {
-        $auth
-      }
+      router,
+      mocks
     });
     expect(home.find("p").text()).toMatch(/Successfully logged in./);
     const button = home.find("button");
@@ -106,30 +124,10 @@ describe("Tests authenticated routes", () => {
   });
 });
 
-import { authGuard } from "../../src/auth/authGuard";
-import * as auth from "../../src/auth/auth";
-
-const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
-const routes = [
-  {
-    name: "home",
-    path: "/",
-    component: Home
-  },
-  {
-    name: "systems",
-    path: "/system",
-    component: Model,
-    beforeEnter: authGuard
-  }
-];
 describe("Test authguard", () => {
   let actions: any;
   let store: any;
   let state: any;
-  let router: any;
   beforeEach(() => {
     actions = {
       fetchSystems: jest.fn()
@@ -141,12 +139,8 @@ describe("Test authguard", () => {
       state,
       actions
     });
-    router = new VueRouter({
-      mode: "history",
-      base: process.env.BASE_URL,
-      routes: routes
-    });
     jest.clearAllMocks();
+    router.push({ name: "Home" });
   });
 
   it("test unauthenticated access to protected route", async () => {
@@ -155,13 +149,11 @@ describe("Test authguard", () => {
       store,
       localVue,
       router,
-      mocks: {
-        $auth
-      }
+      mocks
     });
     expect(view.find("p").text()).toMatch(/Welcome to the solar/);
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
-    router.push({ name: "systems" });
+    router.push({ name: "Systems" });
     await Vue.nextTick();
     expect($auth.loginWithRedirect).toHaveBeenCalled();
     // assert view has not changed since loginWithRedirect is mocked and does
@@ -174,16 +166,14 @@ describe("Test authguard", () => {
       store,
       localVue,
       router,
-      mocks: {
-        $auth
-      }
+      mocks
     });
     expect(view.find("p").text()).toMatch(/Successfully logged in/);
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
-    router.push({ name: "systems" });
+    router.push({ name: "Systems" });
     await Vue.nextTick();
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
     // Assert view at new path is rendered
-    expect(view.find("h1").text()).toMatch(/New System/);
+    expect(view.find("h1").text()).toMatch(/Systems/);
   });
 });

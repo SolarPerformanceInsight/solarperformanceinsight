@@ -2,7 +2,7 @@
  * should be registered with `beforeEnter: authGuard`.
  */
 import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
+import { RouteConfig } from "vue-router";
 import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
