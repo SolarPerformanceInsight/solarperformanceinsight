@@ -1,4 +1,5 @@
 import datetime as dt
+from uuid import UUID
 
 
 import httpx
@@ -30,15 +31,20 @@ def auth_token():
 
 
 @pytest.fixture(scope="module")
-def add_example_db_data():
+def root_conn():
     conn = storage._make_sql_connection_partial(user="root", password="testpassword")()
-    curs = conn.cursor()
+    yield conn
+    conn.close()
+
+
+@pytest.fixture(scope="module")
+def add_example_db_data(root_conn):
+    curs = root_conn.cursor()
     curs.callproc("add_example_data")
-    conn.commit()
+    root_conn.commit()
     yield curs
     curs.callproc("remove_example_data")
-    conn.commit()
-    conn.close()
+    root_conn.commit()
 
 
 @pytest.fixture(scope="module")
@@ -47,8 +53,8 @@ def auth0_id():
 
 
 @pytest.fixture(scope="module")
-def user_id():  # pragma: no cover
-    return "17fbf1c6-34bd-11eb-af43-f4939feddd82"
+def user_id():
+    return UUID("17fbf1c6-34bd-11eb-af43-f4939feddd82")
 
 
 @pytest.fixture(scope="module")

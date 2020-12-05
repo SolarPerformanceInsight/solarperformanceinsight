@@ -416,7 +416,7 @@ class StoredObjectID(BaseModel):
 
 class StoredObject(StoredObjectID):
     created_at: dt.datetime = Field(..., description="Datetime the object was created")
-    modified_at: dt.datetime = Field(
+    modified_at: Optional[dt.datetime] = Field(
         ..., description="Datetime the object was last modified"
     )
 
@@ -445,3 +445,9 @@ class StoredPVSystem(StoredObject):
                 "definition": SYSTEM_EXAMPLE,
             }
         }
+
+
+class UserInfo(StoredObject):
+    """Information about the current user"""
+
+    auth0_id: str = Field(..., description="User ID from Auth 0")

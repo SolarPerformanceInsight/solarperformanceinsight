@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Type, TypeVar
+from typing import List, Callable
 from uuid import UUID
 
 
@@ -115,10 +115,7 @@ engine = create_engine(
 ).pool
 
 
-T = TypeVar("T")
-
-
-def ensure_user_exists(f: Type[T]) -> Type[T]:
+def ensure_user_exists(f: Callable) -> Callable:
     def wrapper(cls, *args, **kwargs):
         cls.create_user_if_not_exists()
         return f(cls, *args, **kwargs)
@@ -214,8 +211,16 @@ class StorageInterface:
             raise HTTPException(status_code=404)
         return result
 
-    def create_user(self) -> str:
+    def create_user_if_not_exists(self) -> str:
         return self._call_procedure_for_single("create_user_if_not_exists")["user_id"]
+
+    @ensure_user_exists
+    def get_user(self) -> models.UserInfo:
+        out = self._call_procedure_for_single("get_user")
+        out["object_id"] = out.pop("user_id")
+        out["object_type"] = "user"
+        out["modified_at"] = None
+        return models.UserInfo(**out)
 
     def list_systems(self) -> List[models.StoredPVSystem]:
         systems = self._call_procedure("list_systems")
