@@ -416,7 +416,7 @@ class StoredObjectID(BaseModel):
 
 class StoredObject(StoredObjectID):
     created_at: dt.datetime = Field(..., description="Datetime the object was created")
-    modified_at: Optional[dt.datetime] = Field(
+    modified_at: dt.datetime = Field(
         ..., description="Datetime the object was last modified"
     )
 

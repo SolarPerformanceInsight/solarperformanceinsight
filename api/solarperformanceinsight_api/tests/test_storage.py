@@ -278,7 +278,7 @@ def test_get_user(storage_interface, add_example_db_data, auth0_id, user_id):
     assert out.auth0_id == auth0_id
     assert out.object_id == user_id
     assert out.object_type == "user"
-    assert out.modified_at is None
+    assert out.modified_at == out.created_at
 
 
 @pytest.fixture()

@@ -223,7 +223,7 @@ class StorageInterface:
         out = self._call_procedure_for_single("get_user")
         out["object_id"] = out.pop("user_id")
         out["object_type"] = "user"
-        out["modified_at"] = None
+        out["modified_at"] = out["created_at"]
         return models.UserInfo(**out)
 
     def list_systems(self) -> List[models.StoredPVSystem]:
