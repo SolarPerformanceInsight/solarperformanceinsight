@@ -116,6 +116,10 @@ engine = create_engine(
 
 
 def ensure_user_exists(f: Callable) -> Callable:
+    """Decorator that ensures the DB user exists for the current auth0 ID.
+    Only necessary on methods that require an existing user like create_*.
+    """
+
     def wrapper(cls, *args, **kwargs):
         cls.create_user_if_not_exists()
         return f(cls, *args, **kwargs)
