@@ -12,6 +12,22 @@ import { spiStore } from "./store/store";
 import { domain, clientId, audience } from "../auth_config.json";
 import { Auth0Plugin } from "./auth/auth";
 
+// Import all components for global registration
+import ArrayView from "@/components/model/Array.vue";
+import ArraysView from "@/components/model/Arrays.vue";
+import HelpPopup from "@/components/Help.vue";
+import Home from "@/views/Home.vue";
+import InverterView from "@/components/model/Inverter.vue";
+import InvertersView from "@/components/model/Inverters.vue";
+import InverterParametersView from "@/components/model/InverterParameters.vue";
+import LossParametersView from "@/components/model/LossParameters.vue";
+import ModuleParametersView from "@/components/model/ModuleParameters.vue";
+import TemperatureParametersView from "@/components/model/TemperatureParameters.vue";
+import TrackingParametersView from "@/components/model/TrackingParameters.vue";
+import FileUpload from "@/components/FileUpload.vue";
+import SystemView from "@/components/model/System.vue";
+
+
 import "./assets/css/styles.css";
 
 Vue.use(VueRouter);
@@ -56,6 +72,21 @@ Vue.prototype.$validator = validator;
 
 Vue.use(Vuex);
 const store = new Vuex.Store(spiStore);
+
+// Register components globally.
+Vue.component("array-view", ArrayView);
+Vue.component("arrays-view", ArraysView);
+Vue.component("help", HelpPopup);
+Vue.component("home", Home);
+Vue.component("inverter-view", InverterView);
+Vue.component("inverters-view", InvertersView);
+Vue.component("inverter-parameters", InverterParametersView);
+Vue.component("loss-parameters", LossParametersView);
+Vue.component("module-parameters", ModuleParametersView);
+Vue.component("tracking-parameters", TrackingParametersView);
+Vue.component("temperature-parameters", TemperatureParametersView);
+Vue.component("system-view", SystemView);
+Vue.component("file-upload", FileUpload);
 
 new Vue({
   router,

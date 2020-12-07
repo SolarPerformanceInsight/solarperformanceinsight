@@ -37,15 +37,12 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import {
   FixedTrackingParameters,
   SingleAxisTrackingParameters
 } from "@/types/Tracking";
-
-Vue.component("help", HelpPopup);
 
 @Component
 export default class TrackingParametersView extends ModelBase {

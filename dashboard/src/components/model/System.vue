@@ -46,8 +46,6 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
-import InvertersView from "@/components/model/Inverters.vue";
 
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
@@ -55,9 +53,6 @@ import {
   SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
-
-Vue.component("inverters-view", InvertersView);
-Vue.component("help", HelpPopup);
 
 @Component
 export default class SystemView extends ModelBase {

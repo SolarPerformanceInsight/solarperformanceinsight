@@ -22,7 +22,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ArrayView from "@/components/model/Array.vue";
 import { PVArray } from "@/types/PVArray";
 import {
   PVWattsModuleParameters,
@@ -32,8 +31,6 @@ import {
   SAPMTemperatureParameters,
   PVSystTemperatureParameters
 } from "@/types/TemperatureParameters";
-
-Vue.component("array-view", ArrayView);
 
 @Component
 export default class ArraysView extends Vue {

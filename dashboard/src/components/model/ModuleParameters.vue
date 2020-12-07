@@ -126,14 +126,12 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
 
 import {
   PVSystModuleParameters,
   PVWattsModuleParameters
 } from "@/types/ModuleParameters";
 
-Vue.component("help", HelpPopup);
 
 @Component
 export default class ModuleParametersView extends ModelBase {

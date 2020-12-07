@@ -122,17 +122,12 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
-import ArraysView from "@/components/model/Arrays.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import {
   SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
-
-Vue.component("arrays-view", ArraysView);
-Vue.component("help", HelpPopup);
 
 @Component
 export default class InverterParametersView extends ModelBase {

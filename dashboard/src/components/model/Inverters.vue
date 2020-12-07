@@ -22,7 +22,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import InverterView from "@/components/model/Inverter.vue";
 import { Inverter } from "@/types/Inverter";
 import {
   PVWattsInverterParameters,
@@ -30,7 +29,6 @@ import {
 } from "@/types/InverterParameters";
 import { PVWattsLosses } from "@/types/Losses";
 
-Vue.component("inverter-view", InverterView);
 @Component
 export default class InvertersView extends Vue {
   @Prop() inverters!: Array<Inverter>;

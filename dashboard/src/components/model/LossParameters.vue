@@ -91,13 +91,9 @@
 import ModelBase from "@/components/ModelBase.vue";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
-import HelpPopup from "@/components/Help.vue";
-
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
 import { PVWattsLosses } from "@/types/Losses";
-
-Vue.component("help", HelpPopup);
 
 @Component
 export default class LossParametersView extends ModelBase {

@@ -60,7 +60,6 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
 
 import { Component, Prop, Vue } from "vue-property-decorator";
 
@@ -71,7 +70,6 @@ import {
   SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
-Vue.component("help", HelpPopup);
 
 @Component
 export default class TemperatureParametersView extends ModelBase {

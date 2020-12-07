@@ -40,10 +40,6 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-import HelpPopup from "@/components/Help.vue";
-import InverterParametersView from "@/components/model/InverterParameters.vue";
-import LossParametersView from "@/components/model/LossParameters.vue";
-import ArraysView from "@/components/model/Arrays.vue";
 
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { Inverter } from "@/types/Inverter";
@@ -52,11 +48,6 @@ import {
   SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
-
-Vue.component("arrays-view", ArraysView);
-Vue.component("inverter-parameters", InverterParametersView);
-Vue.component("loss-parameters", LossParametersView);
-Vue.component("help", HelpPopup);
 
 @Component
 export default class InverterView extends ModelBase {
