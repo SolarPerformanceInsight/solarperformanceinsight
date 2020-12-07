@@ -47,7 +47,7 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
@@ -72,6 +72,13 @@ export default class TemperatureParametersView extends ModelBase {
       componentName = "SAPMTemperatureParameters";
     }
     return componentName;
+  }
+
+  @Watch("parameters", { deep: true })
+  validate(newParams: Record<string, any>){
+    this.$validator
+      .validate(this.apiComponentName, newParams)
+      .then(this.setValidationResult);
   }
 }
 </script>
