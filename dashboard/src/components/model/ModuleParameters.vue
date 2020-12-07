@@ -27,7 +27,7 @@
         <br />
       </span>
       <b>mu_gamma:</b>
-      <input v-model="parameters.mu_gamma" />
+      <input type="number" v-model.number="parameters.mu_gamma" />
       <help :helpText="this.definitions.properties.mu_gamma.description" />
       <br />
       <span style="color:#F00;" v-if="'mu_gamma' in this.errors">
@@ -35,7 +35,7 @@
         <br />
       </span>
       <b>I_L_ref:</b>
-      <input v-model="parameters.I_L_ref" />
+      <input type="number" v-model.number="parameters.I_L_ref" />
       <help :helpText="this.definitions.properties.I_L_ref.description" />
       <br />
       <span style="color:#F00;" v-if="'I_L_ref' in this.errors">
@@ -43,7 +43,7 @@
         <br />
       </span>
       <b>I_o_ref:</b>
-      <input v-model="parameters.I_o_ref" />
+      <input type="number" v-model.number="parameters.I_o_ref" />
       <help :helpText="this.definitions.properties.I_o_ref.description" />
       <br />
       <span style="color:#F00;" v-if="'I_o_ref' in this.errors">
@@ -51,7 +51,7 @@
         <br />
       </span>
       <b>R_sh_ref:</b>
-      <input v-model="parameters.R_sh_ref" />
+      <input type="number" v-model.number="parameters.R_sh_ref" />
       <help :helpText="this.definitions.properties.R_sh_ref.description" />
       <br />
       <span style="color:#F00;" v-if="'R_sh_ref' in this.errors">
@@ -59,7 +59,7 @@
         <br />
       </span>
       <b>R_sh_0:</b>
-      <input v-model="parameters.R_sh_0" />
+      <input type="number" v-model.number="parameters.R_sh_0" />
       <help :helpText="this.definitions.properties.R_sh_0.description" />
       <br />
       <span style="color:#F00;" v-if="'R_sh_0' in this.errors">
@@ -67,7 +67,7 @@
         <br />
       </span>
       <b>R_s:</b>
-      <input v-model="parameters.R_s" />
+      <input type="number" v-model.number="parameters.R_s" />
       <help :helpText="this.definitions.properties.R_s.description" />
       <br />
       <span style="color:#F00;" v-if="'R_s' in this.errors">
@@ -75,7 +75,7 @@
         <br />
       </span>
       <b>alpha_sc:</b>
-      <input v-model="parameters.alpha_sc" />
+      <input type="number" v-model.number="parameters.alpha_sc" />
       <help :helpText="this.definitions.properties.alpha_sc.description" />
       <br />
       <span style="color:#F00;" v-if="'alpha_sc' in this.errors">
@@ -83,7 +83,7 @@
         <br />
       </span>
       <b>EgRef:</b>
-      <input v-model="parameters.EgRef" />
+      <input type="number" v-model.number="parameters.EgRef" />
       <help :helpText="this.definitions.properties.EgRef.description" />
       <br />
       <span style="color:#F00;" v-if="'EgRef' in this.errors">
@@ -91,7 +91,7 @@
         <br />
       </span>
       <b>cells_in_series:</b>
-      <input v-model="parameters.cells_in_series" />
+      <input type="number" v-model.number="parameters.cells_in_series" />
       <help
         :helpText="this.definitions.properties.cells_in_series.description"
       />
@@ -103,7 +103,7 @@
     </div>
     <div v-if="model == 'pvwatts'">
       <b>pdc0:</b>
-      <input v-model="parameters.pdc0" />
+      <input type="number" v-model.number="parameters.pdc0" />
       <help :helpText="this.definitions.properties.pdc0.description" />
       <br />
       <span style="color:#F00;" v-if="'pdc0' in this.errors">
@@ -111,7 +111,7 @@
         <br />
       </span>
       <b>gamma_pdc:</b>
-      <input v-model="parameters.gamma_pdc" />
+      <input type="number" v-model.number="parameters.gamma_pdc" />
       <help :helpText="this.definitions.properties.gamma_pdc.description" />
       <br />
       <span style="color:#F00;" v-if="'gamma_pdc' in this.errors">
