@@ -445,3 +445,9 @@ class StoredPVSystem(StoredObject):
                 "definition": SYSTEM_EXAMPLE,
             }
         }
+
+
+class UserInfo(StoredObject):
+    """Information about the current user"""
+
+    auth0_id: str = Field(..., description="User ID from Auth 0")

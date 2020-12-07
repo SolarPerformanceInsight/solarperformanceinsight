@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List
+from typing import List, Callable
 from uuid import UUID
 
 
@@ -113,6 +113,18 @@ engine = create_engine(
     pool_recycle=3600,
     pool_pre_ping=True,
 ).pool
+
+
+def ensure_user_exists(f: Callable) -> Callable:
+    """Decorator that ensures the DB user exists for the current auth0 ID.
+    Only necessary on methods that require an existing user like create_*.
+    """
+
+    def wrapper(cls, *args, **kwargs):
+        cls.create_user_if_not_exists()
+        return f(cls, *args, **kwargs)
+
+    return wrapper
 
 
 class StorageInterface:
@@ -203,6 +215,17 @@ class StorageInterface:
             raise HTTPException(status_code=404)
         return result
 
+    def create_user_if_not_exists(self) -> str:
+        return self._call_procedure_for_single("create_user_if_not_exists")["user_id"]
+
+    @ensure_user_exists
+    def get_user(self) -> models.UserInfo:
+        out = self._call_procedure_for_single("get_user")
+        out["object_id"] = out.pop("user_id")
+        out["object_type"] = "user"
+        out["modified_at"] = out["created_at"]
+        return models.UserInfo(**out)
+
     def list_systems(self) -> List[models.StoredPVSystem]:
         systems = self._call_procedure("list_systems")
         out = []
@@ -212,6 +235,7 @@ class StorageInterface:
             out.append(models.StoredPVSystem(**sys))
         return out
 
+    @ensure_user_exists
     def create_system(self, system_def: models.PVSystem) -> models.StoredObjectID:
         created = self._call_procedure_for_single(
             "create_system", system_def.name, system_def.json()

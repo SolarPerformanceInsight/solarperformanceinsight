@@ -249,3 +249,55 @@ def test_update_system_wrong_owner(
         with storage_interface.start_transaction() as st:
             st.update_system(other_system_id, system_def)
     assert err.value.status_code == 404
+
+
+def test_create_user_if_not_exists(storage_interface, add_example_db_data, mocker):
+    now = dt.datetime.utcnow().replace(microsecond=0, tzinfo=dt.timezone.utc)
+    mocker.patch.object(storage_interface, "user", new="newuser")
+    with storage_interface.start_transaction() as st:
+        st.create_user_if_not_exists()
+        out = st._call_procedure_for_single("get_user")
+    assert out["created_at"] >= now
+    assert out["auth0_id"] == "newuser"
+
+
+def test_create_user_if_not_exists_does_already(
+    storage_interface, add_example_db_data, auth0_id
+):
+    with storage_interface.start_transaction() as st:
+        st.create_user_if_not_exists()
+        out = st._call_procedure_for_single("get_user")
+    assert out["created_at"] == dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
+    assert out["auth0_id"] == auth0_id
+
+
+def test_get_user(storage_interface, add_example_db_data, auth0_id, user_id):
+    with storage_interface.start_transaction() as st:
+        out = st.get_user()
+    assert out.created_at == dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
+    assert out.auth0_id == auth0_id
+    assert out.object_id == user_id
+    assert out.object_type == "user"
+    assert out.modified_at == out.created_at
+
+
+@pytest.fixture()
+def cleanup_user(root_conn):
+    try:
+        yield
+    finally:
+        curs = root_conn.cursor()
+        curs.execute("delete from users where auth0_id = 'newuser'")
+        root_conn.commit()
+
+
+def test_get_user_new(storage_interface, mocker, cleanup_user):
+    now = dt.datetime.utcnow().replace(microsecond=0, tzinfo=dt.timezone.utc)
+    mocker.patch.object(storage_interface, "user", new="newuser")
+    create = mocker.spy(storage_interface, "create_user_if_not_exists")
+    with storage_interface.start_transaction() as st:
+        out = st.get_user()
+    assert out.created_at >= now
+    assert out.auth0_id == "newuser"
+    assert out.object_type == "user"
+    create.assert_called()
