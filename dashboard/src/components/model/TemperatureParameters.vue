@@ -1,36 +1,22 @@
 <template>
   <div class="temperature-parameters">
     <div v-if="model == 'pvsyst'">
-      <b>uC:</b>
-      <input v-model="parameters.u_c" />
-      <help :helpText="this.definitions.properties.u_c.description" />
-      <br />
-      <span style="color: #F00;" v-if="'u_c' in this.errors">
-        {{ this.errors.u_c }}
-      </span>
-      <b>uV:</b>
-      <input v-model="parameters.u_v" />
-      <help :helpText="this.definitions.properties.u_v.description" />
-      <br />
-      <span style="color: #F00;" v-if="'u_v' in this.errors">
-        {{ this.errors.u_v }}
-      </span>
-      <b>Alpha absorption:</b>
-      <input v-model="parameters.alpha_absorption" />
-      <help
-        :helpText="this.definitions.properties.alpha_absorption.description"
-      />
-      <br />
-      <span style="color: #F00;" v-if="'alpha_absorption' in this.errors">
-        {{ this.errors.alpha_absorption }}
-      </span>
-      <b>eta m:</b>
-      <input v-model="parameters.eta_m" />
-      <help :helpText="this.definitions.properties.eta_m.description" />
-      <br />
-      <span style="color: #F00;" v-if="'eta_m' in this.errors">
-        {{ this.errors.eta_m }}
-      </span>
+      <model-field
+        title="uC"
+        field-name="u_c"
+        input-type="number" />
+      <model-field
+        title="uV"
+        field-name="u_v"
+        input-type="number" />
+      <model-field
+        title="Alpha absorption"
+        field-name="alpha_absorption"
+        input-type="number" />
+      <model-field
+        title="eta m"
+        field-name="eta_m"
+        input-type="number"/>
     </div>
     <div v-if="model == 'pvwatts'">
       <b>a:</b>
