@@ -1,7 +1,7 @@
 <template>
   <div class="model">
     <div v-if="loading">
-      Fetching System...
+      Loading...
     </div>
     <div v-if="errorState">
       An error occured.
@@ -85,7 +85,7 @@ export default class SystemSpec extends Vue {
 
   created() {
     if (this.systemId != undefined) {
-      this.loadSystem();
+      this.system = this.$store.state.systems[this.systemId];
     } else {
       this.system = new System({});
       this.loading = false;
@@ -98,7 +98,7 @@ export default class SystemSpec extends Vue {
       model: "pvsyst",
       displaySummary: false,
       displayAdvanced: false,
-      loading: true,
+      loading: false,
       errorState: false
     };
   }
@@ -141,23 +141,6 @@ export default class SystemSpec extends Vue {
       } else if (PVWattsInverterParameters.isInstance(firstParams)) {
         this.model = "pvwatts";
       }
-    }
-  }
-
-  async loadSystem() {
-    const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/${this.systemId}`, {
-      headers: new Headers({
-        Authorization: `Bearer ${token}`
-      })
-    });
-    if (response.ok) {
-      const system: System = await response.json();
-      this.system = system;
-      this.loading = false;
-    } else {
-      this.loading = false;
-      this.errorState = true;
     }
   }
 
