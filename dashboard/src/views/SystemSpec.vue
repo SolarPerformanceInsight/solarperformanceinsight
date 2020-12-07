@@ -85,7 +85,7 @@ export default class SystemSpec extends Vue {
 
   created() {
     if (this.systemId != undefined) {
-      this.system = this.$store.state.systems[this.systemId];
+      this.system = new System(this.$store.state.systems[this.systemId]);
     } else {
       this.system = new System({});
       this.loading = false;
