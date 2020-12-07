@@ -25,7 +25,7 @@
         {{ this.errors.snow }}
         <br />
       </span>
-      <b>mismath:</b>
+      <b>mismatch:</b>
       <input type="number" v-model.number="parameters.mismatch" />
       <help :helpText="this.definitions.properties.mismatch.description" />
       <br />

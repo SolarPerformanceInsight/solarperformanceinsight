@@ -12,7 +12,7 @@ export const actions = {
     }).then(response => response.json());
     const systemMapping: Record<string, System> = {};
     for (const system of systemlist) {
-      systemMapping[system.system_id] = system as System;
+      systemMapping[system.object_id] = system.definition as System;
     }
     context.commit("updateSystemsList", systemMapping);
   }
