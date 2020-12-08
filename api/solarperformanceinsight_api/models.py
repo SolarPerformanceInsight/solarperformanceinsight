@@ -1,6 +1,7 @@
 import datetime as dt
 from typing import Union, List, Optional, Any
 from pydantic import BaseModel, Field
+from enum import Enum
 from pydantic.fields import Undefined
 from pydantic.types import UUID
 
@@ -53,6 +54,11 @@ SYSTEM_EXAMPLE = dict(
                     ),
                 )
             ],
+            airmass_model="kastenyoung1989",
+            aoi_model="no_loss",
+            clearsky_model="ineichen",
+            spectral_model="no_loss",
+            transposition_model="haydavies",
         )
     ],
 )
@@ -350,6 +356,54 @@ class SandiaInverterParameters(BaseModel):
     )
 
 
+class AOIModelEnum(str, Enum):
+    """Model to calculate the incidence angle modifier"""
+
+    no_loss = "no_loss"
+    physical = "physical"
+    ashrae = "ashrae"
+    sapm = "sapm"
+    martin_ruiz = "martin_ruiz"
+
+
+class SpectralModelEnum(str, Enum):
+    """Spectral losses model"""
+
+    no_loss = "no_loss"
+
+
+class ClearskyModelEnum(str, Enum):
+    """Model to estimate clear sky GHI, DNI, DHI"""
+
+    ineichen = "ineichen"
+    haurwitz = "haurwitz"
+    simplified_solis = "simplified_solis"
+
+
+class AirmassModelEnum(str, Enum):
+    """Model to estimate relative airmass at sea level"""
+
+    simple = "simple"
+    kasten1966 = "kasten1966"
+    youngirvine1967 = "youngirvine1967"
+    kastenyoung1989 = "kastenyoung1989"
+    gueymard1993 = "gueymard1993"
+    young1994 = "young1994"
+    pickering2002 = "pickering2002"
+
+
+class TranspositionModelEnum(str, Enum):
+    """Transposition model to determine total in-plane irradiance and the
+    beam, sky diffuse, and ground reflected components"""
+
+    isotropic = "isotropic"
+    klucher = "klucher"
+    haydavies = "haydavies"
+    reindl = "reindl"
+    king = "king"
+    perez = "perez"
+
+
 class Inverter(BaseModel):
     """Parameters for a single inverter feeding into a PV system"""
 
@@ -375,6 +429,11 @@ class Inverter(BaseModel):
         title="Inverter Parameters",
         description="Power conversion parameters for the inverter",
     )
+    airmass_model: AirmassModelEnum = AirmassModelEnum.kastenyoung1989
+    aoi_model: AOIModelEnum = AOIModelEnum.no_loss
+    clearsky_model: ClearskyModelEnum = ClearskyModelEnum.ineichen
+    spectral_model: SpectralModelEnum = SpectralModelEnum.no_loss
+    transposition_model: TranspositionModelEnum = TranspositionModelEnum.haydavies
 
 
 class PVSystem(BaseModel):
