@@ -12,7 +12,7 @@
           v-for="(inverter, index) in inverters"
           :key="index"
           :index="index"
-          :inverter="inverter"
+          :parameters="inverter"
           :model="model"
         />
       </ul>

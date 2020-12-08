@@ -3,34 +3,24 @@
     <b>System Name:</b>
     {{ $parent.$parent.system.name }}
     <br />
-    <b>Name:</b>
-    <input v-model="inverter.name" />
-    <help :helpText="this.definitions.properties.name.description" />
-    <br />
-    <span style="color:#F00;" v-if="'name' in this.errors">
-      {{ this.errors.name }}
-      <br />
-    </span>
-    <b>Make and Model:</b>
-    <input v-model="inverter.make_model" />
-    <help :helpText="this.definitions.properties.make_model.description" />
-    <br />
-    <span style="color:#F00;" v-if="'make_model' in this.errors">
-      {{ this.errors.make_model }}
-      <br />
-    </span>
+    <model-field
+      field-name="name"
+      input-type="string" />
+    <model-field
+      field-name="make_model"
+      input-type="string" />
     <b>Inverter Parameters:</b>
     <br />
     <inverter-parameters
-      :parameters="inverter.inverter_parameters"
+      :parameters="parameters.inverter_parameters"
       :model="model"
     />
     <span v-if="model == 'pvwatts'">
       <b>Loss Parameters:</b>
       <br />
-      <loss-parameters :parameters="inverter.losses" :model="model" />
+      <loss-parameters :parameters="parameters.losses" :model="model" />
     </span>
-    <arrays-view :pvarrays="inverter.arrays" :model="model" />
+    <arrays-view :pvarrays="parameters.arrays" :model="model" />
     <br />
     <button @click="removeInverter">Remove Inverter</button>
     <br />
@@ -51,18 +41,18 @@ import {
 
 @Component
 export default class InverterView extends ModelBase {
-  @Prop() inverter!: Inverter;
+  @Prop() parameters!: Inverter;
   @Prop() index!: number;
   @Prop() model!: string;
 
   @Watch("model")
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.inverter.inverter_parameters = new SandiaInverterParameters({});
-      this.inverter.losses = null;
+      this.parameters.inverter_parameters = new SandiaInverterParameters({});
+      this.parameters.losses = null;
     } else if (newModel == "pvwatts") {
-      this.inverter.inverter_parameters = new PVWattsInverterParameters({});
-      this.inverter.losses = new PVWattsLosses({});
+      this.parameters.inverter_parameters = new PVWattsInverterParameters({});
+      this.parameters.losses = new PVWattsLosses({});
     }
   }
 
@@ -72,13 +62,13 @@ export default class InverterView extends ModelBase {
   }
   duplicateInverter() {
     // @ts-expect-error
-    this.$parent.inverters.push(new Inverter(this.inverter));
+    this.$parent.inverters.push(new Inverter(this.parameters));
   }
   get apiComponentName() {
     return "Inverter";
   }
 
-  @Watch("inverter", { deep: true })
+  @Watch("parameters", { deep: true })
   validate(newInverter: Record<string, any>) {
     const inverter = newInverter as Inverter;
     this.$validator
