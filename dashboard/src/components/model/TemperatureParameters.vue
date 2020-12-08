@@ -19,27 +19,18 @@
         input-type="number"/>
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>a:</b>
-      <input v-model="parameters.a" />
-      <help :helpText="this.definitions.properties.a.description" />
-      <br />
-      <span style="color: #F00;" v-if="'a' in this.errors">
-        {{ this.errors.a }}
-      </span>
-      <b>b:</b>
-      <input v-model="parameters.b" />
-      <help :helpText="this.definitions.properties.b.description" />
-      <br />
-      <span style="color: #F00;" v-if="'b' in this.errors">
-        {{ this.errors.b }}
-      </span>
-      <b>deltaT:</b>
-      <input v-model="parameters.deltaT" />
-      <help :helpText="this.definitions.properties.deltaT.description" />
-      <br />
-      <span style="color: #F00;" v-if="'deltaT' in this.errors">
-        {{ this.errors.deltaT }}
-      </span>
+      <model-field
+        title="a"
+        field-name="a"
+        input-type="number" />
+      <model-field
+        title="b"
+        field-name="b"
+        input-type="number" />
+      <model-field
+        title="deltaT"
+        field-name="deltaT"
+        input-type="number" />
     </div>
   </div>
 </template>
