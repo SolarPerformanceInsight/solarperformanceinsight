@@ -1,24 +1,14 @@
 <template>
   <li>
     <b>Inverter Name:</b>
-    {{ $parent.$parent.inverter.name }}
+    {{ $parent.$parent.parameters.name }}
     <br />
-    <b>Name:</b>
-    <input v-model="pvarray.name" />
-    <help :helpText="this.definitions.properties.name.description" />
-    <br />
-    <span style="color:#F00;" v-if="'name' in this.errors">
-      {{ this.errors.name }}
-      <br />
-    </span>
-    <b>Make and Model:</b>
-    <input v-model="pvarray.make_model" />
-    <help :helpText="this.definitions.properties.make_model.description" />
-    <br />
-    <span style="color:#F00;" v-if="'make_model' in this.errors">
-      {{ this.errors.make_model }}
-      <br />
-    </span>
+    <model-field
+      field-name="name"
+      input-type="string" />
+    <model-field
+      field-name="make_model"
+      input-type="string" />
     <b>Tracking:</b>
     <input
       v-model="tracking"
@@ -34,16 +24,16 @@
       value="singleAxis"
     />
     Single Axis
-    <tracking-parameters :tracking="tracking" :parameters="pvarray.tracking" />
+    <tracking-parameters :tracking="tracking" :parameters="parameters.tracking" />
     <b>Temperature Model Parameters:</b>
     <br />
     <temperature-parameters
       :model="model"
-      :parameters="pvarray.temperature_model_parameters"
+      :parameters="parameters.temperature_model_parameters"
     />
     <b>Module Parameters:</b>
     <br />
-    <module-parameters :parameters="pvarray.module_parameters" :model="model" />
+    <module-parameters :parameters="parameters.module_parameters" :model="model" />
     <button @click="removeArray">Remove Array</button>
     <br />
     <button @click="duplicateArray">Duplicate Array</button>
@@ -76,7 +66,7 @@ interface HTMLInputEvent extends Event {
 
 @Component
 export default class ArrayView extends ModelBase {
-  @Prop() pvarray!: PVArray;
+  @Prop() parameters!: PVArray;
   @Prop() index!: number;
   @Prop() model!: string;
   tracking!: string;
@@ -90,7 +80,7 @@ export default class ArrayView extends ModelBase {
     this.tracking = this.inferTracking();
   }
   inferTracking() {
-    if (FixedTrackingParameters.isInstance(this.pvarray.tracking)) {
+    if (FixedTrackingParameters.isInstance(this.parameters.tracking)) {
       return "fixed";
     } else {
       return "singleAxis";
@@ -99,13 +89,13 @@ export default class ArrayView extends ModelBase {
   @Watch("model")
   changeModel(newModel: string) {
     if (newModel == "pvsyst") {
-      this.pvarray.module_parameters = new PVSystModuleParameters({});
-      this.pvarray.temperature_model_parameters = new PVSystTemperatureParameters(
+      this.parameters.module_parameters = new PVSystModuleParameters({});
+      this.parameters.temperature_model_parameters = new PVSystTemperatureParameters(
         {}
       );
     } else if (newModel == "pvwatts") {
-      this.pvarray.module_parameters = new PVWattsModuleParameters({});
-      this.pvarray.temperature_model_parameters = new SAPMTemperatureParameters(
+      this.parameters.module_parameters = new PVWattsModuleParameters({});
+      this.parameters.temperature_model_parameters = new SAPMTemperatureParameters(
         {}
       );
     }
@@ -114,12 +104,12 @@ export default class ArrayView extends ModelBase {
   changeTracking(e: HTMLInputEvent) {
     const tracking = e.target.value;
     if (tracking == "fixed") {
-      this.pvarray.tracking = new FixedTrackingParameters({});
+      this.parameters.tracking = new FixedTrackingParameters({});
     } else {
-      this.pvarray.tracking = new SingleAxisTrackingParameters({});
+      this.parameters.tracking = new SingleAxisTrackingParameters({});
     }
   }
-  @Watch("pvarray.tracking")
+  @Watch("parameters.tracking")
   ensureTracking() {
     // Ensure tracking stays consistent when the tracking parameters change
     // commonly fired an array is removed, so tha the component updates with
@@ -134,13 +124,13 @@ export default class ArrayView extends ModelBase {
   }
   duplicateArray() {
     // @ts-expect-error
-    this.$parent.pvarrays.push(new PVArray(this.pvarray));
+    this.$parent.pvarrays.push(new PVArray(this.parameters));
   }
   get apiComponentName() {
     return "PVArray";
   }
 
-  @Watch("pvarray", { deep: true })
+  @Watch("parameters", { deep: true })
   validate(newArray: Record<string, any>) {
     const arr = newArray as PVArray;
     this.$validator

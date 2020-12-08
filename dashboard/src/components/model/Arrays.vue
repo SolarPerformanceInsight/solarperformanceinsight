@@ -12,7 +12,7 @@
           v-for="(pvarray, index) in pvarrays"
           :key="index"
           :index="index"
-          :pvarray="pvarray"
+          :parameters="pvarray"
           :model="model"
         />
       </ul>
