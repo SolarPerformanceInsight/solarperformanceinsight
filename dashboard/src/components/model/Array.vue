@@ -5,6 +5,8 @@
     <br />
     <model-field field-name="name" />
     <model-field field-name="make_model" />
+    <model-field field-name="modules_per_string" />
+    <model-field field-name="strings" />
     <b>Tracking:</b>
     <input
       v-model="tracking"

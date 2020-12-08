@@ -29,6 +29,12 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
     <input
       v-if="inputType == 'number'"
       type="number"
+      step="any"
+      v-model.number="$parent.parameters[fieldName]"
+    />
+    <input
+      v-if="inputType == 'integer'"
+      type="number"
       v-model.number="$parent.parameters[fieldName]"
     />
     <template v-if="inputType == 'boolean'">
