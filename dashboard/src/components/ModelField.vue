@@ -1,8 +1,15 @@
 <template>
   <div class="model-field">
     <b>{{ title }}:</b>
+
     <input v-if="inputType == 'number'" type="number" v-model.number="$parent.parameters[fieldName]" />
-    <input v-if="inputType != 'number'" v-model="$parent.parameters[fieldName]" />
+    <template v-if="inputType == 'boolean'">
+      True: <input type="radio" :value="true" v-model="$parent.parameters[fieldName]" />
+      False: <input type="radio" :value="false" v-model="$parent.parameters[fieldName]" />
+    </template>
+
+    <input v-if="inputType == 'string'" v-model="$parent.parameters[fieldName]" />
+
     <help :helpText="$parent.definitions.properties[fieldName].description" />
     <br />
     <span style="color: #F00;" v-if="fieldName in $parent.errors">
@@ -17,12 +24,8 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 @Component
 export default class ModelField extends Vue{
   @Prop() title!: string;
-  @Prop() inputType?: string;
+  @Prop({ default: "string" }) inputType?: string;
   @Prop() fieldName!: string;
-  //@Prop() parameters!: Record<string, any>;
-  //@Prop() errors!: Record<string, any>;
-  //@Prop() definitions!: Record<string, any>;
-
 }
 </script>
 
