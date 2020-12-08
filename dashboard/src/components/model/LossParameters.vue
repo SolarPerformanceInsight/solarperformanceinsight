@@ -1,88 +1,36 @@
 <template>
   <div class="loss-parameters">
     <div v-if="model == 'pvwatts'">
-      <b>soiling:</b>
-      <input type="number" v-model.number="parameters.soiling" />
-      <help :helpText="this.definitions.properties.soiling.description" />
-      <br />
-      <span style="color: #F00;" v-if="'soiling' in this.errors">
-        {{ this.errors.soiling }}
-        <br />
-      </span>
-      <b>shading:</b>
-      <input type="number" v-model.number="parameters.shading" />
-      <help :helpText="this.definitions.properties.shading.description" />
-      <br />
-      <span style="color: #F00;" v-if="'shading' in this.errors">
-        {{ this.errors.shading }}
-        <br />
-      </span>
-      <b>snow:</b>
-      <input type="number" v-model.number="parameters.snow" />
-      <help :helpText="this.definitions.properties.snow.description" />
-      <br />
-      <span style="color: #F00;" v-if="'snow' in this.errors">
-        {{ this.errors.snow }}
-        <br />
-      </span>
-      <b>mismatch:</b>
-      <input type="number" v-model.number="parameters.mismatch" />
-      <help :helpText="this.definitions.properties.mismatch.description" />
-      <br />
-      <span style="color: #F00;" v-if="'mismatch' in this.errors">
-        {{ this.errors.mismatch }}
-        <br />
-      </span>
-      <b>wiring:</b>
-      <input type="number" v-model.number="parameters.wiring" />
-      <help :helpText="this.definitions.properties.wiring.description" />
-      <br />
-      <span style="color: #F00;" v-if="'wiring' in this.errors">
-        {{ this.errors.wiring }}
-        <br />
-      </span>
-      <b>connections:</b>
-      <input type="number" v-model.number="parameters.connections" />
-      <help :helpText="this.definitions.properties.connections.description" />
-      <br />
-      <span style="color: #F00;" v-if="'connections' in this.errors">
-        {{ this.errors.connections }}
-        <br />
-      </span>
-      <b>lid:</b>
-      <input type="number" v-model.number="parameters.lid" />
-      <help :helpText="this.definitions.properties.lid.description" />
-      <br />
-      <span style="color: #F00;" v-if="'lid' in this.errors">
-        {{ this.errors.lid }}
-        <br />
-      </span>
-      <b>nameplate rating:</b>
-      <input type="number" v-model.number="parameters.nameplate_rating" />
-      <help
-        :helpText="this.definitions.properties.nameplate_rating.description"
-      />
-      <br />
-      <span style="color: #F00;" v-if="'nameplate_rating' in this.errors">
-        {{ this.errors.nameplate_rating }}
-        <br />
-      </span>
-      <b>age:</b>
-      <input type="number" v-model.number="parameters.age" />
-      <help :helpText="this.definitions.properties.age.description" />
-      <br />
-      <span style="color: #F00;" v-if="'age' in this.errors">
-        {{ this.errors.age }}
-        <br />
-      </span>
-      <b>availability:</b>
-      <input type="number" v-model.number="parameters.availability" />
-      <help :helpText="this.definitions.properties.availability.description" />
-      <br />
-      <span style="color: #F00;" v-if="'availability' in this.errors">
-        {{ this.errors.availability }}
-        <br />
-      </span>
+      <model-field
+        field-name="soiling"
+        input-type="number" />
+      <model-field
+        field-name="shading"
+        input-type="number" />
+      <model-field
+        field-name="snow"
+        input-type="number" />
+      <model-field
+        field-name="mismatch"
+        input-type="number" />
+      <model-field
+        field-name="wiring"
+        input-type="number" />
+      <model-field
+        field-name="connections"
+        input-type="number" />
+      <model-field
+        field-name="lid"
+        input-type="number" />
+      <model-field
+        field-name="nameplate_rating"
+        input-type="number" />
+      <model-field
+        field-name="age"
+        input-type="number" />
+      <model-field
+        field-name="availability"
+        input-type="number" />
     </div>
   </div>
 </template>
