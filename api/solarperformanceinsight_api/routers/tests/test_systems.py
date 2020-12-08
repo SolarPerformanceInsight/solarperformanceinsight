@@ -1,6 +1,7 @@
 """Test some select system endpoint interaction. The majority of testing
 is done via schemathesis in ../../tests/test_app.py
 """
+import json
 import uuid
 
 
@@ -69,3 +70,14 @@ def test_update_other_system(client, add_example_db_data, other_system_id, syste
     system_def.name = "New Name"
     response = client.post(f"/systems/{other_system_id}", data=system_def.json())
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "change", [({}, 200), ({"latitude": "notanumber"}, 422), ({"name": "ok"}, 200)]
+)
+def test_check_system(system_def, client, change):
+    cd, code = change
+    data = system_def.dict()
+    data.update(cd)
+    resp = client.post("/systems/check", data=json.dumps(data))
+    assert resp.status_code == code

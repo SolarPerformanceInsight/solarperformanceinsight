@@ -64,6 +64,18 @@ async def create_system(
         return id_
 
 
+@router.post(
+    "/check",
+    responses={401: {}, 403: {}},
+    status_code=200,
+)
+async def check_system(
+    system: models.PVSystem,
+):
+    """Check if the POSTed system is valid for modeling"""
+    return
+
+
 @router.get(
     "/{system_id}",
     response_model=models.StoredPVSystem,
