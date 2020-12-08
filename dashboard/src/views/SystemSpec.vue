@@ -85,6 +85,8 @@ export default class SystemSpec extends Vue {
 
   created() {
     if (this.systemId != undefined) {
+      // Ensure that a new system is created from the System found in
+      // the store, so as not to inadvertently mangle stored systems.
       this.system = new System(this.$store.state.systems[this.systemId]);
     } else {
       this.system = new System({});
