@@ -1,36 +1,32 @@
 <template>
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
-      <b>Tilt:</b>
-      <input type="number" v-model.number="parameters.tilt" />
-      <help :helpText="this.definitions.properties.tilt.description" />
-      <br />
-      <span style="color:#F00;" v-if="'tilt' in this.errors">
-        {{ this.errors.tilt }}
-        <br />
-      </span>
-      <b>Azimuth:</b>
-      <input type="number" v-model.number="parameters.azimuth" />
-      <help :helpText="this.definitions.properties.azimuth.description" />
-      <br />
-      <span style="color:#F00;" v-if="'azimuth' in this.errors">
-        {{ this.errors.azimuth }}
-        <br />
-      </span>
+      <model-field
+        title="Tilt"
+        field-name="tilt"
+        input-type="number" />
+      <model-field
+        title="Azimuth"
+        field-name="azimuth"
+        input-type="number" />
     </div>
     <div v-if="tracking == 'singleAxis'">
-      <b>Axis Tilt:</b>
-      <input v-model.number="parameters.axis_tilt" />
-      <help :helpText="this.definitions.properties.axis_tilt.description" />
-      <br />
-      <b>Axis Azimuth:</b>
-      <input v-model.number="parameters.axis_azimuth" />
-      <help :helpText="this.definitions.properties.axis_azimuth.description" />
-      <br />
-      <b>Ground Coverage Ratio:</b>
-      <input v-model.number="parameters.gcr" />
-      <help :helpText="this.definitions.properties.gcr.description" />
-      <br />
+      <model-field
+        title="Axis Tilt"
+        field-name="axis_tilt"
+        input-type="number" />
+      <model-field
+        title="Axis Azimuth"
+        field-name="axis_azimuth"
+        input-type="number" />
+      <model-field
+        title="Ground Coverage Ratio"
+        field-name="gcr"
+        input-type="number" />
+      <model-field
+        title="Backtracking"
+        field-name="backtracking"
+        input-type="boolean" />
     </div>
   </div>
 </template>
