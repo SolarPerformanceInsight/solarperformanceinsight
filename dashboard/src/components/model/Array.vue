@@ -20,7 +20,10 @@
       value="singleAxis"
     />
     Single Axis
-    <tracking-parameters :tracking="tracking" :parameters="parameters.tracking" />
+    <tracking-parameters
+      :tracking="tracking"
+      :parameters="parameters.tracking"
+    />
     <b>Temperature Model Parameters:</b>
     <br />
     <temperature-parameters
@@ -29,7 +32,10 @@
     />
     <b>Module Parameters:</b>
     <br />
-    <module-parameters :parameters="parameters.module_parameters" :model="model" />
+    <module-parameters
+      :parameters="parameters.module_parameters"
+      :model="model"
+    />
     <button @click="removeArray">Remove Array</button>
     <br />
     <button @click="duplicateArray">Duplicate Array</button>

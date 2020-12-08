@@ -18,32 +18,20 @@
       <br />
     </div>
     <div v-if="model == 'pvsyst'">
-      <model-field
-        field-name="gamma_ref" />
-      <model-field
-        field-name="mu_gamma" />
-      <model-field
-        field-name="I_L_ref" />
-      <model-field
-        field-name="I_o_ref" />
-      <model-field
-        field-name="R_sh_ref" />
-      <model-field
-        field-name="R_sh_0" />
-      <model-field
-        field-name="R_s" />
-      <model-field
-        field-name="alpha_sc" />
-      <model-field
-        field-name="EgRef" />
-      <model-field
-        field-name="cells_in_series" />
+      <model-field field-name="gamma_ref" />
+      <model-field field-name="mu_gamma" />
+      <model-field field-name="I_L_ref" />
+      <model-field field-name="I_o_ref" />
+      <model-field field-name="R_sh_ref" />
+      <model-field field-name="R_sh_0" />
+      <model-field field-name="R_s" />
+      <model-field field-name="alpha_sc" />
+      <model-field field-name="EgRef" />
+      <model-field field-name="cells_in_series" />
     </div>
     <div v-if="model == 'pvwatts'">
-      <model-field
-        field-name="pdc0" />
-      <model-field
-        field-name="gamma_pdc" />
+      <model-field field-name="pdc0" />
+      <model-field field-name="gamma_pdc" />
     </div>
   </div>
 </template>
@@ -57,7 +45,6 @@ import {
   PVSystModuleParameters,
   PVWattsModuleParameters
 } from "@/types/ModuleParameters";
-
 
 @Component
 export default class ModuleParametersView extends ModelBase {

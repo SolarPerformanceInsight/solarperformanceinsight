@@ -28,7 +28,6 @@ import TrackingParametersView from "@/components/model/TrackingParameters.vue";
 import FileUpload from "@/components/FileUpload.vue";
 import SystemView from "@/components/model/System.vue";
 
-
 import "./assets/css/styles.css";
 
 Vue.use(VueRouter);

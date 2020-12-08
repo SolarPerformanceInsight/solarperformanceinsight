@@ -18,32 +18,20 @@
       <br />
     </div>
     <div v-if="model == 'pvsyst'">
-      <model-field
-        field-name="Paco" />
-      <model-field
-        field-name="Pdco" />
-      <model-field
-        field-name="Vdco" />
-      <model-field
-        field-name="Pso" />
-      <model-field
-        field-name="C0" />
-      <model-field
-        field-name="C1" />
-      <model-field
-        field-name="C2" />
-      <model-field
-        field-name="C3" />
-      <model-field
-        field-name="Pnt" />
+      <model-field field-name="Paco" />
+      <model-field field-name="Pdco" />
+      <model-field field-name="Vdco" />
+      <model-field field-name="Pso" />
+      <model-field field-name="C0" />
+      <model-field field-name="C1" />
+      <model-field field-name="C2" />
+      <model-field field-name="C3" />
+      <model-field field-name="Pnt" />
     </div>
     <div v-if="model == 'pvwatts'">
-      <model-field
-        field-name="pdc0" />
-      <model-field
-        field-name="eta_inv_nom" />
-      <model-field
-        field-name="eta_inv_ref" />
+      <model-field field-name="pdc0" />
+      <model-field field-name="eta_inv_nom" />
+      <model-field field-name="eta_inv_ref" />
     </div>
   </div>
 </template>

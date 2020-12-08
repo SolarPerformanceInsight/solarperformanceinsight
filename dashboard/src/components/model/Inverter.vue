@@ -3,10 +3,8 @@
     <b>System Name:</b>
     {{ $parent.$parent.parameters.name }}
     <br />
-    <model-field
-      field-name="name" />
-    <model-field
-      field-name="make_model" />
+    <model-field field-name="name" />
+    <model-field field-name="make_model" />
     <b>Inverter Parameters:</b>
     <br />
     <inverter-parameters
