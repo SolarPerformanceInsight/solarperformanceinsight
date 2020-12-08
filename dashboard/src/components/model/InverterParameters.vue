@@ -18,64 +18,37 @@
       <br />
     </div>
     <div v-if="model == 'pvsyst'">
-      <b>AC Power Rating:</b>
-      <input v-model="parameters.Paco" />
-      <br />
-      <b>DC Power Rating:</b>
-      <input v-model="parameters.Pdco" />
-      <br />
-      <b>Vdco:</b>
-      <input v-model="parameters.Vdco" />
-      <br />
-      <b>Pso:</b>
-      <input v-model="parameters.Pso" />
-      <br />
-      <b>C0:</b>
-      <input v-model="parameters.C0" />
-      <br />
-      <b>C1:</b>
-      <input v-model="parameters.C1" />
-      <br />
-      <b>C2:</b>
-      <input v-model="parameters.C2" />
-      <br />
-      <b>C3:</b>
-      <input v-model="parameters.C3" />
-      <br />
-      <b>Pnt:</b>
-      <input v-model="parameters.Pnt" />
-      <br />
+      <model-field field-name="Paco" />
+      <model-field field-name="Pdco" />
+      <model-field field-name="Vdco" />
+      <model-field field-name="Pso" />
+      <model-field field-name="C0" />
+      <model-field field-name="C1" />
+      <model-field field-name="C2" />
+      <model-field field-name="C3" />
+      <model-field field-name="Pnt" />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>pdc:</b>
-      <input v-model="parameters.pdc" />
-      <br />
-      <b>pdc0:</b>
-      <input v-model="parameters.pdc0" />
-      <br />
-      <b>eta_inv_nom:</b>
-      <input v-model="parameters.eta_inv_nom" />
-      <br />
-      <b>eta_inv_ref:</b>
-      <input v-model="parameters.eta_inv_ref" />
-      <br />
+      <model-field field-name="pdc0" />
+      <model-field field-name="eta_inv_nom" />
+      <model-field field-name="eta_inv_ref" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import ArraysView from "@/components/Arrays.vue";
+import ModelBase from "@/components/ModelBase.vue";
+
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import {
-  PVSystInverterParameters,
+  SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
 
-Vue.component("arrays-view", ArraysView);
 @Component
-export default class InverterParametersView extends Vue {
+export default class InverterParametersView extends ModelBase {
   // extend acceptable types for InverterParameters to include a PVWatts class
-  @Prop() parameters!: PVSystInverterParameters | PVWattsInverterParameters;
+  @Prop() parameters!: SandiaInverterParameters | PVWattsInverterParameters;
   @Prop() model!: string;
   @Prop({ default: null }) selectedInverter!: string;
 
@@ -99,6 +72,29 @@ export default class InverterParametersView extends Vue {
     } else {
       return [];
     }
+  }
+
+  get apiComponentName() {
+    let componentName: string;
+    if (this.model == "pvsyst") {
+      componentName = "SandiaInverterParameters";
+    } else {
+      componentName = "PVWattsInverterParameters";
+    }
+    return componentName;
+  }
+
+  @Watch("parameters", { deep: true })
+  validate(newParams: Record<string, any>) {
+    let params: Record<string, any>;
+    if (this.model == "pvsyst") {
+      params = newParams as SandiaInverterParameters;
+    } else {
+      params = newParams as PVWattsInverterParameters;
+    }
+    this.$validator
+      .validate(this.apiComponentName, params)
+      .then(this.setValidationResult);
   }
 }
 </script>

@@ -18,59 +18,36 @@
       <br />
     </div>
     <div v-if="model == 'pvsyst'">
-      <b>gamma_ref:</b>
-      <input v-model="parameters.gamma_ref" />
-      <br />
-      <b>mu_gamma:</b>
-      <input v-model="parameters.mu_gamma" />
-      <br />
-      <b>I_L_ref:</b>
-      <input v-model="parameters.I_L_ref" />
-      <br />
-      <b>I_o_ref:</b>
-      <input v-model="parameters.I_o_ref" />
-      <br />
-      <b>R_sh_ref:</b>
-      <input v-model="parameters.R_sh_ref" />
-      <br />
-      <b>R_sh_0:</b>
-      <input v-model="parameters.R_sh_0" />
-      <br />
-      <b>R_s:</b>
-      <input v-model="parameters.R_s" />
-      <br />
-      <b>alpha_sc:</b>
-      <input v-model="parameters.alpha_sc" />
-      <br />
-      <b>EgRef:</b>
-      <input v-model="parameters.EgRef" />
-      <br />
-      <b>cells_in_series:</b>
-      <input v-model="parameters.cells_in_series" />
-      <br />
+      <model-field field-name="gamma_ref" />
+      <model-field field-name="mu_gamma" />
+      <model-field field-name="I_L_ref" />
+      <model-field field-name="I_o_ref" />
+      <model-field field-name="R_sh_ref" />
+      <model-field field-name="R_sh_0" />
+      <model-field field-name="R_s" />
+      <model-field field-name="alpha_sc" />
+      <model-field field-name="EgRef" />
+      <model-field field-name="cells_in_series" />
     </div>
     <div v-if="model == 'pvwatts'">
-      <b>pdc0:</b>
-      <input v-model="parameters.pdc0" />
-      <br />
-      <b>gamma_pdc:</b>
-      <input v-model="parameters.gamma_pdc" />
-      <br />
+      <model-field field-name="pdc0" />
+      <model-field field-name="gamma_pdc" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-// Update with many classes of inverter parameters to check for type before
-// choosing a display.
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+
+import ModelBase from "@/components/ModelBase.vue";
+
 import {
   PVSystModuleParameters,
   PVWattsModuleParameters
 } from "@/types/ModuleParameters";
 
 @Component
-export default class ModuleParametersView extends Vue {
+export default class ModuleParametersView extends ModelBase {
   @Prop() parameters!: PVSystModuleParameters | PVWattsModuleParameters;
 
   @Prop({ default: "pvsyst" }) model!: string;
@@ -99,6 +76,27 @@ export default class ModuleParametersView extends Vue {
     } else {
       return [];
     }
+  }
+
+  get apiComponentName() {
+    if (this.model == "pvsyst") {
+      return "PVsystModuleParameters";
+    } else {
+      return "PVWattsModuleParameters";
+    }
+  }
+
+  @Watch("parameters", { deep: true })
+  validate(newParams: Record<string, any>) {
+    let params: Record<string, any>;
+    if (this.model == "pvsyst") {
+      params = newParams as PVSystModuleParameters;
+    } else {
+      params = newParams as PVWattsModuleParameters;
+    }
+    this.$validator
+      .validate(this.apiComponentName, params)
+      .then(this.setValidationResult);
   }
 }
 </script>

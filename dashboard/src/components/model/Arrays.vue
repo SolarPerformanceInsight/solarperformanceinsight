@@ -12,7 +12,7 @@
           v-for="(pvarray, index) in pvarrays"
           :key="index"
           :index="index"
-          :pvarray="pvarray"
+          :parameters="pvarray"
           :model="model"
         />
       </ul>
@@ -22,18 +22,16 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ArrayView from "@/components/Array.vue";
 import { PVArray } from "@/types/PVArray";
 import {
   PVWattsModuleParameters,
   PVSystModuleParameters
 } from "@/types/ModuleParameters";
 import {
-  PVWattsTemperatureParameters,
+  SAPMTemperatureParameters,
   PVSystTemperatureParameters
 } from "@/types/TemperatureParameters";
 
-Vue.component("array-view", ArrayView);
 @Component
 export default class ArraysView extends Vue {
   @Prop() pvarrays!: Array<PVArray>;
@@ -41,7 +39,7 @@ export default class ArraysView extends Vue {
 
   addArray() {
     let modParamClass: any = PVWattsModuleParameters;
-    let tempParamClass: any = PVWattsTemperatureParameters;
+    let tempParamClass: any = SAPMTemperatureParameters;
     if (this.model == "pvsyst") {
       modParamClass = PVSystModuleParameters;
       tempParamClass = PVSystTemperatureParameters;
