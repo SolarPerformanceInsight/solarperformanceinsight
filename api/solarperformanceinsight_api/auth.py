@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, jwk
 import httpx
+from jose import jwt, jwk  # type: ignore
+from pydantic.types import Json
 
 
 from . import settings
@@ -10,7 +11,7 @@ from . import settings
 bearer_scheme = HTTPBearer()
 
 
-async def get_auth_key():
+async def get_auth_key() -> Json:
     if settings.auth_key is not None:
         return settings.auth_key
     async with httpx.AsyncClient() as client:

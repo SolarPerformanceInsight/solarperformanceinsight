@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
-import uvicorn
+import uvicorn  # type: ignore
 
 
 from solarperformanceinsight_api.main import app
@@ -31,7 +31,11 @@ if __name__ == "__main__":
         StaticFiles(
             directory=os.getenv(
                 "STATIC_DIRECTORY",
-                (Path(__file__).parent / ".." / ".." / "dashboard" / "dist").absolute(),
+                str(
+                    (
+                        Path(__file__).parent / ".." / ".." / "dashboard" / "dist"
+                    ).absolute()
+                ),
             )
         ),
         name="static",
