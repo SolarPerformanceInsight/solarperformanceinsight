@@ -1,3 +1,27 @@
+<!--
+Single field component to render an input for schema properties defined by the
+Solar Performance Insight API's OpenAPI Spec. Includes a help popup that
+renders the property description at the right of the input. Safe to use in
+components in the `models` directory that extend the `ModelBase` class.
+
+WARNING : THIS COMPONENT WILL MUTATE ITS PARENTS PROPERTIES. BY UTILIZING IT
+YOU ARE ALLOWING THE PROPERTIES OF YOUR COMPONENTS `parameters` FIELD TO BE
+CHANGED. DO NOT USE WHEN UPSTREAM COMPONENTS ALSO USE `v-model` or `v-bind`
+ON THE SAME FIELD.
+
+This component only works for a single primitive schema property, and will not
+work for properties containing nested schema. e.g. `arrays` or `inverters`
+
+Parent components should have a Prop called `parameters` that contains an
+object defined in the OpenAPI spec. This component can be used by passing the
+property name to render as the `field-name` Prop.
+
+e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
+     with:
+
+    ` <model-field field-name="pdc0">`
+
+-->
 <template>
   <div class="model-field">
     <b>{{ title }}:</b>
