@@ -226,7 +226,7 @@ def test_update_system(
     now = dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc, microsecond=0)
     if alter:
         system_def.albedo = 999
-        system_def.inverters = []
+        system_def.inverters[0].arrays[0].strings = 3
     with storage_interface.start_transaction() as st:
         st.update_system(system_id, system_def)
         out = st.get_system(system_id)

@@ -360,7 +360,10 @@ class Inverter(BaseModel):
         description="Make and model of the inverter",
     )
     arrays: List[PVArray] = Field(
-        ..., description="List of PV arrays that are connected to this inverter"
+        ...,
+        description="List of PV arrays that are connected to this inverter",
+        min_items=1,
+        max_items=1,  # only a single array until pvlib 0.9/#1076
     )
     losses: Optional[PVWattsLosses] = Field(
         {}, description="Parameters describing the array losses"
@@ -394,7 +397,7 @@ class PVSystem(BaseModel):
         ..., description="Albedo of the surface around the system", ge=0
     )
     inverters: List[Inverter] = Field(
-        ..., description="List of inverters that make up this system"
+        ..., description="List of inverters that make up this system", min_items=1
     )
 
     class Config:
