@@ -53,7 +53,7 @@
       </div>
 
       <div>
-        <system-view :system="system" :model="model" />
+        <system-view :parameters="system" :model="model" />
       </div>
     </div>
   </div>

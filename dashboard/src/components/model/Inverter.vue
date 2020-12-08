@@ -1,7 +1,7 @@
 <template>
   <li>
     <b>System Name:</b>
-    {{ $parent.$parent.system.name }}
+    {{ $parent.$parent.parameters.name }}
     <br />
     <model-field
       field-name="name"
