@@ -3,27 +3,21 @@
     <div v-if="model == 'pvsyst'">
       <model-field
         field-name="u_c"
-        input-type="number" />
-      <model-field
+      /><model-field
         field-name="u_v"
-        input-type="number" />
+      />
       <model-field
-        field-name="alpha_absorption"
-        input-type="number" />
+        field-name="alpha_absorption" />
       <model-field
-        field-name="eta_m"
-        input-type="number"/>
+        field-name="eta_m" />
     </div>
     <div v-if="model == 'pvwatts'">
       <model-field
-        field-name="a"
-        input-type="number" />
+        field-name="a" />
       <model-field
-        field-name="b"
-        input-type="number" />
+        field-name="b" />
       <model-field
-        field-name="deltaT"
-        input-type="number" />
+        field-name="deltaT" />
     </div>
   </div>
 </template>

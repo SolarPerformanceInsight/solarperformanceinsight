@@ -19,43 +19,31 @@
     </div>
     <div v-if="model == 'pvsyst'">
       <model-field
-        field-name="gamma_ref"
-        input-type="number" />
+        field-name="gamma_ref" />
       <model-field
-        field-name="mu_gamma"
-        input-type="number" />
+        field-name="mu_gamma" />
       <model-field
-        field-name="I_L_ref"
-        input-type="number" />
+        field-name="I_L_ref" />
       <model-field
-        field-name="I_o_ref"
-        input-type="number" />
+        field-name="I_o_ref" />
       <model-field
-        field-name="R_sh_ref"
-        input-type="number" />
+        field-name="R_sh_ref" />
       <model-field
-        field-name="R_sh_0"
-        input-type="number" />
+        field-name="R_sh_0" />
       <model-field
-        field-name="R_s"
-        input-type="number" />
+        field-name="R_s" />
       <model-field
-        field-name="alpha_sc"
-        input-type="number" />
+        field-name="alpha_sc" />
       <model-field
-        field-name="EgRef"
-        input-type="number" />
+        field-name="EgRef" />
       <model-field
-        field-name="cells_in_series"
-        input-type="number" />
+        field-name="cells_in_series" />
     </div>
     <div v-if="model == 'pvwatts'">
       <model-field
-        field-name="pdc0"
-        input-type="number" />
+        field-name="pdc0" />
       <model-field
-        field-name="gamma_pdc"
-        input-type="number" />
+        field-name="gamma_pdc" />
     </div>
   </div>
 </template>

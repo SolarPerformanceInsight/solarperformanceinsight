@@ -1,32 +1,14 @@
 <template>
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
-      <model-field
-        title="Tilt"
-        field-name="tilt"
-        input-type="number" />
-      <model-field
-        title="Azimuth"
-        field-name="azimuth"
-        input-type="number" />
+      <model-field field-name="tilt" />
+      <model-field field-name="azimuth" />
     </div>
     <div v-if="tracking == 'singleAxis'">
-      <model-field
-        title="Axis Tilt"
-        field-name="axis_tilt"
-        input-type="number" />
-      <model-field
-        title="Axis Azimuth"
-        field-name="axis_azimuth"
-        input-type="number" />
-      <model-field
-        title="Ground Coverage Ratio"
-        field-name="gcr"
-        input-type="number" />
-      <model-field
-        title="Backtracking"
-        field-name="backtracking"
-        input-type="boolean" />
+      <model-field field-name="axis_tilt" />
+      <model-field field-name="axis_azimuth" />
+      <model-field field-name="gcr" />
+      <model-field field-name="backtracking" />
     </div>
   </div>
 </template>

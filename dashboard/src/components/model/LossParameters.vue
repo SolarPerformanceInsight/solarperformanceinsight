@@ -2,35 +2,25 @@
   <div class="loss-parameters">
     <div v-if="model == 'pvwatts'">
       <model-field
-        field-name="soiling"
-        input-type="number" />
+        field-name="soiling" />
       <model-field
-        field-name="shading"
-        input-type="number" />
+        field-name="shading" />
       <model-field
-        field-name="snow"
-        input-type="number" />
+        field-name="snow" />
       <model-field
-        field-name="mismatch"
-        input-type="number" />
+        field-name="mismatch" />
       <model-field
-        field-name="wiring"
-        input-type="number" />
+        field-name="wiring" />
       <model-field
-        field-name="connections"
-        input-type="number" />
+        field-name="connections" />
       <model-field
-        field-name="lid"
-        input-type="number" />
+        field-name="lid" />
       <model-field
-        field-name="nameplate_rating"
-        input-type="number" />
+        field-name="nameplate_rating" />
       <model-field
-        field-name="age"
-        input-type="number" />
+        field-name="age" />
       <model-field
-        field-name="availability"
-        input-type="number" />
+        field-name="availability" />
     </div>
   </div>
 </template>

@@ -19,43 +19,31 @@
     </div>
     <div v-if="model == 'pvsyst'">
       <model-field
-        field-name="Paco"
-        input-type="number" />
+        field-name="Paco" />
       <model-field
-        field-name="Pdco"
-        input-type="number" />
+        field-name="Pdco" />
       <model-field
-        field-name="Vdco"
-        input-type="number" />
+        field-name="Vdco" />
       <model-field
-        field-name="Pso"
-        input-type="number" />
+        field-name="Pso" />
       <model-field
-        field-name="C0"
-        input-type="number" />
+        field-name="C0" />
       <model-field
-        field-name="C1"
-        input-type="number" />
+        field-name="C1" />
       <model-field
-        field-name="C2"
-        input-type="number" />
+        field-name="C2" />
       <model-field
-        field-name="C3"
-        input-type="number" />
+        field-name="C3" />
       <model-field
-        field-name="Pnt"
-        input-type="number" />
+        field-name="Pnt" />
     </div>
     <div v-if="model == 'pvwatts'">
       <model-field
-        field-name="pdc0"
-        input-type="number" />
+        field-name="pdc0" />
       <model-field
-        field-name="eta_inv_nom"
-        input-type="number" />
+        field-name="eta_inv_nom" />
       <model-field
-        field-name="eta_inv_ref"
-        input-type="number" />
+        field-name="eta_inv_ref" />
     </div>
   </div>
 </template>

@@ -4,11 +4,9 @@
     {{ $parent.$parent.parameters.name }}
     <br />
     <model-field
-      field-name="name"
-      input-type="string" />
+      field-name="name" />
     <model-field
-      field-name="make_model"
-      input-type="string" />
+      field-name="make_model" />
     <b>Inverter Parameters:</b>
     <br />
     <inverter-parameters

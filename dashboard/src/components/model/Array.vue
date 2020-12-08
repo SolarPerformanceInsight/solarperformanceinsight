@@ -3,12 +3,8 @@
     <b>Inverter Name:</b>
     {{ $parent.$parent.parameters.name }}
     <br />
-    <model-field
-      field-name="name"
-      input-type="string" />
-    <model-field
-      field-name="make_model"
-      input-type="string" />
+    <model-field field-name="name" />
+    <model-field field-name="make_model" />
     <b>Tracking:</b>
     <input
       v-model="tracking"

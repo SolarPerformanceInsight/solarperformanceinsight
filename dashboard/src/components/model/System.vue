@@ -1,20 +1,10 @@
 <template>
   <div class="system">
-    <model-field
-      field-name="name"
-      input-type="string" />
-    <model-field
-      field-name="latitude"
-      input-type="number" />
-    <model-field
-      field-name="longitude"
-      input-type="number" />
-    <model-field
-      field-name="elevation"
-      input-type="number" />
-    <model-field
-      field-name="albedo"
-      input-type="number" />
+    <model-field field-name="name" />
+    <model-field field-name="latitude" />
+    <model-field field-name="longitude" />
+    <model-field field-name="elevation" />
+    <model-field field-name="albedo" />
     <inverters-view :inverters="parameters.inverters" :model="model" />
   </div>
 </template>

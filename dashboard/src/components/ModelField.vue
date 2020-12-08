@@ -23,12 +23,16 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
 export default class ModelField extends Vue{
-  @Prop({ default: "string" }) inputType?: string;
   @Prop() fieldName!: string;
+  definitions!: Record<string, any>;
 
-  get title(){
+  get title() {
     return this.$parent.definitions.properties[this.fieldName].title;
   }
+  get inputType() {
+    return this.$parent.definitions.properties[this.fieldName].type;
+  }
+
 }
 </script>
 
