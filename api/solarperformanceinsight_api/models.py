@@ -1,7 +1,7 @@
 import datetime as dt
-from typing import Union, List, Optional, Any
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Union, List, Optional, Any, Tuple
+from pydantic import BaseModel, Field, PrivateAttr
 from pydantic.fields import Undefined
 from pydantic.types import UUID
 
@@ -174,6 +174,7 @@ class PVsystModuleParameters(BaseModel):
         ),
         gt=0,
     )
+    _pvlib_dc_model: str = PrivateAttr("pvsyst")
 
 
 class PVWattsModuleParameters(BaseModel):
@@ -190,6 +191,7 @@ class PVWattsModuleParameters(BaseModel):
             "Typically -0.002 to -0.005 per degree C"
         ),
     )
+    _pvlib_dc_model: str = PrivateAttr("pvwatts")
 
 
 class PVsystTemperatureParameters(BaseModel):
@@ -207,6 +209,7 @@ class PVsystTemperatureParameters(BaseModel):
     )
     eta_m: float = Field(0.1, description="Module external efficiency as a fraction")
     alpha_absorption: float = Field(0.9, description="Absorption coefficient")
+    _pvlib_temperature_model: str = PrivateAttr("pvsyst")
 
 
 class SAPMTemperatureParameters(BaseModel):
@@ -222,6 +225,7 @@ class SAPMTemperatureParameters(BaseModel):
     deltaT: float = Field(
         ..., description="Parameter delta T of the Sandia Array Performance Model"
     )
+    _pvlib_temperature_model: str = PrivateAttr("sapm")
 
 
 class PVArray(BaseModel):
@@ -259,6 +263,17 @@ class PVArray(BaseModel):
     strings: int = Field(
         ..., description="Number of parallel strings in the array", gt=0
     )
+    _pvlib_models: Tuple[Tuple[str, str], ...] = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._pvlib_models = (
+            ("dc_model", self.module_parameters._pvlib_dc_model),
+            (
+                "temperature_model",
+                self.temperature_model_parameters._pvlib_temperature_model,
+            ),
+        )
 
 
 class PVWattsLosses(BaseModel):
@@ -274,6 +289,7 @@ class PVWattsLosses(BaseModel):
     nameplate_rating: float = Field(1.0, description="Nameplate Rating loss, %")
     age: float = Field(0.0, description="Age loss, %")
     availability: float = Field(3.0, description="Availability loss, %")
+    _pvlib_losses_model: str = PrivateAttr("pvwatts")
 
 
 class PVWattsInverterParameters(BaseModel):
@@ -292,6 +308,7 @@ class PVWattsInverterParameters(BaseModel):
     eta_inv_ref: float = Field(
         0.9637, description="Reference inverter efficiency, unitless"
     )
+    _pvlib_ac_model: str = PrivateAttr("pvwatts")
 
 
 class SandiaInverterParameters(BaseModel):
@@ -354,6 +371,7 @@ class SandiaInverterParameters(BaseModel):
             " (i.e., night tare), W"
         ),
     )
+    _pvlib_ac_model: str = PrivateAttr("sandia")
 
 
 class AOIModelEnum(str, Enum):
@@ -434,6 +452,14 @@ class Inverter(BaseModel):
     clearsky_model: ClearskyModelEnum = ClearskyModelEnum.ineichen
     spectral_model: SpectralModelEnum = SpectralModelEnum.no_loss
     transposition_model: TranspositionModelEnum = TranspositionModelEnum.haydavies
+    _pvlib_models: Tuple[Tuple[str, str], ...] = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._pvlib_models = self.arrays[0]._pvlib_models + (
+            ("ac_model", self.inverter_parameters._pvlib_ac_model),
+            ("losses_model", getattr(self.losses, "_pvlib_losses_model", "no_loss")),
+        )
 
 
 class PVSystem(BaseModel):
