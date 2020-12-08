@@ -2,33 +2,26 @@
   <div class="temperature-parameters">
     <div v-if="model == 'pvsyst'">
       <model-field
-        title="uC"
         field-name="u_c"
         input-type="number" />
       <model-field
-        title="uV"
         field-name="u_v"
         input-type="number" />
       <model-field
-        title="Alpha absorption"
         field-name="alpha_absorption"
         input-type="number" />
       <model-field
-        title="eta m"
         field-name="eta_m"
         input-type="number"/>
     </div>
     <div v-if="model == 'pvwatts'">
       <model-field
-        title="a"
         field-name="a"
         input-type="number" />
       <model-field
-        title="b"
         field-name="b"
         input-type="number" />
       <model-field
-        title="deltaT"
         field-name="deltaT"
         input-type="number" />
     </div>
