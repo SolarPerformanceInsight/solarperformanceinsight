@@ -8,9 +8,15 @@ if __name__ == "__main__":
         install_requires=[
             "cryptography",
             "fastapi",
-            "pydantic",
             "httpx",
+            "pandas",
+            "prometheus_fastapi_instrumentator",
+            "pvlib",
+            "pydantic",
+            "pymysql",
             "python-jose",
+            "sentry_sdk",
+            "sqlalchemy",
         ],
         use_scm_version={
             "write_to": "api/solarperformanceinsight_api/_version.py",
