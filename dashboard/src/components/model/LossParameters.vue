@@ -1,16 +1,66 @@
 <template>
   <div class="loss-parameters">
     <div v-if="model == 'pvwatts'">
-      <model-field field-name="soiling" />
-      <model-field field-name="shading" />
-      <model-field field-name="snow" />
-      <model-field field-name="mismatch" />
-      <model-field field-name="wiring" />
-      <model-field field-name="connections" />
-      <model-field field-name="lid" />
-      <model-field field-name="nameplate_rating" />
-      <model-field field-name="age" />
-      <model-field field-name="availability" />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="soiling"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="shading"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="snow"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="mismatch"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="wiring"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="connections"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="lid"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="nameplate_rating"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="age"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="availability"
+      />
     </div>
   </div>
 </template>

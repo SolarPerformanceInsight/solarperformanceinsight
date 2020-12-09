@@ -1,15 +1,50 @@
 <template>
   <div class="temperature-parameters">
     <div v-if="model == 'pvsyst'">
-      <model-field field-name="u_c" />
-      <model-field field-name="u_v" />
-      <model-field field-name="alpha_absorption" />
-      <model-field field-name="eta_m" />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="u_c"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="u_v"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="alpha_absorption"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="eta_m"
+      />
     </div>
     <div v-if="model == 'pvwatts'">
-      <model-field field-name="a" />
-      <model-field field-name="b" />
-      <model-field field-name="deltaT" />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="a"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="b"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="deltaT"
+      />
     </div>
   </div>
 </template>

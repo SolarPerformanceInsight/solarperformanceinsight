@@ -1,10 +1,35 @@
 <template>
   <div class="system">
-    <model-field field-name="name" />
-    <model-field field-name="latitude" />
-    <model-field field-name="longitude" />
-    <model-field field-name="elevation" />
-    <model-field field-name="albedo" />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="name"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="latitude"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="longitude"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="elevation"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="albedo"
+    />
     <inverters-view :inverters="parameters.inverters" :model="model" />
   </div>
 </template>

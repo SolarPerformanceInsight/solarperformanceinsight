@@ -12,14 +12,17 @@ ON THE SAME FIELD.
 This component only works for a single primitive schema property, and will not
 work for properties containing nested schema. e.g. `arrays` or `inverters`
 
-Parent components should have a Prop called `parameters` that contains an
-object defined in the OpenAPI spec. This component can be used by passing the
-property name to render as the `field-name` Prop.
+Parent components should v-bind `parameters`, `definitions`, and `errors` and
+pass the name of the property to render as the `fieldName` prop.
 
 e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
      with:
 
-    ` <model-field field-name="pdc0">`
+    <model-field
+      :parameters="paremeters"
+      :definitions="definitions"
+      :errors="errors"
+      field-name="pdc0">`
 
 -->
 <template>
@@ -30,37 +33,26 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
       v-if="inputType == 'number'"
       type="number"
       step="any"
-      v-model.number="$parent.parameters[fieldName]"
+      v-model.number="parameters[fieldName]"
     />
     <input
       v-if="inputType == 'integer'"
       type="number"
-      v-model.number="$parent.parameters[fieldName]"
+      v-model.number="parameters[fieldName]"
     />
     <template v-if="inputType == 'boolean'">
       True:
-      <input
-        type="radio"
-        :value="true"
-        v-model="$parent.parameters[fieldName]"
-      />
+      <input type="radio" :value="true" v-model="parameters[fieldName]" />
       False:
-      <input
-        type="radio"
-        :value="false"
-        v-model="$parent.parameters[fieldName]"
-      />
+      <input type="radio" :value="false" v-model="parameters[fieldName]" />
     </template>
 
-    <input
-      v-if="inputType == 'string'"
-      v-model="$parent.parameters[fieldName]"
-    />
+    <input v-if="inputType == 'string'" v-model="parameters[fieldName]" />
 
-    <help :helpText="$parent.definitions.properties[fieldName].description" />
+    <help :helpText="definitions.properties[fieldName].description" />
     <br />
-    <span style="color: #F00;" v-if="fieldName in $parent.errors">
-      {{ $parent.errors[fieldName] }}
+    <span style="color: #F00;" v-if="fieldName in errors">
+      {{ errors[fieldName] }}
     </span>
   </div>
 </template>
@@ -72,15 +64,15 @@ import ModelBase from "@/components/ModelBase.vue";
 @Component
 export default class ModelField extends Vue {
   @Prop() fieldName!: string;
-  definitions!: Record<string, any>;
+  @Prop() parameters!: Record<string, any>;
+  @Prop() definitions!: Record<string, any>;
+  @Prop() errors!: Record<string, any>;
 
   get title() {
-    const parent: ModelBase = this.$parent as ModelBase;
-    return parent.definitions.properties[this.fieldName].title;
+    return this.definitions.properties[this.fieldName].title;
   }
   get inputType() {
-    const parent: ModelBase = this.$parent as ModelBase;
-    return parent.definitions.properties[this.fieldName].type;
+    return this.definitions.properties[this.fieldName].type;
   }
 }
 </script>

@@ -1,14 +1,44 @@
 <template>
   <div class="tracking-parameters">
     <div v-if="tracking == 'fixed'">
-      <model-field field-name="tilt" />
-      <model-field field-name="azimuth" />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="tilt"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="azimuth"
+      />
     </div>
     <div v-if="tracking == 'singleAxis'">
-      <model-field field-name="axis_tilt" />
-      <model-field field-name="axis_azimuth" />
-      <model-field field-name="gcr" />
-      <model-field field-name="backtracking" />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="axis_tilt"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="axis_azimuth"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="gcr"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="backtracking"
+      />
     </div>
   </div>
 </template>
