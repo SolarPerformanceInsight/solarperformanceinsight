@@ -33,7 +33,6 @@ const pvsyst_test_system = {
   latitude: 0,
   longitude: 0,
   elevation: 0,
-  albedo: 0,
   inverters: [
     {
       name: "New Inverter",
@@ -54,6 +53,7 @@ const pvsyst_test_system = {
         {
           name: "New Array",
           make_model: "ABC 123",
+          albedo: 0,
           modules_per_string: 0,
           strings: 0,
           losses_parameters: {},
@@ -120,7 +120,6 @@ const pvwatts_test_system = {
   latitude: 34.0,
   longitude: -110.0,
   elevation: 500,
-  albedo: 0.2,
   inverters: [
     {
       name: "The inverter",
@@ -147,6 +146,7 @@ const pvwatts_test_system = {
         {
           name: "The Array",
           make_model: "ABC 123",
+          albedo: 0.2,
           modules_per_string: 0,
           strings: 0,
           losses_parameters: {},
