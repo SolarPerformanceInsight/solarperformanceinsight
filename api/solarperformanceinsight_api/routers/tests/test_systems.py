@@ -57,7 +57,7 @@ def test_update_system(
     client, add_example_db_data, system_def, system_id, mocker, alter
 ):
     if alter:
-        system_def.albedo = 999
+        system_def.latitude = 33.99
     update = mocker.spy(storage.StorageInterface, "update_system")
     response = client.post(f"/systems/{system_id}", data=system_def.json())
     assert response.status_code == 201
@@ -66,7 +66,7 @@ def test_update_system(
 
 
 def test_update_other_system(client, add_example_db_data, other_system_id, system_def):
-    system_def.albedo = 999
+    system_def.longitude = -129.83
     system_def.name = "New Name"
     response = client.post(f"/systems/{other_system_id}", data=system_def.json())
     assert response.status_code == 404

@@ -163,7 +163,6 @@ begin
        "latitude": 33.98,
        "longitude": -115.323,
        "elevation": 2300,
-       "albedo": 0.2,
        "inverters": [
          {
            "name": "Inverter 1",
@@ -184,6 +183,7 @@ begin
              {
                "name": "Array 1",
                "make_model": "Canadian_Solar_Inc__CS5P_220M",
+               "albedo": 0.2,
                "modules_per_string": 7,
                "strings": 5,
                "tracking": {
@@ -489,5 +489,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20201130184500'),
   ('20201130190000'),
   ('20201130190100'),
-  ('20201202162400');
+  ('20201202162400'),
+  ('20201208224427');
 UNLOCK TABLES;
