@@ -21,6 +21,7 @@ export class PVArray {
     | SAPMTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
+  albedo: number;
   modules_per_string: number;
   strings: number;
   losses_parameters: object; // eslint-disable-line
@@ -31,12 +32,14 @@ export class PVArray {
     module_parameters = new PVSystModuleParameters({}),
     temperature_model_parameters = new PVSystTemperatureParameters({}),
     tracking = new FixedTrackingParameters({}),
+    albedo = 0,
     modules_per_string = 0,
     strings = 0,
     losses_parameters = {}
   }: Partial<PVArray>) {
     this.name = name;
     this.make_model = make_model;
+    this.albedo = albedo;
     this.modules_per_string = modules_per_string;
     this.strings = strings;
     this.losses_parameters = losses_parameters;
@@ -75,6 +78,7 @@ export class PVArray {
       maybe.module_parameters != undefined &&
       maybe.temperature_model_parameters != undefined &&
       maybe.tracking != undefined &&
+      maybe.albedo != undefined &&
       maybe.modules_per_string != undefined &&
       maybe.strings != undefined &&
       maybe.losses_parameters != undefined
