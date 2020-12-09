@@ -30,5 +30,3 @@ coverage:
       carryforward: true
 
 comment: false
-github_checks:
-  annotations: false
