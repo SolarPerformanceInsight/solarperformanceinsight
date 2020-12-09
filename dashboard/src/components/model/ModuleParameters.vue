@@ -24,6 +24,7 @@
       <model-field field-name="I_o_ref" />
       <model-field field-name="R_sh_ref" />
       <model-field field-name="R_sh_0" />
+      <model-field field-name="R_sh_exp" />
       <model-field field-name="R_s" />
       <model-field field-name="alpha_sc" />
       <model-field field-name="EgRef" />
