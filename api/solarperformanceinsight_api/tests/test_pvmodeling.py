@@ -83,26 +83,12 @@ def test_construct_pvsystem_consistent_kwargs_fixed(system_def, mocker, fixed_tr
     assert kwargs.issubset(params)
 
 
-def test_extract_pvlib_models(system_def):
-    out = pvmodeling.extract_pvlib_models(system_def.inverters[0])
-    assert out == {
-        "ac_model": "sandia",
-        "dc_model": "pvsyst",
-        "temperature_model": "pvsyst",
-        "airmass_model": "kastenyoung1989",
-        "aoi_model": "no_loss",
-        "clearsky_model": "ineichen",
-        "spectral_model": "no_loss",
-        "transposition_model": "haydavies",
-        "losses_model": "pvwatts",
-    }
-
-
-def test_extract_pvlib_models_consistent_with_modelchain(system_def):
-    models = pvmodeling.extract_pvlib_models(system_def.inverters[0])
+def test_inverter_models_consistent_with_modelchain(system_def):
+    # test Inverter._modelchain_models specifies all _model arguments for ModelChain
+    models = {k[0] for k in system_def.inverters[0]._modelchain_models}
     sig = signature(ModelChain)
     model_params = {k for k in sig.parameters.keys() if k.endswith("_model")}
-    assert set(models.keys()) == model_params
+    assert models == model_params
 
 
 def test_construct_modelchains_fixed(system_def, fixed_tracking):

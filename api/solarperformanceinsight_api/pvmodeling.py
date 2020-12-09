@@ -67,29 +67,15 @@ def construct_pvsystem(
     return system_model(**tracking_kwargs, **common_kwargs)
 
 
-def extract_pvlib_models(inverter: models.Inverter) -> Dict[str, str]:
-    """Extract the pvlib.modelchain.ModelChain _model keywords from an
-    Inverter definition"""
-    models = dict(inverter._pvlib_models)
-    models.update(
-        {
-            k: v
-            for k, v in inverter.dict().items()
-            if k.endswith("_model") and k != "make_model"
-        }
-    )
-    return models
-
-
 def construct_modelchains(system: models.PVSystem) -> List[ModelChain]:
     """Construct a pvlib.modelchain.ModelChain object for each Inverter
     in system"""
     location = construct_location(system=system)
     out = []
-    for i, inverter in enumerate(system.inverters):
+    for inverter in system.inverters:
         pvsystem = construct_pvsystem(inverter=inverter, albedo=system.albedo)
         mc = ModelChain(
-            system=pvsystem, location=location, **extract_pvlib_models(inverter)
+            system=pvsystem, location=location, **dict(inverter._modelchain_models)
         )
         out.append(mc)
     return out
