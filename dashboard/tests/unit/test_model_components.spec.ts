@@ -2,6 +2,9 @@ import Vue from "vue";
 
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
+import { APIValidator } from "@/types/validation/Validator";
+import APISpec from "./openapi.json";
+
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
 import HelpPopup from "@/components/Help.vue";
@@ -53,8 +56,14 @@ const parentComponent: Vue = mount({
   }
 }).vm;
 
-const mocks = {};
-
+const $validator = new APIValidator();
+$validator.getAPISpec = jest.fn().mockResolvedValue(APISpec);
+const mocks = {
+  $validator
+};
+beforeAll(() => {
+  $validator.init();
+});
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -63,19 +72,44 @@ function expectAllModelFields(
   parameters: Record<string, any>
 ) {
   /* Tests that all parameter properties of type string, number or boolean
-   * exist as <model-field> components in the wrapper.
+   * exist as <model-field> components in the wrapper and that values are
+   * set to values of the passed in parameters.
    */
-
   const modelFieldKeys = Object.keys(parameters).filter(k => {
     return ["string", "number", "boolean"].includes(typeof parameters[k]);
   });
+
   const fields = wrapper.findAllComponents(ModelField);
   expect(fields).toHaveLength(modelFieldKeys.length);
-  const fieldProps = fields.wrappers.map(function(w: any) {
-    return w.props("fieldName");
+  for (const fw of fields.wrappers) {
+    const fn = fw.props("fieldName");
+    let inp: any;
+    if (typeof parameters[fn] == "boolean") {
+      inp = fw.find("input[type=radio]:checked");
+    } else {
+      inp = fw.find("input");
+    }
+    expect(inp.element.value).toEqual(parameters[fn].toString());
+  }
+}
+
+function expectAllModelFieldsShallow(
+  wrapper: Wrapper<any>,
+  parameters: Record<string, any>
+) {
+  /* Tests that all parameter properties of type string, number or boolean
+   * exist as <model-field> components. Used to test shallow-mounted components
+   * that would normally contain model fields of other nested components.
+   */
+  const modelFieldKeys = Object.keys(parameters).filter(k => {
+    return ["string", "number", "boolean"].includes(typeof parameters[k]);
   });
-  for (const field of modelFieldKeys) {
-    expect(fieldProps.includes(field)).toBe(true);
+
+  const fields = wrapper.findAllComponents(ModelField);
+  expect(fields).toHaveLength(modelFieldKeys.length);
+  for (const fw of fields.wrappers) {
+    const fn = fw.props("fieldName");
+    expect(fn in parameters).toBe(true);
   }
 }
 
@@ -86,14 +120,13 @@ import {
   PVSystTemperatureParameters,
   SAPMTemperatureParameters
 } from "@/types/TemperatureParameters";
-
 describe("Tests temperature parameters", () => {
   it("pvsyst", () => {
     const propsData = {
       parameters: new PVSystTemperatureParameters({}),
       model: "pvsyst"
     };
-    const wrapper = shallowMount(TemperatureParametersView, {
+    const wrapper = mount(TemperatureParametersView, {
       localVue,
       propsData,
       mocks
@@ -105,7 +138,7 @@ describe("Tests temperature parameters", () => {
       parameters: new SAPMTemperatureParameters({}),
       model: "pvwatts"
     };
-    const wrapper = shallowMount(TemperatureParametersView, {
+    const wrapper = mount(TemperatureParametersView, {
       localVue,
       propsData,
       mocks
@@ -124,7 +157,7 @@ describe("Tests Loss Parameters", () => {
       parameters: new PVWattsLosses({}),
       model: "pvwatts"
     };
-    const wrapper = shallowMount(LossParametersView, {
+    const wrapper = mount(LossParametersView, {
       localVue,
       propsData,
       mocks
@@ -136,7 +169,7 @@ describe("Tests Loss Parameters", () => {
       parameters: null,
       model: "pvsyst"
     };
-    const wrapper = shallowMount(LossParametersView, {
+    const wrapper = mount(LossParametersView, {
       localVue,
       propsData,
       mocks
@@ -159,7 +192,7 @@ describe("Test tracking parameters", () => {
       parameters: new FixedTrackingParameters({}),
       tracking: "fixed"
     };
-    const wrapper = shallowMount(TrackingParametersView, {
+    const wrapper = mount(TrackingParametersView, {
       localVue,
       propsData,
       mocks
@@ -171,7 +204,7 @@ describe("Test tracking parameters", () => {
       parameters: new SingleAxisTrackingParameters({}),
       tracking: "singleAxis"
     };
-    const wrapper = shallowMount(TrackingParametersView, {
+    const wrapper = mount(TrackingParametersView, {
       localVue,
       propsData,
       mocks
@@ -193,7 +226,7 @@ describe("Test module parameters", () => {
       parameters: new PVWattsModuleParameters({}),
       model: "pvwatts"
     };
-    const wrapper = shallowMount(ModuleParametersView, {
+    const wrapper = mount(ModuleParametersView, {
       localVue,
       propsData,
       mocks
@@ -205,7 +238,7 @@ describe("Test module parameters", () => {
       parameters: new PVSystModuleParameters({}),
       model: "pvsyst"
     };
-    const wrapper = shallowMount(ModuleParametersView, {
+    const wrapper = mount(ModuleParametersView, {
       localVue,
       propsData,
       mocks
@@ -236,7 +269,7 @@ describe("Test array", () => {
       parentComponent,
       mocks
     });
-    expectAllModelFields(wrapper, propsData.parameters);
+    expectAllModelFieldsShallow(wrapper, propsData.parameters);
     const mp = wrapper.findComponent(ModuleParametersView);
     expect(mp.exists()).toBe(true);
     expect(mp.props("model")).toBe("pvwatts");
@@ -270,7 +303,7 @@ describe("Test array", () => {
       parentComponent,
       mocks
     });
-    expectAllModelFields(wrapper, propsData.parameters);
+    expectAllModelFieldsShallow(wrapper, propsData.parameters);
     const mp = wrapper.findComponent(ModuleParametersView);
     expect(mp.exists()).toBe(true);
     expect(mp.props("model")).toBe("pvsyst");
@@ -316,7 +349,7 @@ describe("Test Inverter", () => {
       parentComponent,
       mocks
     });
-    expectAllModelFields(wrapper, propsData.parameters);
+    expectAllModelFieldsShallow(wrapper, propsData.parameters);
     const ip = wrapper.findComponent(InverterParametersView);
     expect(ip.exists()).toBe(true);
     expect(ip.props("model")).toBe("pvwatts");
@@ -348,7 +381,7 @@ describe("Test Inverter", () => {
       parentComponent,
       mocks
     });
-    expectAllModelFields(wrapper, propsData.parameters);
+    expectAllModelFieldsShallow(wrapper, propsData.parameters);
     const ip = wrapper.findComponent(InverterParametersView);
     expect(ip.exists()).toBe(true);
     expect(ip.props("model")).toBe("pvsyst");
@@ -374,7 +407,7 @@ describe("Test inverter parameters", () => {
       parameters: new PVWattsInverterParameters({}),
       model: "pvwatts"
     };
-    const wrapper = shallowMount(InverterParametersView, {
+    const wrapper = mount(InverterParametersView, {
       localVue,
       propsData,
       mocks
@@ -386,11 +419,32 @@ describe("Test inverter parameters", () => {
       parameters: new SandiaInverterParameters({}),
       model: "pvsyst"
     };
-    const wrapper = shallowMount(InverterParametersView, {
+    const wrapper = mount(InverterParametersView, {
       localVue,
       propsData,
       mocks
     });
     expectAllModelFields(wrapper, propsData.parameters);
+  });
+});
+/*
+ * System
+ */
+import { System } from "@/types/System";
+describe("Test ", () => {
+  it("pvwatts", () => {
+    const propsData = {
+      parameters: new System({}),
+      model: "pvwatts"
+    };
+    const wrapper = shallowMount(SystemView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    expectAllModelFieldsShallow(wrapper, propsData.parameters);
+    const iv = wrapper.findComponent(InvertersView);
+    expect(iv.props("model")).toEqual("pvwatts");
+    expect(iv.props("inverters")).toEqual(propsData.parameters.inverters);
   });
 });
