@@ -27,8 +27,7 @@ jobs:
 
       - name: Test
         run: |
-          cd dashboard
-          npm run test:unit
+          npm run --prefix dashboard test:unit
 
       - name: Upload coverage
         run: |
