@@ -24,12 +24,6 @@
       :definitions="definitions"
       field-name="elevation"
     />
-    <model-field
-      :parameters="parameters"
-      :errors="errors"
-      :definitions="definitions"
-      field-name="albedo"
-    />
     <inverters-view :inverters="parameters.inverters" :model="model" />
   </div>
 </template>

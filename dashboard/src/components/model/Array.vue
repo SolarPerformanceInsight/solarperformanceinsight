@@ -19,6 +19,12 @@
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
+      field-name="albedo"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
       field-name="modules_per_string"
     />
     <model-field

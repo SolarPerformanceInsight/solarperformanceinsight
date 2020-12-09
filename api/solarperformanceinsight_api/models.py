@@ -11,7 +11,6 @@ SYSTEM_EXAMPLE = dict(
     latitude=33.98,
     longitude=-115.323,
     elevation=2300,
-    albedo=0.2,
     inverters=[
         dict(
             name="Inverter 1",
@@ -32,6 +31,7 @@ SYSTEM_EXAMPLE = dict(
                 dict(
                     name="Array 1",
                     make_model="Canadian_Solar_Inc__CS5P_220M",
+                    albedo=0.2,
                     modules_per_string=7,
                     strings=5,
                     tracking=dict(
@@ -253,6 +253,9 @@ class PVArray(BaseModel):
     )
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
+    )
+    albedo: float = Field(
+        ..., description="Albedo of the surface around the array", ge=0
     )
     modules_per_string: int = Field(
         ...,
@@ -485,9 +488,6 @@ class PVSystem(BaseModel):
     )
     elevation: float = Field(
         ..., description="Elevation of the system above sea level in meters", ge=-300
-    )
-    albedo: float = Field(
-        ..., description="Albedo of the surface around the system", ge=0
     )
     inverters: List[Inverter] = Field(
         ..., description="List of inverters that make up this system", min_items=1

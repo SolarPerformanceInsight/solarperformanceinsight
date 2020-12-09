@@ -42,16 +42,14 @@ def construct_tracker(
         raise TypeError("Only FixedTracking and SingleAxisTracking currently supported")
 
 
-def construct_pvsystem(
-    inverter: models.Inverter, albedo: float
-) -> Union[PVSystem, SingleAxisTracker]:
+def construct_pvsystem(inverter: models.Inverter) -> Union[PVSystem, SingleAxisTracker]:
     """Construct a pvlib.pvsystem.PVSystem (or SingleAxisTracker) from an
     Inverter object"""
     # only a single array for now until pvlib#1076
     # otherwise one pvsystem/pvarray per array
     array = inverter.arrays[0]
     common_kwargs = dict(
-        albedo=albedo,
+        albedo=array.albedo,
         module=array.make_model,
         module_parameters=array.module_parameters.dict(),
         temperature_model_parameters=array.temperature_model_parameters.dict(),
@@ -73,7 +71,7 @@ def construct_modelchains(system: models.PVSystem) -> List[ModelChain]:
     location = construct_location(system=system)
     out = []
     for inverter in system.inverters:
-        pvsystem = construct_pvsystem(inverter=inverter, albedo=system.albedo)
+        pvsystem = construct_pvsystem(inverter=inverter)
         mc = ModelChain(
             system=pvsystem, location=location, **dict(inverter._modelchain_models)
         )

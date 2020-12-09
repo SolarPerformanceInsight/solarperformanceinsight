@@ -64,7 +64,7 @@ def either_tracker(request, system_def, fixed_tracking, single_axis_tracking):
 
 def test_construct_pvsystem(either_tracker):
     inv, cls = either_tracker
-    out = pvmodeling.construct_pvsystem(inv, 0)
+    out = pvmodeling.construct_pvsystem(inv)
     assert isinstance(out, cls)
     assert isinstance(out.module_parameters, dict)
     assert isinstance(out.temperature_model_parameters, dict)
@@ -75,7 +75,7 @@ def test_construct_pvsystem_consistent_kwargs_fixed(system_def, mocker, fixed_tr
     pvsys = mocker.spy(pvmodeling, "PVSystem")
     inv = system_def.inverters[0]
     inv.arrays[0].tracking = fixed_tracking
-    out = pvmodeling.construct_pvsystem(inv, 0)
+    out = pvmodeling.construct_pvsystem(inv)
     assert isinstance(out, PVSystem)
     sig = signature(PVSystem)
     params = set(sig.parameters.keys())

@@ -44,12 +44,27 @@ export default class ArraysView extends Vue {
       modParamClass = PVSystModuleParameters;
       tempParamClass = PVSystTemperatureParameters;
     }
-    this.pvarrays.push(
-      new PVArray({
-        module_parameters: new modParamClass({}),
-        temperature_model_parameters: new tempParamClass({})
-      })
-    );
+
+    let newArray: PVArray;
+    const modParams = new modParamClass({});
+    const tempParams = new tempParamClass({});
+    if (
+      this.pvarrays.length > 0 &&
+      this.pvarrays.every(x => x.albedo === this.pvarrays[0].albedo)
+    ) {
+      const albedo: number = this.pvarrays[0].albedo;
+      newArray = new PVArray({
+        albedo: albedo,
+        module_parameters: modParams,
+        temperature_model_parameters: tempParams
+      });
+    } else {
+      newArray = new PVArray({
+        module_parameters: modParams,
+        temperature_model_parameters: tempParams
+      });
+    }
+    this.pvarrays.push(newArray);
   }
 }
 </script>

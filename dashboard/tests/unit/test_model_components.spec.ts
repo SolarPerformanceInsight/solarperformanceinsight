@@ -324,6 +324,44 @@ describe("Test array", () => {
 });
 
 /*
+ * PV Arrays
+ */
+
+describe("Test adding arrays", () => {
+  const propsData = {
+    pvarrays: new Array(),
+    model: "pvwatts",
+    index: 0
+  };
+  // @ts-expect-error
+  const wrapper = shallowMount(ArraysView, {
+    localVue,
+    propsData,
+    parentComponent,
+    mocks
+  });
+
+  expect(propsData.pvarrays).toHaveLength(0);
+  wrapper.find("button").trigger("click");
+  expect(propsData.pvarrays).toHaveLength(1);
+  const defaultAlbedo = propsData.pvarrays[0].albedo;
+  // change albedo and make sure new array have this value
+  const initAlbedo = 1.2;
+  propsData.pvarrays[0].albedo = initAlbedo;
+  wrapper.find("button").trigger("click");
+  expect(propsData.pvarrays).toHaveLength(2);
+  expect(propsData.pvarrays[1].albedo).toBe(initAlbedo);
+  wrapper.find("button").trigger("click");
+  expect(propsData.pvarrays).toHaveLength(3);
+  expect(propsData.pvarrays[2].albedo).toBe(initAlbedo);
+  // if one array has different albedo, others added have default
+  propsData.pvarrays[1].albedo = 99.8;
+  wrapper.find("button").trigger("click");
+  expect(propsData.pvarrays).toHaveLength(4);
+  expect(propsData.pvarrays[3].albedo).toBe(defaultAlbedo);
+});
+
+/*
  * Inverter
  */
 
