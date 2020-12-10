@@ -36,8 +36,6 @@ export default class InvertersView extends Vue {
   @Prop() inverters!: Array<Inverter>;
   @Prop() model!: string;
 
-  components = ["inverter-view"];
-
   addInverter(existingInverter: Inverter | null) {
     let newInverter: Inverter;
     if (existingInverter) {

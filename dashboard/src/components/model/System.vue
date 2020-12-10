@@ -43,8 +43,6 @@ export default class SystemView extends ModelBase {
   @Prop() parameters!: System;
   @Prop() model!: string;
 
-  components = ["inverters-view"];
-
   get apiComponentName() {
     return "PVSystem";
   }
