@@ -68,7 +68,10 @@ describe("Tests authenticated routes", () => {
     });
     $auth.isAuthenticated = false;
     jest.clearAllMocks();
-    router.push({ name: "Home" });
+    // @ts-expect-error
+    if (router.history.current.path != "/"){
+      router.push({ name: "Home" });
+    }
   });
   it("unauthenticated home", async () => {
     const home = mount(Home, {
@@ -105,7 +108,10 @@ describe("Tests authenticated routes", () => {
     });
     $auth.isAuthenticated = true;
     jest.clearAllMocks();
-    router.push;
+    // @ts-expect-error
+    if (router.history.current.path != "/"){
+      router.push({ name: "Home" });
+    }
   });
   it("authenticated home", async () => {
     const home = mount(Home, {
@@ -141,7 +147,10 @@ describe("Test authguard", () => {
       actions
     });
     jest.clearAllMocks();
-    router.push({ name: "Home" });
+    // @ts-expect-error
+    if (router.history.current.path != "/"){
+      router.push({ name: "Home" });
+    }
   });
 
   it("test unauthenticated access to protected route", async () => {
