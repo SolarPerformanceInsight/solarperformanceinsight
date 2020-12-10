@@ -28,9 +28,9 @@
     </span>
     <arrays-view :pvarrays="parameters.arrays" :model="model" />
     <br />
-    <button @click="removeInverter">Remove Inverter</button>
+    <button class="remove-inverter" @click="removeInverter">Remove Inverter</button>
     <br />
-    <button @click="duplicateInverter">Duplicate Inverter</button>
+    <button class-"duplicate-inverter" @click="duplicateInverter">Duplicate Inverter</button>
   </li>
 </template>
 
@@ -64,11 +64,11 @@ export default class InverterView extends ModelBase {
 
   removeInverter() {
     // @ts-expect-error
-    this.$parent.inverters.splice(this.index, 1);
+    this.$emit("inverter-removed", this.index);
   }
   duplicateInverter() {
     // @ts-expect-error
-    this.$parent.inverters.push(new Inverter(this.parameters));
+    this.$emit("inverter-added", this.parameters);
   }
   get apiComponentName() {
     return "Inverter";
