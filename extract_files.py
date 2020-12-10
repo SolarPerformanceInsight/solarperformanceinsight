@@ -41,6 +41,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     new_openapi = app.openapi()
+    new_openapi["info"]["version"] = "1"
     inverter_df = retrieve_sam("CECInverter")
     inv_param_keys = SandiaInverterParameters.schema()["properties"].keys()
     inverters = inverter_df.loc[inv_param_keys].astype(float)
