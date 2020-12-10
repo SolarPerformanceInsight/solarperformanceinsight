@@ -64,9 +64,9 @@
       :parameters="parameters.module_parameters"
       :model="model"
     />
-    <button @click="removeArray">Remove Array</button>
+    <button class="remove-array" @click="removeArray">Remove Array</button>
     <br />
-    <button @click="duplicateArray">Duplicate Array</button>
+    <button class="duplicate-array" @click="duplicateArray">Duplicate Array</button>
   </li>
 </template>
 
