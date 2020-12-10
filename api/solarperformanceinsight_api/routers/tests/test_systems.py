@@ -2,6 +2,8 @@
 is done via schemathesis in ../../tests/test_app.py
 """
 import json
+import string
+from urllib.parse import quote
 import uuid
 
 
@@ -92,7 +94,7 @@ def test_check_system(system_def, client, change):
 
 
 def test_get_create_delete_system(client, system_def, nocommit_transaction, system_id):
-    r1 = client.get("/systems")
+    r1 = client.get("/systems/")
     assert len(r1.json()) == 1
     assert r1.json()[0]["object_id"] == system_id
     r2 = client.delete(f"/systems/{system_id}")
@@ -107,3 +109,12 @@ def test_get_create_delete_system(client, system_def, nocommit_transaction, syst
 def test_create_same_name(client, system_def, nocommit_transaction):
     resp = client.post("/systems/", json=system_def.dict())
     assert resp.status_code == 409
+
+
+@pytest.mark.parametrize("char", string.whitespace)
+def test_get_system_whitespace(client, char):
+    resp = client.get(f"/systems/{quote(char)}")
+    if char == "\n":  # newline goes to the list systems endpoint
+        assert resp.status_code == 200
+    else:
+        assert resp.status_code == 422
