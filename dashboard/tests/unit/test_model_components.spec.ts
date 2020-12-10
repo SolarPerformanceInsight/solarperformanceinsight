@@ -1,5 +1,5 @@
 import Vue from "vue";
-
+import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
 import { APIValidator } from "@/types/validation/Validator";
@@ -672,6 +672,8 @@ describe("Test model base", () => {
       propsData,
       mocks
     });
+    await Vue.nextTick();
+
     // @ts-expect-error
     const defs = wrapper.vm.definitions;
     expect(defs["description"]).toEqual(
@@ -684,38 +686,26 @@ describe("Test model base", () => {
     // @ts-expect-error
     const valspy = jest.spyOn(wrapper.vm, "validate");
 
-    //expect(ucField.element.type).toEqual("number");
+    // @ts-expect-error
+    expect(ucField.element.type).toEqual("number");
 
     // trigger setValidationResult with validity = false
-    //ucField.setValue("");
-    wrapper.setProps({
-      parameters: {
-        u_c: "a",
-        u_v: 0,
-        alpha_absorption: 0.9,
-        eta_m: 0.1
-      },
-      model: "pvsyst",
-    });
+    ucField.setValue("");
     await Vue.nextTick();
 
+    // Manually trigger watch function, which does not fire in tests
     // @ts-expect-error
-    expect(wrapper.vm.validate).toHaveBeenCalled();
+    wrapper.vm.validate(wrapper.props("parameters"));
+
+    await flushPromises();
+
     // @ts-expect-error
     expect(wrapper.vm.setValidationResult).toHaveBeenCalled();
 
     expect(wrapper.props("parameters").u_c).toBe("");
-    // @ts-expect-error
-    console.log(wrapper.vm.errors);
+
     // @ts-expect-error
     expect("u_c" in wrapper.vm.errors).toBe(true);
+    expect(wrapper.find("span.errors").text()).toEqual("should be number");
   });
-});
-
-/*
- * Help
- */
-describe("Test help", () => {
-  it("Test popup toggle", () => {
-  })
 });
