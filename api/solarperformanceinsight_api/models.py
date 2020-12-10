@@ -6,6 +6,7 @@ from pydantic.fields import Undefined
 from pydantic.types import UUID
 
 
+SYSTEM_ID = "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
 SYSTEM_EXAMPLE = dict(
     name="Test PV System",
     latitude=33.98,

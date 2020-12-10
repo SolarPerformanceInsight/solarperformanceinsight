@@ -48,7 +48,7 @@ async def startup_event():  # pragma: no cover
 
 
 def custom_openapi():
-    if app.openapi_schema:
+    if app.openapi_schema:  # pragma: no cover
         return app.openapi_schema
 
     openapi_schema = get_openapi(

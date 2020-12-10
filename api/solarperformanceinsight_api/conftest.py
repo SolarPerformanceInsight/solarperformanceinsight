@@ -1,8 +1,10 @@
+from contextlib import contextmanager
 import datetime as dt
 from uuid import UUID
 
 
 import httpx
+import pymysql
 import pytest
 
 
@@ -47,6 +49,23 @@ def add_example_db_data(root_conn):
     root_conn.commit()
 
 
+@pytest.fixture()
+def nocommit_transaction(mocker):
+    conn = storage.engine.connect()
+
+    @contextmanager
+    def start_transaction(cls):
+        cls._cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+        yield cls
+        cls._cursor = None
+
+    mocker.patch.object(
+        storage.StorageInterface, "start_transaction", new=start_transaction
+    )
+    yield
+    conn.rollback()
+
+
 @pytest.fixture(scope="module")
 def auth0_id():
     return "auth0|5fa9596ccf64f9006e841a3a"
@@ -59,7 +78,7 @@ def user_id():
 
 @pytest.fixture(scope="module")
 def system_id():
-    return "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
+    return models.SYSTEM_ID
 
 
 @pytest.fixture(scope="module")
