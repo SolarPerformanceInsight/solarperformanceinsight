@@ -59,6 +59,10 @@ jobs:
           fail_ci_if_error: true
         if: ${{ always() }}
 
+      - name: Ensure assets are up to date
+        if: ${{ always() }}
+        run: python extract_files.py --check
+
   lint-python:
     runs-on: ubuntu-latest
 
