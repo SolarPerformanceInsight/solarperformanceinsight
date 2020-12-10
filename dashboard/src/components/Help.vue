@@ -60,12 +60,6 @@ export default class HelpPopup extends Vue {
   hideHelp() {
     this.show = false;
   }
-
-  newfunc() {
-    this.show = true;
-    let a: number = 1;
-    a = a + 1;
-  }
 }
 </script>
 
