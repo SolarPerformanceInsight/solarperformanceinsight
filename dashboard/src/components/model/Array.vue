@@ -3,11 +3,36 @@
     <b>Inverter Name:</b>
     {{ $parent.$parent.parameters.name }}
     <br />
-    <model-field field-name="name" />
-    <model-field field-name="make_model" />
-    <model-field field-name="albedo" />
-    <model-field field-name="modules_per_string" />
-    <model-field field-name="strings" />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="name"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="make_model"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="albedo"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="modules_per_string"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="strings"
+    />
     <b>Tracking:</b>
     <input
       v-model="tracking"
