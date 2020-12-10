@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Response, Request, Depends
+from fastapi import APIRouter, Response, Request, Depends, Path
 from pydantic.types import UUID
 
 
@@ -85,7 +85,10 @@ async def check_system(
     },
 )
 async def get_system(
-    system_id: UUID, storage: StorageInterface = Depends(StorageInterface)
+    system_id: UUID = Path(
+        ..., description="ID of system to get", example=models.SYSTEM_ID
+    ),
+    storage: StorageInterface = Depends(StorageInterface),
 ) -> models.StoredPVSystem:
     """Get a single PV System"""
     with storage.start_transaction() as st:
@@ -96,7 +99,10 @@ async def get_system(
     "/{system_id}", responses={**default_get_responses, 204: {}}, status_code=204
 )
 async def delete_system(
-    system_id: UUID, storage: StorageInterface = Depends(StorageInterface)
+    system_id: UUID = Path(
+        ..., description="ID of system to delete", example=models.SYSTEM_ID
+    ),
+    storage: StorageInterface = Depends(StorageInterface),
 ):
     """Delete a PV system"""
     with storage.start_transaction() as st:
@@ -113,10 +119,12 @@ async def delete_system(
     status_code=201,
 )
 async def update_system(
-    system_id: UUID,
     system: models.PVSystem,
     response: Response,
     request: Request,
+    system_id: UUID = Path(
+        ..., description="ID of system to update", example=models.SYSTEM_ID
+    ),
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.StoredObjectID:
     """Update a PV System"""

@@ -78,7 +78,7 @@ def user_id():
 
 @pytest.fixture(scope="module")
 def system_id():
-    return "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
+    return models.SYSTEM_ID
 
 
 @pytest.fixture(scope="module")
