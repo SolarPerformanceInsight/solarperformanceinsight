@@ -81,6 +81,7 @@ The backend RESTful API for Solar Performance Insight.
         }
     ]
     app.openapi_schema = openapi_schema
+
     return app.openapi_schema
 
 
