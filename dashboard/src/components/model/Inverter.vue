@@ -30,7 +30,7 @@
     <br />
     <button class="remove-inverter" @click="removeInverter">Remove Inverter</button>
     <br />
-    <button class-"duplicate-inverter" @click="duplicateInverter">Duplicate Inverter</button>
+    <button class="duplicate-inverter" @click="duplicateInverter">Duplicate Inverter</button>
   </li>
 </template>
 
