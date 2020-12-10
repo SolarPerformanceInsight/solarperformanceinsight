@@ -52,7 +52,9 @@ const parentComponent: Vue = mount({
   },
   template: "<div />",
   data() {
-    return { parameters: { name: "Name" } };
+    return {
+      parameters: { name: "Name" }
+    };
   }
 }).vm;
 
@@ -321,6 +323,101 @@ describe("Test array", () => {
     expect(trp.props("tracking")).toBe("singleAxis");
     expect(trp.props("parameters")).toEqual(propsData.parameters.tracking);
   });
+  it("test tracking change", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    expect(wrapper.vm.$data.tracking).toBe("fixed");
+    const trackingView = wrapper.findComponent(TrackingParametersView);
+    expect(
+      FixedTrackingParameters.isInstance(trackingView.props("parameters"))
+    ).toBe(true);
+
+    // Test that button click alters class in tracking view
+    const singleAxisButton = wrapper.find("input[value=singleAxis]");
+    singleAxisButton.trigger("click");
+    await Vue.nextTick();
+    expect(wrapper.vm.$data.tracking).toBe("singleAxis");
+    expect(
+      SingleAxisTrackingParameters.isInstance(
+        wrapper.props("parameters").tracking
+      )
+    ).toBe(true);
+
+    expect(
+      SingleAxisTrackingParameters.isInstance(trackingView.props("parameters"))
+    ).toBe(true);
+    const fixedButton = wrapper.find("input[value=fixed");
+    fixedButton.trigger("click");
+    await Vue.nextTick();
+    expect(wrapper.vm.$data.tracking).toBe("fixed");
+    expect(
+      FixedTrackingParameters.isInstance(wrapper.props("parameters").tracking)
+    ).toBe(true);
+  });
+  it("test array removal", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+
+    expect(wrapper.emitted("array-removed")).toBeFalsy();
+    const remove = wrapper.find("button.remove-array");
+    remove.trigger("click");
+    await Vue.nextTick();
+    // @ts-expect-error
+    expect(wrapper.emitted("array-removed")[0]).toEqual([0]);
+  });
+  it("test array duplication", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+
+    expect(wrapper.emitted("array-added")).toBeFalsy();
+    const duplicate = wrapper.find("button.duplicate-array");
+    duplicate.trigger("click");
+    await Vue.nextTick();
+    // @ts-expect-error
+    expect(wrapper.emitted("array-added")[0]).toEqual([propsData.parameters]);
+  });
 });
 
 /*
@@ -329,7 +426,7 @@ describe("Test array", () => {
 
 describe("Test adding arrays", () => {
   const propsData = {
-    pvarrays: new Array(),
+    pvarrays: [] as Array<PVArray>,
     model: "pvwatts",
     index: 0
   };
@@ -434,8 +531,81 @@ describe("Test Inverter", () => {
     expect(arrays.props("model")).toBe("pvsyst");
     expect(arrays.props("pvarrays")).toEqual(propsData.parameters.arrays);
   });
+  it("test inverter duplication", async () => {
+    const propsData = {
+      parameters: new Inverter({
+        inverter_parameters: new PVWattsInverterParameters({}),
+        losses: new PVWattsLosses({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(InverterView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+
+    expect(wrapper.emitted("inverter-added")).toBeFalsy();
+    const duplicate = wrapper.find("button.duplicate-inverter");
+    duplicate.trigger("click");
+    await Vue.nextTick();
+    // @ts-expect-error
+    expect(wrapper.emitted("inverter-added")[0]).toEqual([
+      propsData.parameters
+    ]);
+  });
+  it("test inverter removal", async () => {
+    const propsData = {
+      parameters: new Inverter({
+        inverter_parameters: new PVWattsInverterParameters({}),
+        losses: new PVWattsLosses({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(InverterView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+
+    expect(wrapper.emitted("inverter-removed")).toBeFalsy();
+    const remove = wrapper.find("button.remove-inverter");
+    remove.trigger("click");
+    await Vue.nextTick();
+    // @ts-expect-error
+    expect(wrapper.emitted("inverter-removed")[0]).toEqual([0]);
+  });
 });
 
+/*
+ * Inverters
+ */
+describe("Test inverter listing", () => {
+  it("test add inverter", async () => {
+    const propsData = {
+      inverters: [] as Array<Inverter>,
+      model: "pvwatts"
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(InvertersView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    expect(propsData.inverters.length).toBe(0);
+    const remove = wrapper.find("button");
+    remove.trigger("click");
+    await Vue.nextTick();
+    expect(propsData.inverters.length).toBe(1);
+  });
+});
 /*
  * Inverter Parameters
  */
@@ -469,7 +639,7 @@ describe("Test inverter parameters", () => {
  * System
  */
 import { System } from "@/types/System";
-describe("Test ", () => {
+describe("Test System", () => {
   it("pvwatts", () => {
     const propsData = {
       parameters: new System({}),
@@ -485,4 +655,67 @@ describe("Test ", () => {
     expect(iv.props("model")).toEqual("pvwatts");
     expect(iv.props("inverters")).toEqual(propsData.parameters.inverters);
   });
+});
+
+/*
+ * Model Base
+ */
+describe("Test model base", () => {
+  it("Test validation display", async () => {
+    // Using simple class that extends ModelBase and implements methods
+    const propsData = {
+      parameters: new PVSystTemperatureParameters({}),
+      model: "pvsyst"
+    };
+    const wrapper = mount(TemperatureParametersView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    // @ts-expect-error
+    const defs = wrapper.vm.definitions;
+    expect(defs["description"]).toEqual(
+      APISpec.components.schemas.PVsystTemperatureParameters.description
+    );
+    const ucField = wrapper.find("input");
+
+    // @ts-expect-error
+    const spy = jest.spyOn(wrapper.vm, "setValidationResult");
+    // @ts-expect-error
+    const valspy = jest.spyOn(wrapper.vm, "validate");
+
+    //expect(ucField.element.type).toEqual("number");
+
+    // trigger setValidationResult with validity = false
+    //ucField.setValue("");
+    wrapper.setProps({
+      parameters: {
+        u_c: "a",
+        u_v: 0,
+        alpha_absorption: 0.9,
+        eta_m: 0.1
+      },
+      model: "pvsyst",
+    });
+    await Vue.nextTick();
+
+    // @ts-expect-error
+    expect(wrapper.vm.validate).toHaveBeenCalled();
+    // @ts-expect-error
+    expect(wrapper.vm.setValidationResult).toHaveBeenCalled();
+
+    expect(wrapper.props("parameters").u_c).toBe("");
+    // @ts-expect-error
+    console.log(wrapper.vm.errors);
+    // @ts-expect-error
+    expect("u_c" in wrapper.vm.errors).toBe(true);
+  });
+});
+
+/*
+ * Help
+ */
+describe("Test help", () => {
+  it("Test popup toggle", () => {
+  })
 });

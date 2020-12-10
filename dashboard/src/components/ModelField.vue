@@ -51,7 +51,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
 
     <help :helpText="definitions.properties[fieldName].description" />
     <br />
-    <span style="color: #F00;" v-if="fieldName in errors">
+    <span class="errors" style="color: #F00;" v-if="fieldName in errors">
       {{ errors[fieldName] }}
     </span>
   </div>
