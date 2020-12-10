@@ -56,6 +56,7 @@ export default class HelpPopup extends Vue {
   toggleHelp() {
     this.show = !this.show;
   }
+
   hideHelp() {
     this.show = false;
   }

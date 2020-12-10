@@ -30,8 +30,11 @@ jobs:
           npm run --prefix dashboard test:unit
 
       - name: Upload coverage
-        run: |
-          bash <(curl -s https://codecov.io/bash) -Z -c -F javascript
+        uses: codecov/codecov-action@v1
+        with:
+          flags: javascript
+          files: ./dashboard/coverage/lcov.info
+          fail_ci_if_error: true
         if: ${{ always() }}
 
   lint-javascript:
