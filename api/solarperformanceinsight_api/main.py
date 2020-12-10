@@ -58,9 +58,34 @@ The backend RESTful API for Solar Performance Insight.
 
 # Introduction
 
+On this page, you'll find documentation for the Solar Performance
+Insight API.  The API primarily serves the Solar Performance Insight
+dashboard, but power users may interact with it directly. An OpenAPI
+generator such as
+[https://github.com/OpenAPITools/openapi-generator](https://github.com/OpenAPITools/openapi-generator)
+may be used to generate client libraries for a number of languages to
+interact with the API. A download link for the OpenAPI spec can be
+found above.
+
 # Authentication
 
-""",
+The API is secured via OAuth 2.0 and OpenID Connect with
+[Auth0](https://auth0.com) as the identity provider. We require valid
+JSON Web Token (JWT) from Auth0 to be included as a Bearer token in
+the Authorization header for API access. When [requesting a
+token](https://auth0.com/docs/api/authentication#authorization-code-flow-with-pkce46),
+the audience must be set to `{audience}`, the Client ID must be set to
+`{client_id}`, and the token endpoint is `{token_endpoint}`.  Most tokens
+are set to expire in 3 hours, and Auth0 rate limits requests, so users
+are advised to reuse a token for as long as it is valid. One Python
+library that can automatically refresh the tokens is
+[Authlib](https://docs.authlib.org/en/latest/client/oauth2.html#oauth2session-for-password).
+
+""".format(
+            audience=settings.auth_audience,
+            client_id=settings.auth_client_id,
+            token_endpoint=settings.auth_issuer,
+        ),
         version=__version__,
         routes=app.routes,
     )
@@ -76,10 +101,12 @@ The backend RESTful API for Solar Performance Insight.
     }
     openapi_schema["tags"] = [
         {
-            "name": "Power Plant",
-            "description": "Power Plant description",
-        }
+            "name": "PV Systems",
+            "description": "Interact with PV System metadata",
+        },
+        {"name": "User", "description": "Interact with User metadata"},
     ]
+    openapi_schema["servers"] = [{"url": "/api"}]  # for the docs 'try it out' to work
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
