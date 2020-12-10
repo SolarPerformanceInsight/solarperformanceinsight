@@ -19,7 +19,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
      with:
 
     <model-field
-      :parameters="paremeters"
+      :parameters="parameters"
       :definitions="definitions"
       :errors="errors"
       field-name="pdc0">`
