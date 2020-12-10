@@ -13,7 +13,7 @@ schemathesis.fixups.install()
 
 @pytest.fixture()
 def new_settings():
-    return {"stateful_step_count": 3, "max_examples": 100}
+    return {"stateful_step_count": 5, "max_examples": 50}
 
 
 @pytest.fixture()

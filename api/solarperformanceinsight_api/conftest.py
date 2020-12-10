@@ -1,8 +1,10 @@
+from contextlib import contextmanager
 import datetime as dt
 from uuid import UUID
 
 
 import httpx
+import pymysql
 import pytest
 
 
@@ -45,6 +47,23 @@ def add_example_db_data(root_conn):
     yield curs
     curs.callproc("remove_example_data")
     root_conn.commit()
+
+
+@pytest.fixture()
+def nocommit_transaction(mocker):
+    conn = storage.engine.connect()
+
+    @contextmanager
+    def start_transaction(cls):
+        cls._cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+        yield cls
+        cls._cursor = None
+
+    mocker.patch.object(
+        storage.StorageInterface, "start_transaction", new=start_transaction
+    )
+    yield
+    conn.rollback()
 
 
 @pytest.fixture(scope="module")
