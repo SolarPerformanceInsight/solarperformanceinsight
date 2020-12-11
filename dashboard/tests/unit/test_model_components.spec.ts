@@ -662,12 +662,14 @@ describe("PV Arrays", () => {
     });
     wrapper.find("button").trigger("click");
     expect(propsData.pvarrays).toHaveLength(1);
-    expect(PVSystModuleParameters.isInstance(
-      propsData.pvarrays[0].module_parameters
-    )).toBe(true);
-    expect(PVSystTemperatureParameters.isInstance(
-      propsData.pvarrays[0].temperature_model_parameters
-    )).toBe(true);
+    expect(
+      PVSystModuleParameters.isInstance(propsData.pvarrays[0].module_parameters)
+    ).toBe(true);
+    expect(
+      PVSystTemperatureParameters.isInstance(
+        propsData.pvarrays[0].temperature_model_parameters
+      )
+    ).toBe(true);
   });
   it("Test event handling", async () => {
     const propsData = {
@@ -682,7 +684,7 @@ describe("PV Arrays", () => {
       parentComponent,
       mocks
     });
-    const arr = wrapper.findComponent(ArrayView)
+    const arr = wrapper.findComponent(ArrayView);
     arr.vm.$emit("array-added", propsData.pvarrays[0]);
     expect(propsData.pvarrays).toHaveLength(2);
     expect(propsData.pvarrays[0]).toEqual(propsData.pvarrays[1]);
@@ -902,7 +904,7 @@ describe("Test inverter listing", () => {
       parentComponent,
       mocks
     });
-    const arr = wrapper.findComponent(InverterView)
+    const arr = wrapper.findComponent(InverterView);
     arr.vm.$emit("inverter-added", propsData.inverters[0]);
     expect(propsData.inverters).toHaveLength(2);
     expect(propsData.inverters[0]).toEqual(propsData.inverters[1]);
