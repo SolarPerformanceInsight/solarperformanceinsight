@@ -67,11 +67,9 @@ export default class InverterView extends ModelBase {
   }
 
   removeInverter() {
-    // @ts-expect-error
     this.$emit("inverter-removed", this.index);
   }
   duplicateInverter() {
-    // @ts-expect-error
     this.$emit("inverter-added", this.parameters);
   }
   get apiComponentName() {
