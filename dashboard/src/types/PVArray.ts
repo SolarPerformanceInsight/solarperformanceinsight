@@ -24,7 +24,6 @@ export class PVArray {
   albedo: number;
   modules_per_string: number;
   strings: number;
-  losses_parameters: object; // eslint-disable-line
 
   constructor({
     name = "New Array",
@@ -35,14 +34,12 @@ export class PVArray {
     albedo = 0,
     modules_per_string = 0,
     strings = 0,
-    losses_parameters = {}
   }: Partial<PVArray>) {
     this.name = name;
     this.make_model = make_model;
     this.albedo = albedo;
     this.modules_per_string = modules_per_string;
     this.strings = strings;
-    this.losses_parameters = losses_parameters;
 
     if (PVWattsModuleParameters.isInstance(module_parameters)) {
       this.module_parameters = new PVWattsModuleParameters(module_parameters);
@@ -80,8 +77,7 @@ export class PVArray {
       maybe.tracking != undefined &&
       maybe.albedo != undefined &&
       maybe.modules_per_string != undefined &&
-      maybe.strings != undefined &&
-      maybe.losses_parameters != undefined
+      maybe.strings != undefined
     );
   }
 }
