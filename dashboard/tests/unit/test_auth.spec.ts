@@ -69,7 +69,7 @@ describe("Tests authenticated routes", () => {
     $auth.isAuthenticated = false;
     jest.clearAllMocks();
     // @ts-expect-error
-    if (router.history.current.path != "/"){
+    if (router.history.current.path != "/") {
       router.push({ name: "Home" });
     }
   });
@@ -109,7 +109,7 @@ describe("Tests authenticated routes", () => {
     $auth.isAuthenticated = true;
     jest.clearAllMocks();
     // @ts-expect-error
-    if (router.history.current.path != "/"){
+    if (router.history.current.path != "/") {
       router.push({ name: "Home" });
     }
   });
@@ -148,7 +148,7 @@ describe("Test authguard", () => {
     });
     jest.clearAllMocks();
     // @ts-expect-error
-    if (router.history.current.path != "/"){
+    if (router.history.current.path != "/") {
       router.push({ name: "Home" });
     }
   });
