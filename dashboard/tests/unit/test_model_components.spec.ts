@@ -613,38 +613,84 @@ describe("Test array", () => {
  * PV Arrays
  */
 
-describe("Test adding arrays", () => {
-  const propsData = {
-    pvarrays: [] as Array<PVArray>,
-    model: "pvwatts",
-    index: 0
-  };
-  // @ts-expect-error
-  const wrapper = shallowMount(ArraysView, {
-    localVue,
-    propsData,
-    parentComponent,
-    mocks
-  });
+describe("PV Arrays", () => {
+  it("Test adding arrays", () => {
+    const propsData = {
+      pvarrays: [] as Array<PVArray>,
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArraysView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
 
-  expect(propsData.pvarrays).toHaveLength(0);
-  wrapper.find("button").trigger("click");
-  expect(propsData.pvarrays).toHaveLength(1);
-  const defaultAlbedo = propsData.pvarrays[0].albedo;
-  // change albedo and make sure new array have this value
-  const initAlbedo = 1.2;
-  propsData.pvarrays[0].albedo = initAlbedo;
-  wrapper.find("button").trigger("click");
-  expect(propsData.pvarrays).toHaveLength(2);
-  expect(propsData.pvarrays[1].albedo).toBe(initAlbedo);
-  wrapper.find("button").trigger("click");
-  expect(propsData.pvarrays).toHaveLength(3);
-  expect(propsData.pvarrays[2].albedo).toBe(initAlbedo);
-  // if one array has different albedo, others added have default
-  propsData.pvarrays[1].albedo = 99.8;
-  wrapper.find("button").trigger("click");
-  expect(propsData.pvarrays).toHaveLength(4);
-  expect(propsData.pvarrays[3].albedo).toBe(defaultAlbedo);
+    expect(propsData.pvarrays).toHaveLength(0);
+    wrapper.find("button").trigger("click");
+    expect(propsData.pvarrays).toHaveLength(1);
+    const defaultAlbedo = propsData.pvarrays[0].albedo;
+    // change albedo and make sure new array have this value
+    const initAlbedo = 1.2;
+    propsData.pvarrays[0].albedo = initAlbedo;
+    wrapper.find("button").trigger("click");
+    expect(propsData.pvarrays).toHaveLength(2);
+    expect(propsData.pvarrays[1].albedo).toBe(initAlbedo);
+    wrapper.find("button").trigger("click");
+    expect(propsData.pvarrays).toHaveLength(3);
+    expect(propsData.pvarrays[2].albedo).toBe(initAlbedo);
+    // if one array has different albedo, others added have default
+    propsData.pvarrays[1].albedo = 99.8;
+    wrapper.find("button").trigger("click");
+    expect(propsData.pvarrays).toHaveLength(4);
+    expect(propsData.pvarrays[3].albedo).toBe(defaultAlbedo);
+  });
+  it("Test adding arrays", () => {
+    const propsData = {
+      pvarrays: [] as Array<PVArray>,
+      model: "pvsyst",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArraysView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    wrapper.find("button").trigger("click");
+    expect(propsData.pvarrays).toHaveLength(1);
+    expect(PVSystModuleParameters.isInstance(
+      propsData.pvarrays[0].module_parameters
+    )).toBe(true);
+    expect(PVSystTemperatureParameters.isInstance(
+      propsData.pvarrays[0].temperature_model_parameters
+    )).toBe(true);
+  });
+  it("Test event handling", async () => {
+    const propsData = {
+      pvarrays: [new PVArray({})],
+      model: "pvsyst",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArraysView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    const arr = wrapper.findComponent(ArrayView)
+    arr.vm.$emit("array-added", propsData.pvarrays[0]);
+    expect(propsData.pvarrays).toHaveLength(2);
+    expect(propsData.pvarrays[0]).toEqual(propsData.pvarrays[1]);
+    propsData.pvarrays[1].name = "array 2";
+    arr.vm.$emit("array-removed", 0);
+    expect(propsData.pvarrays).toHaveLength(1);
+    expect(propsData.pvarrays[0].name).toBe("array 2");
+  });
 });
 
 /*
@@ -843,6 +889,27 @@ describe("Test inverter listing", () => {
     remove.trigger("click");
     await Vue.nextTick();
     expect(propsData.inverters.length).toBe(1);
+  });
+  it("Test event handling", async () => {
+    const propsData = {
+      inverters: [new Inverter({})],
+      model: "pvwatts"
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(InvertersView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    const arr = wrapper.findComponent(InverterView)
+    arr.vm.$emit("inverter-added", propsData.inverters[0]);
+    expect(propsData.inverters).toHaveLength(2);
+    expect(propsData.inverters[0]).toEqual(propsData.inverters[1]);
+    propsData.inverters[1].name = "inverter 2";
+    arr.vm.$emit("inverter-removed", 0);
+    expect(propsData.inverters).toHaveLength(1);
+    expect(propsData.inverters[0].name).toBe("inverter 2");
   });
 });
 
