@@ -449,8 +449,8 @@ test("PVWatts array init", () => {
     pvwattsArray.temperature_model_parameters instanceof
       SAPMTemperatureParameters
   ).toBeTruthy();
-  expect(pvwattsArray.modules_per_string).toBe(0);
-  expect(pvwattsArray.strings).toBe(0);
+  expect(pvwattsArray.modules_per_string).toBe(1);
+  expect(pvwattsArray.strings).toBe(1);
 });
 test("PVarray init with array temperature", () => {
   const pvarray = new PVArray({ temperature_model_parameters: [1, 2, 3] });
