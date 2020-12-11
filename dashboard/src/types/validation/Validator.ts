@@ -19,7 +19,15 @@ export class APIValidator {
 
   constructor() {
     this.ajv = new Ajv({
-      keywords: ["openapi", "info", "paths", "components", "tags", "example"],
+      keywords: [
+        "openapi",
+        "info",
+        "paths",
+        "components",
+        "tags",
+        "example",
+        "servers"
+      ],
       allErrors: true
     });
     this.components = {};

@@ -56,7 +56,6 @@ const pvsyst_test_system = {
           albedo: 0,
           modules_per_string: 0,
           strings: 0,
-          losses_parameters: {},
           module_parameters: {
             gamma_ref: 0,
             mu_gamma: 0,
@@ -149,7 +148,6 @@ const pvwatts_test_system = {
           albedo: 0.2,
           modules_per_string: 0,
           strings: 0,
-          losses_parameters: {},
           module_parameters: {
             pdc0: 1.0,
             gamma_pdc: 1.0
@@ -268,15 +266,13 @@ describe("Array typeguard", () => {
     "temperature_model_parameters",
     "tracking",
     "modules_per_string",
-    "strings",
-    "losses_parameters"
+    "strings"
   ])("Array typeguard missing %p", missing => {
     const anon_array: { [key: string]: any } = {
       name: "New Array",
       make_model: "ABC 123",
       modules_per_string: 0,
       strings: 0,
-      losses_parameters: {},
       module_parameters: {
         gamma_ref: 0,
         mu_gamma: 0,
@@ -433,7 +429,6 @@ test("Empty pvarray init", () => {
   ).toBeTruthy();
   expect(pvarray.modules_per_string).toBe(0);
   expect(pvarray.strings).toBe(0);
-  expect(pvarray.losses_parameters).toStrictEqual({});
 });
 test("PVWatts array init", () => {
   const array = new PVArray({});
@@ -456,7 +451,6 @@ test("PVWatts array init", () => {
   ).toBeTruthy();
   expect(pvwattsArray.modules_per_string).toBe(0);
   expect(pvwattsArray.strings).toBe(0);
-  expect(pvwattsArray.losses_parameters).toStrictEqual({});
 });
 test("PVarray init with array temperature", () => {
   const pvarray = new PVArray({ temperature_model_parameters: [1, 2, 3] });

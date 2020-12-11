@@ -64,9 +64,11 @@
       :parameters="parameters.module_parameters"
       :model="model"
     />
-    <button @click="removeArray">Remove Array</button>
+    <button class="remove-array" @click="removeArray">Remove Array</button>
     <br />
-    <button @click="duplicateArray">Duplicate Array</button>
+    <button class="duplicate-array" @click="duplicateArray">
+      Duplicate Array
+    </button>
   </li>
 </template>
 
@@ -149,12 +151,10 @@ export default class ArrayView extends ModelBase {
   }
 
   removeArray() {
-    // @ts-expect-error
-    this.$parent.pvarrays.splice(this.index, 1);
+    this.$emit("array-removed", this.index); //.pvarrays.splice(this.index, 1);
   }
   duplicateArray() {
-    // @ts-expect-error
-    this.$parent.pvarrays.push(new PVArray(this.parameters));
+    this.$emit("array-added", this.parameters); //parent.pvarrays.push(new PVArray(this.parameters));
   }
   get apiComponentName() {
     return "PVArray";
