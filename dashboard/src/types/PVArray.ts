@@ -32,8 +32,8 @@ export class PVArray {
     temperature_model_parameters = new PVSystTemperatureParameters({}),
     tracking = new FixedTrackingParameters({}),
     albedo = 0,
-    modules_per_string = 0,
-    strings = 0
+    modules_per_string = 1,
+    strings = 1
   }: Partial<PVArray>) {
     this.name = name;
     this.make_model = make_model;
