@@ -19,26 +19,29 @@ sandia_inverter_params = (
 
 
 @router.get(
-    "/inverters/sandia/",
+    "/sandiainverterparameters",
     response_model=List[str],
     responses={200: {"description": "Names of available Sandia inverters"}},
 )
-def get_sandia_inverters() -> List[str]:
+def list_sandia_inverters() -> List[str]:
+    """List the names of all Sandia inverters we have parameters for"""
     return sandia_inverter_params.columns.to_list()
 
 
 @router.get(
-    "/inverters/sandia/{inverter_name}",
+    "/sandiainverterparameters/{inverter_name}",
     response_model=models.SandiaInverterParameters,
     responses={200: {}, 404: {}, 422: {}},
+    summary="Get a set of SandiaInverterParameters",
 )
-def get_one_sandia_inverter(
+def get_sandia_inverter(
     inverter_name: str = Path(
         ...,
         description="Name of the inverter to fetch parameters for",
         example="ABB__MICRO_0_25_I_OUTD_US_208__208V_",
     )
 ) -> models.SandiaInverterParameters:
+    """Get the parameters for the named Sandia inverter"""
     if inverter_name not in sandia_inverter_params.columns:
         raise HTTPException(
             status_code=404,

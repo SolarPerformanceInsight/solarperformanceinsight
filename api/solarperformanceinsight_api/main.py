@@ -105,6 +105,7 @@ library that can automatically refresh the tokens is
             "description": "Interact with PV System metadata",
         },
         {"name": "User", "description": "Interact with User metadata"},
+        {"name": "Parameters", "description": "Retrieve parameters for select schemas"},
     ]
     openapi_schema["servers"] = [{"url": "/api"}]  # for the docs 'try it out' to work
     app.openapi_schema = openapi_schema
