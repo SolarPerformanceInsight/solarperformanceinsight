@@ -4,9 +4,10 @@
       Loading...
     </div>
     <div v-if="errorState">
-      An error occured.
+      <!-- TODO: render errors that can't be handled by validation -->
+      {{ JSON.stringify(apiErrors, null, 2) }}
     </div>
-    <div v-if="!loading && !errorState">
+    <div v-if="!loading">
       <h1 v-if="systemId == null">New System</h1>
       <button @click="displaySummary = !displaySummary">
         Display JSON Summary
@@ -82,6 +83,7 @@ export default class SystemSpec extends Vue {
   model!: string;
   loading!: boolean;
   errorState!: boolean;
+  apiErrors: Record<string, any>;
 
   created() {
     if (this.systemId != undefined) {
@@ -101,7 +103,8 @@ export default class SystemSpec extends Vue {
       displaySummary: false,
       displayAdvanced: false,
       loading: false,
-      errorState: false
+      errorState: false,
+      apiErrors: {}
     };
   }
   components = ["system-view", "file-upload"];
@@ -145,7 +148,16 @@ export default class SystemSpec extends Vue {
       }
     }
   }
+  async loadSystem() {
+    this.loading = true;
+    const token = await this.$auth.getTokenSilently();
+    const response = await fetch(`/api/systems/${this.systemId}`, {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`
+      })
+    });
 
+  }
   async saveSystem() {
     const token = await this.$auth.getTokenSilently();
     const response = await fetch(`/api/systems/`, {
@@ -160,6 +172,13 @@ export default class SystemSpec extends Vue {
     } else {
       this.loading = false;
       this.errorState = true;
+      try{
+        this.apiErrors = await response.json();
+      } catch (error) {
+        this.apiErrors = {
+          error: `API responded with status code: ${response.status}`
+        }
+      }
     }
   }
 }
