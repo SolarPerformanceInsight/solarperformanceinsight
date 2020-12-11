@@ -127,10 +127,8 @@ export default class InverterParametersView extends ModelBase {
     // Return a list of parameter options based on currently selected model
     if (this.model == "pvsyst") {
       return ["PVSystInverter_0", "PVSystInverter_1"];
-    } else if (this.model == "pvwatts") {
-      return ["PVWattsInverter_0", "PVWattsInverter_1"];
     } else {
-      return [];
+      return ["PVWattsInverter_0", "PVWattsInverter_1"];
     }
   }
 

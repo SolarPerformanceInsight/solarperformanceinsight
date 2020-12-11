@@ -136,11 +136,9 @@ export default class ModuleParametersView extends ModelBase {
     if (this.model == "pvsyst") {
       // TODO: load pvsyst compatible parameters
       return ["PVSystModule_0", "PVSystModule_1"];
-    } else if (this.model == "pvwatts") {
+    } else {
       // TODO: load pvwatts compatible parameters
       return ["PVWattsModule_0", "PVWattsModule_1"];
-    } else {
-      return [];
     }
   }
 
