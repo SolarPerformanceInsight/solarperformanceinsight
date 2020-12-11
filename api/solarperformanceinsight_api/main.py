@@ -10,7 +10,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
 from . import auth, __version__, settings, storage
-from .routers import systems, user
+from .routers import systems, user, parameters
 
 
 app = FastAPI(title="Solar Performance Insight")
@@ -105,6 +105,7 @@ library that can automatically refresh the tokens is
             "description": "Interact with PV System metadata",
         },
         {"name": "User", "description": "Interact with User metadata"},
+        {"name": "Parameters", "description": "Retrieve parameters for select schemas"},
     ]
     openapi_schema["servers"] = [{"url": "/api"}]  # for the docs 'try it out' to work
     app.openapi_schema = openapi_schema
@@ -121,3 +122,4 @@ app.include_router(
 app.include_router(
     user.router, prefix="/user", tags=["User"], dependencies=[Depends(auth.get_user_id)]
 )
+app.include_router(parameters.router, prefix="/parameters", tags=["Parameters"])
