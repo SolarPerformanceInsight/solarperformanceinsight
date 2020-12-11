@@ -31,7 +31,11 @@ def before_generate_path_parameters(context, strategy):
 @schema.parametrize(method=["GET", "DELETE"])
 def test_api(case, with_auth, auth_token):
     if with_auth:
-        case.headers["Authorization"] = f"Bearer {auth_token}"
+        upd = {"Authorization": f"Bearer {auth_token}"}
+        if case.headers is None:
+            case.headers = upd
+        else:
+            case.headers.update(upd)
     response = case.call_asgi()
     case.validate_response(response)
 
@@ -41,6 +45,10 @@ def test_api(case, with_auth, auth_token):
 @hypsettings(max_examples=5, suppress_health_check=HealthCheck.all())
 def test_api_post(case, with_auth, auth_token):
     if with_auth:
-        case.headers["Authorization"] = f"Bearer {auth_token}"
+        upd = {"Authorization": f"Bearer {auth_token}"}
+        if case.headers is None:
+            case.headers = upd
+        else:
+            case.headers.update(upd)
     response = case.call_asgi()
     case.validate_response(response)
