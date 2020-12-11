@@ -33,7 +33,7 @@ export class PVArray {
     tracking = new FixedTrackingParameters({}),
     albedo = 0,
     modules_per_string = 0,
-    strings = 0,
+    strings = 0
   }: Partial<PVArray>) {
     this.name = name;
     this.make_model = make_model;
