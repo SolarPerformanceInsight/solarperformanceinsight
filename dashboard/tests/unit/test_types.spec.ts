@@ -427,8 +427,8 @@ test("Empty pvarray init", () => {
   expect(
     pvarray.temperature_model_parameters instanceof PVSystTemperatureParameters
   ).toBeTruthy();
-  expect(pvarray.modules_per_string).toBe(0);
-  expect(pvarray.strings).toBe(0);
+  expect(pvarray.modules_per_string).toBe(1);
+  expect(pvarray.strings).toBe(1);
 });
 test("PVWatts array init", () => {
   const array = new PVArray({});
