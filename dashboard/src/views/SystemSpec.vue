@@ -174,7 +174,11 @@ export default class SystemSpec extends Vue {
   }
   async saveSystem() {
     const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/`, {
+    let apiPath = "/api/systems/";
+    if (this.systemId) {
+      apiPath = apiPath + this.systemId;
+    }
+    const response = await fetch(apiPath, {
       method: "post",
       body: JSON.stringify(this.system),
       headers: new Headers({
