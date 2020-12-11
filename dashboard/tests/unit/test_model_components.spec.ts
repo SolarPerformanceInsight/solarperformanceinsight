@@ -184,7 +184,7 @@ describe("Tests Loss Parameters", () => {
     });
     expectAllModelFields(wrapper, propsData.parameters);
   });
-  it("pvwatts errors", () => {
+  it("pvwatts errors", async () => {
     const propsData = {
       parameters: new PVWattsLosses({}),
       model: "pvwatts"
@@ -197,7 +197,7 @@ describe("Tests Loss Parameters", () => {
     });
     // @ts-expect-error
     expect(wrapper.vm.apiComponentName).toBe("PVWattsLosses");
-    expectAllErrors(wrapper, Object.keys(new PVWattsLosses({})));
+    await expectAllErrors(wrapper, Object.keys(new PVWattsLosses({})));
   });
 
   it("pvsyst", () => {
@@ -235,7 +235,7 @@ describe("Test tracking parameters", () => {
     });
     expectAllModelFields(wrapper, propsData.parameters);
   });
-  it("fixed errors", () => {
+  it("fixed errors", async () => {
     const propsData = {
       parameters: new FixedTrackingParameters({}),
       tracking: "fixed"
@@ -248,7 +248,10 @@ describe("Test tracking parameters", () => {
     });
     // @ts-expect-error
     expect(wrapper.vm.apiComponentName).toBe("FixedTracking");
-    expectAllErrors(wrapper, Object.keys(new FixedTrackingParameters({})));
+    await expectAllErrors(
+      wrapper,
+      Object.keys(new FixedTrackingParameters({}))
+    );
   });
   it("singleAxis", () => {
     const propsData = {
@@ -262,7 +265,7 @@ describe("Test tracking parameters", () => {
     });
     expectAllModelFields(wrapper, propsData.parameters);
   });
-  it("singleAxis errors", () => {
+  it("singleAxis errors", async () => {
     const propsData = {
       parameters: new SingleAxisTrackingParameters({}),
       tracking: "singleAxis"
@@ -275,7 +278,10 @@ describe("Test tracking parameters", () => {
     });
     // @ts-expect-error
     expect(wrapper.vm.apiComponentName).toBe("SingleAxisTracking");
-    expectAllErrors(wrapper, Object.keys(new SingleAxisTrackingParameters({})));
+    await expectAllErrors(
+      wrapper,
+      Object.keys(new SingleAxisTrackingParameters({}))
+    );
   });
 });
 
@@ -324,7 +330,7 @@ describe("Test module parameters", () => {
     });
     // @ts-expect-error
     expect(wrapper.vm.apiComponentName).toBe("PVsystModuleParameters");
-    expectAllErrors(wrapper, Object.keys(new PVSystModuleParameters({})));
+    await expectAllErrors(wrapper, Object.keys(new PVSystModuleParameters({})));
   });
   it("pvwatts component name and validation", async () => {
     const propsData = {
@@ -338,7 +344,10 @@ describe("Test module parameters", () => {
     });
     // @ts-expect-error
     expect(wrapper.vm.apiComponentName).toBe("PVWattsModuleParameters");
-    expectAllErrors(wrapper, Object.keys(new PVWattsModuleParameters({})));
+    await expectAllErrors(
+      wrapper,
+      Object.keys(new PVWattsModuleParameters({}))
+    );
   });
 });
 /*
@@ -461,6 +470,29 @@ describe("Test array", () => {
       FixedTrackingParameters.isInstance(wrapper.props("parameters").tracking)
     ).toBe(true);
   });
+  it("test ensureTracking", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    expect(wrapper.vm.$data.tracking).toBe("fixed");
+    propsData.parameters.tracking = new SingleAxisTrackingParameters({});
+    // @ts-expect-error
+    wrapper.vm.ensureTracking();
+    expect(wrapper.vm.$data.tracking).toBe("singleAxis");
+  });
   it("test array removal", async () => {
     const propsData = {
       parameters: new PVArray({
@@ -510,6 +542,70 @@ describe("Test array", () => {
     await Vue.nextTick();
     // @ts-expect-error
     expect(wrapper.emitted("array-added")[0]).toEqual([propsData.parameters]);
+  });
+  it("test errors", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    fillEmptyString(propsData.parameters);
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    // @ts-expect-error
+    expect(wrapper.vm.apiComponentName).toBe("PVArray");
+    await expectAllErrors(wrapper, Object.keys(new PVArray({})));
+  });
+  it("test change model", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+
+    // @ts-expect-error
+    wrapper.vm.changeModel("pvsyst");
+
+    expect(
+      PVSystModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(
+      PVSystTemperatureParameters.isInstance(
+        propsData.parameters.temperature_model_parameters
+      )
+    ).toBe(true);
+
+    // @ts-expect-error
+    wrapper.vm.changeModel("pvwatts");
+    expect(
+      PVWattsModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(
+      SAPMTemperatureParameters.isInstance(
+        propsData.parameters.temperature_model_parameters
+      )
+    ).toBe(true);
   });
 });
 
@@ -749,6 +845,7 @@ describe("Test inverter listing", () => {
     expect(propsData.inverters.length).toBe(1);
   });
 });
+
 /*
  * Inverter Parameters
  */
@@ -777,6 +874,38 @@ describe("Test inverter parameters", () => {
     });
     expectAllModelFields(wrapper, propsData.parameters);
   });
+  it("test pvwatts errors", async () => {
+    const propsData = {
+      parameters: new PVWattsInverterParameters({}),
+      model: "pvwatts"
+    };
+    fillEmptyString(propsData.parameters);
+    const wrapper = mount(InverterParametersView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await expectAllErrors(
+      wrapper,
+      Object.keys(new PVWattsInverterParameters({}))
+    );
+  });
+  it("test pvsyst errors", async () => {
+    const propsData = {
+      parameters: new SandiaInverterParameters({}),
+      model: "pvsyst"
+    };
+    fillEmptyString(propsData.parameters);
+    const wrapper = mount(InverterParametersView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await expectAllErrors(
+      wrapper,
+      Object.keys(new SandiaInverterParameters({}))
+    );
+  });
 });
 /*
  * System
@@ -797,6 +926,22 @@ describe("Test System", () => {
     const iv = wrapper.findComponent(InvertersView);
     expect(iv.props("model")).toEqual("pvwatts");
     expect(iv.props("inverters")).toEqual(propsData.parameters.inverters);
+  });
+  it("test system errors", async () => {
+    const propsData = {
+      parameters: new System({}),
+      model: "pvwatts"
+    };
+    fillEmptyString(propsData.parameters);
+    propsData.parameters.name = "*";
+    const wrapper = shallowMount(SystemView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await expectAllErrors(wrapper, Object.keys(new System({})));
+    // @ts-expect-error
+    expect("name" in wrapper.vm.errors).toBe(true);
   });
 });
 

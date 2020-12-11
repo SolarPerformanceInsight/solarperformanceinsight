@@ -266,7 +266,7 @@ describe("Array typeguard", () => {
     "temperature_model_parameters",
     "tracking",
     "modules_per_string",
-    "strings",
+    "strings"
   ])("Array typeguard missing %p", missing => {
     const anon_array: { [key: string]: any } = {
       name: "New Array",
