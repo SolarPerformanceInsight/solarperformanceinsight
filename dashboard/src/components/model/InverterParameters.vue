@@ -1,10 +1,7 @@
 <template>
   <div class="inverter-parameters">
     <b>Parameter source:</b>
-    <select v-model="parameterSource" name="parameter-source">
-      <option>User Supplied</option>
-      <option>Browse Database</option>
-    </select>
+    <db-browser :componentName="apiComponentName" />
     <br />
     <!-- If user selects something other than User Supplied, display the
          list of inverters from the db. This should probably be it's own
