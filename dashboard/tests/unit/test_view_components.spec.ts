@@ -115,7 +115,24 @@ describe("Test SystemSpec view", () => {
     await flushPromises();
     expect(wrapper.vm.$data.apiErrors).toEqual({});
     expect($router.push).toHaveBeenCalledWith("/systems");
+    expect(fetch).toHaveBeenCalledWith("/api/systems/", expect.anything());
   });
+  it("Test save existing system", async () => {
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      propsData: {
+        systemId: "banana"
+      },
+      mocks
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.system).toEqual(system);
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/systems/banana",
+      expect.anything()
+    );
+  });
+
   it("Test save system failure", async () => {
     fetchMock.ok = false;
     const wrapper = shallowMount(SystemSpec, {
