@@ -2,13 +2,16 @@
   <div class="inverter-parameters">
     <template v-if="model == 'pvsyst'">
       <!-- Render an inverter browser for pvsyst model -->
-      <button class="show-browser" @click="showBrowser=true">Browse Inverter Database</button>
+      <button class="show-browser" @click="showBrowser = true">
+        Browse Inverter Database
+      </button>
       <db-browser
         v-on="$listeners"
-        @parameters-selected="showBrowser=false"
-        @cancel-selection="showBrowser=false"
+        @parameters-selected="showBrowser = false"
+        @cancel-selection="showBrowser = false"
         v-if="showBrowser"
-        :componentName="apiComponentName" />
+        :componentName="apiComponentName"
+      />
       <br />
     </template>
     <!-- If user selects something other than User Supplied, display the

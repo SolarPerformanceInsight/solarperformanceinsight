@@ -985,14 +985,14 @@ describe("Test inverter parameters", () => {
       parameters: new Inverter({
         inverter_parameters: new SandiaInverterParameters({
           Paco: 10,
-          Pdco: 10,
-        }),
+          Pdco: 10
+        })
       }),
       model: "pvsyst"
     };
     fetchMock = {
       json: jest.fn().mockResolvedValue(["inverter1"])
-    }
+    };
     // @ts-expect-error
     const wrapper = mount(InverterView, {
       localVue,
@@ -1031,10 +1031,7 @@ describe("Test inverter parameters", () => {
     await flushPromises();
 
     expect(wrapper.find("div.db-browser").exists()).toBe(false);
-
-
   });
-
 });
 /*
  * System

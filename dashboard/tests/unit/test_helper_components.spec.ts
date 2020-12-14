@@ -31,7 +31,7 @@ import DBBrowser from "@/components/Browser.vue";
 import { SandiaInverterParameters } from "@/types/InverterParameters";
 
 const mockInverters = ["inva", "invb", "invc"];
-const mockParams = new SandiaInverterParameters({})
+const mockParams = new SandiaInverterParameters({});
 describe("Test Browser Component", () => {
   beforeEach(() => {
     fetchMock = {
@@ -45,8 +45,8 @@ describe("Test Browser Component", () => {
   it("test load options", async () => {
     const wrapper = mount(DBBrowser, {
       propsData: {
-        componentName: "SandiaInverterParameters",
-      },
+        componentName: "SandiaInverterParameters"
+      }
     });
     await flushPromises();
     expect(wrapper.vm.$data.options).toEqual(mockInverters);
@@ -59,7 +59,7 @@ describe("Test Browser Component", () => {
 
     await flushPromises();
 
-    expect(wrapper.vm.$data.selectOptions).toEqual(['inva']);
+    expect(wrapper.vm.$data.selectOptions).toEqual(["inva"]);
     const option = wrapper.findAll("option");
     expect(option).toHaveLength(1);
     expect(wrapper.find("ul").exists()).toBe(false);
@@ -80,15 +80,15 @@ describe("Test Browser Component", () => {
     wrapper.find("button.commit").trigger("click");
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.emitted("parameters-selected")[0]).toStrictEqual(
-      [mockParams]
-    );
+    expect(wrapper.emitted("parameters-selected")[0]).toStrictEqual([
+      mockParams
+    ]);
   });
   it("test emit cancel", async () => {
     const wrapper = mount(DBBrowser, {
       propsData: {
-        componentName: "SandiaInverterParameters",
-      },
+        componentName: "SandiaInverterParameters"
+      }
     });
     await flushPromises();
     expect(wrapper.vm.$data.options).toEqual(mockInverters);
