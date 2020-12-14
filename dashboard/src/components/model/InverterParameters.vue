@@ -1,6 +1,6 @@
 <template>
   <div class="inverter-parameters">
-    <template v-if="model = 'pvsyst'">
+    <template v-if="model == 'pvsyst'">
       <!-- Render an inverter browser for pvsyst model -->
       <button @click="showBrowser=true">Browse Inverter Database</button>
       <db-browser
