@@ -10,11 +10,16 @@
       </div>
       <template v-if="system">
         <h1 v-if="systemId == null">New System</h1>
-        <button @click="displaySummary = !displaySummary">
+        <button
+          class="display-summary"
+          @click="displaySummary = !displaySummary"
+        >
           Display JSON Summary
         </button>
-        <button @click="downloadSystem">Download System JSON</button>
-        <button @click="saveSystem">Save System</button>
+        <button class="download-system" @click="downloadSystem">
+          Download System JSON
+        </button>
+        <button class="save-system" @click="saveSystem">Save System</button>
         <div v-if="displaySummary" class="model-summary">
           <h1>Model Summary</h1>
           <pre>{{ JSON.stringify(system, null, 2) }}</pre>
