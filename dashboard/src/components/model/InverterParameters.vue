@@ -2,7 +2,7 @@
   <div class="inverter-parameters">
     <template v-if="model == 'pvsyst'">
       <!-- Render an inverter browser for pvsyst model -->
-      <button @click="showBrowser=true">Browse Inverter Database</button>
+      <button class="show-browser" @click="showBrowser=true">Browse Inverter Database</button>
       <db-browser
         v-on="$listeners"
         @parameters-selected="showBrowser=false"

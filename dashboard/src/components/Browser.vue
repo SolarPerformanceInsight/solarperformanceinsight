@@ -2,9 +2,9 @@
 <template>
   <div class="db-browser">
     <input v-model="search" v-on:keyup.enter="filterOptions"/>
-    <button @click="filterOptions">Search</button>
-    <button @click="resetSearch">Reset Search</button>
-    <button @click="cancel">Cancel</button>
+    <button class="search" @click="filterOptions">Search</button>
+    <button class="search-reset" @click="resetSearch">Reset Search</button>
+    <button class="cancel" @click="cancel">Cancel</button>
     <div v-if="optionsLoading">
       Loading database...
     </div>
@@ -23,7 +23,7 @@
              <b>{{ k }}:</b> {{ v }}
            </li>
          </ul>
-         <button @click="commit">Use these parameters</button>
+         <button class="commit" @click="commit">Use these parameters</button>
        </div>
        <div v-else>
          Please make a selection.

@@ -1,6 +1,8 @@
 import Vue from "vue";
 import { createLocalVue, mount } from "@vue/test-utils";
 
+import flushPromises from "flush-promises";
+
 import HelpPopup from "@/components/Help.vue";
 
 describe("test help popup", () => {
@@ -17,5 +19,84 @@ describe("test help popup", () => {
     expand.trigger("click");
     await Vue.nextTick();
     expect(wrapper.find("div.help-wrapper").exists()).toBe(false);
+  });
+});
+
+let fetchMock: any = {};
+
+global.fetch = jest.fn(() => Promise.resolve(fetchMock));
+
+import DBBrowser from "@/components/Browser.vue";
+
+import { SandiaInverterParameters } from "@/types/InverterParameters";
+
+const mockInverters = ["inva", "invb", "invc"];
+const mockParams = new SandiaInverterParameters({})
+describe("Test Browser Component", () => {
+  beforeEach(() => {
+    fetchMock = {
+      // reset the mocked response so each test can alter as needed.
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockInverters),
+      status: 200
+    };
+    jest.clearAllMocks();
+  });
+  it("test load options", async () => {
+    const wrapper = mount(DBBrowser, {
+      propsData: {
+        componentName: "SandiaInverterParameters",
+      },
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.options).toEqual(mockInverters);
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/parameters/sandiainverterparameters"
+    );
+    fetchMock.json.mockResolvedValue(mockParams);
+    wrapper.find("input").setValue("inva");
+    wrapper.find("button.search").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.vm.$data.selectOptions).toEqual(['inva']);
+    const option = wrapper.findAll("option");
+    expect(option).toHaveLength(1);
+    expect(wrapper.find("ul").exists()).toBe(false);
+    option.at(0).setSelected();
+
+    await flushPromises();
+
+    wrapper.find("button.search-reset").trigger("click");
+
+    await flushPromises();
+
+    const allOptions = wrapper.findAll("option");
+    expect(allOptions).toHaveLength(3);
+
+    const summary = wrapper.find("ul");
+    expect(summary.exists()).toBe(true);
+    expect(wrapper.vm.$data.spec).toEqual(mockParams);
+    wrapper.find("button.commit").trigger("click");
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.emitted("parameters-selected")[0]).toStrictEqual(
+      [mockParams]
+    );
+  });
+  it("test emit cancel", async () => {
+    const wrapper = mount(DBBrowser, {
+      propsData: {
+        componentName: "SandiaInverterParameters",
+      },
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.options).toEqual(mockInverters);
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/parameters/sandiainverterparameters"
+    );
+    wrapper.find("button.cancel").trigger("click");
+    await flushPromises();
+    expect(wrapper.emitted("cancel-selection")).toBeTruthy();
   });
 });

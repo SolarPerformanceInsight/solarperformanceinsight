@@ -7,6 +7,7 @@ import APISpec from "./openapi.json";
 
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
+import DBBrowser from "@/components/Browser.vue";
 import HelpPopup from "@/components/Help.vue";
 import Home from "@/views/Home.vue";
 import InverterView from "@/components/model/Inverter.vue";
@@ -24,6 +25,7 @@ const localVue = createLocalVue();
 
 Vue.component("array-view", ArrayView);
 Vue.component("arrays-view", ArraysView);
+Vue.component("db-browser", DBBrowser);
 Vue.component("help", HelpPopup);
 Vue.component("home", Home);
 Vue.component("inverter-view", InverterView);
@@ -64,6 +66,9 @@ $validator.getAPISpec = jest.fn().mockResolvedValue(APISpec);
 const mocks = {
   $validator
 };
+
+let fetchMock: any = {};
+global.fetch = jest.fn(() => Promise.resolve(fetchMock));
 
 beforeAll(() => {
   $validator.init();
@@ -975,6 +980,61 @@ describe("Test inverter parameters", () => {
       Object.keys(new SandiaInverterParameters({}))
     );
   });
+  it("test inverter browser display pvsyst", async () => {
+    const propsData = {
+      parameters: new Inverter({
+        inverter_parameters: new SandiaInverterParameters({
+          Paco: 10,
+          Pdco: 10,
+        }),
+      }),
+      model: "pvsyst"
+    };
+    fetchMock = {
+      json: jest.fn().mockResolvedValue(["inverter1"])
+    }
+    // @ts-expect-error
+    const wrapper = mount(InverterView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
+    wrapper.find("button.show-browser").trigger("click");
+
+    await flushPromises();
+
+    const browse = wrapper.find("div.db-browser");
+    expect(browse.exists()).toBe(true);
+    fetchMock.json.mockResolvedValue(new SandiaInverterParameters({}));
+    browse.find("option").setSelected();
+
+    await flushPromises();
+
+    browse.find("button.commit").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
+    expect(wrapper.props("parameters").inverter_parameters).toEqual(
+      new SandiaInverterParameters({})
+    );
+    wrapper.find("button.show-browser").trigger("click");
+
+    await flushPromises();
+
+    const browserAgain = wrapper.find("div.db-browser");
+    expect(browserAgain.exists()).toBe(true);
+    browserAgain.find("button.cancel").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
+
+
+  });
+
 });
 /*
  * System
