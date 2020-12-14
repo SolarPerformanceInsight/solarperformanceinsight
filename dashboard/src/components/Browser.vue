@@ -47,7 +47,6 @@ export default class DBBrowser extends Vue {
   spec: Record<string, any> = {};
 
   mounted() {
-    console.log("browser mounted");
     this.loadOptions();
   }
   data() {
