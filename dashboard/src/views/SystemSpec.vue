@@ -3,58 +3,70 @@
     <div v-if="loading">
       Loading...
     </div>
-    <div v-if="errorState">
-      An error occured.
-    </div>
-    <div v-if="!loading && !errorState">
-      <h1 v-if="systemId == null">New System</h1>
-      <button @click="displaySummary = !displaySummary">
-        Display JSON Summary
-      </button>
-      <button @click="downloadSystem">Download System JSON</button>
-      <button @click="saveSystem">Save System</button>
-      <div v-if="displaySummary" class="model-summary">
-        <h1>Model Summary</h1>
-        <pre>{{ JSON.stringify(system, null, 2) }}</pre>
+    <div v-if="!loading">
+      <div v-if="errorState">
+        <!-- TODO: render errors that can't be handled by validation -->
+        {{ JSON.stringify(apiErrors, null, 2) }}
       </div>
-      <file-upload @uploadSuccess="uploadSuccess" />
+      <template v-if="system">
+        <h1 v-if="systemId == null">New System</h1>
+        <button
+          class="display-summary"
+          @click="displaySummary = !displaySummary"
+        >
+          Display JSON Summary
+        </button>
+        <button class="download-system" @click="downloadSystem">
+          Download System JSON
+        </button>
+        <button class="save-system" @click="saveSystem">Save System</button>
+        <div v-if="displaySummary" class="model-summary">
+          <h1>Model Summary</h1>
+          <pre>{{ JSON.stringify(system, null, 2) }}</pre>
+        </div>
+        <file-upload @uploadSuccess="uploadSuccess" />
 
-      <b>Model:</b>
-      <select v-model="model">
-        <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
-      </select>
-      <br />
-      <a
-        href="#"
-        :class="displayAdvanced ? 'open' : ''"
-        @click.prevent="displayAdvanced = !displayAdvanced"
-      >
-        Advanced
-      </a>
-      <div class="advanced-model-params" v-if="displayAdvanced">
-        <b>Transposition Model:</b>
-        <input disabled v-model="modelSpec.transposition_model" />
+        <b>Model:</b>
+        <select v-model="model">
+          <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
+        </select>
         <br />
-        <b>DC Model:</b>
-        <input disabled v-model="modelSpec.dc_model" />
-        <br />
-        <b>AC Model:</b>
-        <input disabled v-model="modelSpec.ac_model" />
-        <br />
-        <b>AOI Model:</b>
-        <input disabled v-model="modelSpec.aoi_model" />
-        <br />
-        <b>Spectral Model:</b>
-        <input disabled v-model="modelSpec.spectral_model" />
-        <br />
-        <b>Temperature Model:</b>
-        <input disabled v-model="modelSpec.temperature_model" />
-        <br />
-      </div>
+        <a
+          href="#"
+          :class="displayAdvanced ? 'open' : ''"
+          @click.prevent="displayAdvanced = !displayAdvanced"
+        >
+          Advanced
+        </a>
+        <div class="advanced-model-params" v-if="displayAdvanced">
+          <b>Transposition Model:</b>
+          <input disabled v-model="modelSpec.transposition_model" />
+          <br />
+          <b>DC Model:</b>
+          <input disabled v-model="modelSpec.dc_model" />
+          <br />
+          <b>AC Model:</b>
+          <input disabled v-model="modelSpec.ac_model" />
+          <br />
+          <b>AOI Model:</b>
+          <input disabled v-model="modelSpec.aoi_model" />
+          <br />
+          <b>Spectral Model:</b>
+          <input disabled v-model="modelSpec.spectral_model" />
+          <br />
+          <b>Temperature Model:</b>
+          <input disabled v-model="modelSpec.temperature_model" />
+          <br />
+        </div>
 
-      <div>
-        <system-view :parameters="system" :model="model" />
-      </div>
+        <div>
+          <system-view
+            :exists="systemId != null"
+            :parameters="system"
+            :model="model"
+          />
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -82,12 +94,11 @@ export default class SystemSpec extends Vue {
   model!: string;
   loading!: boolean;
   errorState!: boolean;
+  apiErrors!: Record<string, any>;
 
   created() {
     if (this.systemId != undefined) {
-      // Ensure that a new system is created from the System found in
-      // the store, so as not to inadvertently mangle stored systems.
-      this.system = new System(this.$store.state.systems[this.systemId]);
+      this.loadSystem();
     } else {
       this.system = new System({});
       this.loading = false;
@@ -95,13 +106,14 @@ export default class SystemSpec extends Vue {
   }
   data() {
     return {
-      system: this.system ? this.system : new System({}),
+      system: this.system,
       modelPresetOptions: ["pvsyst", "pvwatts"],
       model: "pvsyst",
       displaySummary: false,
       displayAdvanced: false,
       loading: false,
-      errorState: false
+      errorState: false,
+      apiErrors: {}
     };
   }
   components = ["system-view", "file-upload"];
@@ -145,10 +157,33 @@ export default class SystemSpec extends Vue {
       }
     }
   }
-
+  async loadSystem() {
+    this.loading = true;
+    const token = await this.$auth.getTokenSilently();
+    const response = await fetch(`/api/systems/${this.systemId}`, {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`
+      })
+    });
+    if (response.ok) {
+      const system = await response.json();
+      this.system = new System(system.definition);
+      this.loading = false;
+    } else {
+      this.errorState = true;
+      this.apiErrors = {
+        error: "System not found."
+      };
+      this.loading = false;
+    }
+  }
   async saveSystem() {
     const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/`, {
+    let apiPath = "/api/systems/";
+    if (this.systemId) {
+      apiPath = apiPath + this.systemId;
+    }
+    const response = await fetch(apiPath, {
       method: "post",
       body: JSON.stringify(this.system),
       headers: new Headers({
@@ -160,6 +195,13 @@ export default class SystemSpec extends Vue {
     } else {
       this.loading = false;
       this.errorState = true;
+      try {
+        this.apiErrors = await response.json();
+      } catch (error) {
+        this.apiErrors = {
+          error: `API responded with status code: ${response.status}`
+        };
+      }
     }
   }
 }

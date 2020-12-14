@@ -1,6 +1,11 @@
 <template>
   <div class="system">
+    <div v-if="exists" class="model-field">
+      <b>Name:</b>
+      <span>{{ parameters.name }}</span>
+    </div>
     <model-field
+      v-if="!exists"
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
@@ -40,6 +45,7 @@ import {
 
 @Component
 export default class SystemView extends ModelBase {
+  @Prop({ default: false }) exists!: boolean;
   @Prop() parameters!: System;
   @Prop() model!: string;
 
