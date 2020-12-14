@@ -1,24 +1,28 @@
 
 <template>
   <div class="db-browser">
-    <input v-model="search" />
+    <input v-model="search" v-on:keyup.enter="filterOptions"/>
     <button @click="filterOptions">Search</button>
     <button @click="resetSearch">Reset Search</button>
     <button @click="cancel">Cancel</button>
     <div v-if="optionsLoading">
-      Loading...
+      Loading database...
     </div>
     <div v-else>
      <select size=20 v-model="selection" @change="loadSpec">
        <option v-for="(op, i) in selectOptions" :key="i">{{ op }}</option>
      </select>
      <div v-if="specLoading">
-       Loading Parameters
+       Loading parameters...
      </div>
      <template v-else>
        <div v-if="this.spec">
          Parameters for Inverter : <b>{{this.selection }}</b><br />
-         <pre>{{ this.spec }} </pre>
+         <ul class="parameter-summary">
+           <li v-for="(v, k) in spec" :key="k">
+             <b>{{ k }}:</b> {{ v }}
+           </li>
+         </ul>
          <button @click="commit">Use these parameters</button>
        </div>
        <div v-else>
