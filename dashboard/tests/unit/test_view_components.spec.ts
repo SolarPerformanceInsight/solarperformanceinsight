@@ -115,7 +115,7 @@ describe("Test SystemSpec view", () => {
     await flushPromises();
     expect(wrapper.vm.$data.apiErrors).toEqual({});
     expect($router.push).toHaveBeenCalledWith("/systems");
-    expect(fetch).toHaveBeenCalledWith("/api/systems/", expect.anything());
+    expect(fetch).toHaveBeenLastCalledWith("/api/systems/", expect.anything());
   });
   it("Test save existing system", async () => {
     const wrapper = shallowMount(SystemSpec, {
@@ -126,13 +126,16 @@ describe("Test SystemSpec view", () => {
       mocks
     });
     await flushPromises();
+    const saveBtn = wrapper.find("button.save-system");
+    saveBtn.trigger("click");
+    await flushPromises();
+    expect(wrapper.vm.$data.apiErrors).toEqual({});
     expect(wrapper.vm.$data.system).toEqual(system);
-    expect(fetch).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenLastCalledWith(
       "/api/systems/banana",
       expect.anything()
     );
   });
-
   it("Test save system failure", async () => {
     fetchMock.ok = false;
     const wrapper = shallowMount(SystemSpec, {
