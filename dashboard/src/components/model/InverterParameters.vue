@@ -4,7 +4,8 @@
       <!-- Render an inverter browser for pvsyst model -->
       <button @click="showBrowser=true">Browse Inverter Database</button>
       <db-browser
-        @parameters-selected="loadInverter"
+        v-on="$listeners"
+        @parameters-selected="showBrowser=false"
         @cancel-selection="showBrowser=false"
         v-if="showBrowser"
         :componentName="apiComponentName" />
@@ -115,12 +116,6 @@ export default class InverterParametersView extends ModelBase {
       parameterSource: "User Supplied",
       showBrowser: this.showBrowser
     };
-  }
-
-  loadInverter(parameters: Record<string, any>) {
-    this.showBrowser = false;
-    // only supported for pvsyst model
-    this.parameters = new SandiaInverterParameters(parameters);
   }
 
   get apiComponentName() {
