@@ -76,13 +76,9 @@ export default class DBBrowser extends Vue {
     });
   }
   async loadOptions() {
-    const token = await this.$auth.getTokenSilently();
     const response = await fetch(
-      `/api/parameters/${this.componentName.toLowerCase()}`, {
-        headers: new Headers({
-          Authorization: `Bearer ${token}`
-        })
-    });
+      `/api/parameters/${this.componentName.toLowerCase()}`,
+    );
     const optionList = await response.json()
     this.options = optionList;
     this.selectOptions = optionList;
@@ -93,13 +89,9 @@ export default class DBBrowser extends Vue {
     this.filterOptions();
   }
   async fetchSpec(){
-    const token = await this.$auth.getTokenSilently();
     const response = await fetch(
-      `/api/parameters/${this.componentName.toLowerCase()}/${this.selection}`, {
-        headers: new Headers({
-          Authorization: `Bearer ${token}`
-        })
-    });
+      `/api/parameters/${this.componentName.toLowerCase()}/${this.selection}`
+    );
     const optionList = await response.json();
     return optionList;
   }
