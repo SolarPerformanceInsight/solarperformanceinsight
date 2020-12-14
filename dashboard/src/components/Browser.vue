@@ -1,18 +1,30 @@
 
 <template>
   <div class="db-browser">
-    <button @click="show = true"> Browse Inverter Database</button>
-    <input v-model="search" v-on:input="filterOptions"/>
+    <input v-model="search" />
+    <button @click="filterOptions">Search</button>
+    <button @click="resetSearch">Reset Search</button>
+    <button @click="cancel">Cancel</button>
     <div v-if="optionsLoading">
       Loading...
     </div>
     <div v-else>
-     <select size=20>
-       <option v-for="(op, i) in options" :key="i">{{ op }}</option>
+     <select size=20 v-model="selection" @change="loadSpec">
+       <option v-for="(op, i) in selectOptions" :key="i">{{ op }}</option>
      </select>
-     <div v-if="!specLoading">
-       The spec is loaded
+     <div v-if="specLoading">
+       Loading Parameters
      </div>
+     <template v-else>
+       <div v-if="this.spec">
+         Parameters for Inverter : <b>{{this.selection }}</b><br />
+         <pre>{{ this.spec }} </pre>
+         <button @click="commit">Use these parameters</button>
+       </div>
+       <div v-else>
+         Please make a selection.
+       </div>
+     </template>
     </div>
   </div>
 </template>
@@ -22,9 +34,8 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 @Component
 export default class DBBrowser extends Vue {
   @Prop() componentName!: string;
-  show = false;
   optionsLoading = true;
-  specLoading = true;
+  specLoading = false;
   options!: Array<string>;
   selectOptions: Array<string>= [];
   selection!: string;
@@ -39,28 +50,27 @@ export default class DBBrowser extends Vue {
     return {
       show: false,
       options: this.options,
+      selectOptions: this.options,
       selection: this.selection,
       spec: this.spec,
-      search: this.search
+      search: this.search,
     };
   }
-  filterOptions(){
+  async setFilteredOptions(){
     let opts: Array<string>;
-    console.log("filtering");
-    this.optionsLoading = true;
     if (this.search && this.search != "") {
-      opts =this.options.filter(x => x.includes(this.search));
+      opts = this.options.filter(x => x.includes(this.search));
     } else {
-      opts =this.options;
+      opts = this.options;
     }
-    this.optionsLoading = false;
-    this.selectOptions = opts;
+    return opts;
   }
-  @Watch("search")
-  delaySearch(){
-    setTimeout(() => {
-      this.filterOptions();
-    }, .2)
+  filterOptions(){
+    this.optionsLoading = true;
+    this.setFilteredOptions().then((opts) => {
+      this.optionsLoading = false;
+      this.selectOptions = opts;
+    });
   }
   async loadOptions() {
     const token = await this.$auth.getTokenSilently();
@@ -72,21 +82,47 @@ export default class DBBrowser extends Vue {
     });
     const optionList = await response.json()
     this.options = optionList;
+    this.selectOptions = optionList;
     this.optionsLoading = false;
   }
+  resetSearch(){
+    this.search = "";
+    this.filterOptions();
+  }
+  async fetchSpec(){
+    const token = await this.$auth.getTokenSilently();
+    const response = await fetch(
+      `/api/parameters/${this.componentName.toLowerCase()}/${this.selection}`, {
+        headers: new Headers({
+          Authorization: `Bearer ${token}`
+        })
+    });
+    const optionList = await response.json();
+    return optionList;
+  }
   loadSpec() {
-    console.log("loadspec called");
+    this.specLoading = true;
+    this.fetchSpec().then((spec) => {
+      this.spec = spec;
+      this.specLoading = false;
+    });
   }
   commit() {
     this.$emit("parameters-selected", this.spec);
+  }
+  cancel() {
+    this.$emit("cancel-selection");
   }
 }
 </script>
 
 <style scoped>
-div.help {
-  display: inline-block;
-  position: relative;
+div.db-browser {
+  position: absolute;
+  z-index: 10;
+  background-color: white;
+  border: solid 1px #333;
+  padding: 1em;
 }
 .help-wrapper {
   position: absolute;

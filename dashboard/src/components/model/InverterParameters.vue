@@ -1,19 +1,19 @@
 <template>
   <div class="inverter-parameters">
-    <b>Parameter source:</b>
-    <db-browser :componentName="apiComponentName" />
-    <br />
+    <template v-if="model = 'pvsyst'">
+      <!-- Render an inverter browser for pvsyst model -->
+      <button @click="showBrowser=true">Browse Inverter Database</button>
+      <db-browser
+        @parameters-selected="loadInverter"
+        @cancel-selection="showBrowser=false"
+        v-if="showBrowser"
+        :componentName="apiComponentName" />
+      <br />
+    </template>
     <!-- If user selects something other than User Supplied, display the
          list of inverters from the db. This should probably be it's own
          component with some search functionality built in
      -->
-    <div v-if="parameterSource !== 'User Supplied'">
-      <b>Select an Inverter:</b>
-      <select @change="loadInverter" name="inverter-list">
-        <option v-for="p in parameterOptions" :key="p">{{ p }}</option>
-      </select>
-      <br />
-    </div>
     <div v-if="model == 'pvsyst'">
       <model-field
         :parameters="parameters"
@@ -108,25 +108,19 @@ export default class InverterParametersView extends ModelBase {
   @Prop() parameters!: SandiaInverterParameters | PVWattsInverterParameters;
   @Prop() model!: string;
   @Prop({ default: null }) selectedInverter!: string;
+  showBrowser = false;
 
   data() {
     return {
-      parameterSource: "User Supplied"
+      parameterSource: "User Supplied",
+      showBrowser: this.showBrowser
     };
   }
 
-  loadInverter(event: any) {
-    // TODO: load inverter from correct source based on selected model.
-    console.log(event.target.value);
-  }
-
-  get parameterOptions() {
-    // Return a list of parameter options based on currently selected model
-    if (this.model == "pvsyst") {
-      return ["PVSystInverter_0", "PVSystInverter_1"];
-    } else {
-      return ["PVWattsInverter_0", "PVWattsInverter_1"];
-    }
+  loadInverter(parameters: Record<string, any>) {
+    this.showBrowser = false;
+    // only supported for pvsyst model
+    this.parameters = new SandiaInverterParameters(parameters);
   }
 
   get apiComponentName() {
