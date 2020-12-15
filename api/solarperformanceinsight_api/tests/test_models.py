@@ -1,9 +1,12 @@
+from copy import deepcopy
+import datetime as dt
 from functools import partial
 import re
 
 
 from hypothesis import given, example, assume
 from hypothesis.strategies import floats, booleans, composite, from_regex
+import pandas as pd
 from pydantic import BaseModel, ValidationError
 import pytest
 
@@ -117,3 +120,224 @@ def test_singleaxis_tracking_outside(atg, backtracking):
         models.SingleAxisTracking(
             axis_tilt=tilt, axis_azimuth=azimuth, gcr=gcr, backtracking=backtracking
         )
+
+
+def test_calculatejob_types():
+    # 1A
+    assert models.CalculatePerformanceJob(
+        calculate="predicted performance"
+    )._weather_types == (models.JobDataTypeEnum.original_weather,)
+    # 1B
+    assert models.CalculatePerformanceJob(
+        calculate="expected performance"
+    )._weather_types == (models.JobDataTypeEnum.actual_weather,)
+
+
+def test_comparejob_types():
+    # 2A
+    cj2A = models.ComparePerformanceJob(
+        compare="predicted and actual performance", performance_granularity="inverter"
+    )
+    assert cj2A._weather_types == (
+        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.actual_weather,
+    )
+    assert cj2A._performance_types == (models.JobDataTypeEnum.actual_performance,)
+    # 2B
+    cj2B = models.ComparePerformanceJob(
+        compare="predicted and expected performance", performance_granularity="inverter"
+    )
+    assert cj2B._weather_types == (
+        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.actual_weather,
+    )
+    assert cj2B._performance_types == (models.JobDataTypeEnum.predicted_performance,)
+    # 2C
+    cj2C = models.ComparePerformanceJob(
+        compare="expected and actual performance", performance_granularity="inverter"
+    )
+    assert cj2C._weather_types == (models.JobDataTypeEnum.actual_weather,)
+    assert cj2C._performance_types == (models.JobDataTypeEnum.actual_performance,)
+    # 2D
+    cj2D = models.CalculateWeatherAdjustedPRJob(
+        calculate="weather-adjusted performance ratio", performance_granularity="system"
+    )
+    assert cj2D._weather_types == (models.JobDataTypeEnum.actual_weather,)
+    assert cj2D._performance_types == (models.JobDataTypeEnum.actual_performance,)
+
+
+@pytest.mark.parametrize(
+    "job_type,weather_granularity,expected",
+    [
+        (
+            dict(calculate="predicted performance"),
+            "system",
+            [{"schema_path": "/", "type": "original weather data"}],
+        ),
+        (
+            dict(calculate="predicted performance"),
+            "inverter",
+            [
+                {"schema_path": "/inverters/0", "type": "original weather data"},
+                {"schema_path": "/inverters/1", "type": "original weather data"},
+            ],
+        ),
+        (
+            dict(calculate="predicted performance"),
+            "array",
+            [
+                {
+                    "schema_path": "/inverters/0/arrays/0",
+                    "type": "original weather data",
+                },
+                {
+                    "schema_path": "/inverters/0/arrays/1",
+                    "type": "original weather data",
+                },
+                {
+                    "schema_path": "/inverters/1/arrays/0",
+                    "type": "original weather data",
+                },
+            ],
+        ),
+        (
+            dict(calculate="expected performance"),
+            "inverter",
+            [
+                {"schema_path": "/inverters/0", "type": "actual weather data"},
+                {"schema_path": "/inverters/1", "type": "actual weather data"},
+            ],
+        ),
+        (
+            dict(
+                compare="predicted and actual performance",
+                performance_granularity="system",
+            ),
+            "inverter",
+            [
+                {"schema_path": "/inverters/0", "type": "original weather data"},
+                {"schema_path": "/inverters/1", "type": "original weather data"},
+                {"schema_path": "/inverters/0", "type": "actual weather data"},
+                {"schema_path": "/inverters/1", "type": "actual weather data"},
+                {"schema_path": "/", "type": "actual performance data"},
+            ],
+        ),
+        (
+            dict(
+                compare="predicted and expected performance",
+                performance_granularity="inverter",
+            ),
+            "inverter",
+            [
+                {"schema_path": "/inverters/0", "type": "original weather data"},
+                {"schema_path": "/inverters/1", "type": "original weather data"},
+                {"schema_path": "/inverters/0", "type": "actual weather data"},
+                {"schema_path": "/inverters/1", "type": "actual weather data"},
+                {"schema_path": "/inverters/0", "type": "predicted performance data"},
+                {"schema_path": "/inverters/1", "type": "predicted performance data"},
+            ],
+        ),
+        (
+            dict(
+                compare="expected and actual performance",
+                performance_granularity="system",
+            ),
+            "array",
+            [
+                {"schema_path": "/inverters/0/arrays/0", "type": "actual weather data"},
+                {"schema_path": "/inverters/0/arrays/1", "type": "actual weather data"},
+                {"schema_path": "/inverters/1/arrays/0", "type": "actual weather data"},
+                {"schema_path": "/", "type": "actual performance data"},
+            ],
+        ),
+        (
+            dict(
+                calculate="weather-adjusted performance ratio",
+                performance_granularity="inverter",
+            ),
+            "inverter",
+            [
+                {"schema_path": "/inverters/0", "type": "actual weather data"},
+                {"schema_path": "/inverters/1", "type": "actual weather data"},
+                {"schema_path": "/inverters/0", "type": "actual performance data"},
+                {"schema_path": "/inverters/1", "type": "actual performance data"},
+            ],
+        ),
+    ],
+)
+def test_construct_data_items(job_type, weather_granularity, expected):
+    param_dict = deepcopy(models.JOB_PARAMS_EXAMPLE)
+    param_dict["job_type"] = job_type
+    param_dict["weather_granularity"] = weather_granularity
+    params = models.JobParameters(**param_dict)
+    system_dict = deepcopy(models.SYSTEM_EXAMPLE)
+    system_dict["inverters"] = [
+        system_dict["inverters"][0],
+        system_dict["inverters"][0],
+    ]
+    system = models.PVSystem(**system_dict)
+    arr0 = system.inverters[0].arrays[0]
+    system.inverters[0].arrays = [arr0, arr0]
+
+    out = models._construct_data_items(system, params)
+    assert out == expected
+
+
+@pytest.mark.parametrize(
+    "start,end,tz",
+    (
+        ("2020-01-01T07:00:00+07:00", "2021-01-01T06:59:59+07:00", "UTC"),
+        ("2020-01-01T00:00:00", "2020-12-31T23:59:59", "UTC"),
+        ("2020-01-01T00:00:00", "2021-01-01T00:00:00", "UTC"),
+        pytest.param(
+            "2020-01-01T00:00:00",
+            "2020-12-31T23:59:59",
+            None,
+            marks=pytest.mark.xfail(strict=True),
+        ),
+        ("2020-01-01T00:00:00+00:00", "2020-12-31T23:59:59+00:00", None),
+    ),
+)
+def test_jobtimeindex(start, end, tz):
+    out = models.JobTimeindex(start=start, end=end, step="15:00", timezone=tz)
+    assert out.step == dt.timedelta(minutes=15)
+    assert out.timezone == "UTC"
+    pd.testing.assert_index_equal(
+        out._time_range,
+        pd.date_range(
+            start="2020-01-01T00:00:00",
+            end="2020-12-31T23:59:59",
+            freq="15min",
+            tz="UTC",
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "start,end,step,tz",
+    [
+        pytest.param(
+            "2020-01-01T00:00:00",
+            "2020-02-01T12:39:47",
+            "01:00",
+            "UTC",
+            marks=pytest.mark.xfail(strict=True),
+        ),
+        ("2020-01-01T00:00:00", "2020-02-01T12:39:47", "01:00", None),
+        ("2020-01-01T00:00:00", "2020-02-01T12:39:47", "01:00", "Not a tz"),
+        ("2020-01-01T00:00:00", "2020-02-01T12:39:47", "00:00", "UTC"),
+        ("2020-01-01T00:00:00", "2020-02-01T12:39:47", "90:00", "UTC"),
+        ("2020-01-01T00:00:00+00:00", "2020-02-01T12:39:47", "01:00", "UTC"),
+        ("2020-01-01T00:00:00+00:00", "2020-02-01T12:39:47-07:00", "01:00", "UTC"),
+        ("2020-01-01T00:00:00", "2019-02-01T12:39:47", "10:00", "UTC"),
+        (
+            "2020-01-01T00:00:00",
+            "2020-02-01T12:39:47",
+            -86399999913601.0,  # may cause overflow in dt.timedelta
+            "UTC",
+        ),
+    ],
+)
+def test_jobtimeindex_validation(start, end, step, tz):
+    with pytest.raises(ValidationError):
+        models.JobTimeindex(start=start, end=end, step=step, timezone=tz)

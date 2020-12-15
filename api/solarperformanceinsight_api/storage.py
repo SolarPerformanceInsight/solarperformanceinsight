@@ -258,3 +258,34 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
+
+    @ensure_user_exists
+    def create_job(self, system_id: UUID, job_def: models.Job) -> models.StoredObjectID:
+        created = self._call_procedure_for_single(
+            "create_job", system_id, job_def.json(), job_def._data_items.json()
+        )
+        return models.StoredObjectID(object_id=created["job_id"], object_type="job")
+
+    def delete_job(self, job_id: UUID):
+        self._call_procedure("delete_job", job_id)
+
+    def get_job(self, job_id: UUID) -> models.StoredJob:
+        pass
+
+    def get_job_status(self, job_id: UUID) -> models.JobStatus:
+        pass
+
+    def add_job_data(self, job_data_id: UUID, data: models.JobData):
+        pass
+
+    def get_job_data(self, job_data_id: UUID) -> models.StoredJobData:
+        pass
+
+    def start_job(self, job_id: UUID):
+        pass
+
+    def add_job_results(self):
+        pass
+
+    def get_job_results(self):
+        pass

@@ -1,9 +1,13 @@
 import datetime as dt
 from enum import Enum
 from typing import Union, List, Optional, Any, Tuple
-from pydantic import BaseModel, Field, PrivateAttr
+
+
+import pandas as pd
+from pydantic import BaseModel, Field, PrivateAttr, validator, root_validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID
+import pytz
 
 
 SYSTEM_ID = "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
@@ -548,3 +552,359 @@ class UserInfo(StoredObject):
     """Information about the current user"""
 
     auth0_id: str = Field(..., description="User ID from Auth 0")
+
+
+class JobTimeindex(BaseModel):
+    """Parameters for a time index that all data uploads must conform to.
+    Data is assumed to time-averaged and closed and labeled at the left endpoint, i.e.
+    a datapoint at 23:00 of data with a 1 hour time step is assumed be the
+    average of data from 23:00 to 23:59.
+    """
+
+    start: dt.datetime = Field(
+        ..., description="Start of the time range that data will be uploaded for"
+    )
+    end: dt.datetime = Field(
+        ...,
+        description="End (exclusive) of the time range that data will be uploaded for",
+    )
+    step: dt.timedelta = Field(
+        ..., description="Time step between each data point from 1 to 60 minutes"
+    )
+    timezone: Optional[str] = Field(
+        ...,
+        description="Timezone data will be converted to before computation. "
+        "Unlocalized data will be localized to this timezone. If this is null, "
+        "the timezone will be inferred from start/end.",
+    )
+    _time_range: pd.DatetimeIndex = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        tr = pd.date_range(start=self.start, end=self.end, freq=self.step)
+        if tr[-1] == self.end:
+            tr = tr[:-1]
+        if tr.tzinfo is None:
+            self._time_range = tr.tz_localize(self.timezone)
+        else:
+            if self.timezone is not None:
+                self._time_range = tr.tz_convert(self.timezone)
+            else:
+                self.timezone = str(tr.tzinfo)
+                self._time_range = tr
+
+    @root_validator(pre=True)
+    def restrict_timedelta_number(cls, values):
+        # restrict size of step if int/float and avoid overflowerror
+        step = values.get("step")
+        if isinstance(step, (int, float)):
+            if abs(step) > 1e8:
+                raise ValueError("Step much too large")
+        return values
+
+    @root_validator
+    def check_start_end_tz(cls, values):
+        start = values.get("start")
+        end = values.get("end")
+        tz = values.get("timezone")
+        if start is not None and end is not None and start > end:
+            raise ValueError("'start' is after 'end'")
+        if start.tzinfo != end.tzinfo:
+            raise ValueError("'start' and 'end' must have the same timezone")
+        if tz is None and start.tzinfo is None:
+            raise ValueError("Could not infer timezone")
+        return values
+
+    @validator("step")
+    def check_step(cls, v):
+        secs = v.total_seconds()
+        if secs < 60:
+            raise ValueError("The minimum time step is 1 minute")
+        elif secs > 3600:
+            raise ValueError("The maximum time step is 1 hour")
+        return v
+
+    @validator("timezone")
+    def check_tz(cls, v):
+        if v is not None and v not in pytz.all_timezones:
+            raise ValueError("Unrecognized timezone")
+        return v
+
+
+class WeatherGranularityEnum(str, Enum):
+    """Level of granularity of uploaded weather data"""
+
+    system = "system"
+    inverter = "inverter"
+    array = "array"
+
+
+class PerformanceGranularityEnum(str, Enum):
+    """Level of granularity of uplaoded performance data"""
+
+    system = "system"
+    inverter = "inverter"
+
+
+class IrradianceTypeEnum(str, Enum):
+    """Type of irradiance included in weather files"""
+
+    standard = "standard"
+    poa = "poa"
+    effective = "effective"
+
+
+class TemperatureTypeEnum(str, Enum):
+    """Type of temperature included in weather files"""
+
+    air = "air"
+    module = "module"
+    cell = "cell"
+
+
+class JobDataTypeEnum(str, Enum):
+    original_weather = "original weather data"
+    actual_weather = "actual weather data"
+    predicted_performance = "predicted performance data"
+    expected_performance = "expected performance data"
+    actual_performance = "actual performance data"
+
+
+class CalculateEnum(str, Enum):
+    predicted_performance = "predicted performance"
+    expected_performance = "expected performance"
+
+
+class CalculatePerformanceJob(BaseModel):
+    """Calculate the given type of performance"""
+
+    calculate: CalculateEnum
+    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.calculate == CalculateEnum.predicted_performance:
+            self._weather_types = (JobDataTypeEnum.original_weather,)
+        else:
+            self._weather_types = (JobDataTypeEnum.actual_weather,)
+
+
+class CompareEnum(str, Enum):
+    predicted_actual = "predicted and actual performance"
+    predicted_expected = "predicted and expected performance"
+    expected_actual = "expected and actual performance"
+
+
+class ComparePerformanceJob(BaseModel):
+    """Compare one type of performance to another"""
+
+    compare: CompareEnum
+    performance_granularity: PerformanceGranularityEnum
+    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
+    _performance_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.compare == CompareEnum.predicted_actual:
+            self._weather_types = (
+                JobDataTypeEnum.original_weather,
+                JobDataTypeEnum.actual_weather,
+            )
+            self._performance_types = (JobDataTypeEnum.actual_performance,)
+        elif self.compare == CompareEnum.predicted_expected:
+            self._weather_types = (
+                JobDataTypeEnum.original_weather,
+                JobDataTypeEnum.actual_weather,
+            )
+            self._performance_types = (JobDataTypeEnum.predicted_performance,)
+        elif self.compare == CompareEnum.expected_actual:
+            self._weather_types = (JobDataTypeEnum.actual_weather,)
+            self._performance_types = (JobDataTypeEnum.actual_performance,)
+
+
+class WeatherPREnum(str, Enum):
+    weather_adjusted_pr = "weather-adjusted performance ratio"
+
+
+class CalculateWeatherAdjustedPRJob(BaseModel):
+    """Calculate the weather-adjusted performance ratio"""
+
+    calculate: WeatherPREnum
+    performance_granularity: PerformanceGranularityEnum
+    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
+        (JobDataTypeEnum.actual_weather,)
+    )
+    _performance_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
+        (JobDataTypeEnum.actual_performance,)
+    )
+
+
+JOB_PARAMS_EXAMPLE = dict(
+    system_id=SYSTEM_ID,
+    job_type=dict(
+        compare="predicted and actual performance",
+        performance_granularity="inverter",
+    ),
+    time_parameters=dict(
+        start="2020-01-01T00:00:00+00:00",
+        end="2020-12-31T23:59:59+00:00",
+        step="15:00",
+        timezone="UTC",
+    ),
+    weather_granularity="array",
+    irradiance_type="poa",
+    temperature_type="module",
+)
+
+
+class JobParameters(BaseModel):
+    system_id: UUID
+    job_type: Union[
+        CalculatePerformanceJob, ComparePerformanceJob, CalculateWeatherAdjustedPRJob
+    ] = Field(..., description="Calculation or comparison to be performed")
+    time_parameters: JobTimeindex
+    weather_granularity: WeatherGranularityEnum
+    # in principle, these both could be on a per model chain/inverter basis,
+    # but easier to just keep everything the same for the system
+    irradiance_type: IrradianceTypeEnum
+    temperature_type: TemperatureTypeEnum
+
+    class Config:
+        schema_extra = {"example": JOB_PARAMS_EXAMPLE}
+
+
+JOB_DATA_META_EXAMPLE = dict(
+    schema_path="/inverters/0",
+    type="actual weather data",
+    filename="inverter_0_weather.csv",
+    data_format="application/vnd.apache.arrow.file",
+    present=True,
+)
+
+
+class JobDataItem(BaseModel):
+    schema_path: str = Field(
+        ..., description="Relative to PV system definition, i.e. /inverters/0/arrays/0"
+    )
+    type: JobDataTypeEnum
+
+
+class JobDataMetadata(JobDataItem):
+    filename: Optional[str] = Field(..., description="Filename of file uploaded")
+    data_format: Optional[str]
+    present: bool = Field(False, description="If the data has been uploaded or not")
+
+
+class StoredJobDataMetadata(StoredObject):
+    definition: JobDataMetadata
+
+
+JOB_EXAMPLE = dict(system_definition=SYSTEM_EXAMPLE, parameters=JOB_PARAMS_EXAMPLE)
+
+
+def _construct_data_items(
+    system: PVSystem, parameters: JobParameters
+) -> List[JobDataItem]:
+    out = []
+    if parameters.weather_granularity == WeatherGranularityEnum.system:
+        weather_paths = ["/"]
+    elif parameters.weather_granularity == WeatherGranularityEnum.inverter:
+        weather_paths = [f"/inverters/{i}" for i in range(len(system.inverters))]
+    elif parameters.weather_granularity == WeatherGranularityEnum.array:
+        weather_paths = [
+            f"/inverters/{i}/arrays/{j}"
+            for i, inv in enumerate(system.inverters)
+            for j in range(len(inv.arrays))
+        ]
+
+    out += [
+        JobDataItem(schema_path=wp, type=jt)
+        for jt in parameters.job_type._weather_types
+        for wp in weather_paths
+    ]
+
+    if hasattr(parameters.job_type, "performance_granularity"):
+        if (
+            parameters.job_type.performance_granularity
+            == PerformanceGranularityEnum.system
+        ):
+            perf_paths = ["/"]
+        elif (
+            parameters.job_type.performance_granularity
+            == PerformanceGranularityEnum.inverter
+        ):
+            perf_paths = [f"/inverters/{i}" for i in range(len(system.inverters))]
+        out += [
+            JobDataItem(schema_path=pp, type=jt)
+            for jt in parameters.job_type._performance_types
+            for pp in perf_paths
+        ]
+    return out
+
+
+class Job(BaseModel):
+    # duplicated here to track without worrying about changes
+    system_definition: PVSystem
+    parameters: JobParameters
+    _data_items: List[JobDataItem] = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._data_items = _construct_data_items(
+            self.system_definition, self.parameters
+        )
+
+
+class JobStatusEnum(str, Enum):
+    incomplete = "incomplete"
+    prepared = "prepared"
+    queued = "queued"
+    running = "running"
+    complete = "complete"
+    error = "error"
+
+
+class JobStatus(BaseModel):
+    status: JobStatusEnum = Field(
+        ...,
+        description="""Status of the job:
+- incomplete: The job has been created but missing required data.
+- prepared: The job has been created and all required data is present.
+- queued: The job has been queued for execution.
+- running: The job is running.
+- complete: The job has completed without fatal errors and results are ready.
+- error: The job encountered a fatal error. The results will describe the error.
+""",
+    )
+    last_change: dt.datetime
+
+
+class StoredJob(StoredObject):
+    system_id: UUID
+    definition: Job
+    status: JobStatus
+    data_objects: List[StoredJobDataMetadata]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_type": "job",
+                "created_at": "2020-12-01T01:23:00+00:00",
+                "modified_at": "2020-12-01T01:23:00+00:00",
+                "definition": JOB_EXAMPLE,
+                "status": {
+                    "status": "incomplete",
+                    "last_change": "2020-12-01T02:02:00+00:00",
+                },
+                "data_objects": [
+                    {
+                        "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                        "object_type": "job_data",
+                        "created_at": "2020-12-01T01:23:00+00:00",
+                        "modified_at": "2020-12-01T01:23:00+00:00",
+                        "definition": JOB_DATA_META_EXAMPLE,
+                    }
+                ],
+            }
+        }
