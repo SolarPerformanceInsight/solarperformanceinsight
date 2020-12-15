@@ -64,7 +64,8 @@ export default class DBBrowser extends Vue {
   async setFilteredOptions() {
     let opts: Array<string>;
     if (this.search && this.search != "") {
-      opts = this.options.filter(x => x.includes(this.search));
+      const lowerSearch = this.search.toLowerCase();
+      opts = this.options.filter(x => x.toLowerCase().includes(lowerSearch));
     } else {
       opts = this.options;
     }
