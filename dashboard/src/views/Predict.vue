@@ -2,14 +2,16 @@
 -->
 <template>
   <div class="predict-performance">
-    <p>I want to:
-    <select v-model="workflow">
-      <option value="predicted">calculate predicted performance.</option>
-      <option value="expected">calculate expected performance.</option>
-    </select>
+    <p>
+      I want to:
+      <select v-model="workflow">
+        <option value="predicted">calculate predicted performance.</option>
+        <option value="expected">calculate expected performance.</option>
+      </select>
     </p>
-    <div v-if="workflow=='predicted'">
-      Steps:<br />
+    <div v-if="workflow == 'predicted'">
+      Steps:
+      <br />
       <ol>
         <li>register job(user clicks "get started")</li>
         <li>user uploads predicted weather data</li>
@@ -17,8 +19,9 @@
         <li>Display Result</li>
       </ol>
     </div>
-    <div v-if="workflow=='expected'">
-      Steps:<br />
+    <div v-if="workflow == 'expected'">
+      Steps:
+      <br />
       <ol>
         <li>register job(user clicks "get started")</li>
         <li>user uploads actual weather data</li>
@@ -37,8 +40,8 @@ export default class PredictPerformace extends Vue {
   workflow!: string;
   data() {
     return {
-      workflow: "predicted",
-    }
+      workflow: "predicted"
+    };
   }
 }
 </script>
