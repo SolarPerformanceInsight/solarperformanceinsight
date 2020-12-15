@@ -18,6 +18,7 @@
     <b>Inverter Parameters:</b>
     <br />
     <inverter-parameters
+      @parameters-selected="loadInverterParameters"
       :parameters="parameters.inverter_parameters"
       :model="model"
     />
@@ -82,6 +83,13 @@ export default class InverterView extends ModelBase {
     this.$validator
       .validate(this.apiComponentName, inverter)
       .then(this.setValidationResult);
+  }
+
+  loadInverterParameters(parameters: Record<string, any>) {
+    // only supported for pvsyst model
+    this.parameters.inverter_parameters = new SandiaInverterParameters(
+      parameters
+    );
   }
 }
 </script>

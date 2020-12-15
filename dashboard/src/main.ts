@@ -15,6 +15,7 @@ import { Auth0Plugin } from "./auth/auth";
 // Import all components for global registration
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
+import DBBrowser from "@/components/Browser.vue";
 import HelpPopup from "@/components/Help.vue";
 import Home from "@/views/Home.vue";
 import InverterView from "@/components/model/Inverter.vue";
@@ -76,6 +77,7 @@ const store = new Vuex.Store(spiStore);
 // Register components globally.
 Vue.component("array-view", ArrayView);
 Vue.component("arrays-view", ArraysView);
+Vue.component("db-browser", DBBrowser);
 Vue.component("help", HelpPopup);
 Vue.component("home", Home);
 Vue.component("inverter-view", InverterView);
