@@ -121,16 +121,4 @@ div.db-browser {
   border: solid 1px #333;
   padding: 1em;
 }
-.help-wrapper {
-  position: absolute;
-  padding: 0.5em;
-  width: 300px;
-  background-color: #fff;
-  border: 1px solid black;
-  border-radius: 5px;
-  box-shadow: 1px 1px 5px #555;
-  z-index: 1;
-  top: 0;
-  left: 100%;
-}
 </style>
