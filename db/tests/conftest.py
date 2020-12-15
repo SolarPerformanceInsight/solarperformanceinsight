@@ -49,9 +49,38 @@ def system_def():
 
 
 @pytest.fixture(scope="session")
-def standard_test_data(auth0_id, user_id, connection, system_id, system_def):
+def job_id():
+    return str(uuid1())
+
+
+@pytest.fixture(scope="session")
+def job_def():
+    return json.dumps({"data": "for the job"})
+
+
+@pytest.fixture(scope="session")
+def job_data_ids():
+    return str(uuid1()), str(uuid1()), str(uuid1()), str(uuid1())
+
+
+@pytest.fixture(scope="session")
+def otherid():
+    return str(uuid1())
+
+
+@pytest.fixture(scope="session")
+def standard_test_data(
+    auth0_id,
+    user_id,
+    connection,
+    system_id,
+    system_def,
+    job_id,
+    job_def,
+    job_data_ids,
+    otherid,
+):
     curs = connection.cursor()
-    otherid = str(uuid1())
     curs.executemany(
         "insert into users (id, auth0_id) values (uuid_to_bin(%s, 1), %s)",
         [(user_id, auth0_id), (otherid, "auth0|otheruser")],
@@ -61,16 +90,38 @@ def standard_test_data(auth0_id, user_id, connection, system_id, system_def):
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s)",
         (system_id, user_id, *system_def),
     )
+    curs.execute(
+        "insert into jobs (id, user_id, system_id, definition) values "
+        "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s)",
+        (job_id, user_id, system_id, job_def),
+    )
+    curs.executemany(
+        "insert into job_data (id, job_id, schema_path, type) values "
+        "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s)",
+        (
+            (job_data_ids[0], job_id, "data0", "weather"),
+            (job_data_ids[1], job_id, "data1", "weather"),
+            (job_data_ids[2], job_id, "data2", "weather"),
+            (job_data_ids[3], job_id, "data3", "performance"),
+        ),
+    )
     connection.commit()
     yield
     curs.executemany(
         "delete from users where id = uuid_to_bin(%s, 1)", (user_id, otherid)
     )
     curs.execute("delete from systems where id = uuid_to_bin(%s, 1)", system_id)
+    curs.execute("delete from jobs where id = uuid_to_bin(%s, 1)", job_id)
     connection.commit()
 
 
 @pytest.fixture()
 def cursor(connection, standard_test_data):
     yield connection.cursor()
+    connection.rollback()
+
+
+@pytest.fixture()
+def dictcursor(connection, standard_test_data):
+    yield connection.cursor(pymysql.cursors.DictCursor)
     connection.rollback()
