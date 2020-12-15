@@ -2,3 +2,9 @@ b {
   display: inline-block;
   margin: .25em;
 }
+a:not([href]) {
+  text-decoration: underline;
+}
+a:not([href]):hover {
+  cursor: pointer;
+}
