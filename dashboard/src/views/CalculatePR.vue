@@ -3,6 +3,14 @@
 <template>
   <div class="calculate-pr">
     Calculate performance ratio
+    Steps:<br />
+    <ol>
+      <li>register job(user clicks "get started")</li>
+      <li>user uploads actual performance<li>
+      <li>user uploads modeled performance</li>
+      <li>submit calculation</li>
+      <li>Display Result</li>
+    </ol>
   </div>
 </template>
 
