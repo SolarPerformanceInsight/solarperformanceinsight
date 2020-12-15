@@ -35,3 +35,17 @@ export class System {
     );
   }
 }
+export class StoredSystem {
+  object_id!: string;
+  object_type = "system";
+  created_at!: string;
+  modified_at!: string;
+  definition!: System;
+
+  constructor(stored: StoredSystem) {
+    this.object_id = stored.object_id;
+    this.created_at = stored.created_at;
+    this.modified_at = stored.modified_at;
+    this.definition = new System(stored.definition);
+  }
+}
