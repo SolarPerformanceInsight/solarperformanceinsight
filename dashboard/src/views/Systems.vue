@@ -25,9 +25,21 @@
           <span class="system-cell small">
             <a role="button" @click="displayDeleteDialog(system)">Delete</a>
           </span>
-          <span class="system-cell"><button>Predict Performance</button></span>
-          <span class="system-cell"><button>Compare Performance</button></span>
-          <span class="system-cell"><button>Calculate PR</button></span>
+          <span class="system-cell">
+            <router-link to="/predict" tag="button">
+              Predict Performance
+            </router-link>
+          </span>
+          <span class="system-cell">
+            <router-link to="/compare" tag="button">
+              Compare Performance
+            </router-link>
+          </span>
+          <span class="system-cell">
+            <router-link to="/calculatepr" tag="button">
+              Calculate PR
+            </router-link>
+          </span>
         </li>
       </ul>
     </div>
