@@ -1,4 +1,4 @@
-import { System } from "../types/System";
+import { System, StoredSystem } from "../types/System";
 
 export const actions = {
   async fetchSystems(context: any) {
@@ -10,9 +10,9 @@ export const actions = {
         Authorization: `Bearer ${token}`
       })
     }).then(response => response.json());
-    const systemMapping: Record<string, System> = {};
+    const systemMapping: Record<string, StoredSystem> = {};
     for (const system of systemlist) {
-      systemMapping[system.object_id] = system.definition as System;
+      systemMapping[system.object_id] = system as StoredSystem;
     }
     context.commit("updateSystemsList", systemMapping);
   }

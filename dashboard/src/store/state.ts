@@ -1,7 +1,7 @@
-import { System } from "../types/System";
+import { StoredSystem } from "../types/System";
 
 export const state = {
-  systems: {} as Record<string, System>,
+  systems: {} as Record<string, StoredSystem>,
   loading: true
 };
 
