@@ -37,9 +37,10 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard
   },
   {
-    path: "/calculate",
-    name: "Predict Performance",
+    path: "/system/:systemId/calculate",
+    name: "Calculate Performance",
     component: CalculatePerformance,
+    props: true,
     beforeEnter: authGuard
   },
   {

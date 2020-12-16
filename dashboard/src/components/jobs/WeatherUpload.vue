@@ -9,13 +9,18 @@
     accept="text/csv"
     @change="processFile"/>
     <template v-if="promptForMapping">
-      <weather-csv-mapper :headers="headers" />
+      <weather-csv-mapper
+        :system="system"
+        :weather_granularity="weather_granularity"
+        :weather_type="weather_type"
+        :headers="headers" />
     </template>
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import FileUpload from "@/components/FileUpload.vue";
+import { StoredSystem } from "@/types/System";
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -23,6 +28,9 @@ interface HTMLInputEvent extends Event {
 
 @Component
 export default class WeatherUpload extends Vue {
+  @Prop() weather_granularity!: string;
+  @Prop() weather_type!: string;
+  @Prop() system!: StoredSystem;
   mapping!: Record<string, string>;
   promptForMapping!: boolean;
   headers!: Array<string>;

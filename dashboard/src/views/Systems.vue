@@ -26,7 +26,13 @@
             <a role="button" @click="displayDeleteDialog(system)">Delete</a>
           </span>
           <span class="system-cell">
-            <router-link to="/calculate" tag="button">
+            <router-link
+              :to="{
+                name: 'Calculate Performance',
+                params: { systemId: uuid }
+              }"
+              tag="button"
+            >
               Calculate Performance
             </router-link>
           </span>

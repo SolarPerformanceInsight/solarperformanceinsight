@@ -4,18 +4,34 @@
   <div class="compare-performance">
     Compare performance
     <p>
-      I want to compare...<br />
-      <input id="predicted-actual" value="predicted-actual" type="radio" v-model="workflow" />
+      I want to compare...
+      <br />
+      <input
+        id="predicted-actual"
+        value="predicted-actual"
+        type="radio"
+        v-model="workflow"
+      />
       <label for="predicted-actual">
         predicted to actual performance.
       </label>
       <br />
-      <input id="expected-actual" value="expected-actual" type="radio" v-model="workflow" />
+      <input
+        id="expected-actual"
+        value="expected-actual"
+        type="radio"
+        v-model="workflow"
+      />
       <label for="expected-actual">
         expected to actual performance.
       </label>
       <br />
-      <input id="predicted-expected" value="predicted-expected" type="radio" v-model="workflow" />
+      <input
+        id="predicted-expected"
+        value="predicted-expected"
+        type="radio"
+        v-model="workflow"
+      />
       <label for="predicted-expected">
         predicted to expected performance.
       </label>
