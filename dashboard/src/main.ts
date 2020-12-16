@@ -16,6 +16,7 @@ import { Auth0Plugin } from "./auth/auth";
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
 import DBBrowser from "@/components/Browser.vue";
+import FileUpload from "@/components/FileUpload.vue";
 import HelpPopup from "@/components/Help.vue";
 import Home from "@/views/Home.vue";
 import InverterView from "@/components/model/Inverter.vue";
@@ -26,8 +27,9 @@ import ModelField from "@/components/ModelField.vue";
 import ModuleParametersView from "@/components/model/ModuleParameters.vue";
 import TemperatureParametersView from "@/components/model/TemperatureParameters.vue";
 import TrackingParametersView from "@/components/model/TrackingParameters.vue";
-import FileUpload from "@/components/FileUpload.vue";
 import SystemView from "@/components/model/System.vue";
+import WeatherUpload from "@/components/jobs/WeatherUpload.vue";
+import WeatherCSVMapper from "@/components/jobs/WeatherCSVMapper.vue";
 
 import "./assets/css/styles.css";
 
@@ -78,6 +80,7 @@ const store = new Vuex.Store(spiStore);
 Vue.component("array-view", ArrayView);
 Vue.component("arrays-view", ArraysView);
 Vue.component("db-browser", DBBrowser);
+Vue.component("file-upload", FileUpload);
 Vue.component("help", HelpPopup);
 Vue.component("home", Home);
 Vue.component("inverter-view", InverterView);
@@ -89,7 +92,8 @@ Vue.component("module-parameters", ModuleParametersView);
 Vue.component("tracking-parameters", TrackingParametersView);
 Vue.component("temperature-parameters", TemperatureParametersView);
 Vue.component("system-view", SystemView);
-Vue.component("file-upload", FileUpload);
+Vue.component("weather-upload", WeatherUpload);
+Vue.component("weather-csv-mapper", WeatherCSVMapper);
 
 new Vue({
   router,

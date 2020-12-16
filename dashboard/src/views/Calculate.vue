@@ -3,6 +3,7 @@
 <template>
   <div class="calculate-performance">
     Calculate Performance
+    <template v-if="!jobSubmitted">
     <p>
       I want to calculate the system output using...
       <br />
@@ -15,27 +16,30 @@
       <label for="expected">
         actual weather data during system operation.
       </label>
+      <br />
+      <button @click="submitJob">Get Started</button>
     </p>
-    <div v-if="workflow == 'predicted'">
-      Steps:
-      <br />
-      <ol>
-        <li>register job(user clicks "get started")</li>
-        <li>user uploads predicted weather data</li>
-        <li>submit calculation</li>
+    </template>
+    <transition name="fade">
+    <template v-if="jobSubmitted">
+      <div v-if="workflow == 'predicted'">
+        <br />
+        <weather-upload><b>Step 1. Upload weather data</b></weather-upload>
+        <button @click="submitCalculation">Submit Calculation</button>
         <li>Display Result</li>
-      </ol>
-    </div>
-    <div v-if="workflow == 'expected'">
-      Steps:
-      <br />
-      <ol>
-        <li>register job(user clicks "get started")</li>
-        <li>user uploads actual weather data</li>
-        <li>submit calculation</li>
-        <li>Display Result</li>
-      </ol>
-    </div>
+      </div>
+      <div v-if="workflow == 'expected'">
+        Steps:
+        <br />
+        <ol>
+          <li>register job(user clicks "get started")</li>
+          <li>user uploads actual weather data</li>
+          <li>submit calculation</li>
+          <li>Display Result</li>
+        </ol>
+      </div>
+    </template>
+    </transition>
   </div>
 </template>
 
@@ -44,13 +48,29 @@ import { Component, Vue } from "vue-property-decorator";
 @Component
 export default class PredictPerformace extends Vue {
   workflow!: string;
+  jobSubmitted!: boolean;
   data() {
     return {
-      workflow: "predicted"
+      workflow: "predicted",
+      jobSubmitted: false
     };
+  }
+  submitJob(){
+    this.jobSubmitted = true;
+  }
+  submitCalculation(){
+    console.log("Calculation submitted");
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped></style>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+</style>
