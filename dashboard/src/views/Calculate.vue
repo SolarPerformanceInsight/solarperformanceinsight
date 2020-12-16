@@ -11,94 +11,126 @@
       <br />
       <template v-if="!jobSubmitted">
         <div class="my-1">
-          I want to calculate the system output using...
-          <br />
-          <div class="ml-1">
-            <input
-              id="predicted"
-              value="predicted"
-              type="radio"
-              v-model="workflow"
-            />
-            <label for="predicted">
-              weather data provided when the system was designed.
-            </label>
+          <div class="my-1">
+            I want to calculate the system output using...
             <br />
-            <input
-              id="expected"
-              value="expected"
-              type="radio"
-              v-model="workflow"
-            />
-            <label for="expected">
-              actual weather data during system operation.
-            </label>
-            <br />
+            <div class="ml-1 mt-1">
+              <input
+                id="predicted"
+                value="predicted"
+                type="radio"
+                v-model="workflow"
+              />
+              <label for="predicted">
+                weather data provided when the system was designed.
+              </label>
+              <br />
+              <input
+                id="expected"
+                value="expected"
+                type="radio"
+                v-model="workflow"
+              />
+              <label for="expected">
+                actual weather data during system operation.
+              </label>
+              <br />
+            </div>
           </div>
-          My data files includes:
-          <br />
-          <div class="ml-1">
-            <input
-              id="standard"
-              value="standard"
-              type="radio"
-              v-model="weather_type"
-            />
-            <label for="standard">
-              global horizontal (GHI), direct normal (DNI), and diffuse
-              horizontal (DHI) irradiance.
-            </label>
+          <div class="my-1">
+            My data files includes:
             <br />
-            <input id="poa" value="poa" type="radio" v-model="weather_type" />
-            <label for="poa">
-              global plane of array (POA global), direct plane of array(POA
-              direct), and diffuse plane of array(POA diffuse) irradiance.
-            </label>
-            <br />
-            <input
-              id="effective"
-              value="effective"
-              type="radio"
-              v-model="weather_type"
-            />
-            <label for="effective">
-              effective irradiance.
-            </label>
-            <br />
+            <div class="ml-1 mt-1">
+              <input
+                id="standard"
+                value="standard"
+                type="radio"
+                v-model="weather_type"
+              />
+              <label for="standard">
+                global horizontal (GHI), direct normal (DNI), and diffuse
+                horizontal (DHI) irradiance.
+              </label>
+              <br />
+              <input id="poa" value="poa" type="radio" v-model="weather_type" />
+              <label for="poa">
+                global plane of array (POA global), direct plane of array(POA
+                direct), and diffuse plane of array(POA diffuse) irradiance.
+              </label>
+              <br />
+              <input
+                id="effective"
+                value="effective"
+                type="radio"
+                v-model="weather_type"
+              />
+              <label for="effective">
+                effective irradiance.
+              </label>
+              <br />
+            </div>
           </div>
-          I have data for:
-          <br />
-          <div class="ml-1">
-            <input
-              id="system"
-              value="system"
-              type="radio"
-              v-model="weather_granularity"
-            />
-            <label for="system">
-              the entire system.
-            </label>
+          <div class="my-1">
+            How should we determine module temperature?
             <br />
-            <input
-              id="inverter"
-              value="inverter"
-              type="radio"
-              v-model="weather_granularity"
-            />
-            <label for="inverter">
-              each inverter.
-            </label>
+            <div class="ml-1 mt-1">
+              <input
+                id="module"
+                value="module"
+                type="radio"
+                v-model="temperature"
+              />
+              <label for="module">
+                Module temperature is included in my data.
+              </label>
+              <br />
+              <input id="cell" value="" type="radio" v-model="temperature" />
+              <label for="inverter">
+                Calculate from cell temperature in my data.
+              </label>
+              <br />
+              <input id="air" value="air" type="radio" v-model="temperature" />
+              <label for="air">
+                Calculate from air temperature and windspeed.
+              </label>
+              <br />
+            </div>
+          </div>
+          <div class="my-1">
+            I have data for:
             <br />
-            <input
-              id="array"
-              value="array"
-              type="radio"
-              v-model="weather_granularity"
-            />
-            <label for="array">
-              each array.
-            </label>
-            <br />
+            <div class="ml-1 mt-1">
+              <input
+                id="system"
+                value="system"
+                type="radio"
+                v-model="weather_granularity"
+              />
+              <label for="system">
+                the entire system.
+              </label>
+              <br />
+              <input
+                id="inverter"
+                value="inverter"
+                type="radio"
+                v-model="weather_granularity"
+              />
+              <label for="inverter">
+                each inverter.
+              </label>
+              <br />
+              <input
+                id="array"
+                value="array"
+                type="radio"
+                v-model="weather_granularity"
+              />
+              <label for="array">
+                each array.
+              </label>
+              <br />
+            </div>
           </div>
           <button class="mt-1" @click="submitJob">Get Started</button>
         </div>
@@ -108,6 +140,7 @@
           <div v-if="workflow == 'predicted'">
             <br />
             <weather-upload
+              :temperature="temperature"
               :system="system"
               :weather_granularity="weather_granularity"
               :weather_type="weather_type"
@@ -143,6 +176,7 @@ export default class PredictPerformace extends Vue {
   workflow!: string;
   weather_granularity!: string;
   weather_type!: string;
+  temperature!: string;
   jobSubmitted!: boolean;
 
   // TODO: refactor common api/404 code
@@ -169,7 +203,8 @@ export default class PredictPerformace extends Vue {
       system: this.system,
       systemLoading: this.systemLoading,
       apiErrors: {},
-      errorState: false
+      errorState: false,
+      temperature: "module"
     };
   }
   submitJob() {
