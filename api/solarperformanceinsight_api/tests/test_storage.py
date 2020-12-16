@@ -301,3 +301,6 @@ def test_get_user_new(storage_interface, mocker, cleanup_user):
     assert out.auth0_id == "newuser"
     assert out.object_type == "user"
     create.assert_called()
+
+
+# test all the job stuff

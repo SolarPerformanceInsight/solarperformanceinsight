@@ -880,7 +880,6 @@ class JobStatus(BaseModel):
 
 
 class StoredJob(StoredObject):
-    system_id: UUID
     definition: Job
     status: JobStatus
     data_objects: List[StoredJobDataMetadata]

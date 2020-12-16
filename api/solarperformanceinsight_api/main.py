@@ -10,7 +10,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 
 from . import auth, __version__, settings, storage
-from .routers import systems, user, parameters
+from .routers import systems, user, parameters, jobs
 
 
 app = FastAPI(title="Solar Performance Insight")
@@ -123,3 +123,6 @@ app.include_router(
     user.router, prefix="/user", tags=["User"], dependencies=[Depends(auth.get_user_id)]
 )
 app.include_router(parameters.router, prefix="/parameters", tags=["Parameters"])
+app.include_router(
+    jobs.router, prefix="/jobs", tags=["Jobs"], dependencies=[Depends(auth.get_user_id)]
+)
