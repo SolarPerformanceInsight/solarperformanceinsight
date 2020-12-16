@@ -1,13 +1,20 @@
 <!-- View for workflows presented in usecases 1A and 1B
 -->
 <template>
-  <div class="predict-performance">
+  <div class="calculate-performance">
+    Calculate Performance
     <p>
-      I want to:
-      <select v-model="workflow">
-        <option value="predicted">calculate predicted performance.</option>
-        <option value="expected">calculate expected performance.</option>
-      </select>
+      I want to calculate the system output using...
+      <br />
+      <input id="predicted" value="predicted" type="radio" v-model="workflow" />
+      <label for="predicted">
+        weather data provided when the system was designed.
+      </label>
+      <br />
+      <input id="expected" value="expected" type="radio" v-model="workflow" />
+      <label for="expected">
+        actual weather data during system operation.
+      </label>
     </p>
     <div v-if="workflow == 'predicted'">
       Steps:
@@ -34,7 +41,6 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-
 @Component
 export default class PredictPerformace extends Vue {
   workflow!: string;

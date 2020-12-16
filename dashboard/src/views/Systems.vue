@@ -26,8 +26,8 @@
             <a role="button" @click="displayDeleteDialog(system)">Delete</a>
           </span>
           <span class="system-cell">
-            <router-link to="/predict" tag="button">
-              Predict Performance
+            <router-link to="/calculate" tag="button">
+              Calculate Performance
             </router-link>
           </span>
           <span class="system-cell">

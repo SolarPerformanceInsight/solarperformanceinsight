@@ -4,18 +4,22 @@
   <div class="compare-performance">
     Compare performance
     <p>
-      I want to:
-      <select v-model="workflow">
-        <option value="predicted-actual">
-          compare predicted to actual performance.
-        </option>
-        <option value="expected-actual">
-          compare expected to actual performance.
-        </option>
-        <option value="predicted-expected">
-          compre predicted to expected performance.
-        </option>
-      </select>
+      I want to compare...<br />
+      <input id="predicted-actual" value="predicted-actual" type="radio" v-model="workflow" />
+      <label for="predicted-actual">
+        predicted to actual performance.
+      </label>
+      <br />
+      <input id="expected-actual" value="expected-actual" type="radio" v-model="workflow" />
+      <label for="expected-actual">
+        expected to actual performance.
+      </label>
+      <br />
+      <input id="predicted-expected" value="predicted-expected" type="radio" v-model="workflow" />
+      <label for="predicted-expected">
+        predicted to expected performance.
+      </label>
+      <br />
     </p>
     <div v-if="workflow == 'predicted-actual'">
       Steps:
