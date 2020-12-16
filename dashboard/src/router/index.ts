@@ -6,7 +6,7 @@ import VueRouter, { RouteConfig } from "vue-router";
 import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
-import PredictPerformance from "../views/Predict.vue";
+import CalculatePerformance from "../views/Calculate.vue";
 import ComparePerformance from "../views/Compare.vue";
 import CalculatePR from "../views/CalculatePR.vue";
 import { authGuard } from "../auth/authGuard";
@@ -37,9 +37,9 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard
   },
   {
-    path: "/predict",
+    path: "/calculate",
     name: "Predict Performance",
-    component: PredictPerformance,
+    component: CalculatePerformance,
     beforeEnter: authGuard
   },
   {
