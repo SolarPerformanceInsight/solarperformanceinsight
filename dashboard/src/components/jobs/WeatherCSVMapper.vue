@@ -116,9 +116,9 @@ export default class WeatherCSVMapper extends Vue {
     if (this.weather_granularity == "system") {
       loc = "/"; // system/definition?
     } else if (this.weather_granularity == "inverter") {
-      loc = "/inverters/index[0]";
+      loc = `/inverters/${index[0]}`;
     } else if (this.weather_granularity == "array") {
-      loc = "/inverters/[index[0]/arrays/index[2]";
+      loc = `/inverters/${index[0]}/arrays/${index[1]}`;
     } else {
       throw new Error("Bad granularity in updateMapping");
     }
