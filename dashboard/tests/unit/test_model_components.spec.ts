@@ -873,6 +873,43 @@ describe("Test Inverter", () => {
       mocks
     });
   });
+  it("test loadInverterParameters", () => {
+    const propsData = {
+      parameters: new Inverter({
+        inverter_parameters: new SandiaInverterParameters({}),
+        losses: null
+      }),
+      model: "pvsyst",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(InverterView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    const chosenParameters = {
+      name: "ABB__PVI_3_0_OUTD_S_US_Z_A__208V_",
+      parameters: {
+        Paco: 3000,
+        Pdco: 3142.30127,
+        Vdco: 310,
+        Pso: 18.166279,
+        C0: -0.000008039486,
+        C1: -0.000011,
+        C2: 0.000999,
+        C3: -0.00028700000000000004,
+        Pnt: 0.1
+      }
+    };
+    // @ts-expect-error
+    wrapper.vm.loadInverterParameters(chosenParameters);
+    expect(propsData.parameters.make_model).toBe(chosenParameters.name);
+    expect(propsData.parameters.inverter_parameters).toStrictEqual(
+      new SandiaInverterParameters(chosenParameters.parameters)
+    );
+  });
 });
 
 /*
