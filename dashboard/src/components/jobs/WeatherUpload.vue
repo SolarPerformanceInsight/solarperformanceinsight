@@ -116,11 +116,13 @@ export default class WeatherUpload extends Vue {
     }
   }
   getRequired() {
-    let requiredFields: Array<string> = [];
-    // @ts-expect-error
-    requiredFields = requiredIrradianceFields[this.weather_type].concat(
-      // @ts-expect-error
-      requiredTemperatureFields[this.temperature]
+    let requiredFields: Array<string> = ["time"];
+    requiredFields = requiredFields.concat(
+      //@ts-expect-error
+      requiredIrradianceFields[this.weather_type].concat(
+        // @ts-expect-error
+        requiredTemperatureFields[this.temperature]
+      )
     );
     return requiredFields;
   }
@@ -129,13 +131,13 @@ export default class WeatherUpload extends Vue {
   }
   get totalMappings() {
     // number of required variables plus one for timestamps.
-    let total = 1;
+    let total: number;
     const numRequired = this.required.length;
     if (this.weather_granularity == "system") {
-      total += numRequired;
+      total = numRequired;
     } else if (this.weather_granularity == "inverter") {
       const numInverters = this.system.definition.inverters.length;
-      total += numRequired * numInverters;
+      total = numRequired * numInverters;
     } else {
       const numArrays = this.system.definition.inverters.reduce(
         (totalArrays: number, inverter) => {
@@ -143,7 +145,7 @@ export default class WeatherUpload extends Vue {
         },
         0
       );
-      total += numRequired * numArrays;
+      total = numRequired * numArrays;
     }
     return total;
   }
