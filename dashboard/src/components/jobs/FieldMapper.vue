@@ -117,6 +117,7 @@ const displayNames = {
   ghi: "Global Horizontal Irradiance",
   dhi: "Diffuse Horizontal Irradiance",
   dni: "Direct Normal Irradiance",
+  effective_irradiance: "Effective Irradiance",
   cell_temperature: "Cell Temperature",
   module_temperature: "Module Temperature",
   temp_air: "Air Temperature",
