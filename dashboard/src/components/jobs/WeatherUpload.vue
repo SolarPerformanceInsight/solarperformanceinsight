@@ -95,14 +95,13 @@ export default class WeatherUpload extends Vue {
     }
   }
   mapAndStoreCSV(csv: string) {
-    console.log(csv);
     if (csv.indexOf("\n")){
       this.headers = csv.slice(0, csv.indexOf("\n")).split(",");
       this.promptForMapping = true;;
     } else {
       console.log("Bad csv");
     }
-      }
+  }
   processMapping(newMapping: Record<string, string>) {
     this.mapping = newMapping;
   }
@@ -133,10 +132,10 @@ export default class WeatherUpload extends Vue {
     let total = 1;
     const numRequired = this.required.length;
     if (this.weather_granularity == "system") {
-      total = numRequired;
+      total += numRequired;
     } else if (this.weather_granularity == "inverter") {
       const numInverters = this.system.definition.inverters.length;
-      total = numRequired * numInverters;
+      total += numRequired * numInverters;
     } else {
       const numArrays = this.system.definition.inverters.reduce(
         (totalArrays: number, inverter) => {
@@ -144,9 +143,8 @@ export default class WeatherUpload extends Vue {
         },
         0
       );
-      total = numRequired * numArrays;
+      total += numRequired * numArrays;
     }
-    console.log(total);
     return total;
   }
 }

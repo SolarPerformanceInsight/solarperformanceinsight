@@ -79,7 +79,6 @@ export default class WeatherCSVMapper extends Vue {
   }
   get unMapped() {
     const unmapped = this.headers.filter(x => !(x in this.mapping));
-    console.log(unmapped);
     return unmapped;
   }
   get toMap() {
