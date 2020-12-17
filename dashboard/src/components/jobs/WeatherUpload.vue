@@ -1,3 +1,23 @@
+<!--
+Component that handles upload and extracting of headers for a single file.
+Takes the following props that can be extracted from job metadata.
+  - temperature: string - the source of module temperature. One of:
+    - "module": requires that "module_temperature" be provided in the file.
+    - "cell": requires that "cell_temperature" be provided in the file.
+    - "air": requires that "temp_air" and "wind_speed" be provided".
+  - weather_type: string - Type of irradiance found in weather data. One of:
+    - "standard": requires "ghi", "dni", and "dhi" provided in the file.
+    - "poa": requires "poa_global", "poa_direct", and "poa_diffuse" provided in
+      the file.
+    - "effictive_irradiance": required "effective_irradiance" provided in the
+      file.
+  - weather_granularity: string: What part of the spec the weather data is
+    associated with. One of:
+    - "system": System wide data in the file.
+    - "inverter": Data for each inverter in the file.
+    - "array": Data for each array in the file.
+  - system: StoredSystem: The system to map data onto.
+-->
 <template>
   <div class="weather-upload">
   <slot>Upload your weather data</slot>
@@ -10,6 +30,7 @@
     @change="processFile"/>
     <template v-if="promptForMapping">
       <weather-csv-mapper
+        :temperature="temperature"
         :system="system"
         :weather_granularity="weather_granularity"
         :weather_type="weather_type"
@@ -31,6 +52,7 @@ export default class WeatherUpload extends Vue {
   @Prop() weather_granularity!: string;
   @Prop() weather_type!: string;
   @Prop() system!: StoredSystem;
+  @Prop() temperature!: string;
   mapping!: Record<string, string>;
   promptForMapping!: boolean;
   headers!: Array<string>;

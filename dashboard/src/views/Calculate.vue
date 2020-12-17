@@ -71,9 +71,14 @@
             </div>
           </div>
           <div class="my-1">
-            How should we determine module temperature?
+            How should we determine cell temperature?
             <br />
             <div class="ml-1 mt-1">
+              <input id="cell" value="" type="radio" v-model="temperature" />
+              <label for="inverter">
+                Cell temperature is included in my data.
+              </label>
+              <br />
               <input
                 id="module"
                 value="module"
@@ -81,17 +86,13 @@
                 v-model="temperature"
               />
               <label for="module">
-                Module temperature is included in my data.
-              </label>
-              <br />
-              <input id="cell" value="" type="radio" v-model="temperature" />
-              <label for="inverter">
-                Calculate from cell temperature in my data.
+                Calculate cell temperature from module temperature in my data.
               </label>
               <br />
               <input id="air" value="air" type="radio" v-model="temperature" />
               <label for="air">
-                Calculate from air temperature and windspeed.
+                Calculate cell temperature from irradiance, air temperature and
+                windspeed in my data.
               </label>
               <br />
             </div>
@@ -169,6 +170,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredSystem } from "@/types/System";
+
 @Component
 export default class PredictPerformace extends Vue {
   @Prop() systemId!: string;
@@ -221,10 +223,7 @@ export default class PredictPerformace extends Vue {
         Authorization: `Bearer ${token}`
       })
     });
-    console.log(response.status);
-    console.log(response.ok);
     if (response.ok) {
-      console.log("this if also does not work");
       const system = await response.json();
       this.system = new StoredSystem(system);
       this.systemLoading = false;
