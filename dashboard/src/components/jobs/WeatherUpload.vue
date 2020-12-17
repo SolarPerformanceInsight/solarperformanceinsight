@@ -32,7 +32,7 @@ Takes the following props that can be extracted from job metadata.
       <div class="warning" v-if="headers.length < totalMappings">
         Warning: It looks like you may not have enough data in this file. The
         file contains {{headers.length}} columns and {{ totalMappings }}
-        columns are expected ( {{ required.join(", ") }}
+        columns are expected (a timestamp column and {{ required.join(", ") }}
         for <template v-if="weather_granularity == 'system'">the</template>
         <template v-else>each</template> {{ weather_granularity }}).
       </div>
