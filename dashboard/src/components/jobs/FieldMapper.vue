@@ -53,7 +53,7 @@ Components using the mapper should react to events emitted from this component:
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
-          {{ field }} (required):
+          {{ getDisplayName(field)}} (required):
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
@@ -70,7 +70,7 @@ Components using the mapper should react to events emitted from this component:
       <!-- optional fields -->
       <ul class="mapping-list">
         <li v-for="field of optional" :key="field">
-          {{ field }}:
+          {{ getDisplayName(field) }}:
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
@@ -98,17 +98,22 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
-const optionalFields = [
-  "temp_air",
-  "wind_speed",
-  "cell_temperature",
-  "module_temperature"
-];
-
 type SystemComponent = System | Inverter | PVArray;
 type SystemComponentIndexed = SystemComponent & {
   index: Array<number>;
 };
+
+// Maps variables to human friendly names
+const displayNames = {
+  time: "Timestamp",
+  ghi: "Global Horizontal Irradiance",
+  dhi: "Diffuse Horizontal Irradiance",
+  dni: "Direct Normal Irradiance",
+  cell_temperature: "Cell Temperature",
+  module_temperature: "Module Temperature",
+  temp_air: "Air Temperature",
+  wind_speed: "Wind Speed",
+}
 
 @Component
 export default class FieldMapper extends Vue {
@@ -152,6 +157,10 @@ export default class FieldMapper extends Vue {
     }
     this.$emit("mapping-updated", { ...this.mapping, index: this.comp.index });
   }
+  getDisplayName(variable: string){
+    // @ts-expect-error
+    return displayNames[variable];
+  }
   isValid() {
     return this.required.every(x => x in this.mapping);
   }
@@ -160,5 +169,8 @@ export default class FieldMapper extends Vue {
 <style scoped>
 div.metadata {
   border: solid 1px black;
+}
+.mapping-list li {
+ margin-top: .5em;
 }
 </style>
