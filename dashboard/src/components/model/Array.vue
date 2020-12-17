@@ -13,12 +13,6 @@
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
-      field-name="make_model"
-    />
-    <model-field
-      :parameters="parameters"
-      :errors="errors"
-      :definitions="definitions"
       field-name="albedo"
     />
     <model-field
@@ -54,9 +48,11 @@
     />
     <b>Temperature Model Parameters:</b>
     <br />
-    <temperature-parameters
-      :model="model"
-      :parameters="parameters.temperature_model_parameters"
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="make_model"
     />
     <b>Module Parameters:</b>
     <br />
@@ -64,6 +60,11 @@
       :parameters="parameters.module_parameters"
       :model="model"
     />
+    <temperature-parameters
+      :model="model"
+      :parameters="parameters.temperature_model_parameters"
+    />
+
     <button class="remove-array" @click="removeArray">Remove Array</button>
     <br />
     <button class="duplicate-array" @click="duplicateArray">
