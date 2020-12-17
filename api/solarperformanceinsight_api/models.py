@@ -235,7 +235,7 @@ class PVArray(BaseModel):
     name: str = UserString("", description="Name of this array")
     make_model: str = UserString(
         "",
-        title="Make & Model",
+        title="Module Make & Model",
         description="Make and model of the PV modules in this array",
     )
     module_parameters: Union[PVsystModuleParameters, PVWattsModuleParameters] = Field(
@@ -432,7 +432,7 @@ class Inverter(BaseModel):
     name: str = UserString("", description="Name of this inverter")
     make_model: str = UserString(
         "",
-        title="Make & Model",
+        title="Inverter Make & Model",
         description="Make and model of the inverter",
     )
     arrays: List[PVArray] = Field(
