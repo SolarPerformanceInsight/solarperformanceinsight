@@ -8,3 +8,8 @@ a:not([href]) {
 a:not([href]):hover {
   cursor: pointer;
 }
+.warning {
+  border: solid 1px #E00;
+  padding: .5em;
+  color: #E00;
+}

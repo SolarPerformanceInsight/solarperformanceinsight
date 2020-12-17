@@ -3,6 +3,8 @@ Component that handles the csv headers of one file and master mapping for the
 system.
 Takes the following props:
   - headers: Array<string> - the csv headers to be mapped.
+  - required: Array<string> - Required fields to be mapped for each component.
+  - optional: Array<string> - Optional fields to be mapped for each component.
   - temperature: string - the source of module temperature. One of:
     - "module": requires that "module_temperature" be provided in the file.
     - "cell": requires that "cell_temperature" be provided in the file.
@@ -56,24 +58,6 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 Vue.component("field-mapper", FieldMapper);
-// Maps the required irradiance components to the data that the user has
-const requiredIrradianceFields = {
-  standard: ["dni", "ghi", "dhi"],
-  poa: ["poa_global", "poa_direct", "poa_diffuse"],
-  effective: ["effective_irradiance"]
-};
-const requiredTemperatureFields = {
-  cell: ["cell_temperature"],
-  module: ["module_temperature"],
-  air: ["temp_air", "wind_speed"]
-};
-
-const optionalFields = [
-  "temp_air",
-  "wind_speed",
-  "cell_temperature",
-  "module_temperature"
-];
 
 @Component
 export default class WeatherCSVMapper extends Vue {
@@ -82,28 +66,16 @@ export default class WeatherCSVMapper extends Vue {
   @Prop() weather_type!: string;
   @Prop() weather_granularity!: string;
   @Prop() system!: StoredSystem;
+  @Prop() required!: Array<string>;
+  @Prop() optional!: Array<string>;
   mapping!: Record<string, string>;
-  required!: Array<string>;
   usedHeaders!: Array<string>;
 
   data() {
     return {
       mapping: {},
-      required: this.getRequired(),
       usedHeaders: []
     };
-  }
-  getRequired() {
-    let requiredFields: Array<string> = [];
-    // @ts-expect-error
-    requiredFields = requiredIrradianceFields[this.weather_type].concat(
-      // @ts-expect-error
-      requiredTemperatureFields[this.temperature]
-    );
-    return requiredFields;
-  }
-  get optional() {
-    return optionalFields.filter(x => !this.required.includes(x));
   }
   get unMapped() {
     const unmapped = this.headers.filter(x => !(x in this.mapping));

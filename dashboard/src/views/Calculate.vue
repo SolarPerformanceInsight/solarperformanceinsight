@@ -169,8 +169,9 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { StoredSystem } from "@/types/System";
-
+import { StoredSystem, System } from "@/types/System";
+import { Inverter } from "@/types/Inverter";
+import { PVArray } from "@/types/PVArray";
 @Component
 export default class PredictPerformace extends Vue {
   @Prop() systemId!: string;
@@ -216,24 +217,59 @@ export default class PredictPerformace extends Vue {
     console.log("Calculation submitted");
   }
   async loadSystem() {
-    this.systemLoading = true;
-    const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/${this.systemId}`, {
-      headers: new Headers({
-        Authorization: `Bearer ${token}`
+    const newSystem = new StoredSystem({
+      object_id: "some_uuid",
+      object_type: "system",
+      created_at: "2020-12-15T00:00Z",
+      modified_at: "2020-12-15T00:00Z",
+      definition: new System({
+        name: "The System",
+        inverters: [
+          new Inverter({
+            name: "inverter 1",
+            arrays: [
+              new PVArray({
+                name: "Array 1 inverter 1"
+              }),
+              new PVArray({
+                name: "Array 2 inverter 1"
+              })
+            ]
+          }),
+          new Inverter({
+            name: "inverter 2",
+            arrays: [
+              new PVArray({
+                name: "Array 1 inverter 2"
+              }),
+              new PVArray({
+                name: "Array 2 inverter 2"
+              })
+            ]
+          })
+        ]
       })
     });
-    if (response.ok) {
-      const system = await response.json();
-      this.system = new StoredSystem(system);
-      this.systemLoading = false;
-    } else {
-      this.errorState = true;
-      this.apiErrors = {
-        error: "System not found."
-      };
-      this.systemLoading = false;
-    }
+    this.system = newSystem;
+    this.systemLoading = false;
+    //this.systemLoading = true;
+    //const token = await this.$auth.getTokenSilently();
+    //const response = await fetch(`/api/systems/${this.systemId}`, {
+    //  headers: new Headers({
+    //    Authorization: `Bearer ${token}`
+    //  })
+    //});
+    //if (response.ok) {
+    //  const system = await response.json();
+    //  this.system = new StoredSystem(system);
+    //  this.systemLoading = false;
+    //} else {
+    //  this.errorState = true;
+    //  this.apiErrors = {
+    //    error: "System not found."
+    //  };
+    //  this.systemLoading = false;
+    //}
   }
 }
 </script>
