@@ -30,12 +30,20 @@ Components using the mapper should react to events emitted from this component:
             {{ metadata.make_model }}
             <br />
             <template v-if="'tilt' in metadata.tracking">
-            <b>Surface Tilt:</b> {{ metadata.tracking.tilt }}&deg;<br />
-            <b>Surface Azimuth:</b> {{ metadata.tracking.azimuth }}&deg;<br />
+              <b>Surface Tilt:</b>
+              {{ metadata.tracking.tilt }}&deg;
+              <br />
+              <b>Surface Azimuth:</b>
+              {{ metadata.tracking.azimuth }}&deg;
+              <br />
             </template>
             <template v-else>
-            <b>Axis Tilt:</b> {{ metadata.tracking.axis_tilt }}&deg;<br />
-            <b>Axis Azimuth:</b> {{ metadata.tracking.axis_tilt }}&deg;<br />
+              <b>Axis Tilt:</b>
+              {{ metadata.tracking.axis_tilt }}&deg;
+              <br />
+              <b>Axis Azimuth:</b>
+              {{ metadata.tracking.axis_tilt }}&deg;
+              <br />
             </template>
             <b>Inverter Name:</b>
             {{ metadata.parent.name }}
@@ -53,7 +61,7 @@ Components using the mapper should react to events emitted from this component:
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
-          {{ getDisplayName(field)}} (required):
+          {{ getDisplayName(field) }} (required):
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
@@ -112,8 +120,8 @@ const displayNames = {
   cell_temperature: "Cell Temperature",
   module_temperature: "Module Temperature",
   temp_air: "Air Temperature",
-  wind_speed: "Wind Speed",
-}
+  wind_speed: "Wind Speed"
+};
 
 @Component
 export default class FieldMapper extends Vue {
@@ -157,7 +165,7 @@ export default class FieldMapper extends Vue {
     }
     this.$emit("mapping-updated", { ...this.mapping, index: this.comp.index });
   }
-  getDisplayName(variable: string){
+  getDisplayName(variable: string) {
     // @ts-expect-error
     return displayNames[variable];
   }
@@ -171,6 +179,6 @@ div.metadata {
   border: solid 1px black;
 }
 .mapping-list li {
- margin-top: .5em;
+  margin-top: 0.5em;
 }
 </style>
