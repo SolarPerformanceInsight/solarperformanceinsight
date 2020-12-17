@@ -29,6 +29,14 @@ Components using the mapper should react to events emitted from this component:
             <b>Module Make and Model:</b>
             {{ metadata.make_model }}
             <br />
+            <template v-if="'tilt' in metadata.tracking">
+            <b>Surface Tilt:</b> {{ metadata.tracking.tilt }}&deg;<br />
+            <b>Surface Azimuth:</b> {{ metadata.tracking.azimuth }}&deg;<br />
+            </template>
+            <template v-else>
+            <b>Axis Tilt:</b> {{ metadata.tracking.axis_tilt }}&deg;<br />
+            <b>Axis Azimuth:</b> {{ metadata.tracking.axis_tilt }}&deg;<br />
+            </template>
             <b>Inverter Name:</b>
             {{ metadata.parent.name }}
             <br />
