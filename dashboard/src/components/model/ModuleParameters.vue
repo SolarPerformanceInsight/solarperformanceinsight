@@ -1,22 +1,5 @@
 <template>
   <div class="module-parameters">
-    <b>Parameter source:</b>
-    <select v-model="parameterSource" name="module-parameter-source">
-      <option>User Supplied</option>
-      <option>Browse Database</option>
-    </select>
-    <br />
-    <!-- If user selects something other than User Supplied, display the
-         list of inverters from the db. This should probably be it's own
-         component with some search functionality built in
-     -->
-    <div v-if="parameterSource !== 'User Supplied'">
-      <b>Select a Module:</b>
-      <select @change="loadModule" name="module-list">
-        <option v-for="p in parameterOptions" :key="p">{{ p }}</option>
-      </select>
-      <br />
-    </div>
     <div v-if="model == 'pvsyst'">
       <model-field
         :parameters="parameters"
@@ -117,14 +100,6 @@ export default class ModuleParametersView extends ModelBase {
   @Prop() parameters!: PVSystModuleParameters | PVWattsModuleParameters;
 
   @Prop({ default: "pvsyst" }) model!: string;
-
-  @Prop({ default: null }) selectedInverter!: string;
-
-  data() {
-    return {
-      parameterSource: "User Supplied"
-    };
-  }
 
   loadModule(event: Event) {
     // TODO: load inverter from correct source based on selected model.
