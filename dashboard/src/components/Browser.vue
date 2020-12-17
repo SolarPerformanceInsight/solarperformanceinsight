@@ -106,7 +106,7 @@ export default class DBBrowser extends Vue {
     });
   }
   commit() {
-    this.$emit("parameters-selected", this.spec);
+    this.$emit("parameters-selected", {parameters: this.spec, name: this.selection});
   }
   cancel() {
     this.$emit("cancel-selection");

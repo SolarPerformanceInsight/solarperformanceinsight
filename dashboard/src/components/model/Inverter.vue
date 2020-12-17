@@ -85,7 +85,10 @@ export default class InverterView extends ModelBase {
       .then(this.setValidationResult);
   }
 
-  loadInverterParameters(parameters: Record<string, any>) {
+  loadInverterParameters({
+      parameters, name}: {parameters:Record<string, any>, name:string}
+    ) {
+    this.parameters.make_model = name;
     // only supported for pvsyst model
     this.parameters.inverter_parameters = new SandiaInverterParameters(
       parameters
