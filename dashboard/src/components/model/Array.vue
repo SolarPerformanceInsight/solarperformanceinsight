@@ -46,7 +46,6 @@
       :tracking="tracking"
       :parameters="parameters.tracking"
     />
-    <b>Temperature Model Parameters:</b>
     <br />
     <model-field
       :parameters="parameters"
@@ -60,6 +59,7 @@
       :parameters="parameters.module_parameters"
       :model="model"
     />
+    <b>Temperature Model Parameters:</b>
     <temperature-parameters
       :model="model"
       :parameters="parameters.temperature_model_parameters"
