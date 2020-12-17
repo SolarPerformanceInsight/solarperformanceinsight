@@ -25,16 +25,21 @@ Components using the mapper should react to events emitted from this component:
         {{ metadata.name }}
         <br />
         <template v-if="'make_model' in metadata">
-          <b>Make and Model:</b>
-          {{ metadata.make_model }}
-          <br />
-        </template>
-        <template v-if="'parent' in metadata">
-          <b>Inverter Name:</b>
-          {{ metadata.parent.name }}
-          <br />
-          <b>Inverter Make and Model:</b>
-          {{ metadata.parent.make_model }}
+          <template v-if="'parent' in metadata">
+            <b>Module Make and Model:</b>
+            {{ metadata.make_model }}
+            <br />
+            <b>Inverter Name:</b>
+            {{ metadata.parent.name }}
+            <br />
+            <b>Inverter Make and Model:</b>
+            {{ metadata.parent.make_model }}
+          </template>
+          <template v-else>
+            <b>Make and Model:</b>
+            {{ metadata.make_model }}
+            <br />
+          </template>
         </template>
       </div>
       <!-- Required fields -->
