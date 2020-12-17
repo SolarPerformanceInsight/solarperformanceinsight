@@ -32,7 +32,11 @@ Takes the following props:
           <b>{{ thing.name }}</b>
           ?
         </p>
+        <!-- ref argument here is used to determine if the mapping is complete
+             (all objects have all required fields mapped).
+        -->
         <field-mapper
+          :ref="weather_granularity + '_' + i"
           @used-header="useHeader"
           @free-header="freeHeader"
           @mapping-updated="updateMapping"
@@ -70,11 +74,13 @@ export default class WeatherCSVMapper extends Vue {
   @Prop() optional!: Array<string>;
   mapping!: Record<string, string>;
   usedHeaders!: Array<string>;
+  isValid!: boolean;
 
   data() {
     return {
       mapping: {},
-      usedHeaders: []
+      usedHeaders: [],
+      isValid: false
     };
   }
   get unMapped() {
@@ -110,8 +116,10 @@ export default class WeatherCSVMapper extends Vue {
     this.usedHeaders.splice(this.usedHeaders.indexOf(header), 1);
   }
   updateMapping(newMap: any) {
+    // pop the index from the mapping
     const index = newMap.index;
     delete newMap.index;
+
     let loc: string;
     if (this.weather_granularity == "system") {
       loc = "/"; // system/definition?
@@ -123,6 +131,18 @@ export default class WeatherCSVMapper extends Vue {
       throw new Error("Bad granularity in updateMapping");
     }
     this.mapping[loc] = newMap;
+    this.checkValidity();
+  }
+  checkValidity() {
+    const componentValidity: Record<string, boolean> = {};
+
+    for (const ref in this.$refs) {
+      // @ts-expect-error
+      componentValidity[ref] = this.$refs[ref][0].isValid();
+    }
+    this.isValid = Object.values(componentValidity).every(x => x === true);
+
+    this.$emit("mapping-complete", this.mapping);
   }
 }
 </script>
