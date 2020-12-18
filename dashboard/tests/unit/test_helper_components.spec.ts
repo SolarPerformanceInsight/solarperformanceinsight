@@ -81,7 +81,10 @@ describe("Test Browser Component", () => {
     await flushPromises();
     // @ts-expect-error
     expect(wrapper.emitted("parameters-selected")[0]).toStrictEqual([
-      mockParams
+      {
+        parameters: mockParams,
+        name: "inva"
+      }
     ]);
   });
   it("test emit cancel", async () => {
