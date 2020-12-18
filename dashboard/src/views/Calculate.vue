@@ -91,12 +91,12 @@
                 v-model="temperature"
               />
               <label for="module">
-                Calculate cell temperature from module temperature in my data.
+                Calculate cell temperature from module temperature and irradiance in my data.
               </label>
               <br />
               <input id="air" value="air" type="radio" v-model="temperature" />
               <label for="air">
-                Calculate cell temperature from irradiance, air temperature and
+                Calculate cell temperature from irradiance, air temperature, and
                 windspeed in my data.
               </label>
               <br />
