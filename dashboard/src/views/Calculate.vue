@@ -103,7 +103,7 @@
             </div>
           </div>
           <div class="my-1">
-            I have data for:
+            I will provide weather data as:
             <br />
             <div class="ml-1 mt-1">
               <input
@@ -113,7 +113,7 @@
                 v-model="weather_granularity"
               />
               <label for="system">
-                the entire system.
+                one set for the entire system.
               </label>
               <br />
               <input
@@ -123,7 +123,7 @@
                 v-model="weather_granularity"
               />
               <label for="inverter">
-                each inverter.
+                one set for each inverter and its associated arrays.
               </label>
               <br />
               <input
@@ -133,7 +133,7 @@
                 v-model="weather_granularity"
               />
               <label for="array">
-                each array.
+                one set for each array.
               </label>
               <br />
             </div>
