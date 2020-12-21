@@ -30,7 +30,7 @@ import TemperatureParametersView from "@/components/model/TemperatureParameters.
 import TrackingParametersView from "@/components/model/TrackingParameters.vue";
 import SystemView from "@/components/model/System.vue";
 import WeatherUpload from "@/components/jobs/WeatherUpload.vue";
-import WeatherCSVMapper from "@/components/jobs_dev/WeatherCSVMapper.vue";
+import WeatherCSVMapper from "@/components/jobs/WeatherCSVMapper.vue";
 
 import "./assets/css/styles.css";
 
