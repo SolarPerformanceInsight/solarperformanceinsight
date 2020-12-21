@@ -134,10 +134,10 @@ export default class WeatherUpload extends Vue {
     if (this.weather_granularity == "system") {
       total = numRequired;
     } else if (this.weather_granularity == "inverter") {
-      const numInverters = this.system.definition.inverters.length;
+      const numInverters = this.system.inverters.length;
       total = numRequired * numInverters;
     } else {
-      const numArrays = this.system.definition.inverters.reduce(
+      const numArrays = this.system.inverters.reduce(
         (totalArrays: number, inverter) => {
            return totalArrays + inverter.arrays.length
         },
