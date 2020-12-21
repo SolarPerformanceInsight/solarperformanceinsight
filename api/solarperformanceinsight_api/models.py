@@ -775,8 +775,8 @@ class JobParameters(BaseModel):
 
 JOB_DATA_META_EXAMPLE = dict(
     schema_path="/inverters/0",
-    type="actual weather data",
-    filename="inverter_0_weather.csv",
+    type="actual performance data",
+    filename="inverter_0_performance.arrow",
     data_format="application/vnd.apache.arrow.file",
     present=True,
 )
@@ -887,23 +887,36 @@ class StoredJob(StoredObject):
     class Config:
         schema_extra = {
             "example": {
-                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_id": "e1772e64-43ac-11eb-92c2-f4939feddd82",
                 "object_type": "job",
-                "created_at": "2020-12-01T01:23:00+00:00",
-                "modified_at": "2020-12-01T01:23:00+00:00",
+                "created_at": "2020-12-11T19:52:00+00:00",
+                "modified_at": "2020-12-11T19:52:00+00:00",
                 "definition": JOB_EXAMPLE,
                 "status": {
                     "status": "incomplete",
-                    "last_change": "2020-12-01T02:02:00+00:00",
+                    "last_change": "2020-12-11T20:00:00+00:00",
                 },
                 "data_objects": [
                     {
-                        "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                        "object_id": "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
                         "object_type": "job_data",
-                        "created_at": "2020-12-01T01:23:00+00:00",
-                        "modified_at": "2020-12-01T01:23:00+00:00",
+                        "created_at": "2020-12-11T19:52:00+00:00",
+                        "modified_at": "2020-12-11T19:52:00+00:00",
+                        "definition": {
+                            "schema_path": "/inverters/0/arrays/0",
+                            "type": "original weather data",
+                            "filename": None,
+                            "data_format": None,
+                            "present": False,
+                        },
+                    },
+                    {
+                        "object_id": "f9ef0c00-43ac-11eb-8931-f4939feddd82",
+                        "object_type": "job_data",
+                        "created_at": "2020-12-11T19:52:00+00:00",
+                        "modified_at": "2020-12-11T20:00:00+00:00",
                         "definition": JOB_DATA_META_EXAMPLE,
-                    }
+                    },
                 ],
             }
         }

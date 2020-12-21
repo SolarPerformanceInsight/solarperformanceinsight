@@ -268,10 +268,10 @@ grant execute on procedure `get_job_data` to 'apiuser'@'%';
 create definer = 'select_objects'@'localhost'
   function check_job_queued (binid binary(16))
     returns boolean
-    comment 'Check, from a job data id, if a job is queued'
+    comment 'Check, from a job data id, if a job is queued or complete'
     reads sql data sql security definer
   begin
-    return (select status = 'queued' from jobs where id = (
+    return (select status != 'created' from jobs where id = (
       select job_id from job_data where id = binid));
   end;
 grant execute on function `check_job_queued` to 'select_objects'@'localhost';

@@ -366,6 +366,18 @@ def test_add_job_data_queued_up(cursor, auth0_id, job_id, job_data_ids):
     assert err.value.args[0] == 1348
 
 
+def test_add_job_data_complete(cursor, auth0_id, job_id, job_data_ids):
+    cursor.execute(
+        "update jobs set status = 'complete' where id = uuid_to_bin(%s, 1)", job_id
+    )
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call add_job_data(%s, %s, %s, %s, %s)",
+            (auth0_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
+        )
+    assert err.value.args[0] == 1348
+
+
 def test_add_job_data_baduser(cursor, bad_user, job_data_ids):
     with pytest.raises(OperationalError) as err:
         cursor.execute(

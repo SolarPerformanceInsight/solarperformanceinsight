@@ -170,8 +170,8 @@ class StorageInterface:
             msg = err.args[1]
             if ecode == 1142:
                 raise HTTPException(status_code=404, detail=msg)
-            elif ecode == 1062:
-                raise HTTPException(status_code=409)
+            elif ecode == 1062 or ecode == 1348:
+                raise HTTPException(status_code=409, detail=msg)
             elif ecode == 3140 or ecode == 1406 or ecode == 1048 or ecode == 1054:
                 raise HTTPException(status_code=400, detail=msg)
             else:
@@ -281,8 +281,10 @@ class StorageInterface:
     ) -> models.StoredJobDataMetadata:
         data_meta["object_id"] = data_meta.pop("id")
         data_meta["object_type"] = "job_data"
-        data_meta["created_at"] = convert_datetime_utc(data_meta["created_at"])
-        data_meta["modified_at"] = convert_datetime_utc(data_meta["modified_at"])
+        if isinstance(data_meta["created_at"], str):
+            data_meta["created_at"] = convert_datetime_utc(data_meta["created_at"])
+        if isinstance(data_meta["modified_at"], str):
+            data_meta["modified_at"] = convert_datetime_utc(data_meta["modified_at"])
         data_meta["definition"] = {
             k: data_meta[k]
             for k in models.JobDataMetadata.schema()["properties"].keys()

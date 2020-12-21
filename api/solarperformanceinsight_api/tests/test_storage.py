@@ -303,4 +303,191 @@ def test_get_user_new(storage_interface, mocker, cleanup_user):
     create.assert_called()
 
 
-# test all the job stuff
+def test_create_job(storage_interface, add_example_db_data, job_def):
+    with storage_interface.start_transaction() as st:
+        sysid = st.create_job(job_def)
+        out = st.get_job(sysid.object_id)
+    assert out.definition == job_def
+
+
+def test_list_job(storage_interface, add_example_db_data, stored_job):
+    with storage_interface.start_transaction() as st:
+        out = st.list_jobs()
+    assert out == [stored_job]
+
+
+def test_get_job(storage_interface, add_example_db_data, stored_job, job_id):
+    with storage_interface.start_transaction() as st:
+        out = st.get_job(job_id)
+    assert out == stored_job
+
+
+def test_get_job_dne(storage_interface, add_example_db_data):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.get_job(uuid.uuid1())
+    assert err.value.status_code == 404
+
+
+def test_get_job_wrong_owner(storage_interface, add_example_db_data, other_job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.get_job(other_job_id)
+    assert err.value.status_code == 404
+
+
+def test_delete_job(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        st.delete_job(job_id)
+        assert len(st.list_jobs()) == 0
+
+
+def test_delete_job_dne(storage_interface, add_example_db_data):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.delete_job(uuid.uuid1())
+    assert err.value.status_code == 404
+
+
+def test_delete_job_wrong_owner(storage_interface, add_example_db_data, other_job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.delete_job(other_job_id)
+    assert err.value.status_code == 404
+
+
+def test_get_job_status(storage_interface, add_example_db_data, job_id, job_status):
+    with storage_interface.start_transaction() as st:
+        stat = st.get_job_status(job_id)
+    assert stat == job_status
+
+
+def test_get_job_status_dne(storage_interface, add_example_db_data):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.get_job_status(uuid.uuid1())
+    assert err.value.status_code == 404
+
+
+def test_get_job_status_wrong_owner(
+    storage_interface, add_example_db_data, other_job_id
+):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.get_job_status(other_job_id)
+    assert err.value.status_code == 404
+
+
+def test_get_job_data(
+    storage_interface, add_example_db_data, job_data_ids, job_data_meta
+):
+    with storage_interface.start_transaction() as st:
+        data = st.get_job_data(job_data_ids[1])
+    assert data == (job_data_meta, b"binary data blob")
+
+
+def test_get_job_data_empty(
+    storage_interface, add_example_db_data, job_data_ids, job_data_meta
+):
+    with storage_interface.start_transaction() as st:
+        data = st.get_job_data(job_data_ids[0])
+    assert data[1] is None
+    assert data[0].definition.filename is None
+    assert not data[0].definition.present
+
+
+def test_get_job_data_dne(storage_interface, add_example_db_data, job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.get_job_data(job_id)
+    assert err.value.status_code == 404
+
+
+def test_add_job_data(storage_interface, add_example_db_data, job_data_ids, job_id):
+    now = dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc, microsecond=0)
+    with storage_interface.start_transaction() as st:
+        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        newd = st.get_job_data(job_data_ids[0])
+        stat = st.get_job_status(job_id)
+    assert newd[0].definition.filename == "newfname"
+    assert newd[0].modified_at >= now
+    assert newd[1] == b"new data"
+    assert newd[0].definition.present
+    assert stat.status == "prepared"
+    assert stat.last_change >= now
+    with storage_interface.start_transaction() as st:
+        st.add_job_data(job_data_ids[0], "newfname", "text", b"more newer data")
+
+
+def test_add_job_data_dne(storage_interface, add_example_db_data, job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.add_job_data(job_id, "newfname", "text", b"new data")
+    assert err.value.status_code == 404
+
+
+@pytest.fixture()
+def mark_job_complete(root_conn, job_id):
+    curs = root_conn.cursor()
+    curs.execute(
+        "update jobs set status = 'complete' where id = uuid_to_bin(%s, 1)", job_id
+    )
+    root_conn.commit()
+    yield
+    curs.execute(
+        "update jobs set status = 'created' where id = uuid_to_bin(%s, 1)", job_id
+    )
+    root_conn.commit()
+
+
+def test_add_job_data_after_queued(
+    storage_interface, add_example_db_data, job_id, job_data_ids
+):
+    with storage_interface.start_transaction() as st:
+        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        st.queue_job(job_id)
+        stat = st.get_job_status(job_id)
+        assert stat.status == "queued"
+        with pytest.raises(HTTPException) as err:
+            st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        assert err.value.status_code == 409
+
+
+def test_add_job_data_after_complete(
+    storage_interface, add_example_db_data, job_data_ids, mark_job_complete
+):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+    assert err.value.status_code == 409
+
+
+def test_queue_job(storage_interface, add_example_db_data, job_data_ids, job_id):
+    with storage_interface.start_transaction() as st:
+        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        st.queue_job(job_id)
+        out = st.get_job_status(job_id)
+    assert out.status == "queued"
+
+
+def test_queue_job_dne(storage_interface, add_example_db_data, other_job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.queue_job(other_job_id)
+    assert err.value.status_code == 404
+
+
+def test_queue_job_incomplete(storage_interface, add_example_db_data, job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.queue_job(job_id)
+    assert err.value.status_code == 400
+
+
+def test_queue_job_already_complete(
+    storage_interface, add_example_db_data, job_id, mark_job_complete
+):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.queue_job(job_id)
+    assert err.value.status_code == 409
