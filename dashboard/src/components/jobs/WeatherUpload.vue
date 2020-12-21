@@ -37,10 +37,8 @@ Takes the following props that can be extracted from job metadata.
         <template v-else>each</template> {{ weather_granularity }}).
       </div>
       <weather-csv-mapper
-        :temperature="temperature_type"
         :system="system"
         :weather_granularity="weather_granularity"
-        :weather_type="irradiance_type"
         :headers="headers"
         :required="required"
         :optional="optional" />
