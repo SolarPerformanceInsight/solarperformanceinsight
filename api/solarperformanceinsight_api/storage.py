@@ -288,6 +288,7 @@ class StorageInterface:
         data_meta["definition"] = {
             k: data_meta[k]
             for k in models.JobDataMetadata.schema()["properties"].keys()
+            if data_meta[k] is not None
         }
         return models.StoredJobDataMetadata(**data_meta)
 

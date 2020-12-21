@@ -577,7 +577,7 @@ class JobTimeindex(BaseModel):
         "Unlocalized data will be localized to this timezone. If this is null, "
         "the timezone will be inferred from start/end.",
     )
-    _time_range: pd.DatetimeIndex = PrivateAttr()
+    _time_range: List[dt.datetime] = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -790,8 +790,8 @@ class JobDataItem(BaseModel):
 
 
 class JobDataMetadata(JobDataItem):
-    filename: Optional[str] = Field(..., description="Filename of file uploaded")
-    data_format: Optional[str]
+    filename: str = Field("", description="Filename of the uploaded file")
+    data_format: str = Field("", description="Format of the binary file")
     present: bool = Field(False, description="If the data has been uploaded or not")
 
 
@@ -823,7 +823,9 @@ def _construct_data_items(
         for wp in weather_paths
     ]
 
-    if hasattr(parameters.job_type, "performance_granularity"):
+    if isinstance(
+        parameters.job_type, (ComparePerformanceJob, CalculateWeatherAdjustedPRJob)
+    ):
         if (
             parameters.job_type.performance_granularity
             == PerformanceGranularityEnum.system
@@ -905,8 +907,6 @@ class StoredJob(StoredObject):
                         "definition": {
                             "schema_path": "/inverters/0/arrays/0",
                             "type": "original weather data",
-                            "filename": None,
-                            "data_format": None,
                             "present": False,
                         },
                     },

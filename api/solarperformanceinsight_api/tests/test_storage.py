@@ -392,7 +392,7 @@ def test_get_job_data_empty(
     with storage_interface.start_transaction() as st:
         data = st.get_job_data(job_data_ids[0])
     assert data[1] is None
-    assert data[0].definition.filename is None
+    assert data[0].definition.filename == ""
     assert not data[0].definition.present
 
 

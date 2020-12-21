@@ -161,8 +161,8 @@ def stored_job(job_id, job_def, job_status, job_data_ids, job_data_meta):
         definition=models.JobDataMetadata(
             schema_path="/inverters/0/arrays/0",
             type="original weather data",
-            filename=None,
-            data_type=None,
+            filename="",
+            data_type="",
         ),
     )
     job_data_meta_1 = job_data_meta
