@@ -23,7 +23,13 @@
             </router-link>
           </span>
           <span class="system-cell small">
-            <a role="button" @click="displayDeleteDialog(system)">Delete</a>
+            <a
+              role="button"
+              class="delete-button"
+              @click="displayDeleteDialog(system)"
+            >
+              Delete
+            </a>
           </span>
           <span class="system-cell">
             <router-link
@@ -56,8 +62,10 @@
             Are you sure you want to delete the system
             {{ selectedSystem.definition.name }}?
           </p>
-          <button @click="deleteSystem">Yes</button>
-          <button @click="showDeleteDialog = false">Cancel</button>
+          <button class="confirm-deletion" @click="deleteSystem">Yes</button>
+          <button class="cancel-deletion" @click="showDeleteDialog = false">
+            Cancel
+          </button>
         </div>
       </div>
     </transition>
