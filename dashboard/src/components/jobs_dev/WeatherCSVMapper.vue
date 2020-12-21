@@ -57,7 +57,7 @@ import FileUpload from "@/components/FileUpload.vue";
 import { StoredSystem } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
-import FieldMapper from "@/components/jobs/FieldMapper.vue";
+import FieldMapper from "@/components/jobs_dev/FieldMapper.vue";
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
