@@ -153,12 +153,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`select_objects`@`localhost` FUNCTION `check_users_job_data`(auth0id varchar(32), dataid char(36)) RETURNS tinyint(1)
+CREATE DEFINER=`select_objects`@`localhost` FUNCTION `check_users_job_data`(auth0id varchar(32), jobid char(36), dataid char(36)) RETURNS tinyint(1)
     READS SQL DATA
     COMMENT 'Check if a job exists and belongs to the user'
 begin
     return exists(
       select 1 from jobs where user_id = get_user_binid(auth0id)
+        and id = uuid_to_bin(jobid, 1)
         and id = (select job_id from job_data where id = uuid_to_bin(dataid, 1)));
   end ;;
 DELIMITER ;
@@ -363,13 +364,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`update_objects`@`localhost` PROCEDURE `add_job_data`(auth0id varchar(32), dataid char(36),
+CREATE DEFINER=`update_objects`@`localhost` PROCEDURE `add_job_data`(auth0id varchar(32), jobid char(36), dataid char(36),
                           fname varchar(128), format varchar(64), newdata longblob)
     MODIFIES SQL DATA
     COMMENT 'Adds data for a job'
 begin
     declare binid binary(16) default (uuid_to_bin(dataid, 1));
-    declare allowed boolean default (check_users_job_data(auth0id, dataid));
+    declare allowed boolean default (check_users_job_data(auth0id, jobid, dataid));
     declare queued boolean default (check_job_queued(binid));
 
     if allowed then
@@ -602,12 +603,12 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_job_data`(auth0id varchar(32), dataid char(36))
+CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_job_data`(auth0id varchar(32), jobid char(36), dataid char(36))
     READS SQL DATA
     COMMENT 'Read the data for a single job data id'
 begin
     declare binid binary(16) default (uuid_to_bin(dataid, 1));
-    declare allowed boolean default (check_users_job_data(auth0id, dataid));
+    declare allowed boolean default (check_users_job_data(auth0id, jobid, dataid));
 
     if allowed then
       select bin_to_uuid(id, 1) as id, bin_to_uuid(job_id, 1) as job_id,

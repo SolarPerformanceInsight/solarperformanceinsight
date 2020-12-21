@@ -206,7 +206,7 @@ def test_list_jobs(dictcursor, auth0_id, user_id, system_id, otherid, job_id, mo
     )
     dictcursor.execute("call list_jobs(%s)", auth0_id)
     res = dictcursor.fetchall()
-    assert len(res) == 2
+    assert len(res) == 3
     keys = {
         "job_id",
         "system_id",
@@ -307,7 +307,9 @@ def test_get_job_data(dictcursor, auth0_id, job_data_ids, job_id):
         "update job_data set filename='newname', data='data' where id = uuid_to_bin(%s, 1)",
         job_data_ids[0],
     )
-    dictcursor.execute("call get_job_data(%s, %s)", (auth0_id, job_data_ids[0]))
+    dictcursor.execute(
+        "call get_job_data(%s, %s, %s)", (auth0_id, job_id, job_data_ids[0])
+    )
     res = dictcursor.fetchone()
     assert res["id"] == job_data_ids[0]
     assert res["job_id"] == job_id
@@ -317,23 +319,34 @@ def test_get_job_data(dictcursor, auth0_id, job_data_ids, job_id):
     assert res["data"] == b"data"
 
 
-def test_get_job_data_baduser(cursor, bad_user, job_data_ids):
+def test_get_job_data_baduser(cursor, bad_user, job_data_ids, job_id):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call get_job_data(%s, %s)", (bad_user, job_data_ids[1]))
+        cursor.execute(
+            "call get_job_data(%s, %s, %s)", (bad_user, job_id, job_data_ids[1])
+        )
     assert err.value.args[0] == 1142
 
 
 def test_get_job_data_not_owned(cursor, auth0_id, job_id):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call get_job_data(%s, %s)", (auth0_id, job_id))
+        cursor.execute("call get_job_data(%s, %s, %s)", (auth0_id, job_id, job_id))
     assert err.value.args[0] == 1142
 
 
-def test_add_job_data(dictcursor, auth0_id, job_data_ids):
+def test_get_job_data_id_mismatch(cursor, auth0_id, job_id, other_job_data_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call get_job_data(%s, %s, %s)", (auth0_id, job_id, other_job_data_id)
+        )
+    assert err.value.args[0] == 1142
+
+
+def test_add_job_data(dictcursor, auth0_id, job_data_ids, job_id):
     dictcursor.execute(
-        "call add_job_data(%s, %s, %s, %s, %s)",
+        "call add_job_data(%s, %s, %s, %s, %s, %s)",
         (
             auth0_id,
+            job_id,
             job_data_ids[0],
             "newfilename",
             "application/vnd.apache.arrow.file",
@@ -360,8 +373,8 @@ def test_add_job_data_queued_up(cursor, auth0_id, job_id, job_data_ids):
     )
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            "call add_job_data(%s, %s, %s, %s, %s)",
-            (auth0_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
+            "call add_job_data(%s, %s, %s, %s, %s, %s)",
+            (auth0_id, job_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
         )
     assert err.value.args[0] == 1348
 
@@ -372,25 +385,26 @@ def test_add_job_data_complete(cursor, auth0_id, job_id, job_data_ids):
     )
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            "call add_job_data(%s, %s, %s, %s, %s)",
-            (auth0_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
+            "call add_job_data(%s, %s, %s, %s, %s, %s)",
+            (auth0_id, job_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
         )
     assert err.value.args[0] == 1348
 
 
-def test_add_job_data_baduser(cursor, bad_user, job_data_ids):
+def test_add_job_data_baduser(cursor, bad_user, job_data_ids, job_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            "call add_job_data(%s, %s, %s, %s, %s)",
-            (bad_user, job_data_ids[1], "asd", "format", b"sdfsdssd"),
+            "call add_job_data(%s, %s, %s, %s, %s, %s)",
+            (bad_user, job_id, job_data_ids[1], "asd", "format", b"sdfsdssd"),
         )
     assert err.value.args[0] == 1142
 
 
-def test_add_job_data_not_owned(cursor, auth0_id, job_id):
+def test_add_job_data_not_owned(cursor, auth0_id, job_id, other_job_data_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            "call add_job_data(%s, %s, %s, %s, %s)", (auth0_id, job_id, "b", "a", "c")
+            "call add_job_data(%s, %s, %s, %s, %s, %s)",
+            (auth0_id, job_id, other_job_data_id, "b", "a", "c"),
         )
     assert err.value.args[0] == 1142
 

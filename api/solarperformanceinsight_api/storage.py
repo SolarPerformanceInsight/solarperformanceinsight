@@ -312,14 +312,21 @@ class StorageInterface:
         return models.JobStatus(**status)
 
     def add_job_data(
-        self, job_data_id: UUID, filename: str, data_format: str, data: bytes
+        self,
+        job_id: UUID,
+        job_data_id: UUID,
+        filename: str,
+        data_format: str,
+        data: bytes,
     ):
-        self._call_procedure("add_job_data", job_data_id, filename, data_format, data)
+        self._call_procedure(
+            "add_job_data", job_id, job_data_id, filename, data_format, data
+        )
 
     def get_job_data(
-        self, job_data_id: UUID
+        self, job_id: UUID, job_data_id: UUID
     ) -> Tuple[models.StoredJobDataMetadata, bytes]:
-        out = self._call_procedure_for_single("get_job_data", job_data_id)
+        out = self._call_procedure_for_single("get_job_data", job_id, job_data_id)
         data = out.pop("data")
         meta = self._parse_job_data_meta(out)
         return meta, data

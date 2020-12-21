@@ -231,25 +231,26 @@ grant execute on procedure `delete_job` to 'apiuser'@'%';
 
 
 create definer = 'select_objects'@'localhost'
-  function check_users_job_data (auth0id varchar(32), dataid char(36))
+  function check_users_job_data (auth0id varchar(32), jobid char(36), dataid char(36))
     returns boolean
     comment 'Check if a job exists and belongs to the user'
     reads sql data sql security definer
   begin
     return exists(
       select 1 from jobs where user_id = get_user_binid(auth0id)
+        and id = uuid_to_bin(jobid, 1)
         and id = (select job_id from job_data where id = uuid_to_bin(dataid, 1)));
   end;
 grant execute on function `check_users_job_data` to 'select_objects'@'localhost';
 
 -- get job data
 create definer = 'select_objects'@'localhost'
-  procedure get_job_data (auth0id varchar(32), dataid char(36))
+  procedure get_job_data (auth0id varchar(32), jobid char(36), dataid char(36))
     comment 'Read the data for a single job data id'
     reads sql data sql security definer
   begin
     declare binid binary(16) default (uuid_to_bin(dataid, 1));
-    declare allowed boolean default (check_users_job_data(auth0id, dataid));
+    declare allowed boolean default (check_users_job_data(auth0id, jobid, dataid));
 
     if allowed then
       select bin_to_uuid(id, 1) as id, bin_to_uuid(job_id, 1) as job_id,
@@ -279,13 +280,13 @@ grant execute on function `check_job_queued` to 'update_objects'@'localhost';
 
 -- add job data
 create definer = 'update_objects'@'localhost'
-  procedure add_job_data (auth0id varchar(32), dataid char(36),
+  procedure add_job_data (auth0id varchar(32), jobid char(36), dataid char(36),
                           fname varchar(128), format varchar(64), newdata longblob)
     comment 'Adds data for a job'
     modifies sql data sql security definer
   begin
     declare binid binary(16) default (uuid_to_bin(dataid, 1));
-    declare allowed boolean default (check_users_job_data(auth0id, dataid));
+    declare allowed boolean default (check_users_job_data(auth0id, jobid, dataid));
     declare queued boolean default (check_job_queued(binid));
 
     if allowed then

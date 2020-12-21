@@ -121,8 +121,7 @@ async def get_job_data(
     job_id: UUID, data_id: UUID, storage: StorageInterface = Depends(StorageInterface)
 ):
     with storage.start_transaction() as st:
-        meta, data = st.get_job_data(data_id)
-        # check job_id?
+        meta, data = st.get_job_data(job_id, data_id)
         # check data type?
     return ArrowResponse(data)
 
@@ -145,7 +144,7 @@ async def post_job_data(
     content = await file.read()
     await file.close()
     with storage.start_transaction() as st:
-        st.add_job_data(data_id, file.filename, file.content_type, content)
+        st.add_job_data(job_id, data_id, file.filename, file.content_type, content)
 
 
 @router.post(

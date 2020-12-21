@@ -69,6 +69,16 @@ def otherid():
 
 
 @pytest.fixture(scope="session")
+def other_job_data_id():
+    return str(uuid1())
+
+
+@pytest.fixture(scope="session")
+def other_job_id():
+    return str(uuid1())
+
+
+@pytest.fixture(scope="session")
 def standard_test_data(
     auth0_id,
     user_id,
@@ -79,6 +89,8 @@ def standard_test_data(
     job_def,
     job_data_ids,
     otherid,
+    other_job_id,
+    other_job_data_id,
 ):
     curs = connection.cursor()
     curs.executemany(
@@ -90,10 +102,13 @@ def standard_test_data(
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s)",
         (system_id, user_id, *system_def),
     )
-    curs.execute(
+    curs.executemany(
         "insert into jobs (id, user_id, system_id, definition) values "
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s)",
-        (job_id, user_id, system_id, job_def),
+        (
+            (job_id, user_id, system_id, job_def),
+            (other_job_id, user_id, system_id, job_def),
+        ),
     )
     curs.executemany(
         "insert into job_data (id, job_id, schema_path, type) values "
@@ -103,6 +118,7 @@ def standard_test_data(
             (job_data_ids[1], job_id, "data1", "weather"),
             (job_data_ids[2], job_id, "data2", "weather"),
             (job_data_ids[3], job_id, "data3", "performance"),
+            (other_job_data_id, other_job_id, "other data", "weather"),
         ),
     )
     connection.commit()

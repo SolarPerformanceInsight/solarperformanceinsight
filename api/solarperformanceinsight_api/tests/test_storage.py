@@ -379,18 +379,18 @@ def test_get_job_status_wrong_owner(
 
 
 def test_get_job_data(
-    storage_interface, add_example_db_data, job_data_ids, job_data_meta
+    storage_interface, add_example_db_data, job_data_ids, job_data_meta, job_id
 ):
     with storage_interface.start_transaction() as st:
-        data = st.get_job_data(job_data_ids[1])
+        data = st.get_job_data(job_id, job_data_ids[1])
     assert data == (job_data_meta, b"binary data blob")
 
 
 def test_get_job_data_empty(
-    storage_interface, add_example_db_data, job_data_ids, job_data_meta
+    storage_interface, add_example_db_data, job_data_ids, job_data_meta, job_id
 ):
     with storage_interface.start_transaction() as st:
-        data = st.get_job_data(job_data_ids[0])
+        data = st.get_job_data(job_id, job_data_ids[0])
     assert data[1] is None
     assert data[0].definition.filename == ""
     assert not data[0].definition.present
@@ -399,15 +399,15 @@ def test_get_job_data_empty(
 def test_get_job_data_dne(storage_interface, add_example_db_data, job_id):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_job_data(job_id)
+            st.get_job_data(job_id, job_id)
     assert err.value.status_code == 404
 
 
 def test_add_job_data(storage_interface, add_example_db_data, job_data_ids, job_id):
     now = dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc, microsecond=0)
     with storage_interface.start_transaction() as st:
-        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
-        newd = st.get_job_data(job_data_ids[0])
+        st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"new data")
+        newd = st.get_job_data(job_id, job_data_ids[0])
         stat = st.get_job_status(job_id)
     assert newd[0].definition.filename == "newfname"
     assert newd[0].modified_at >= now
@@ -416,13 +416,13 @@ def test_add_job_data(storage_interface, add_example_db_data, job_data_ids, job_
     assert stat.status == "prepared"
     assert stat.last_change >= now
     with storage_interface.start_transaction() as st:
-        st.add_job_data(job_data_ids[0], "newfname", "text", b"more newer data")
+        st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"more newer data")
 
 
 def test_add_job_data_dne(storage_interface, add_example_db_data, job_id):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.add_job_data(job_id, "newfname", "text", b"new data")
+            st.add_job_data(job_id, job_id, "newfname", "text", b"new data")
     assert err.value.status_code == 404
 
 
@@ -444,27 +444,27 @@ def test_add_job_data_after_queued(
     storage_interface, add_example_db_data, job_id, job_data_ids
 ):
     with storage_interface.start_transaction() as st:
-        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"new data")
         st.queue_job(job_id)
         stat = st.get_job_status(job_id)
         assert stat.status == "queued"
         with pytest.raises(HTTPException) as err:
-            st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+            st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"new data")
         assert err.value.status_code == 409
 
 
 def test_add_job_data_after_complete(
-    storage_interface, add_example_db_data, job_data_ids, mark_job_complete
+    storage_interface, add_example_db_data, job_data_ids, mark_job_complete, job_id
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+            st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"new data")
     assert err.value.status_code == 409
 
 
 def test_queue_job(storage_interface, add_example_db_data, job_data_ids, job_id):
     with storage_interface.start_transaction() as st:
-        st.add_job_data(job_data_ids[0], "newfname", "text", b"new data")
+        st.add_job_data(job_id, job_data_ids[0], "newfname", "text", b"new data")
         st.queue_job(job_id)
         out = st.get_job_status(job_id)
     assert out.status == "queued"
