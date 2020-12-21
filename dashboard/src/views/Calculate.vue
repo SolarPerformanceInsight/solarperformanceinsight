@@ -38,7 +38,7 @@
             </div>
           </div>
           <div class="my-1">
-            My data files includes:
+            My data file includes:
             <br />
             <div class="ml-1 mt-1">
               <input
@@ -54,8 +54,8 @@
               <br />
               <input id="poa" value="poa" type="radio" v-model="weather_type" />
               <label for="poa">
-                global plane of array (POA global), direct plane of array(POA
-                direct), and diffuse plane of array(POA diffuse) irradiance.
+                global plane of array (POA global), direct plane of array (POA
+                direct), and diffuse plane of array (POA diffuse) irradiance.
               </label>
               <br />
               <input
