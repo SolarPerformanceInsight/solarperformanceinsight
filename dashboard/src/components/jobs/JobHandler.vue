@@ -10,7 +10,14 @@ Component that handles basic job/workflows.
         :weather_granularity="jobParameters.weather_granularity"
         :irradiance_type="jobParameters.irradiance_type"
       >
-      <b>Step 1: Upload Weather Data</b>
+       <b>Step 1: Upload
+       <template v-if="jobParameters.job_type.calculate == 'predicted_performance'">
+       Predicted
+       </template>
+       <template v-if="jobParameters.job_type.calculate == 'expected_performance'">
+       Actual
+       </template>
+       Weather Data</b>
       </weather-upload>
     </template>
     <template v-if="jobType == 'compare'">
