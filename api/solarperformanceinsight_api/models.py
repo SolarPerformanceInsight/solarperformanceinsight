@@ -562,20 +562,31 @@ class JobTimeindex(BaseModel):
     """
 
     start: dt.datetime = Field(
-        ..., description="Start of the time range that data will be uploaded for"
+        ...,
+        description=(
+            "Start of the time range that data will be uploaded for. "
+            "String values in the format YYYY-MM-DD[T]HH:MM:SS[Z or +-HH[:]MM] "
+            "may be provided. "
+            "Integers/floats may be provided and are assumed to be Unix time."
+        ),
     )
     end: dt.datetime = Field(
         ...,
         description="End (exclusive) of the time range that data will be uploaded for",
     )
     step: dt.timedelta = Field(
-        ..., description="Time step between each data point from 1 to 60 minutes"
+        ...,
+        description=(
+            "Time step between each data point in whole minutes, "
+            "from 1 to 60 minutes. Acceptable formats include ISO 8601 timedeltas,"
+            " strings formatted like HH:MM, and integers/float assumed as seconds."
+        ),
     )
     timezone: Optional[str] = Field(
         ...,
         description="Timezone data will be converted to before computation. "
-        "Unlocalized data will be localized to this timezone. If this is null, "
-        "the timezone will be inferred from start/end.",
+        "Unlocalized data will be localized to this timezone. If timezone is "
+        "null, the timezone will be inferred from start/end.",
     )
     _time_range: List[dt.datetime] = PrivateAttr()
 
@@ -621,13 +632,17 @@ class JobTimeindex(BaseModel):
         if secs < 60:
             raise ValueError("The minimum time step is 1 minute")
         elif secs > 3600:
-            raise ValueError("The maximum time step is 1 hour")
+            raise ValueError("The maximum time step is 60 minutes")
+        if secs % 60 != 0:
+            raise ValueError("The time step must be in whole minutes")
         return v
 
     @validator("timezone")
     def check_tz(cls, v):
         if v is not None and v not in pytz.all_timezones:
-            raise ValueError("Unrecognized timezone")
+            raise ValueError(
+                "Unrecognized timezone, timezone must be one of pytz.all_timezones"
+            )
         return v
 
 

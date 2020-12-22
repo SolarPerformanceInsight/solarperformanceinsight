@@ -336,6 +336,12 @@ def test_jobtimeindex(start, end, tz):
             -86399999913601.0,  # may cause overflow in dt.timedelta
             "UTC",
         ),
+        (
+            "2020-01-01T00:00:00",
+            "2020-02-01T12:39:47",
+            "01:10",
+            "UTC",
+        ),
     ],
 )
 def test_jobtimeindex_validation(start, end, step, tz):
