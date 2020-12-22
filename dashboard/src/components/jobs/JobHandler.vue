@@ -9,9 +9,9 @@ Component that handles basic job/workflows.
         :system="job.definition.system"
         :weather_granularity="jobParameters.weather_granularity"
         :irradiance_type="jobParameters.irradiance_type"
-        :data_objects="dataObjects"
+        :data_objects="weatherDataObjects"
       >
-       <b>Step 1: Upload
+       <b>Upload
        <template v-if="jobParameters.job_type.calculate == 'predicted_performance'">
        Predicted
        </template>
@@ -47,6 +47,14 @@ export default class JobHandler extends Vue {
   get jobType() {
     // TODO: examine job object and return appropriate type.
     return "calculate";
+  }
+  get weatherDataObjects() {
+    // Get data objects pertaining to weather data
+    return this.dataObjects.filter((x: any) => x.type.includes("weather"));
+  }
+  get performanceDataObjects() {
+    // Get data objects pertaining to performance
+    return this.dataObjects.filter((x: any) => x.type.includes("performance"));
   }
   get dataObjects() {
     // TODO: use data objects from api object
