@@ -31,6 +31,9 @@ Component that handles basic job/workflows.
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { System } from "@/types/System";
+import { Inverter } from "@/types/Inverter";
+import { PVArray } from "@/types/PVArray";
 
 @Component
 export default class JobHandler extends Vue {
@@ -48,13 +51,13 @@ export default class JobHandler extends Vue {
   get dataObjects() {
     // TODO: use data objects from api object
     const params = this.jobParameters;
-    let dataType: str;
+    let dataType: string;
     if (params.job_type.calculate == "predicted_performance") {
       dataType = "original_weather";
     } else {
       dataType = "actual_weather";
     }
-    let dataObjects = [];
+    let dataObjects: Array<Record<string, any>> = [];
     if (params.weather_granularity == "system") {
       dataObjects = [{
         schema_path: "/",
@@ -64,7 +67,7 @@ export default class JobHandler extends Vue {
         present: "false"
       }];
     } else if (params.weather_granularity == "inverter") {
-      this.job.definition.system.inverters.forEach(function(inverter, i) {
+      this.job.definition.system.inverters.forEach(function(inverter: Inverter, i: number) {
         dataObjects.push({
           schema_path: `/inverters/${i}`,
           type: dataType,
@@ -74,8 +77,8 @@ export default class JobHandler extends Vue {
         });
       });
     } else {
-      this.job.definition.system.inverters.forEach(function(inverter, i) {
-        inverter.arrays.forEach(function(pvarray, j) {
+      this.job.definition.system.inverters.forEach(function(inverter: Inverter, i: number) {
+        inverter.arrays.forEach(function(pvarray: PVArray, j: number) {
           dataObjects.push({
             schema_path: `/inverters/${i}/arrays/${j}`,
             type: dataType,

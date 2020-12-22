@@ -118,10 +118,12 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
-type SystemComponent = System | Inverter | PVArray;
-type SystemComponentIndexed = SystemComponent & {
+interface MetadataWithLoc {
   loc: string;
-};
+  metadata: System | Inverter | PVArray;
+}
+
+type SystemComponent = System | Inverter | PVArray;
 
 // Maps variables to human friendly names
 const displayNames = {
@@ -145,7 +147,7 @@ export default class FieldMapper extends Vue {
   @Prop() usedHeaders!: Array<string>;
   @Prop() required!: Array<string>;
   @Prop() optional!: Array<string>;
-  @Prop() comp!: SystemComponentIndexed;
+  @Prop() comp!: MetadataWithLoc;
   @Prop() system!: StoredSystem;
   mapping!: Record<string, string>;
 
