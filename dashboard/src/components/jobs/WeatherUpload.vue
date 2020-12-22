@@ -17,6 +17,7 @@ Takes the following props that can be extracted from job metadata.
     - "inverter": Data for each inverter in the file.
     - "array": Data for each array in the file.
   - system: StoredSystem: The system to map data onto.
+  - data_objects: array - Array of data objects created by the api.
 -->
 <template>
   <div class="weather-upload">
@@ -37,12 +38,15 @@ Takes the following props that can be extracted from job metadata.
         <template v-else>each</template> {{ weather_granularity }}).
       </div>
       <weather-csv-mapper
+        @mapping-complete="processMapping"
+        @mapping-incomplete="mappingComplete=false"
         :system="system"
         :weather_granularity="weather_granularity"
         :data_objects="data_objects"
         :headers="headers"
         :required="required"
         :optional="optional" />
+      <button :disabled="!mappingComplete" @click="uploadData">Upload Data</button><span v-if="!mappingComplete">All required fields must be mapped before upload</span>
     </template>
   </div>
 </template>
@@ -85,16 +89,23 @@ export default class WeatherUpload extends Vue {
   promptForMapping!: boolean;
   headers!: Array<string>;
   required!: Array<string>;
+  mappingComplete!: boolean;
 
   data() {
     return {
       mapping: {},
       promptForMapping: false,
       headers: [],
-      required: this.getRequired()
+      required: this.getRequired(),
+      mappingComplete: false
     }
   }
   mapAndStoreCSV(csv: string) {
+    // Parse headers for hand off to mapping components.
+    // TODO: parse file into apache arrow format (probably in utils module)
+    // TODO: parse first x lines for table to highlight mapping options
+    //   during selection
+    // TODO: allow for specification of header row and row where data starts
     if (csv.indexOf("\n")){
       this.headers = csv.slice(0, csv.indexOf("\n")).split(",");
       this.promptForMapping = true;;
@@ -103,9 +114,15 @@ export default class WeatherUpload extends Vue {
     }
   }
   processMapping(newMapping: Record<string, string>) {
+    // Handle a new mapping from the WeatherCSVMapper component, this is a
+    // complete mapping, so set mappingComplete to true to enable upload
+    // button.
+    console.log(newMapping);
     this.mapping = newMapping;
+    this.mappingComplete = true;
   }
   processFile(e: HTMLInputEvent) {
+    // Handle a CSV upload, hand of parsing to mapAndStoreCSV
     if (e.target.files !== null) {
       const fileList = e.target.files;
       const file = e.target.files[0];
@@ -114,6 +131,11 @@ export default class WeatherUpload extends Vue {
       reader.onload = f => this.mapAndStoreCSV(f.target.result);
       reader.readAsText(file);
     }
+  }
+  uploadData() {
+    // function to call when all mapping has been completed. Should complete
+    // the mapping process and post to the API
+    console.log("uploading data");
   }
   getRequired() {
     let requiredFields: Array<string> = ["time"];

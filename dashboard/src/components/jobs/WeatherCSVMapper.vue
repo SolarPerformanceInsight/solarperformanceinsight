@@ -22,14 +22,14 @@ Takes the following props:
       <div v-for="(thing, i) of toMap" :key="i">
         <p>
           What fields contain data for data for {{ weather_granularity }}
-          <b>{{ thing.name }}</b>
+          <b>{{ thing.metadata.name }}</b>
           ?
         </p>
         <!-- ref argument here is used to determine if the mapping is complete
              (all objects have all required fields mapped).
         -->
         <field-mapper
-          :ref="weather_granularity + '_' + i"
+          :ref="refName(i)"
           @used-header="useHeader"
           @free-header="freeHeader"
           @mapping-updated="updateMapping"
@@ -127,10 +127,14 @@ export default class WeatherCSVMapper extends Vue {
   updateMapping(newMap: any) {
     // pop the index from the mapping
     const loc = newMap.loc;
+    newMap = { ...newMap};
+    delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
   }
   checkValidity() {
+    // Check that all child components are completely mapped.
+    // emits a "mapping-complete" event with the full mapping if valid.
     const componentValidity: Record<string, boolean> = {};
 
     for (const ref in this.$refs) {
@@ -138,8 +142,17 @@ export default class WeatherCSVMapper extends Vue {
       componentValidity[ref] = this.$refs[ref][0].isValid();
     }
     this.isValid = Object.values(componentValidity).every(x => x === true);
-
-    this.$emit("mapping-complete", this.mapping);
+    if (this.isValid) {
+      this.$emit("mapping-complete", this.mapping);
+    } else {
+      this.$emit("mapping-incomplete");
+    }
+  }
+  refName(index: number) {
+    // Create a unique ref name for a nested component. Used to store
+    // references to nested components for checking that all mappings are
+    // valid and complete.
+    return `${this.weather_granularity}_${index}`
   }
 }
 </script>

@@ -176,6 +176,9 @@ export default class FieldMapper extends Vue {
       this.$emit("used-header", fileHeader);
     }
     this.$emit("mapping-updated", { ...this.mapping, loc: this.comp.loc });
+    if (this.isValid()) {
+      this.$emit("mapping-complete");
+    }
   }
   getDisplayName(variable: string) {
     // @ts-expect-error
