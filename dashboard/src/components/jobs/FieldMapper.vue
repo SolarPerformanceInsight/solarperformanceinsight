@@ -120,7 +120,7 @@ interface HTMLInputEvent extends Event {
 
 type SystemComponent = System | Inverter | PVArray;
 type SystemComponentIndexed = SystemComponent & {
-  index: Array<number>;
+  loc: string;
 };
 
 // Maps variables to human friendly names
@@ -155,13 +155,7 @@ export default class FieldMapper extends Vue {
     };
   }
   get metadata() {
-    // If the component's index is longer than 1, we are working with an array.
-    if (this.comp.index.length > 1) {
-      const inverter = this.system.definition.inverters[this.comp.index[0]];
-      return { ...this.comp, parent: { ...inverter } };
-    } else {
-      return this.comp;
-    }
+    return this.comp.metadata;
   }
   addMapping(event: any, variable: string) {
     const fileHeader = event.target.value;
@@ -179,7 +173,7 @@ export default class FieldMapper extends Vue {
       this.mapping[variable] = fileHeader;
       this.$emit("used-header", fileHeader);
     }
-    this.$emit("mapping-updated", { ...this.mapping, index: this.comp.index });
+    this.$emit("mapping-updated", { ...this.mapping, loc: this.comp.loc });
   }
   getDisplayName(variable: string) {
     // @ts-expect-error

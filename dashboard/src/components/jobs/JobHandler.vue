@@ -9,6 +9,7 @@ Component that handles basic job/workflows.
         :system="job.definition.system"
         :weather_granularity="jobParameters.weather_granularity"
         :irradiance_type="jobParameters.irradiance_type"
+        :data_objects="dataObjects"
       >
        <b>Step 1: Upload
        <template v-if="jobParameters.job_type.calculate == 'predicted_performance'">
@@ -43,6 +44,49 @@ export default class JobHandler extends Vue {
   get jobType() {
     // TODO: examine job object and return appropriate type.
     return "calculate";
+  }
+  get dataObjects() {
+    // TODO: use data objects from api object
+    const params = this.jobParameters;
+    let dataType: str;
+    if (params.job_type.calculate == "predicted_performance") {
+      dataType = "original_weather";
+    } else {
+      dataType = "actual_weather";
+    }
+    let dataObjects = [];
+    if (params.weather_granularity == "system") {
+      dataObjects = [{
+        schema_path: "/",
+        type: dataType,
+        filename: "0.arrow",
+        data_format: "application/vnd.apache.arrow.file",
+        present: "false"
+      }];
+    } else if (params.weather_granularity == "inverter") {
+      this.job.definition.system.inverters.forEach(function(inverter, i) {
+        dataObjects.push({
+          schema_path: `/inverters/${i}`,
+          type: dataType,
+          filename: "0.arrow",
+          data_format: "application/vnd.apache.arrow.file",
+          present: "false"
+        });
+      });
+    } else {
+      this.job.definition.system.inverters.forEach(function(inverter, i) {
+        inverter.arrays.forEach(function(pvarray, j) {
+          dataObjects.push({
+            schema_path: `/inverters/${i}/arrays/${j}`,
+            type: dataType,
+            filename: "0.arrow",
+            data_format: "application/vnd.apache.arrow.file",
+            present: "false"
+          });
+        });
+      });
+    }
+    return dataObjects;
   }
   get jobParameters() {
     return this.job.definition.parameters;

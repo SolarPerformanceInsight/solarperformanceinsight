@@ -39,6 +39,7 @@ Takes the following props that can be extracted from job metadata.
       <weather-csv-mapper
         :system="system"
         :weather_granularity="weather_granularity"
+        :data_objects="data_objects"
         :headers="headers"
         :required="required"
         :optional="optional" />
@@ -79,6 +80,7 @@ export default class WeatherUpload extends Vue {
   @Prop() irradiance_type!: string;
   @Prop() system!: StoredSystem;
   @Prop() temperature_type!: string;
+  @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, string>;
   promptForMapping!: boolean;
   headers!: Array<string>;
@@ -128,24 +130,7 @@ export default class WeatherUpload extends Vue {
     return optionalFields.filter(x => !this.required.includes(x));
   }
   get totalMappings() {
-    // number of required variables plus one for timestamps.
-    let total: number;
-    const numRequired = this.required.length;
-    if (this.weather_granularity == "system") {
-      total = numRequired;
-    } else if (this.weather_granularity == "inverter") {
-      const numInverters = this.system.inverters.length;
-      total = numRequired * numInverters;
-    } else {
-      const numArrays = this.system.inverters.reduce(
-        (totalArrays: number, inverter) => {
-           return totalArrays + inverter.arrays.length
-        },
-        0
-      );
-      total = numRequired * numArrays;
-    }
-    return total;
+    return this.required.length * this.data_objects.length;
   }
 }
 </script>
