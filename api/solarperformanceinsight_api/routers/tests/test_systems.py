@@ -7,27 +7,13 @@ from urllib.parse import quote
 import uuid
 
 
-from fastapi.testclient import TestClient
 import pytest
 
 
-from solarperformanceinsight_api.main import app
 from solarperformanceinsight_api import models, storage
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
-
-
-@pytest.fixture(scope="module")
-def client(auth_token):
-    out = TestClient(app)
-    out.headers.update({"Authorization": f"Bearer {auth_token}"})
-    return out
-
-
-@pytest.fixture(scope="module")
-def noauthclient():
-    return TestClient(app)
 
 
 def test_list_systems(client, stored_system):

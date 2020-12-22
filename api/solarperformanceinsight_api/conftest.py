@@ -3,11 +3,13 @@ import datetime as dt
 from uuid import UUID
 
 
+from fastapi.testclient import TestClient
 import httpx
 import pymysql
 import pytest
 
 
+from solarperformanceinsight_api.main import app
 from solarperformanceinsight_api import settings, models, storage
 
 
@@ -30,6 +32,18 @@ def auth_token():
     else:
         token = token_req.json()["access_token"]
         return token
+
+
+@pytest.fixture(scope="module")
+def client(auth_token):
+    out = TestClient(app)
+    out.headers.update({"Authorization": f"Bearer {auth_token}"})
+    return out
+
+
+@pytest.fixture(scope="module")
+def noauthclient():
+    return TestClient(app)
 
 
 @pytest.fixture(scope="module")

@@ -63,8 +63,8 @@ async def create_job(
         return id_
 
 
-@router.post("/check", responses={200: {}, 401: {}, 403: {}, 422: {}}, status_code=200)
-async def check_job(job: models.JobParameters):
+@router.post("/check", responses={201: {}, 401: {}, 403: {}, 422: {}}, status_code=201)
+async def check_job(job: models.JobParameters):  # pragma: no cover
     pass
 
 
@@ -159,5 +159,5 @@ async def compute_job(
 
 
 @router.get("/{job_id}/results", responses=default_get_responses)
-async def get_job_results(job_id: UUID):
+async def get_job_results(job_id: UUID):  # pragma: no cover
     pass
