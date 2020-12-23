@@ -6,6 +6,9 @@ import VueRouter, { RouteConfig } from "vue-router";
 import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
+import CalculatePerformance from "../views/Calculate.vue";
+import ComparePerformance from "../views/Compare.vue";
+import CalculatePR from "../views/CalculatePR.vue";
 import { authGuard } from "../auth/authGuard";
 
 const routes: Array<RouteConfig> = [
@@ -31,6 +34,25 @@ const routes: Array<RouteConfig> = [
     name: "Update System",
     component: SystemSpec,
     props: true,
+    beforeEnter: authGuard
+  },
+  {
+    path: "/system/:systemId/calculate",
+    name: "Calculate Performance",
+    component: CalculatePerformance,
+    props: true,
+    beforeEnter: authGuard
+  },
+  {
+    path: "/compare",
+    name: "Compare Performance",
+    component: ComparePerformance,
+    beforeEnter: authGuard
+  },
+  {
+    path: "/calculatepr",
+    name: "Calculate Performance Ratio",
+    component: CalculatePR,
     beforeEnter: authGuard
   }
 ];
