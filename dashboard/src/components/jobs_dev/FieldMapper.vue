@@ -65,15 +65,13 @@ Components using the mapper should react to events emitted from this component:
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
-              v-for="(u,i) in headers"
+              v-for="(u, i) in headers"
               :key="u"
               :name="u"
               :value="u"
               :disabled="usedHeaders.includes(u)"
             >
-              <template v-if="u==''">
-                column {{ i+1 }}
-              </template>
+              <template v-if="u == ''">column {{ i + 1 }}</template>
               <template v-else>
                 {{ u }}
               </template>
@@ -94,9 +92,7 @@ Components using the mapper should react to events emitted from this component:
               :value="u"
               :disabled="usedHeaders.includes(u)"
             >
-              <template v-if="u==''">
-                column {{ i+1 }}
-              </template>
+              <template v-if="u == ''">column {{ i + 1 }}</template>
               <template v-else>
                 {{ u }}
               </template>

@@ -16,22 +16,22 @@
             <br />
             <div class="ml-1 mt-1">
               <input
-                id="predicted_performance"
-                value="predicted_performance"
+                id="predicted performance"
+                value="predicted performance"
                 type="radio"
                 v-model="calculate"
               />
-              <label for="predicted">
+              <label for="predicted performance">
                 weather data provided when the system was designed.
               </label>
               <br />
               <input
-                id="expected_performance"
-                value="expected_performance"
+                id="expected performance"
+                value="expected performance"
                 type="radio"
                 v-model="calculate"
               />
-              <label for="expected_performance">
+              <label for="expected performance">
                 actual weather data during system operation.
               </label>
               <br />
@@ -52,7 +52,12 @@
                 horizontal (DHI) irradiance.
               </label>
               <br />
-              <input id="poa" value="poa" type="radio" v-model="irradiance_type" />
+              <input
+                id="poa"
+                value="poa"
+                type="radio"
+                v-model="irradiance_type"
+              />
               <label for="poa">
                 global plane of array (POA global), direct plane of array (POA
                 direct), and diffuse plane of array (POA diffuse) irradiance.
@@ -95,7 +100,12 @@
                 irradiance in my data.
               </label>
               <br />
-              <input id="air" value="air" type="radio" v-model="temperature_type" />
+              <input
+                id="air"
+                value="air"
+                type="radio"
+                v-model="temperature_type"
+              />
               <label for="air">
                 Calculate cell temperature from irradiance, air temperature, and
                 windspeed in my data.
@@ -144,7 +154,7 @@
       </template>
       <transition name="fade">
         <template v-if="jobSubmitted">
-          <job-handler :job="mockStoredJob"/>
+          <job-handler :job="mockStoredJob" />
         </template>
       </transition>
     </template>
@@ -154,7 +164,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredSystem } from "@/types/System";
-
+import * as Jobs from "@/api/jobs";
 @Component
 export default class PredictPerformace extends Vue {
   @Prop() systemId!: string;
@@ -182,7 +192,7 @@ export default class PredictPerformace extends Vue {
   }
   data() {
     return {
-      calculate: "predicted_performance",
+      calculate: "predicted performance",
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
@@ -213,20 +223,18 @@ export default class PredictPerformace extends Vue {
       },
       status: "incomplete",
       data_objects: []
-    }
+    };
   }
   async submitJob() {
-    // TODO: post jobSpec
-    // const token = this.$auth.getTokenSilently();
-    // const response = await fetch('/jobs/', {
-    //   method: "post,
-    //   body: JSON.stringify(this.jobSpec)
-    //   headers: new Headers({
-    //     Authorization: `Bearer ${token}`
-    //   })
-    // });
-    // if (response.ok) { this.jobId = response.json().object_id };
-    this.jobSubmitted = true;
+    console.log("submitting job");
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.create(token, this.jobSpec);
+    console.log(response);
+    if (response.ok) {
+      const responseBody = await response.json();
+      console.log(responseBody);
+    };
+    //this.jobSubmitted = true;
   }
   submitCalculation() {
     // TODO: Check job status, if ready, submit.

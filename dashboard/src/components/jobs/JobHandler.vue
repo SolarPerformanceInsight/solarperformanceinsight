@@ -11,14 +11,20 @@ Component that handles basic job/workflows.
         :irradiance_type="jobParameters.irradiance_type"
         :data_objects="weatherDataObjects"
       >
-       <b>Upload
-       <template v-if="jobParameters.job_type.calculate == 'predicted_performance'">
-       Predicted
-       </template>
-       <template v-if="jobParameters.job_type.calculate == 'expected_performance'">
-       Actual
-       </template>
-       Weather Data</b>
+        <b>
+          Upload
+          <template
+            v-if="jobParameters.job_type.calculate == 'predicted_performance'"
+          >
+            Predicted
+          </template>
+          <template
+            v-if="jobParameters.job_type.calculate == 'expected_performance'"
+          >
+            Actual
+          </template>
+          Weather Data
+        </b>
       </weather-upload>
     </template>
     <template v-if="jobType == 'compare'">
@@ -67,15 +73,20 @@ export default class JobHandler extends Vue {
     }
     let dataObjects: Array<Record<string, any>> = [];
     if (params.weather_granularity == "system") {
-      dataObjects = [{
-        schema_path: "/",
-        type: dataType,
-        filename: "0.arrow",
-        data_format: "application/vnd.apache.arrow.file",
-        present: "false"
-      }];
+      dataObjects = [
+        {
+          schema_path: "/",
+          type: dataType,
+          filename: "0.arrow",
+          data_format: "application/vnd.apache.arrow.file",
+          present: "false"
+        }
+      ];
     } else if (params.weather_granularity == "inverter") {
-      this.job.definition.system.inverters.forEach(function(inverter: Inverter, i: number) {
+      this.job.definition.system.inverters.forEach(function(
+        inverter: Inverter,
+        i: number
+      ) {
         dataObjects.push({
           schema_path: `/inverters/${i}`,
           type: dataType,
@@ -85,7 +96,10 @@ export default class JobHandler extends Vue {
         });
       });
     } else {
-      this.job.definition.system.inverters.forEach(function(inverter: Inverter, i: number) {
+      this.job.definition.system.inverters.forEach(function(
+        inverter: Inverter,
+        i: number
+      ) {
         inverter.arrays.forEach(function(pvarray: PVArray, j: number) {
           dataObjects.push({
             schema_path: `/inverters/${i}/arrays/${j}`,
@@ -104,5 +118,4 @@ export default class JobHandler extends Vue {
   }
 }
 </script>
-<style scoped>
-</style>
+<style scoped></style>

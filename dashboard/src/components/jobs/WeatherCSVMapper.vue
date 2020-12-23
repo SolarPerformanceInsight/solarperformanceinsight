@@ -87,20 +87,20 @@ export default class WeatherCSVMapper extends Vue {
      *     to be mapped.
      */
     if (this.weather_granularity == "system") {
-      return this.data_objects.map((obj) => {
+      return this.data_objects.map(obj => {
         return {
           loc: obj.schema_path,
           metadata: this.system
-        }
+        };
       });
     } else if (this.weather_granularity == "inverter") {
-      return this.data_objects.map((obj) => {
+      return this.data_objects.map(obj => {
         // get the second element of the location, due to "" first element
         const index = parseInt(obj.schema_path.split("/")[2]);
         return {
           loc: obj.schema_path,
           metadata: this.system.inverters[index]
-        }
+        };
       });
     } else {
       return this.data_objects.map(obj => {
@@ -114,7 +114,7 @@ export default class WeatherCSVMapper extends Vue {
             parent: this.system.inverters[inv_index],
             ...this.system.inverters[inv_index].arrays[arr_index]
           }
-        }
+        };
       });
     }
   }
@@ -127,7 +127,7 @@ export default class WeatherCSVMapper extends Vue {
   updateMapping(newMap: any) {
     // pop the index from the mapping
     const loc = newMap.loc;
-    newMap = { ...newMap};
+    newMap = { ...newMap };
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
@@ -152,7 +152,7 @@ export default class WeatherCSVMapper extends Vue {
     // Create a unique ref name for a nested component. Used to store
     // references to nested components for checking that all mappings are
     // valid and complete.
-    return `${this.weather_granularity}_${index}`
+    return `${this.weather_granularity}_${index}`;
   }
 }
 </script>
