@@ -89,27 +89,27 @@ export default class WeatherCSVMapper extends Vue {
     if (this.weather_granularity == "system") {
       return this.data_objects.map(obj => {
         return {
-          loc: obj.schema_path,
+          loc: obj.definition.schema_path,
           metadata: this.system
         };
       });
     } else if (this.weather_granularity == "inverter") {
       return this.data_objects.map(obj => {
         // get the second element of the location, due to "" first element
-        const index = parseInt(obj.schema_path.split("/")[2]);
+        const index = parseInt(obj.definition.schema_path.split("/")[2]);
         return {
-          loc: obj.schema_path,
+          loc: obj.definition.schema_path,
           metadata: this.system.inverters[index]
         };
       });
     } else {
       return this.data_objects.map(obj => {
         // splitting on "/" results in empty first element, so slice out
-        const loc_array = obj.schema_path.split("/").slice(1);
+        const loc_array = obj.definition.schema_path.split("/").slice(1);
         const arr_index = parseInt(loc_array[loc_array.length - 1]);
         const inv_index = parseInt(loc_array[1]);
         return {
-          loc: obj.schema_path,
+          loc: obj.definition.schema_path,
           metadata: {
             parent: this.system.inverters[inv_index],
             ...this.system.inverters[inv_index].arrays[arr_index]

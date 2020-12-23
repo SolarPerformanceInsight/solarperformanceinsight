@@ -3,35 +3,37 @@ Component that handles basic job/workflows.
 -->
 <template>
   <div class="job-handler">
-    <template v-if="jobType == 'calculate'">
-      <weather-upload
-        :temperature_type="jobParameters.temperature_type"
-        :system="job.definition.system"
-        :weather_granularity="jobParameters.weather_granularity"
-        :irradiance_type="jobParameters.irradiance_type"
-        :data_objects="weatherDataObjects"
-      >
-        <b>
-          Upload
-          <template
-            v-if="jobParameters.job_type.calculate == 'predicted_performance'"
-          >
-            Predicted
-          </template>
-          <template
-            v-if="jobParameters.job_type.calculate == 'expected_performance'"
-          >
-            Actual
-          </template>
-          Weather Data
-        </b>
-      </weather-upload>
-    </template>
-    <template v-if="jobType == 'compare'">
-      Not Implemented.
-    </template>
-    <template v-if="jobType == 'calculate_pr'">
-      Not Implemented.
+    <template v-if="job">
+      <template v-if="jobType == 'calculate'">
+        <weather-upload
+          :temperature_type="jobParameters.temperature_type"
+          :system="job.definition.system_definition"
+          :weather_granularity="jobParameters.weather_granularity"
+          :irradiance_type="jobParameters.irradiance_type"
+          :data_objects="weatherDataObjects"
+        >
+          <b>
+            Upload
+            <template
+              v-if="jobParameters.job_type.calculate == 'predicted performance'"
+            >
+              Predicted
+            </template>
+            <template
+              v-if="jobParameters.job_type.calculate == 'expected performance'"
+            >
+              Actual
+            </template>
+            Weather Data
+          </b>
+        </weather-upload>
+      </template>
+      <template v-if="jobType == 'compare'">
+        Not Implemented.
+      </template>
+      <template v-if="jobType == 'calculate_pr'">
+        Not Implemented.
+      </template>
     </template>
   </div>
 </template>
@@ -40,78 +42,59 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
+import * as Jobs from "@/api/jobs";
 
 @Component
 export default class JobHandler extends Vue {
   @Prop() jobId!: string;
-  @Prop() job!: Record<string, any>; // TODO: convert to data after loading job
+  loading!: boolean;
+  job!: Record<string, any>;
 
-  loadJob() {
-    // TODO: load job from the api.
-    return;
+  created() {
+    this.loadJob();
+  }
+  data() {
+    return {
+      job: null,
+      loading: true
+    };
+  }
+  async loadJob() {
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.read(token, this.jobId);
+    if (response.ok) {
+      this.job = await response.json();
+    } else {
+      console.log("Failed to fetch job");
+    }
+    this.loading = false;
   }
   get jobType() {
-    // TODO: examine job object and return appropriate type.
-    return "calculate";
+    const jobTypeParams = this.jobParameters.job_type;
+    if ("performance_granularity" in jobTypeParams) {
+      if ("compare" in jobTypeParams) {
+        return "compare";
+      } else {
+        return "calculate_pr";
+      }
+    } else {
+      return "calculate";
+    }
   }
   get weatherDataObjects() {
     // Get data objects pertaining to weather data
-    return this.dataObjects.filter((x: any) => x.type.includes("weather"));
+    return this.dataObjects.filter((x: any) =>
+      x.definition.type.includes("weather")
+    );
   }
   get performanceDataObjects() {
     // Get data objects pertaining to performance
-    return this.dataObjects.filter((x: any) => x.type.includes("performance"));
+    return this.dataObjects.filter((x: any) =>
+      x.definition.type.includes("performance")
+    );
   }
   get dataObjects() {
-    // TODO: use data objects from api object
-    const params = this.jobParameters;
-    let dataType: string;
-    if (params.job_type.calculate == "predicted_performance") {
-      dataType = "original_weather";
-    } else {
-      dataType = "actual_weather";
-    }
-    let dataObjects: Array<Record<string, any>> = [];
-    if (params.weather_granularity == "system") {
-      dataObjects = [
-        {
-          schema_path: "/",
-          type: dataType,
-          filename: "0.arrow",
-          data_format: "application/vnd.apache.arrow.file",
-          present: "false"
-        }
-      ];
-    } else if (params.weather_granularity == "inverter") {
-      this.job.definition.system.inverters.forEach(function(
-        inverter: Inverter,
-        i: number
-      ) {
-        dataObjects.push({
-          schema_path: `/inverters/${i}`,
-          type: dataType,
-          filename: "0.arrow",
-          data_format: "application/vnd.apache.arrow.file",
-          present: "false"
-        });
-      });
-    } else {
-      this.job.definition.system.inverters.forEach(function(
-        inverter: Inverter,
-        i: number
-      ) {
-        inverter.arrays.forEach(function(pvarray: PVArray, j: number) {
-          dataObjects.push({
-            schema_path: `/inverters/${i}/arrays/${j}`,
-            type: dataType,
-            filename: "0.arrow",
-            data_format: "application/vnd.apache.arrow.file",
-            present: "false"
-          });
-        });
-      });
-    }
-    return dataObjects;
+    return this.job.data_objects;
   }
   get jobParameters() {
     return this.job.definition.parameters;

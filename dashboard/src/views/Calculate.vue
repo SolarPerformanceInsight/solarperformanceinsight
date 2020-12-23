@@ -149,12 +149,13 @@
               <br />
             </div>
           </div>
+          <time-parameters @new-timeparams="storeTimeParams" />
           <button class="mt-1" @click="submitJob">Get Started</button>
         </div>
       </template>
       <transition name="fade">
         <template v-if="jobSubmitted">
-          <job-handler :job="mockStoredJob" />
+          <job-handler :jobId="jobId" />
         </template>
       </transition>
     </template>
@@ -174,11 +175,13 @@ export default class PredictPerformace extends Vue {
   irradiance_type!: string;
   temperature_type!: string;
   jobSubmitted!: boolean;
+  jobId!: string;
 
   // TODO: refactor common api/404 code
   apiErrors!: Record<string, any>;
   errorState!: boolean;
   systemLoading!: boolean;
+  timeParams!: Record<string, any>;
 
   created() {
     this.systemLoading = true;
@@ -200,8 +203,12 @@ export default class PredictPerformace extends Vue {
       systemLoading: this.systemLoading,
       apiErrors: {},
       errorState: false,
-      temperature_type: "cell"
+      temperature_type: "cell",
+      jobId: null
     };
+  }
+  storeTimeParams(timeParams: Record<string, any>) {
+    this.timeParams = timeParams;
   }
   get jobSpec() {
     return {
@@ -209,6 +216,7 @@ export default class PredictPerformace extends Vue {
       job_type: {
         calculate: this.calculate
       },
+      time_parameters: this.timeParams,
       weather_granularity: this.weather_granularity,
       irradiance_type: this.irradiance_type,
       temperature_type: this.temperature_type
@@ -226,15 +234,14 @@ export default class PredictPerformace extends Vue {
     };
   }
   async submitJob() {
-    console.log("submitting job");
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.create(token, this.jobSpec);
     console.log(response);
     if (response.ok) {
       const responseBody = await response.json();
-      console.log(responseBody);
-    };
-    //this.jobSubmitted = true;
+      this.jobId = responseBody.object_id;
+    }
+    this.jobSubmitted = true;
   }
   submitCalculation() {
     // TODO: Check job status, if ready, submit.

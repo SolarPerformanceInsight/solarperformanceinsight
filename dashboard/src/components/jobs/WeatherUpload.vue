@@ -117,7 +117,6 @@ export default class WeatherUpload extends Vue {
     // Handle a new mapping from the WeatherCSVMapper component, this is a
     // complete mapping, so set mappingComplete to true to enable upload
     // button.
-    console.log(newMapping);
     this.mapping = newMapping;
     this.mappingComplete = true;
   }
