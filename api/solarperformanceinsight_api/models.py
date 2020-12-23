@@ -794,6 +794,7 @@ JOB_DATA_META_EXAMPLE = dict(
     filename="inverter_0_performance.arrow",
     data_format="application/vnd.apache.arrow.file",
     present=True,
+    data_columns=["time", "performance"],
 )
 
 
@@ -808,6 +809,9 @@ class JobDataMetadata(JobDataItem):
     filename: str = Field("", description="Filename of the uploaded file")
     data_format: str = Field("", description="Format of the binary file")
     present: bool = Field(False, description="If the data has been uploaded or not")
+    data_columns: List[str] = Field(
+        [], description="Column names the data is expected to have"
+    )
 
 
 class StoredJobDataMetadata(StoredObject):
@@ -864,12 +868,31 @@ class Job(BaseModel):
     system_definition: PVSystem
     parameters: JobParameters
     _data_items: List[JobDataItem] = PrivateAttr()
+    _weather_columns: List[str] = PrivateAttr()
+    _performance_columns: List[str] = PrivateAttr(["time", "performance"])
 
     def __init__(self, **data):
         super().__init__(**data)
         self._data_items = _construct_data_items(
             self.system_definition, self.parameters
         )
+        # determine what columns to expect in uploads
+        cols = [
+            "time",
+        ]
+        if self.parameters.irradiance_type == IrradianceTypeEnum.effective:
+            cols += ["effective_irradiance"]
+        elif self.parameters.irradiance_type == IrradianceTypeEnum.poa:
+            cols += ["poa_global", "poa_direct", "poa_diffuse"]
+        else:
+            cols += ["ghi", "dni", "dhi"]
+        if self.parameters.temperature_type == TemperatureTypeEnum.module:
+            cols += ["module_temperature"]
+        elif self.parameters.temperature_type == TemperatureTypeEnum.cell:
+            cols += ["cell_temperature"]
+        else:
+            cols += ["temp_air", "wind_speed"]
+        self._weather_columns = cols
 
 
 class JobStatusEnum(str, Enum):
@@ -923,6 +946,13 @@ class StoredJob(StoredObject):
                             "schema_path": "/inverters/0/arrays/0",
                             "type": "original weather data",
                             "present": False,
+                            "data_columns": [
+                                "time",
+                                "poa_global",
+                                "poa_direct",
+                                "poa_diffuse",
+                                "module_temperature",
+                            ],
                         },
                     },
                     {

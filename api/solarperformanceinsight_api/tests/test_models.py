@@ -347,3 +347,49 @@ def test_jobtimeindex(start, end, tz):
 def test_jobtimeindex_validation(start, end, step, tz):
     with pytest.raises(ValidationError):
         models.JobTimeindex(start=start, end=end, step=step, timezone=tz)
+
+
+@pytest.mark.parametrize(
+    "irr,temp,expected",
+    (
+        ("standard", "air", ["time", "ghi", "dni", "dhi", "temp_air", "wind_speed"]),
+        (
+            "poa",
+            "air",
+            [
+                "time",
+                "poa_global",
+                "poa_direct",
+                "poa_diffuse",
+                "temp_air",
+                "wind_speed",
+            ],
+        ),
+        (
+            "effective",
+            "air",
+            ["time", "effective_irradiance", "temp_air", "wind_speed"],
+        ),
+        ("standard", "module", ["time", "ghi", "dni", "dhi", "module_temperature"]),
+        (
+            "poa",
+            "module",
+            ["time", "poa_global", "poa_direct", "poa_diffuse", "module_temperature"],
+        ),
+        ("effective", "module", ["time", "effective_irradiance", "module_temperature"]),
+        ("standard", "cell", ["time", "ghi", "dni", "dhi", "cell_temperature"]),
+        (
+            "poa",
+            "cell",
+            ["time", "poa_global", "poa_direct", "poa_diffuse", "cell_temperature"],
+        ),
+        ("effective", "cell", ["time", "effective_irradiance", "cell_temperature"]),
+    ),
+)
+def test_job_parameters_columns(irr, temp, expected, system_def):
+    params = deepcopy(models.JOB_PARAMS_EXAMPLE)
+    params["irradiance_type"] = irr
+    params["temperature_type"] = temp
+    mod = models.Job(parameters=params, system_definition=system_def)
+    assert mod._weather_columns == expected
+    assert mod._performance_columns == ["time", "performance"]

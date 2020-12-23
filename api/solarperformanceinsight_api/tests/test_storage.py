@@ -383,6 +383,7 @@ def test_get_job_data(
 ):
     with storage_interface.start_transaction() as st:
         data = st.get_job_data(job_id, job_data_ids[1])
+    job_data_meta.definition.data_columns = []
     assert data == (job_data_meta, b"binary data blob")
 
 

@@ -177,6 +177,13 @@ def stored_job(job_id, job_def, job_status, job_data_ids, job_data_meta):
             type="original weather data",
             filename="",
             data_type="",
+            data_columns=[
+                "time",
+                "poa_global",
+                "poa_direct",
+                "poa_diffuse",
+                "module_temperature",
+            ],
         ),
     )
     job_data_meta_1 = job_data_meta
