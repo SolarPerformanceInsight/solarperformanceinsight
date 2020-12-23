@@ -3,11 +3,13 @@ import datetime as dt
 from uuid import UUID
 
 
+from fastapi.testclient import TestClient
 import httpx
 import pymysql
 import pytest
 
 
+from solarperformanceinsight_api.main import app
 from solarperformanceinsight_api import settings, models, storage
 
 
@@ -30,6 +32,18 @@ def auth_token():
     else:
         token = token_req.json()["access_token"]
         return token
+
+
+@pytest.fixture(scope="module")
+def client(auth_token):
+    out = TestClient(app)
+    out.headers.update({"Authorization": f"Bearer {auth_token}"})
+    return out
+
+
+@pytest.fixture(scope="module")
+def noauthclient():
+    return TestClient(app)
 
 
 @pytest.fixture(scope="module")
@@ -100,4 +114,78 @@ def stored_system(system_def, system_id):
         created_at=extime,
         modified_at=extime,
         definition=system_def,
+    )
+
+
+@pytest.fixture(scope="module")
+def job_id():
+    return "e1772e64-43ac-11eb-92c2-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
+def other_job_id():
+    return "7f13ab34-43ad-11eb-80a2-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
+def job_data_ids():
+    return (
+        "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
+        "f9ef0c00-43ac-11eb-8931-f4939feddd82",
+    )
+
+
+@pytest.fixture()
+def job_params():
+    return models.JobParameters(**models.JOB_PARAMS_EXAMPLE)
+
+
+@pytest.fixture()
+def job_def(system_def, job_params):
+    return models.Job(system_definition=system_def, parameters=job_params)
+
+
+@pytest.fixture()
+def job_status():
+    return models.JobStatus(
+        status="incomplete",
+        last_change=dt.datetime(2020, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+
+
+@pytest.fixture()
+def job_data_meta(job_data_ids):
+    return models.StoredJobDataMetadata(
+        definition=models.JobDataMetadata(**models.JOB_DATA_META_EXAMPLE),
+        object_id=job_data_ids[1],
+        object_type="job_data",
+        created_at=dt.datetime(2020, 12, 11, 19, 52, tzinfo=dt.timezone.utc),
+        modified_at=dt.datetime(2020, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+
+
+@pytest.fixture()
+def stored_job(job_id, job_def, job_status, job_data_ids, job_data_meta):
+    ctime = dt.datetime(2020, 12, 11, 19, 52, tzinfo=dt.timezone.utc)
+    job_data_meta_0 = models.StoredJobDataMetadata(
+        object_id=job_data_ids[0],
+        object_type="job_data",
+        created_at=ctime,
+        modified_at=ctime,
+        definition=models.JobDataMetadata(
+            schema_path="/inverters/0/arrays/0",
+            type="original weather data",
+            filename="",
+            data_type="",
+        ),
+    )
+    job_data_meta_1 = job_data_meta
+    return models.StoredJob(
+        definition=job_def,
+        status=job_status,
+        data_objects=[job_data_meta_0, job_data_meta_1],
+        object_id=job_id,
+        object_type="job",
+        created_at=ctime,
+        modified_at=ctime,
     )

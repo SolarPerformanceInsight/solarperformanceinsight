@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Callable
+from typing import List, Callable, Dict, Any, Tuple
 from uuid import UUID
 
 
@@ -170,9 +170,9 @@ class StorageInterface:
             msg = err.args[1]
             if ecode == 1142:
                 raise HTTPException(status_code=404, detail=msg)
-            elif ecode == 1062:
-                raise HTTPException(status_code=409)
-            elif ecode == 3140 or ecode == 1406 or ecode == 1048:
+            elif ecode == 1062 or ecode == 1348:
+                raise HTTPException(status_code=409, detail=msg)
+            elif ecode == 3140 or ecode == 1406 or ecode == 1048 or ecode == 1054:
                 raise HTTPException(status_code=400, detail=msg)
             else:
                 raise
@@ -226,13 +226,16 @@ class StorageInterface:
         out["modified_at"] = out["created_at"]
         return models.UserInfo(**out)
 
+    def _parse_system(self, sys: Dict[str, Any]) -> models.StoredPVSystem:
+        sys["object_id"] = sys.pop("system_id")
+        sys["object_type"] = "system"
+        return models.StoredPVSystem(**sys)
+
     def list_systems(self) -> List[models.StoredPVSystem]:
         systems = self._call_procedure("list_systems")
         out = []
         for sys in systems:
-            sys["object_id"] = sys.pop("system_id")
-            sys["object_type"] = "system"
-            out.append(models.StoredPVSystem(**sys))
+            out.append(self._parse_system(sys))
         return out
 
     @ensure_user_exists
@@ -246,9 +249,7 @@ class StorageInterface:
 
     def get_system(self, system_id: UUID) -> models.StoredPVSystem:
         system = self._call_procedure_for_single("get_system", system_id)
-        system["object_id"] = system.pop("system_id")
-        system["object_type"] = "system"
-        return models.StoredPVSystem(**system)
+        return self._parse_system(system)
 
     def delete_system(self, system_id: UUID):
         self._call_procedure("delete_system", system_id)
@@ -258,3 +259,77 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
+
+    @ensure_user_exists
+    def create_job(self, job: models.Job) -> models.StoredObjectID:
+        data_items = json.dumps([di.dict() for di in job._data_items])
+        created = self._call_procedure_for_single(
+            "create_job", job.parameters.system_id, job.json(), data_items
+        )
+        return models.StoredObjectID(object_id=created["job_id"], object_type="job")
+
+    def list_jobs(self) -> List[models.StoredJob]:
+        joblist = self._call_procedure("list_jobs")
+        return [self._parse_job(jp) for jp in joblist]
+
+    def get_job(self, job_id: UUID) -> models.StoredJob:
+        job = self._call_procedure_for_single("get_job", job_id)
+        return self._parse_job(job)
+
+    def _parse_job_data_meta(
+        self, data_meta: Dict[str, Any]
+    ) -> models.StoredJobDataMetadata:
+        data_meta["object_id"] = data_meta.pop("id")
+        data_meta["object_type"] = "job_data"
+        if isinstance(data_meta["created_at"], str):
+            data_meta["created_at"] = convert_datetime_utc(data_meta["created_at"])
+        if isinstance(data_meta["modified_at"], str):
+            data_meta["modified_at"] = convert_datetime_utc(data_meta["modified_at"])
+        data_meta["definition"] = {
+            k: data_meta[k]
+            for k in models.JobDataMetadata.schema()["properties"].keys()
+            if data_meta[k] is not None
+        }
+        return models.StoredJobDataMetadata(**data_meta)
+
+    def _parse_job(self, job: Dict[str, Any]) -> models.StoredJob:
+        job["object_id"] = job.pop("job_id")
+        job["object_type"] = "job"
+        job["status"]["last_change"] = convert_datetime_utc(
+            job["status"]["last_change"]
+        )
+        jdo = []
+        for do in job["data_objects"]:
+            jdo.append(self._parse_job_data_meta(do))
+        job["data_objects"] = jdo
+        return models.StoredJob(**job)
+
+    def delete_job(self, job_id: UUID):
+        self._call_procedure("delete_job", job_id)
+
+    def get_job_status(self, job_id: UUID) -> models.JobStatus:
+        status = self._call_procedure_for_single("get_job_status", job_id)
+        return models.JobStatus(**status)
+
+    def add_job_data(
+        self,
+        job_id: UUID,
+        job_data_id: UUID,
+        filename: str,
+        data_format: str,
+        data: bytes,
+    ):
+        self._call_procedure(
+            "add_job_data", job_id, job_data_id, filename, data_format, data
+        )
+
+    def get_job_data(
+        self, job_id: UUID, job_data_id: UUID
+    ) -> Tuple[models.StoredJobDataMetadata, bytes]:
+        out = self._call_procedure_for_single("get_job_data", job_id, job_data_id)
+        data = out.pop("data")
+        meta = self._parse_job_data_meta(out)
+        return meta, data
+
+    def queue_job(self, job_id: UUID):
+        self._call_procedure("queue_job", job_id)
