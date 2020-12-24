@@ -236,7 +236,6 @@ export default class PredictPerformace extends Vue {
   async submitJob() {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.create(token, this.jobSpec);
-    console.log(response);
     if (response.ok) {
       const responseBody = await response.json();
       this.jobId = responseBody.object_id;

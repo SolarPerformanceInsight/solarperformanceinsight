@@ -13,3 +13,6 @@ a:not([href]):hover {
   padding: .5em;
   color: #E00;
 }
+.warning-text {
+  color: #E00;
+}

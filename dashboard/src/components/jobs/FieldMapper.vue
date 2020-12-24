@@ -115,7 +115,7 @@ interface HTMLInputEvent extends Event {
 }
 
 interface MetadataWithLoc {
-  loc: string;
+  data_object: Record<string, any>;
   metadata: System | Inverter | PVArray;
 }
 
@@ -171,7 +171,10 @@ export default class FieldMapper extends Vue {
       this.mapping[variable] = fileHeader;
       this.$emit("used-header", fileHeader);
     }
-    this.$emit("mapping-updated", { ...this.mapping, loc: this.comp.loc });
+    this.$emit("mapping-updated", {
+      ...this.mapping,
+       loc: this.comp.data_object.definition.schema_path
+     });
     if (this.isValid()) {
       this.$emit("mapping-complete");
     }

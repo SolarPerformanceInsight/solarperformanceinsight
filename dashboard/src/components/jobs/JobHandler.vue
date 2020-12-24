@@ -4,35 +4,47 @@ Component that handles basic job/workflows.
 <template>
   <div class="job-handler">
     <template v-if="job">
-      <template v-if="jobType == 'calculate'">
-        <weather-upload
-          :temperature_type="jobParameters.temperature_type"
-          :system="job.definition.system_definition"
-          :weather_granularity="jobParameters.weather_granularity"
-          :irradiance_type="jobParameters.irradiance_type"
-          :data_objects="weatherDataObjects"
-        >
-          <b>
-            Upload
-            <template
-              v-if="jobParameters.job_type.calculate == 'predicted performance'"
-            >
-              Predicted
-            </template>
-            <template
-              v-if="jobParameters.job_type.calculate == 'expected performance'"
-            >
-              Actual
-            </template>
-            Weather Data
-          </b>
-        </weather-upload>
+      <template v-if="jobStatus == 'incomplete'">
+        <template v-if="jobType == 'calculate'">
+          <!-- Usecase 1A & 1B -->
+          <weather-upload
+            :temperature_type="jobParameters.temperature_type"
+            :system="job.definition.system_definition"
+            :weather_granularity="jobParameters.weather_granularity"
+            :irradiance_type="jobParameters.irradiance_type"
+            :data_objects="weatherDataObjects"
+          >
+            <b>
+              Upload
+              <template
+                v-if="jobParameters.job_type.calculate == 'predicted performance'"
+              >
+                Predicted
+              </template>
+              <template
+                v-if="jobParameters.job_type.calculate == 'expected performance'"
+              >
+                Actual
+              </template>
+              Weather Data
+            </b>
+          </weather-upload>
+        </template>
+        <template v-if="jobType == 'compare'">
+          <!-- Use cases 2A 2B 2C-->
+          Not Implemented.
+        </template>
+        <template v-if="jobType == 'calculate_pr'">
+          <!-- Use case 2D -->
+          Not Implemented.
+        </template>
       </template>
-      <template v-if="jobType == 'compare'">
-        Not Implemented.
+      <template v-if="jobStatus == 'prepared'">
+        Job is ready for computation.
+        <button>Compute Job</button>
       </template>
-      <template v-if="jobType == 'calculate_pr'">
-        Not Implemented.
+      <template v-if="jobStatus == 'error'">
+        Something went wrong during report processing.
       </template>
     </template>
   </div>
@@ -98,6 +110,9 @@ export default class JobHandler extends Vue {
   }
   get jobParameters() {
     return this.job.definition.parameters;
+  }
+  get jobStatus() {
+    return this.job.status.status;
   }
 }
 </script>

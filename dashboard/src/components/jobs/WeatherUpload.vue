@@ -134,6 +134,7 @@ export default class WeatherUpload extends Vue {
   uploadData() {
     // function to call when all mapping has been completed. Should complete
     // the mapping process and post to the API
+    console.log(this.mapping);
     console.log("uploading data");
   }
   getRequired() {
