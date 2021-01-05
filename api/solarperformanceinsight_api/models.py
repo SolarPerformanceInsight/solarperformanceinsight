@@ -886,10 +886,10 @@ class Job(BaseModel):
             cols += ["poa_global", "poa_direct", "poa_diffuse"]
         else:
             cols += ["ghi", "dni", "dhi"]
-        if self.parameters.temperature_type == TemperatureTypeEnum.module:
-            cols += ["module_temperature"]
-        elif self.parameters.temperature_type == TemperatureTypeEnum.cell:
+        if self.parameters.temperature_type == TemperatureTypeEnum.cell:
             cols += ["cell_temperature"]
+        elif self.parameters.temperature_type == TemperatureTypeEnum.module:
+            cols += ["module_temperature"]
         else:
             cols += ["temp_air", "wind_speed"]
         self._weather_columns = cols
