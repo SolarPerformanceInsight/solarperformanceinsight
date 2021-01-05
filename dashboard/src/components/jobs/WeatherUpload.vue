@@ -133,8 +133,8 @@ export default class WeatherUpload extends Vue {
   }
   processFile(e: HTMLInputEvent) {
     // Handle a CSV upload, hand of parsing to mapAndStoreCSV
-    this.processingFile = true;
     if (e.target.files !== null) {
+      this.processingFile = true;
       const fileList = e.target.files;
       const file = e.target.files[0];
       const reader = new FileReader();

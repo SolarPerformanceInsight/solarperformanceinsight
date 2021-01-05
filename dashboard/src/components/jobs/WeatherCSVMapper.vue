@@ -19,6 +19,29 @@ Takes the following props:
 <template>
   <div class="weather-csv-mapper">
     <div>
+      <!-- Time mapping for the whole file -->
+      <b>Timestamp: </b>
+      <select @change="mapTime">
+        <option value="" disabled selected>
+          Unmapped
+        </option>
+        <option
+          v-for="(u, i) in headers"
+          :key="u"
+          :name="u"
+          :value="u"
+          :disabled="usedHeaders.includes(u)"
+        >
+        <template v-if="u == ''">column {{ i+1 }}</template>
+        <template v-else>{{ u }}</template>
+        </option>
+      </select>
+      <template v-if="!timeMapped">
+        <span class="warning-text">Required</span>
+      </template>
+      <!-- Present a mapper for each System, Inverter, or Array (dependent on
+           weather granularity.
+        -->
       <div v-for="(thing, i) of toMap" :key="i">
         <div>
           <div class="data-object-header">
@@ -39,30 +62,28 @@ Takes the following props:
               v-bind:class="{ opened: dataObjectDisplay[refName(i)] }"
             ></button>
           </div>
-          <transition name="expand">
-            <div v-if="dataObjectDisplay[refName(i)]">
-              <p>
-                What fields contain data for data for {{ weather_granularity }}
-                <b>{{ thing.metadata.name }}</b>
-                ?
-              </p>
-              <!-- ref argument here is used to determine if the mapping is complete
-                 (all objects have all required fields mapped).
-            -->
-              <field-mapper
-                :ref="refName(i)"
-                @used-header="useHeader"
-                @free-header="freeHeader"
-                @mapping-updated="updateMapping"
-                :headers="headers"
-                :usedHeaders="usedHeaders"
-                :comp="thing"
-                :system="system"
-                :required="required"
-                :optional="optional"
-              />
-            </div>
-          </transition>
+          <div v-if="dataObjectDisplay[refName(i)]">
+            <p>
+              What fields contain data for data for {{ weather_granularity }}
+              <b>{{ thing.metadata.name }}</b>
+              ?
+            </p>
+            <!-- ref argument here is used to determine if the mapping is complete
+               (all objects have all required fields mapped).
+          -->
+            <field-mapper
+              :ref="refName(i)"
+              @used-header="useHeader"
+              @free-header="freeHeader"
+              @mapping-updated="updateMapping"
+              :headers="headers"
+              :usedHeaders="usedHeaders"
+              :comp="thing"
+              :system="system"
+              :required="requiredFields"
+              :optional="optional"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -91,16 +112,21 @@ export default class WeatherCSVMapper extends Vue {
   mapping!: Record<string, string>;
   usedHeaders!: Array<string>;
   isValid!: boolean;
+  timeMapped!: boolean
+  timeField!: string;
 
   data() {
     return {
       mapping: {},
       usedHeaders: [],
       isValid: false,
+      timeMapped: false,
+      timeField: "",
       dataObjectDisplay: this.initDataObjectDisplay()
     };
   }
   get unMapped() {
+    // Returns an array of headers that have yet to be mapped.
     const unmapped = this.headers.filter(x => !(x in this.mapping));
     return unmapped;
   }
@@ -143,6 +169,11 @@ export default class WeatherCSVMapper extends Vue {
       });
     }
   }
+  get requiredFields() {
+    // Returns the list of required fields, other than 'time' to be mapped
+    // for each object appropriate for the granularity
+    return this.required.filter(r => r != "time");
+  }
   useHeader(header: string) {
     this.usedHeaders.push(header);
   }
@@ -153,6 +184,7 @@ export default class WeatherCSVMapper extends Vue {
     // pop the index from the mapping
     const loc = newMap.loc;
     newMap = { ...newMap };
+    newMap["time"] = this.timeField;
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
@@ -166,7 +198,7 @@ export default class WeatherCSVMapper extends Vue {
       // @ts-expect-error
       componentValidity[ref] = this.$refs[ref][0].isValid();
     }
-    this.isValid = Object.values(componentValidity).every(x => x === true);
+    this.isValid = Object.values(componentValidity).every(x => x === true) && this.timeMapped;
     if (this.isValid) {
       this.$emit("mapping-complete", this.mapping);
     } else {
@@ -185,6 +217,17 @@ export default class WeatherCSVMapper extends Vue {
       visibleMap[this.refName(i)] = !x.definition.present;
     });
     return visibleMap;
+  }
+  mapTime(event: any) {
+    this.freeHeader(this.timeField);
+    const timeHeader = event.target.value;
+    this.timeField = timeHeader;
+    this.useHeader(this.timeField);
+    this.timeMapped = true;
+    for (const loc in this.mapping) {
+      // @ts-expect-error
+      this.mapping[loc]["time"] = this.timeField;
+    }
   }
 }
 </script>
