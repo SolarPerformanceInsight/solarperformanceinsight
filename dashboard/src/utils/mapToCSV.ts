@@ -15,13 +15,15 @@ export default function(
       columns.push(Float32Array.from(data[orig]));
     }
   }
+  console.log(columns);
   // zip columns of values into rows
-  const rows = columns[0].map((v: Array<any>, i: number) => {
+  const rows: Array<any> = []
+  columns[0].forEach((v: Array<any>, i: number) => {
     const row = [v];
     for (let j = 1; j < columns.length; j++) {
       row.push(columns[j][i]);
     }
-    return row;
+    rows.push(row);
   });
   // append headers
   let csv = headers.join(",") + "\n";
