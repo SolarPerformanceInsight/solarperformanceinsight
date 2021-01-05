@@ -1,8 +1,8 @@
 import csvToJson from "csvtojson";
 
 export default async function(csvString: string) {
-  /* Parses a csv file into an object mapping csv headers to column data. This
-   * is useful for later producing an Arrow Table from the data.
+  /* Parses a csv file into an object mapping csv headers to column data for
+   * easier creation of partial csv files.
    */
   const csvJson = await csvToJson().fromString(csvString);
   const transposed: Record<string, Array<any>> = {};

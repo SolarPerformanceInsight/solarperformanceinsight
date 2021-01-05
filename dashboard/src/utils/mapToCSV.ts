@@ -15,7 +15,6 @@ export default function(
       columns.push(Float32Array.from(data[orig]));
     }
   }
-  console.log(columns);
   // zip columns of values into rows
   const rows: Array<any> = []
   columns[0].forEach((v: Array<any>, i: number) => {
