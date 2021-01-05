@@ -222,25 +222,24 @@ export default class PredictPerformace extends Vue {
       temperature_type: this.temperature_type
     };
   }
-  get mockStoredJob() {
-    // Temporary method to mock/pass stored job result to child component.
-    return {
-      definition: {
-        system: this.system.definition,
-        parameters: this.jobSpec
-      },
-      status: "incomplete",
-      data_objects: []
-    };
-  }
   async submitJob() {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.create(token, this.jobSpec);
     if (response.ok) {
       const responseBody = await response.json();
       this.jobId = responseBody.object_id;
+      this.jobSubmitted = true;
+    } else {
+      this.errorState = true;
+      if (response.status == 422) {
+        const responseBody = await response.json();
+        this.apiErrors = responseBody.detail;
+      } else {
+        this.apiErrors = {
+          error: `Failed to start job with error code ${response.status}`
+        };
+      }
     }
-    this.jobSubmitted = true;
   }
   submitCalculation() {
     // TODO: Check job status, if ready, submit.
