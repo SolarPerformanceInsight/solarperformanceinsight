@@ -8,6 +8,7 @@ Component that handles basic job/workflows.
         <template v-if="jobType == 'calculate'">
           <!-- Usecase 1A & 1B -->
           <weather-upload
+            :jobId="jobId"
             :temperature_type="jobParameters.temperature_type"
             :system="job.definition.system_definition"
             :weather_granularity="jobParameters.weather_granularity"
@@ -17,12 +18,16 @@ Component that handles basic job/workflows.
             <b>
               Upload
               <template
-                v-if="jobParameters.job_type.calculate == 'predicted performance'"
+                v-if="
+                  jobParameters.job_type.calculate == 'predicted performance'
+                "
               >
                 Predicted
               </template>
               <template
-                v-if="jobParameters.job_type.calculate == 'expected performance'"
+                v-if="
+                  jobParameters.job_type.calculate == 'expected performance'
+                "
               >
                 Actual
               </template>

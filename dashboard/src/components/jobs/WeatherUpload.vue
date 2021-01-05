@@ -29,6 +29,9 @@ Takes the following props that can be extracted from job metadata.
     type="file"
     accept="text/csv"
     @change="processFile"/>
+    <template v-if="processingFile">
+      Loading File...
+    </template>
     <template v-if="promptForMapping">
       <div class="warning" v-if="headers.length < totalMappings">
         Warning: It looks like you may not have enough data in this file. The
@@ -54,6 +57,9 @@ Takes the following props that can be extracted from job metadata.
 import { Component, Vue, Prop } from "vue-property-decorator";
 import FileUpload from "@/components/FileUpload.vue";
 import { StoredSystem } from "@/types/System";
+import transposeCSV from "@/utils/transposeCSV";
+import mapToCSV from "@/utils/mapToCSV";
+import { addData } from "@/api/jobs";
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -80,20 +86,24 @@ const optionalFields = [
 
 @Component
 export default class WeatherUpload extends Vue {
+  @Prop() jobId!: string;
   @Prop() weather_granularity!: string;
   @Prop() irradiance_type!: string;
   @Prop() system!: StoredSystem;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
-  mapping!: Record<string, string>;
+  mapping!: Record<string, Record<string, string>>;
   promptForMapping!: boolean;
   headers!: Array<string>;
+  csvData!: Record<string, Array<any>>;
   required!: Array<string>;
   mappingComplete!: boolean;
+  processingFile!: boolean;
 
   data() {
     return {
       mapping: {},
+      processingFile: false,
       promptForMapping: false,
       headers: [],
       required: this.getRequired(),
@@ -101,19 +111,20 @@ export default class WeatherUpload extends Vue {
     }
   }
   mapAndStoreCSV(csv: string) {
-    // Parse headers for hand off to mapping components.
-    // TODO: parse file into apache arrow format (probably in utils module)
+    // Parse the csv into an object mapping csv-headers to arrays of column
+    // data.
     // TODO: parse first x lines for table to highlight mapping options
     //   during selection
     // TODO: allow for specification of header row and row where data starts
-    if (csv.indexOf("\n")){
-      this.headers = csv.slice(0, csv.indexOf("\n")).split(",");
-      this.promptForMapping = true;;
-    } else {
-      console.log("Bad csv");
-    }
+    transposeCSV(csv)
+      .then((result) => {
+        this.csvData = result;
+        this.headers = Object.keys(result);
+        this.processingFile = false;
+        this.promptForMapping = true;
+      });
   }
-  processMapping(newMapping: Record<string, string>) {
+  processMapping(newMapping: Record<string, Record<string, string>>) {
     // Handle a new mapping from the WeatherCSVMapper component, this is a
     // complete mapping, so set mappingComplete to true to enable upload
     // button.
@@ -122,6 +133,7 @@ export default class WeatherUpload extends Vue {
   }
   processFile(e: HTMLInputEvent) {
     // Handle a CSV upload, hand of parsing to mapAndStoreCSV
+    this.processingFile = true;
     if (e.target.files !== null) {
       const fileList = e.target.files;
       const file = e.target.files[0];
@@ -131,11 +143,20 @@ export default class WeatherUpload extends Vue {
       reader.readAsText(file);
     }
   }
-  uploadData() {
+  async uploadData() {
     // function to call when all mapping has been completed. Should complete
     // the mapping process and post to the API
-    console.log(this.mapping);
-    console.log("uploading data");
+    for (const dataObject of this.data_objects) {
+      // TODO: handle this on a single loc basis instead of looping all at once
+      const loc = dataObject.definition.schema_path;
+      const csv = mapToCSV(this.csvData, this.mapping[loc]);
+      const token = await this.$auth.getTokenSilently();
+      addData(token, this.jobId, dataObject.object_id, csv)
+        .then(res => {
+          console.log(`Location ${loc} uploaded.`);
+        });
+    }
+    this.$emit("data-uploaded");
   }
   getRequired() {
     let requiredFields: Array<string> = ["time"];

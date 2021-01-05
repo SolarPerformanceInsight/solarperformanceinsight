@@ -173,8 +173,8 @@ export default class FieldMapper extends Vue {
     }
     this.$emit("mapping-updated", {
       ...this.mapping,
-       loc: this.comp.data_object.definition.schema_path
-     });
+      loc: this.comp.data_object.definition.schema_path
+    });
     if (this.isValid()) {
       this.$emit("mapping-complete");
     }

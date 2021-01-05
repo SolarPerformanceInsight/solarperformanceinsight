@@ -20,3 +20,13 @@ export async function create(token: string, job: Record<string, any>) {
 export async function read(token: string, jobid: string) {
   return jobsRequest(token, "get", null, null, `/${jobid}`);
 }
+export async function addData(
+  token: string,
+  jobid: string,
+  dataid: string,
+  csv: string
+) {
+  const data = new FormData();
+  data.append("file", new Blob([csv], { type: "text/csv" }));
+  return jobsRequest(token, "post", null, data, `${jobid}/data/${dataid}`);
+}

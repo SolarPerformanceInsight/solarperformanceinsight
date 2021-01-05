@@ -22,37 +22,46 @@ Takes the following props:
       <div v-for="(thing, i) of toMap" :key="i">
         <div>
           <div class="data-object-header">
-            <b class="granularity">{{ weather_granularity }}:</b> {{ thing.metadata.name }}
-            <span class="warning-text" v-if="!thing.data_object.definition.present">Requires Data</span>
+            <b class="granularity">{{ weather_granularity }}:</b>
+            {{ thing.metadata.name }}
+            <span
+              class="warning-text"
+              v-if="!thing.data_object.definition.present"
+            >
+              Requires Data
+            </span>
             <span v-else>Complete</span>
             <button
               class="data-object-expander"
-              @click="dataObjectDisplay[refName(i)] = !dataObjectDisplay[refName(i)]"
-              v-bind:class="{ opened: dataObjectDisplay[refName(i)] }"></button>
+              @click="
+                dataObjectDisplay[refName(i)] = !dataObjectDisplay[refName(i)]
+              "
+              v-bind:class="{ opened: dataObjectDisplay[refName(i)] }"
+            ></button>
           </div>
           <transition name="expand">
-          <div v-if="dataObjectDisplay[refName(i)]">
-            <p>
-              What fields contain data for data for {{ weather_granularity }}
-              <b>{{ thing.metadata.name }}</b>
-              ?
-            </p>
-            <!-- ref argument here is used to determine if the mapping is complete
+            <div v-if="dataObjectDisplay[refName(i)]">
+              <p>
+                What fields contain data for data for {{ weather_granularity }}
+                <b>{{ thing.metadata.name }}</b>
+                ?
+              </p>
+              <!-- ref argument here is used to determine if the mapping is complete
                  (all objects have all required fields mapped).
             -->
-            <field-mapper
-              :ref="refName(i)"
-              @used-header="useHeader"
-              @free-header="freeHeader"
-              @mapping-updated="updateMapping"
-              :headers="headers"
-              :usedHeaders="usedHeaders"
-              :comp="thing"
-              :system="system"
-              :required="required"
-              :optional="optional"
-            />
-          </div>
+              <field-mapper
+                :ref="refName(i)"
+                @used-header="useHeader"
+                @free-header="freeHeader"
+                @mapping-updated="updateMapping"
+                :headers="headers"
+                :usedHeaders="usedHeaders"
+                :comp="thing"
+                :system="system"
+                :required="required"
+                :optional="optional"
+              />
+            </div>
           </transition>
         </div>
       </div>
@@ -170,9 +179,9 @@ export default class WeatherCSVMapper extends Vue {
     // valid and complete.
     return `${this.weather_granularity}_${index}`;
   }
-  initDataObjectDisplay(){
+  initDataObjectDisplay() {
     const visibleMap: Record<string, boolean> = {};
-    this.data_objects.map((x: any, i:number) => {
+    this.data_objects.map((x: any, i: number) => {
       visibleMap[this.refName(i)] = !x.definition.present;
     });
     return visibleMap;
@@ -180,9 +189,9 @@ export default class WeatherCSVMapper extends Vue {
 }
 </script>
 <style>
-.data-object-header{
+.data-object-header {
   border: 1px solid #444;
-  padding: .25em;
+  padding: 0.25em;
   position: relative;
 }
 
@@ -198,9 +207,9 @@ button.data-object-expander {
   margin: 0 1em;
   position: absolute;
   top: 25%;
-  transition: transform .5s;
+  transition: transform 0.5s;
 }
-button.data-object-expander.opened{
+button.data-object-expander.opened {
   transform: rotate(225deg);
 }
 button.data-object-expander:hover {
