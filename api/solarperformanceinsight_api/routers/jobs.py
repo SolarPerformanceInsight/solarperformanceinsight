@@ -1,16 +1,26 @@
 """Endpoints for running models"""
+import logging
 from typing import List
 
 
-from fastapi import APIRouter, Response, Request, Depends, UploadFile, File
+from fastapi import (
+    APIRouter,
+    Response,
+    Request,
+    Depends,
+    UploadFile,
+    File,
+    HTTPException,
+)
 from pydantic.types import UUID
 
 
 from . import default_get_responses
-from .. import models
+from .. import models, utils
 from ..storage import StorageInterface
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -129,7 +139,7 @@ async def get_job_data(
 @router.post(
     "/{job_id}/data/{data_id}",
     status_code=204,
-    responses={**default_get_responses, 204: {}},
+    responses={**default_get_responses, 204: {}, 415: {}},
 )
 async def post_job_data(
     job_id: UUID,
@@ -139,12 +149,33 @@ async def post_job_data(
     ),
     storage: StorageInterface = Depends(StorageInterface),
 ):
-    # check and reject content type
-    # check columns conform
-    content = await file.read()
-    await file.close()
+    read_fnc = utils.verify_content_type(file.content_type)
     with storage.start_transaction() as st:
-        st.add_job_data(job_id, data_id, file.filename, file.content_type, content)
+        job = st.get_job(job_id)
+    try:
+        data_obj = list(filter(lambda x: x.object_id == data_id, job.data_objects))[0]
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Job data upload denied")
+    expected_columns = data_obj.definition.data_columns
+    df = read_fnc(file.file)
+    await file.close()
+    utils.validate_dataframe(df, expected_columns)
+    # will fail w/o time column
+    df, extra_times, missing_times = utils.reindex_timeseries(
+        df, job.definition.parameters.time_parameters
+    )
+    # if missing > len(df) * .1 raise? or raise if any extra/missing?
+    arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(df))
+    with storage.start_transaction() as st:
+        st.add_job_data(
+            job_id,
+            data_id,
+            file.filename,
+            "application/vnd.apache.arrow.file",
+            arrow_bytes,
+        )
+    # more informative like how many valid rows, how many nan vals,
+    # how many inserted nans
 
 
 @router.post(

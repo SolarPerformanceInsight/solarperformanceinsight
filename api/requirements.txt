@@ -32,3 +32,5 @@ scipy==1.5.4
 requests==2.24.0
 python-multipart==0.0.5
 pytz==2020.4
+pyarrow==2.0.0
+accept-types==0.4.1

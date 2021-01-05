@@ -176,7 +176,6 @@ def stored_job(job_id, job_def, job_status, job_data_ids, job_data_meta):
             schema_path="/inverters/0/arrays/0",
             type="original weather data",
             filename="",
-            data_type="",
             data_columns=[
                 "time",
                 "poa_global",
