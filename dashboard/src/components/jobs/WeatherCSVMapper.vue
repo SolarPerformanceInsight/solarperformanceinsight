@@ -89,7 +89,6 @@ Takes the following props:
               :usedHeaders="usedHeaders"
               :comp="component"
               :required="requiredFields"
-              :optional="optional"
             >
               <p>
                 What fields contain data for {{ weather_granularity }}
@@ -121,7 +120,6 @@ export default class WeatherCSVMapper extends Vue {
   @Prop() weather_granularity!: string;
   @Prop() system!: System;
   @Prop() required!: Array<string>;
-  @Prop() optional!: Array<string>;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, string>;
   componentValidity!: Record<string, boolean>;
