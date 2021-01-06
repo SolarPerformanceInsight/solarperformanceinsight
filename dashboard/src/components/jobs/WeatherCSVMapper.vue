@@ -1,13 +1,9 @@
 <!--
-Component that handles the csv headers of one file and master mapping for the
+component that handles the csv headers of one file and master mapping for the
 system.
 Takes the following props:
   - headers: Array<string> - the csv headers to be mapped.
   - required: Array<string> - Required fields to be mapped for each component.
-  - optional: Array<string> - Optional fields to be mapped for each component.
-    - "module": requires that "module_temperature" be provided in the file.
-    - "cell": requires that "cell_temperature" be provided in the file.
-    - "air": requires that "temp_air" and "wind_speed" be provided".
   - weather_granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -19,41 +15,58 @@ Takes the following props:
 <template>
   <div class="weather-csv-mapper">
     <div>
-      <!-- Time mapping for the whole file -->
-      <b>Timestamp: </b>
-      <select @change="mapTime">
-        <option value="" disabled selected>
-          Unmapped
-        </option>
-        <option
-          v-for="(u, i) in headers"
-          :key="u"
-          :name="u"
-          :value="u"
-          :disabled="usedHeaders.includes(u)"
-        >
-        <template v-if="u == ''">column {{ i+1 }}</template>
-        <template v-else>{{ u }}</template>
-        </option>
-      </select>
+      <slot></slot>
+      <div>
+        <!-- Time mapping for the whole file -->
+        <b>Timestamp column: </b>
+        <select @change="mapTime">
+          <option value="" disabled selected>
+            Unmapped
+          </option>
+          <option
+            v-for="(u, i) in headers"
+            :key="u"
+            :name="u"
+            :value="u"
+            :disabled="usedHeaders.includes(u)"
+          >
+          <template v-if="u == ''">column {{ i+1 }}</template>
+          <template v-else>{{ u }}</template>
+          </option>
+        </select>
       <template v-if="!timeMapped">
         <span class="warning-text">Required</span>
       </template>
+      </div>
       <!-- Present a mapper for each System, Inverter, or Array (dependent on
            weather granularity.
         -->
-      <div v-for="(thing, i) of toMap" :key="i">
+      <div v-for="(component, i) of toMap" :key="i">
         <div>
           <div class="data-object-header">
+            <span class="object-name">
             <b class="granularity">{{ weather_granularity }}:</b>
-            {{ thing.metadata.name }}
-            <span
-              class="warning-text"
-              v-if="!thing.data_object.definition.present"
-            >
-              Requires Data
+            {{ component.metadata.name }}
             </span>
-            <span v-else>Complete</span>
+            <span class="component-requirements">
+              <!-- Text to alert user that fields need to be mapped -->
+              <span class="warning" v-if="!componentValidity[refName(i)]">
+                Missing Fields
+              </span>
+              <span v-else >
+                Field Mapping Complete
+              </span>
+              <!-- Text to alert user that the component requires data
+                   Uncomment when multi-file capability is added.
+              <span
+                class="component-requirement warning"
+                v-if="!component.data_object.definition.present"
+              >
+                Requires Data
+              </span>
+              <template v-else>Complete</template>
+              -->
+            </span>
             <button
               class="data-object-expander"
               @click="
@@ -63,11 +76,6 @@ Takes the following props:
             ></button>
           </div>
           <div v-if="dataObjectDisplay[refName(i)]">
-            <p>
-              What fields contain data for data for {{ weather_granularity }}
-              <b>{{ thing.metadata.name }}</b>
-              ?
-            </p>
             <!-- ref argument here is used to determine if the mapping is complete
                (all objects have all required fields mapped).
           -->
@@ -78,11 +86,17 @@ Takes the following props:
               @mapping-updated="updateMapping"
               :headers="headers"
               :usedHeaders="usedHeaders"
-              :comp="thing"
+              :comp="component"
               :system="system"
               :required="requiredFields"
               :optional="optional"
-            />
+            >
+              <p>
+              What fields contain data for {{ weather_granularity }}
+              <b>{{ component.metadata.name }}</b>
+              ?
+              </p>
+            </field-mapper>
           </div>
         </div>
       </div>
@@ -110,17 +124,17 @@ export default class WeatherCSVMapper extends Vue {
   @Prop() optional!: Array<string>;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, string>;
+  componentValidity!: Record<string, boolean>;
   usedHeaders!: Array<string>;
   isValid!: boolean;
-  timeMapped!: boolean
   timeField!: string;
 
   data() {
     return {
       mapping: {},
+      componentValidity: {},
       usedHeaders: [],
       isValid: false,
-      timeMapped: false,
       timeField: "",
       dataObjectDisplay: this.initDataObjectDisplay()
     };
@@ -198,6 +212,7 @@ export default class WeatherCSVMapper extends Vue {
       // @ts-expect-error
       componentValidity[ref] = this.$refs[ref][0].isValid();
     }
+    this.componentValidity = componentValidity;
     this.isValid = Object.values(componentValidity).every(x => x === true) && this.timeMapped;
     if (this.isValid) {
       this.$emit("mapping-complete", this.mapping);
@@ -218,16 +233,19 @@ export default class WeatherCSVMapper extends Vue {
     });
     return visibleMap;
   }
+  get timeMapped() {
+    return this.timeField != "";
+  }
   mapTime(event: any) {
     this.freeHeader(this.timeField);
     const timeHeader = event.target.value;
     this.timeField = timeHeader;
     this.useHeader(this.timeField);
-    this.timeMapped = true;
     for (const loc in this.mapping) {
       // @ts-expect-error
       this.mapping[loc]["time"] = this.timeField;
     }
+    this.checkValidity();
   }
 }
 </script>
@@ -236,6 +254,7 @@ export default class WeatherCSVMapper extends Vue {
   border: 1px solid #444;
   padding: 0.25em;
   position: relative;
+  display: flex;
 }
 
 button.data-object-expander {
@@ -249,6 +268,7 @@ button.data-object-expander {
   transform: rotate(45deg);
   margin: 0 1em;
   position: absolute;
+  right: 0;
   top: 25%;
   transition: transform 0.5s;
 }
@@ -272,5 +292,13 @@ button.data-object-expander:focus {
 }
 b.granularity {
   text-transform: capitalize;
+}
+.component-requirements {
+  display: inline-flex;
+  margin-left: auto;
+  margin-right: 2em;
+}
+.component-requirements span {
+  margin: 0 .5em;
 }
 </style>

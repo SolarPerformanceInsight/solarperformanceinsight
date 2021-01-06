@@ -10,7 +10,7 @@ a:not([href]):hover {
 }
 .warning {
   border: solid 1px #E00;
-  padding: .5em;
+  padding: .25em;
   color: #E00;
 }
 .warning-text {

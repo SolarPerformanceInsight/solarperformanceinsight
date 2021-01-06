@@ -4,10 +4,11 @@ Component that handles basic job/workflows.
 <template>
   <div class="job-handler">
     <template v-if="job">
-      <template v-if="jobStatus == 'incomplete'">
+      <template>
         <template v-if="jobType == 'calculate'">
           <!-- Usecase 1A & 1B -->
           <weather-upload
+            @weather-uploaded="handleWeather"
             :jobId="jobId"
             :temperature_type="jobParameters.temperature_type"
             :system="job.definition.system_definition"
@@ -44,9 +45,9 @@ Component that handles basic job/workflows.
           Not Implemented.
         </template>
       </template>
-      <template v-if="jobStatus == 'prepared'">
-        Job is ready for computation.
-        <button>Compute Job</button>
+      <button :disabled="jobStatus !='prepared'">Compute</button>
+      <template v-if="jobStatus != 'prepared'">
+        Data must be uploaded before computation.<br/>
       </template>
       <template v-if="jobStatus == 'error'">
         Something went wrong during report processing.
@@ -118,6 +119,11 @@ export default class JobHandler extends Vue {
   }
   get jobStatus() {
     return this.job.status.status;
+  }
+
+  handleWeather() {
+    // reload the job to get current state of data-objects
+    this.loadJob();
   }
 }
 </script>

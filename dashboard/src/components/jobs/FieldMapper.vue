@@ -1,11 +1,10 @@
 <!--
-Maps required and optional fields to headers.
+Maps required fields to headers.
 Takes the following properties
   - headers: Array<string> - An array of string headers available in the csv.
   - usedHeaders: Array<string> - An array for keeping track of headers that are
     already mapped.
   - required: Array<string> - An array of required variables to map.
-  - optional: Array<string> - An array of optional fields to map.
   - comp: SystemComponent - The System, Inverter, or Array being mapped.
 
 Components using the mapper should react to events emitted from this component:
@@ -18,12 +17,9 @@ Components using the mapper should react to events emitted from this component:
     should be used to determine the location of the mapped System component.
 -->
 <template>
-  <div class="csv-mapper">
+  <div class="field-mapper">
     <div>
       <div class="metadata" v-if="metadata">
-        <b>Name:</b>
-        {{ metadata.name }}
-        <br />
         <template v-if="'make_model' in metadata">
           <template v-if="'parent' in metadata">
             <b>Module Make and Model:</b>
@@ -58,31 +54,11 @@ Components using the mapper should react to events emitted from this component:
           </template>
         </template>
       </div>
+      <slot></slot>
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
           {{ getDisplayName(field) }} (required):
-          <select @change="addMapping($event, field)">
-            <option>Not included</option>
-            <option
-              v-for="(u, i) in headers"
-              :key="u"
-              :name="u"
-              :value="u"
-              :disabled="usedHeaders.includes(u)"
-            >
-              <template v-if="u == ''">column {{ i + 1 }}</template>
-              <template v-else>
-                {{ u }}
-              </template>
-            </option>
-          </select>
-        </li>
-      </ul>
-      <!-- optional fields -->
-      <ul class="mapping-list">
-        <li v-for="field of optional" :key="field">
-          {{ getDisplayName(field) }}:
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
@@ -190,9 +166,11 @@ export default class FieldMapper extends Vue {
 </script>
 <style scoped>
 div.metadata {
-  border: solid 1px black;
 }
 .mapping-list li {
   margin-top: 0.5em;
+}
+.field-mapper {
+  padding-left: 1em;
 }
 </style>

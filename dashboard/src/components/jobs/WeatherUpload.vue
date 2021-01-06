@@ -30,7 +30,7 @@ Takes the following props that can be extracted from job metadata.
     accept="text/csv"
     @change="processFile"/>
     <template v-if="processingFile">
-      Loading File...
+      <div class="loading-wheel">Processing File</div>
     </template>
     <template v-if="promptForMapping">
       <div class="warning" v-if="headers.length < totalMappings">
@@ -47,8 +47,12 @@ Takes the following props that can be extracted from job metadata.
         :weather_granularity="weather_granularity"
         :data_objects="data_objects"
         :headers="headers"
-        :required="required"
-        :optional="optional" />
+        :required="required" >
+        <p>Select which columns in your file contain data for the required
+           variables. Data can be uploaded using the button below once the
+           required variables are mapped to columns for
+           {{ weather_granularity == 'system' ? 'the system': `each ${weather_granularity}` }}.</p>
+      </weather-csv-mapper>
       <button :disabled="!mappingComplete" @click="uploadData">Upload Data</button><span v-if="!mappingComplete">All required fields must be mapped before upload</span>
     </template>
   </div>
@@ -156,7 +160,7 @@ export default class WeatherUpload extends Vue {
           console.log(`Location ${loc} uploaded.`);
         });
     }
-    this.$emit("data-uploaded");
+    this.$emit("weather-uploaded");
   }
   getRequired() {
     let requiredFields: Array<string> = ["time"];
@@ -168,9 +172,6 @@ export default class WeatherUpload extends Vue {
       )
     );
     return requiredFields;
-  }
-  get optional() {
-    return optionalFields.filter(x => !this.required.includes(x));
   }
   get totalMappings() {
     return this.required.length * this.data_objects.length;
