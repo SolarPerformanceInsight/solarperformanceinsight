@@ -9,7 +9,8 @@ Takes the following props:
     - "system": System wide data in the file.
     - "inverter": Data for each inverter in the file.
     - "array": Data for each array in the file.
-  - system: StoredSystem: The system to map data onto.
+  - system: System: The system definition stored with the job as
+    `system_definition`.
 
 -->
 <template>
@@ -18,7 +19,7 @@ Takes the following props:
       <slot></slot>
       <div>
         <!-- Time mapping for the whole file -->
-        <b>Timestamp column: </b>
+        <b>Timestamp column:</b>
         <select @change="mapTime">
           <option value="" disabled selected>
             Unmapped
@@ -30,13 +31,13 @@ Takes the following props:
             :value="u"
             :disabled="usedHeaders.includes(u)"
           >
-          <template v-if="u == ''">column {{ i+1 }}</template>
-          <template v-else>{{ u }}</template>
+            <template v-if="u == ''">column {{ i + 1 }}</template>
+            <template v-else>{{ u }}</template>
           </option>
         </select>
-      <template v-if="!timeMapped">
-        <span class="warning-text">Required</span>
-      </template>
+        <template v-if="!timeMapped">
+          <span class="warning-text">Required</span>
+        </template>
       </div>
       <!-- Present a mapper for each System, Inverter, or Array (dependent on
            weather granularity.
@@ -45,15 +46,15 @@ Takes the following props:
         <div>
           <div class="data-object-header">
             <span class="object-name">
-            <b class="granularity">{{ weather_granularity }}:</b>
-            {{ component.metadata.name }}
+              <b class="granularity">{{ weather_granularity }}:</b>
+              {{ component.metadata.name }}
             </span>
             <span class="component-requirements">
               <!-- Text to alert user that fields need to be mapped -->
               <span class="warning" v-if="!componentValidity[refName(i)]">
                 Missing Fields
               </span>
-              <span v-else >
+              <span v-else>
                 Field Mapping Complete
               </span>
               <!-- Text to alert user that the component requires data
@@ -87,14 +88,13 @@ Takes the following props:
               :headers="headers"
               :usedHeaders="usedHeaders"
               :comp="component"
-              :system="system"
               :required="requiredFields"
               :optional="optional"
             >
               <p>
-              What fields contain data for {{ weather_granularity }}
-              <b>{{ component.metadata.name }}</b>
-              ?
+                What fields contain data for {{ weather_granularity }}
+                <b>{{ component.metadata.name }}</b>
+                ?
               </p>
             </field-mapper>
           </div>
@@ -213,7 +213,9 @@ export default class WeatherCSVMapper extends Vue {
       componentValidity[ref] = this.$refs[ref][0].isValid();
     }
     this.componentValidity = componentValidity;
-    this.isValid = Object.values(componentValidity).every(x => x === true) && this.timeMapped;
+    this.isValid =
+      Object.values(componentValidity).every(x => x === true) &&
+      this.timeMapped;
     if (this.isValid) {
       this.$emit("mapping-complete", this.mapping);
     } else {
@@ -299,6 +301,6 @@ b.granularity {
   margin-right: 2em;
 }
 .component-requirements span {
-  margin: 0 .5em;
+  margin: 0 0.5em;
 }
 </style>

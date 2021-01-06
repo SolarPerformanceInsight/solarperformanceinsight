@@ -45,9 +45,10 @@ Component that handles basic job/workflows.
           Not Implemented.
         </template>
       </template>
-      <button :disabled="jobStatus !='prepared'">Compute</button>
+      <button :disabled="jobStatus != 'prepared'">Compute</button>
       <template v-if="jobStatus != 'prepared'">
-        Data must be uploaded before computation.<br/>
+        Data must be uploaded before computation.
+        <br />
       </template>
       <template v-if="jobStatus == 'error'">
         Something went wrong during report processing.

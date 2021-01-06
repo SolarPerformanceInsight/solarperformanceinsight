@@ -119,7 +119,6 @@ export default class FieldMapper extends Vue {
   @Prop() usedHeaders!: Array<string>;
   @Prop() required!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
-  @Prop() system!: StoredSystem;
   mapping!: Record<string, string>;
 
   data() {
