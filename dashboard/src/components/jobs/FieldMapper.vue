@@ -90,7 +90,7 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
-interface MetadataWithLoc {
+interface MetadataWithDataObject {
   data_object: Record<string, any>;
   metadata: System | Inverter | PVArray;
 }
@@ -118,8 +118,7 @@ export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
   @Prop() required!: Array<string>;
-  @Prop() optional!: Array<string>;
-  @Prop() comp!: MetadataWithLoc;
+  @Prop() comp!: MetadataWithDataObject;
   @Prop() system!: StoredSystem;
   mapping!: Record<string, string>;
 
