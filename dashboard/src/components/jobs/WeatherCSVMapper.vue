@@ -145,9 +145,9 @@ export default class WeatherCSVMapper extends Vue {
     return unmapped;
   }
   get toMap() {
-    /* Create an array containing objects with a loc string and metadata
+    /* Create an array containing objects with a data object and metadata
      * object.
-     * - loc: string - path of the object relative to System root.
+     * - data_object: Object - Data object from the api.
      * - metadata: System | Inverter | PVArray - metadata of the object
      *     to be mapped.
      */
