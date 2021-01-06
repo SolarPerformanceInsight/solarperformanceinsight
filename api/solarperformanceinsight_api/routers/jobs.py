@@ -1,8 +1,9 @@
 """Endpoints for running models"""
 import logging
-from typing import List
+from typing import List, Optional, Union, Type
 
 
+from accept_types import AcceptableType  # type: ignore
 from fastapi import (
     APIRouter,
     Response,
@@ -10,6 +11,7 @@ from fastapi import (
     Depends,
     UploadFile,
     File,
+    Header,
     HTTPException,
 )
 from pydantic.types import UUID
@@ -122,18 +124,79 @@ class ArrowResponse(Response):
     media_type = "application/vnd.apache.arrow.file"
 
 
+class CSVResponse(Response):
+    media_type = "text/csv"
+
+
 @router.get(
     "/{job_id}/data/{data_id}",
-    response_class=ArrowResponse,
-    responses=default_get_responses,
+    response_class=CSVResponse,
+    responses={
+        **default_get_responses,
+        406: {},
+        200: {
+            "content": {
+                "application/vnd.apache.arrow.file": {},
+                "text/csv": {
+                    "example": """time,performance
+2020-01-01T12:00:00Z,101.98
+2020-01-01T13:00:00Z,102.30"""
+                },
+            },
+            "description": "Return the data as an Apache Arrow file or a CSV.",
+        },
+    },
 )
 async def get_job_data(
-    job_id: UUID, data_id: UUID, storage: StorageInterface = Depends(StorageInterface)
-):
+    job_id: UUID,
+    data_id: UUID,
+    storage: StorageInterface = Depends(StorageInterface),
+    accept: Optional[str] = Header(None),
+) -> Union[CSVResponse, ArrowResponse]:
+    type_ = AcceptableType(accept)
+
+    resp: Union[Type[CSVResponse], Type[ArrowResponse]]
+    if type_.matches("text/csv"):
+        resp = CSVResponse
+        meta_type = "text/csv"
+    elif type_.matches("application/vnd.apache.arrow.file"):
+        resp = ArrowResponse
+        meta_type = "application/vnd.apache.arrow.file"
+    else:
+        raise HTTPException(
+            status_code=406,
+            detail="Only 'text/csv' or 'application/vnd.apache.arrow.file' acceptable",
+        )
     with storage.start_transaction() as st:
         meta, data = st.get_job_data(job_id, data_id)
-        # check data type?
-    return ArrowResponse(data)
+    return _convert_job_data(data, meta.definition.data_format, meta_type, resp)
+
+
+def _convert_job_data(data, data_format, requested_mimetype, response_class):
+    if requested_mimetype == data_format:
+        return response_class(data)
+    elif (
+        data_format == "application/vnd.apache.arrow.file"
+        and requested_mimetype == "text/csv"
+    ):
+        try:
+            df = utils.read_arrow(data)
+        except HTTPException:
+            logger.exception("Read arrow failed")
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Unable to convert data saved as Apache Arrow format, "
+                    "try retrieving as application/vnc.apache.arrow.file and converting"
+                ),
+            )
+        csv = df.to_csv(None, index=False)
+        return response_class(csv)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=(f"Unable to convert from {data_format} to {requested_mimetype}"),
+        )
 
 
 @router.post(
