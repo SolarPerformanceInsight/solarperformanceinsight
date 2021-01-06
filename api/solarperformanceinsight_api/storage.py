@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Callable, Dict, Any, Tuple
+from typing import List, Callable, Dict, Any, Tuple, Union
 from uuid import UUID
 
 
@@ -277,7 +277,10 @@ class StorageInterface:
         return self._parse_job(job)
 
     def _parse_job_data_meta(
-        self, data_meta: Dict[str, Any]
+        self,
+        data_meta: Dict[str, Any],
+        weather_cols: Union[List[str], None] = None,
+        performance_cols: Union[List[str], None] = None,
     ) -> models.StoredJobDataMetadata:
         data_meta["object_id"] = data_meta.pop("id")
         data_meta["object_type"] = "job_data"
@@ -288,8 +291,12 @@ class StorageInterface:
         data_meta["definition"] = {
             k: data_meta[k]
             for k in models.JobDataMetadata.schema()["properties"].keys()
-            if data_meta[k] is not None
+            if k != "data_columns" and data_meta[k] is not None
         }
+        if weather_cols is not None and "weather" in data_meta["type"]:
+            data_meta["definition"]["data_columns"] = weather_cols
+        if performance_cols is not None and "performance" in data_meta["type"]:
+            data_meta["definition"]["data_columns"] = performance_cols
         return models.StoredJobDataMetadata(**data_meta)
 
     def _parse_job(self, job: Dict[str, Any]) -> models.StoredJob:
@@ -298,9 +305,15 @@ class StorageInterface:
         job["status"]["last_change"] = convert_datetime_utc(
             job["status"]["last_change"]
         )
+        jobmod = models.Job(**job["definition"])
+        job["definition"] = jobmod
         jdo = []
         for do in job["data_objects"]:
-            jdo.append(self._parse_job_data_meta(do))
+            jdo.append(
+                self._parse_job_data_meta(
+                    do, jobmod._weather_columns, jobmod._performance_columns
+                )
+            )
         job["data_objects"] = jdo
         return models.StoredJob(**job)
 
