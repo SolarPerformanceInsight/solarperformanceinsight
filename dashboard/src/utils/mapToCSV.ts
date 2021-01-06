@@ -16,7 +16,7 @@ export default function(
     }
   }
   // zip columns of values into rows
-  const rows: Array<any> = []
+  const rows: Array<any> = [];
   columns[0].forEach((v: Array<any>, i: number) => {
     const row = [v];
     for (let j = 1; j < columns.length; j++) {
