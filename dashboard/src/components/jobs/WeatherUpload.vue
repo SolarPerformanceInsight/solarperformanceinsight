@@ -69,24 +69,6 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
-// Maps the required irradiance components to the data that the user has
-const requiredIrradianceFields = {
-  standard: ["dni", "ghi", "dhi"],
-  poa: ["poa_global", "poa_direct", "poa_diffuse"],
-  effective: ["effective_irradiance"]
-};
-const requiredTemperatureFields = {
-  cell: ["cell_temperature"],
-  module: ["module_temperature"],
-  air: ["temp_air", "wind_speed"]
-};
-
-const optionalFields = [
-  "temp_air",
-  "wind_speed",
-  "cell_temperature",
-  "module_temperature"
-];
 
 @Component
 export default class WeatherUpload extends Vue {
@@ -163,15 +145,9 @@ export default class WeatherUpload extends Vue {
     this.$emit("weather-uploaded");
   }
   getRequired() {
-    let requiredFields: Array<string> = ["time"];
-    requiredFields = requiredFields.concat(
-      //@ts-expect-error
-      requiredIrradianceFields[this.irradiance_type].concat(
-        // @ts-expect-error
-        requiredTemperatureFields[this.temperature_type]
-      )
-    );
-    return requiredFields;
+    // May need to be updated if required fields are ever different for weather
+    // data objects
+    return this.data_objects[0].definition.data_columns;
   }
   get totalMappings() {
     return this.required.length * this.data_objects.length;

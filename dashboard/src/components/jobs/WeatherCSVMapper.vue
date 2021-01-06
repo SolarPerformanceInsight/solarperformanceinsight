@@ -3,7 +3,6 @@ component that handles the csv headers of one file and master mapping for the
 system.
 Takes the following props:
   - headers: Array<string> - the csv headers to be mapped.
-  - required: Array<string> - Required fields to be mapped for each component.
   - weather_granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -88,7 +87,6 @@ Takes the following props:
               :headers="headers"
               :usedHeaders="usedHeaders"
               :comp="component"
-              :required="requiredFields"
             >
               <p>
                 What fields contain data for {{ weather_granularity }}
@@ -119,7 +117,6 @@ export default class WeatherCSVMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() weather_granularity!: string;
   @Prop() system!: System;
-  @Prop() required!: Array<string>;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, string>;
   componentValidity!: Record<string, boolean>;
@@ -180,11 +177,6 @@ export default class WeatherCSVMapper extends Vue {
         };
       });
     }
-  }
-  get requiredFields() {
-    // Returns the list of required fields, other than 'time' to be mapped
-    // for each object appropriate for the granularity
-    return this.required.filter(r => r != "time");
   }
   useHeader(header: string) {
     this.usedHeaders.push(header);

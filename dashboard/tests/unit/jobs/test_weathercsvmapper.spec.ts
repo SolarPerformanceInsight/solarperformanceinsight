@@ -100,7 +100,14 @@ const testJob = {
       definition: {
         schema_path: "/inverters/0/arrays/0",
         type: "original weather data",
-        present: false
+        present: false,
+        data_columns: [
+          "time",
+          "poa_global",
+          "poa_direct",
+          "poa_diffuse",
+          "module_temperature"
+        ]
       }
     }
   ]
@@ -109,8 +116,6 @@ const testJob = {
 const headers = ["timestamp", "global", "direct", "diffuse"];
 
 const usedHeaders: Array<string> = [];
-
-const required = ["time", "ghi", "dni", "dhi"];
 
 // vue test setup
 const localVue = createLocalVue();
@@ -125,15 +130,12 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: testJob.data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {
       localVue,
       propsData
     });
-    // @ts-expect-error
-    expect(weatherHandler.vm.requiredFields).toEqual(["ghi", "dni", "dhi"]);
     // @ts-expect-error
     expect(weatherHandler.vm.unMapped).toEqual(headers);
 
@@ -170,7 +172,14 @@ describe("Test CSV Mapper", () => {
         definition: {
           schema_path: "/inverters/0",
           type: "original weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       }
     ];
@@ -178,7 +187,6 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: "inverter",
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {
@@ -203,7 +211,14 @@ describe("Test CSV Mapper", () => {
         definition: {
           schema_path: "/",
           type: "original weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       }
     ];
@@ -211,7 +226,6 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: "system",
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {
@@ -231,7 +245,6 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: testJob.data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {
@@ -250,7 +263,6 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: testJob.data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {
@@ -271,7 +283,6 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       weather_granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      required: required,
       data_objects: testJob.data_objects
     };
     const weatherHandler = mount(WeatherCSVMapper, {

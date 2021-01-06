@@ -4,7 +4,6 @@ Takes the following properties
   - headers: Array<string> - An array of string headers available in the csv.
   - usedHeaders: Array<string> - An array for keeping track of headers that are
     already mapped.
-  - required: Array<string> - An array of required variables to map.
   - comp: SystemComponent - The System, Inverter, or Array being mapped.
 
 Components using the mapper should react to events emitted from this component:
@@ -117,7 +116,6 @@ const displayNames = {
 export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
-  @Prop() required!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
   mapping!: Record<string, string>;
 
@@ -128,6 +126,13 @@ export default class FieldMapper extends Vue {
   }
   get metadata() {
     return this.comp.metadata;
+  }
+  get required() {
+    // return all required fields besides time, which is mapped at the
+    // file level
+    return this.comp.data_object.definition.data_columns.filter(
+      (x: string) => x != "time"
+    );
   }
   addMapping(event: any, variable: string) {
     const fileHeader = event.target.value;
@@ -158,7 +163,7 @@ export default class FieldMapper extends Vue {
     return displayNames[variable];
   }
   isValid() {
-    return this.required.every(x => x in this.mapping);
+    return this.required.every((x: string) => x in this.mapping);
   }
 }
 </script>

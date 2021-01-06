@@ -33,7 +33,8 @@ const comp = {
     definition: {
       schema_path: "/",
       type: "original weather data",
-      present: false
+      present: false,
+      data_columns: ["time", "ghi", "dni", "dhi"]
     }
   },
   metadata: testSystem.definition
@@ -43,7 +44,7 @@ const headers = ["timestamp", "global", "direct", "diffuse"];
 
 const usedHeaders: Array<string> = [];
 
-const required = ["time", "ghi", "dni", "dhi"];
+const required = comp.data_object.definition.data_columns;
 
 // vue test setup
 const localVue = createLocalVue();
@@ -53,7 +54,6 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      required,
       comp
     };
     const wrapper = mount(FieldMapper, {
@@ -61,7 +61,7 @@ describe("Test field mapper", () => {
       propsData
     });
     const fields = wrapper.findAll("li");
-    expect(fields).toHaveLength(required.length);
+    expect(fields).toHaveLength(required.length - 1);
     fields.wrappers.forEach(f => {
       const headerOptions = f.findAll("option");
       expect(headerOptions).toHaveLength(headers.length + 1);
@@ -82,7 +82,6 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      required,
       comp: arrayComp
     };
     const wrapper = mount(FieldMapper, {
@@ -96,7 +95,7 @@ describe("Test field mapper", () => {
     expect(metaLabels.wrappers[3].text()).toBe("Inverter Name:");
     expect(metaLabels.wrappers[4].text()).toBe("Inverter Make and Model:");
     const fields = wrapper.findAll("li");
-    expect(fields).toHaveLength(required.length);
+    expect(fields).toHaveLength(required.length - 1);
     fields.wrappers.forEach(f => {
       const headerOptions = f.findAll("option");
       expect(headerOptions).toHaveLength(headers.length + 1);
@@ -119,7 +118,6 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      required,
       comp: arrayComp
     };
     const wrapper = mount(FieldMapper, {
@@ -133,7 +131,7 @@ describe("Test field mapper", () => {
     expect(metaLabels.wrappers[3].text()).toBe("Inverter Name:");
     expect(metaLabels.wrappers[4].text()).toBe("Inverter Make and Model:");
     const fields = wrapper.findAll("li");
-    expect(fields).toHaveLength(required.length);
+    expect(fields).toHaveLength(required.length - 1);
     fields.wrappers.forEach(f => {
       const headerOptions = f.findAll("option");
       expect(headerOptions).toHaveLength(headers.length + 1);
@@ -151,7 +149,6 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      required,
       comp: inverterComp
     };
     const wrapper = mount(FieldMapper, {
@@ -161,7 +158,7 @@ describe("Test field mapper", () => {
     const metaLabels = wrapper.findAll("b");
     expect(metaLabels.wrappers[0].text()).toBe("Make and Model:");
     const fields = wrapper.findAll("li");
-    expect(fields).toHaveLength(required.length);
+    expect(fields).toHaveLength(required.length - 1);
     fields.wrappers.forEach(f => {
       const headerOptions = f.findAll("option");
       expect(headerOptions).toHaveLength(headers.length + 1);
@@ -175,7 +172,6 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      required,
       comp
     };
     const wrapper = mount(FieldMapper, {
