@@ -230,7 +230,16 @@ def test_post_job_data_arrow(
             )
         },
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == 0
+    assert rjson["missing_times"] == []
+    assert rjson["number_of_extra_rows"] == 0
+    assert rjson["extra_times"] == []
+    assert rjson["number_of_expected_rows"] == len(df)
+    assert rjson["number_of_missing_values"] == {
+        c: 0 for c in df.columns if c != "time"
+    }
     job_resp = client.get(f"/jobs/{job_id}")
     assert (
         job_resp.json()["data_objects"][ind]["definition"]["filename"]
@@ -259,7 +268,17 @@ def test_post_job_data_csv(
             )
         },
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == 0
+    assert rjson["missing_times"] == []
+    assert rjson["number_of_extra_rows"] == 0
+    assert rjson["extra_times"] == []
+    assert rjson["number_of_expected_rows"] == len(df)
+    assert rjson["number_of_missing_values"] == {
+        c: 0 for c in df.columns if c != "time"
+    }
+
     job_resp = client.get(f"/jobs/{job_id}")
     assert (
         job_resp.json()["data_objects"][ind]["definition"]["filename"] == "job_data.csv"
@@ -332,11 +351,9 @@ def test_post_job_data_missing_col(client, job_id, job_data_ids, weather_df):
     assert response.status_code == 400
 
 
-def test_post_job_data_not_full_index(
-    client, job_id, job_data_ids, nocommit_transaction, weather_df
-):
+def test_post_job_data_not_enough(client, job_id, job_data_ids, weather_df):
     iob = BytesIO()
-    weather_df.iloc[1:].reset_index().to_feather(iob)
+    weather_df.iloc[:10].reset_index().to_feather(iob)
     iob.seek(0)
     response = client.post(
         f"/jobs/{job_id}/data/{job_data_ids[0]}",
@@ -348,7 +365,85 @@ def test_post_job_data_not_full_index(
             )
         },
     )
-    assert response.status_code == 204
+    assert response.status_code == 400
+
+
+def test_post_job_data_duplicate_points(client, job_id, job_data_ids, weather_df):
+    iob = BytesIO()
+    ndf = weather_df.copy()
+    pd.concat([weather_df, ndf], ignore_index=True).reset_index().to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{job_id}/data/{job_data_ids[0]}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_post_job_data_too_many_datapoints(client, job_id, job_data_ids, weather_df):
+    iob = BytesIO()
+    ndf = weather_df.copy()
+    ndf.loc[:, "time"] += pd.Timedelta("500d")
+    ndf.index = weather_df.index + 10000
+    o = pd.concat(
+        [weather_df, ndf.loc[weather_df.index[-1] :]], ignore_index=True
+    ).reset_index(drop=True)
+    o.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{job_id}/data/{job_data_ids[0]}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 400
+    assert "additional rows" in response.json()["detail"]
+
+
+def test_post_job_data_not_full_index(
+    client, job_id, job_data_ids, nocommit_transaction, weather_df
+):
+    iob = BytesIO()
+    extra_times = [pd.Timestamp("19700501T0000Z"), pd.Timestamp("20190101T0000Z")]
+    ndf = weather_df.iloc[1:].reset_index()
+    ndf = pd.concat([ndf, pd.DataFrame({"time": extra_times})]).reset_index()
+    ndf.loc[100, "poa_global"] = None
+    ndf.loc[1000:1009, "poa_diffuse"] = None
+    ndf.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{job_id}/data/{job_data_ids[0]}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == 1
+    assert rjson["missing_times"] == [weather_df["time"][0].isoformat()]
+    assert rjson["number_of_extra_rows"] == 2
+    assert rjson["extra_times"] == [e.isoformat() for e in extra_times]
+    assert rjson["number_of_expected_rows"] == len(weather_df)
+    assert rjson["number_of_missing_values"] == {
+        "poa_global": 1,
+        "poa_diffuse": 10,
+        "poa_direct": 0,
+        "module_temperature": 0,
+    }
 
 
 def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weather_df):
@@ -359,7 +454,7 @@ def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weat
         f"/jobs/{job_id}/data/{job_data_ids[0]}",
         files={"file": ("test.arrow", iob, "application/vnd.apache.arrow.file")},
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     response = client.get(f"/jobs/{job_id}/status")
     assert response.json()["status"] == "prepared"
     response = client.post(f"/jobs/{job_id}/compute")
@@ -386,7 +481,7 @@ def test_create_upload_compute_delete(
         f"/jobs/{new_id}/data/{data_id}",
         files={"file": ("test.arrow", iob, "application/vnd.apache.arrow.file")},
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     response = client.get(f"/jobs/{new_id}/status")
     assert response.json()["status"] == "prepared"
     response = client.post(f"/jobs/{new_id}/compute")

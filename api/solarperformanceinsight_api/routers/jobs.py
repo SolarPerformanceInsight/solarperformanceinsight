@@ -205,8 +205,8 @@ def _convert_job_data(data, data_format, requested_mimetype, response_class):
 
 @router.post(
     "/{job_id}/data/{data_id}",
-    status_code=204,
-    responses={**default_get_responses, 204: {}, 415: {}},
+    responses={**default_get_responses, 415: {}},
+    response_model=models.DataParsingStats,
 )
 async def post_job_data(
     job_id: UUID,
@@ -222,7 +222,7 @@ async def post_job_data(
         ),
     ),
     storage: StorageInterface = Depends(StorageInterface),
-):
+) -> models.DataParsingStats:
     read_fnc = utils.verify_content_type(file.content_type)
     with storage.start_transaction() as st:
         job = st.get_job(job_id)
@@ -238,7 +238,25 @@ async def post_job_data(
     df, extra_times, missing_times = utils.reindex_timeseries(
         df, job.definition.parameters.time_parameters
     )
-    # if missing > len(df) * .1 raise? or raise if any extra/missing?
+    percent_missing = len(missing_times) / len(df.index) * 100
+    if percent_missing > 10:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Over {percent_missing:0.2f}% of rows were missing from the "
+                "data upload to conform to the job's stated time index."
+            ),
+        )
+    percent_extra = len(extra_times) / len(df.index) * 100
+    if percent_extra > 10:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"There were over {percent_extra:0.2f}% additional rows compared "
+                "to the number of expected rows according to the job's time parameters."
+                " Please double check your data upload."
+            ),
+        )
     arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(df))
     with storage.start_transaction() as st:
         st.add_job_data(
@@ -248,8 +266,18 @@ async def post_job_data(
             "application/vnd.apache.arrow.file",
             arrow_bytes,
         )
-    # more informative like how many valid rows, how many nan vals,
-    # how many inserted nans
+    dft = df[expected_columns].set_index("time")
+    missing_vals = (
+        dft.loc[dft.index.difference(missing_times)].isna().sum(axis=0).to_dict()
+    )
+    return models.DataParsingStats(
+        number_of_expected_rows=len(df.index),
+        number_of_extra_rows=len(extra_times),
+        number_of_missing_rows=len(missing_times),
+        extra_times=extra_times,
+        missing_times=missing_times,
+        number_of_missing_values=missing_vals,
+    )
 
 
 @router.post(

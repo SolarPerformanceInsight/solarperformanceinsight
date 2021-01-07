@@ -111,6 +111,13 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             raise HTTPException(
                 status_code=400, detail='"time" column must only have second precision'
             )
+        # check for duplicates
+        extra_times = len(df["time"]) - len(df["time"].unique())
+        if extra_times != 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f'"time" column has {extra_times} duplicate entries',
+            )
     bad_types = []
     for col in expected - {"time"}:
         if not is_numeric_dtype(df[col]):
@@ -125,7 +132,7 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
 
 def reindex_timeseries(
     df: pd.DataFrame, jobtimeindex: models.JobTimeindex
-) -> Tuple[pd.DataFrame, int, int]:
+) -> Tuple[pd.DataFrame, List[pd.Timestamp], List[pd.Timestamp]]:
     """Conforms a dataframe to the expected time index for a job"""
     newdf = df.set_index("time").sort_index()
     if newdf.index.tzinfo is None:
@@ -133,11 +140,11 @@ def reindex_timeseries(
     else:
         newdf = newdf.tz_convert(jobtimeindex.timezone)
     if not newdf.index.equals(jobtimeindex._time_range):
-        extra = newdf.index.difference(jobtimeindex._time_range)
-        missing = jobtimeindex._time_range.difference(newdf.index)
+        extra = newdf.index.difference(jobtimeindex._time_range).to_list()
+        missing = jobtimeindex._time_range.difference(newdf.index).to_list()
     else:
-        extra = 0
-        missing = 0
+        extra = []
+        missing = []
     newdf = newdf.reindex(jobtimeindex._time_range, copy=False)
     newdf.index.name = "time"
     newdf.reset_index(inplace=True)

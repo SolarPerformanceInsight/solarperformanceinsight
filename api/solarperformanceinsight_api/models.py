@@ -1,6 +1,6 @@
 import datetime as dt
 from enum import Enum
-from typing import Union, List, Optional, Any, Tuple
+from typing import Union, List, Optional, Any, Tuple, Dict
 
 
 import pandas as pd
@@ -965,3 +965,37 @@ class StoredJob(StoredObject):
                 ],
             }
         }
+
+
+class DataParsingStats(BaseModel):
+    number_of_expected_rows: int = Field(
+        ..., description="Number of total rows expected in the data upload."
+    )
+    number_of_extra_rows: int = Field(
+        ...,
+        description="Number of rows outside the specified time parameters for the job.",
+    )
+    number_of_missing_rows: int = Field(
+        ..., description="Number of rows that were missing but expected in the upload."
+    )
+    extra_times: List[dt.datetime] = Field(
+        ...,
+        description=(
+            "Times that were included in the upload but are outside the "
+            "job time parameters."
+        ),
+    )
+    missing_times: List[dt.datetime] = Field(
+        ...,
+        description=(
+            "Times that were expected based on the job time parameters "
+            "but missing from the upload."
+        ),
+    )
+    number_of_missing_values: Dict[str, int] = Field(
+        ...,
+        description=(
+            "Number of values in each column that were missing upon upload. "
+            "Does not include whole rows that were missing."
+        ),
+    )

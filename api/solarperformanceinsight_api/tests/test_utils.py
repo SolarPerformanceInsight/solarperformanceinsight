@@ -164,6 +164,16 @@ def test_verify_content_type(inp, exp):
             ["time", "b"],
             set(),
         ),
+        httpfail(
+            pd.DataFrame(
+                {
+                    "time": [pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-01")],
+                    "b": [0.8, 1],
+                },
+            ),
+            ["time", "b"],
+            set(),
+        ),
     ),
 )
 def test_validate_dataframe(inp, cols, exp):
@@ -315,3 +325,7 @@ def test_dump_arrow_bytes(df):
     assert isinstance(out, bytes)
     new = feather.read_feather(BytesIO(out))
     pd.testing.assert_frame_equal(df, new)
+
+
+def test_reindex_timeseries():
+    raise NotImplementedError()
