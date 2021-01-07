@@ -14,7 +14,7 @@
       min="1"
       max="60"
       step="1"
-    />
+    /> minutes
     <br />
     <b>Timezone:</b>
     <input @change="emitParams" v-model="timezone" class="timezone" />
@@ -45,7 +45,7 @@ export default class JobTimeParameters extends Vue {
     const timeParams = {
       start: this.start,
       end: this.end,
-      step: this.step,
+      step: this.step * 60,
       timezone: this.timezone
     };
     this.$emit("new-timeparams", timeParams);
