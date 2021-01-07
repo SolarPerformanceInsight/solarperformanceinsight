@@ -134,6 +134,7 @@ class CSVResponse(Response):
     responses={
         **default_get_responses,
         406: {},
+        204: {"description": "Data object exists but no data has been uploaded."},
         200: {
             "content": {
                 "application/vnd.apache.arrow.file": {},
@@ -153,7 +154,7 @@ async def get_job_data(
     data_id: UUID,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-) -> Union[CSVResponse, ArrowResponse]:
+) -> Union[CSVResponse, ArrowResponse, Response]:
     type_ = AcceptableType(accept)
 
     resp: Union[Type[CSVResponse], Type[ArrowResponse]]
@@ -170,6 +171,8 @@ async def get_job_data(
         )
     with storage.start_transaction() as st:
         meta, data = st.get_job_data(job_id, data_id)
+    if not meta.definition.present or len(data) == 0:
+        return Response(status_code=204)
     return _convert_job_data(data, meta.definition.data_format, meta_type, resp)
 
 

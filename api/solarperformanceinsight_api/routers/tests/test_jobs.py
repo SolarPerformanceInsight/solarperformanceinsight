@@ -78,6 +78,11 @@ def test_get_job_data(client, job_id, job_data_ids, job_data_meta):
     )
 
 
+def test_get_job_data_not_there(client, job_id, job_data_ids, job_data_meta):
+    response = client.get(f"/jobs/{job_id}/data/{job_data_ids[0]}")
+    assert response.status_code == 204
+
+
 def test_get_job_data_arrow(
     client, job_id, job_data_ids, job_data_meta, arrow_job_data
 ):
