@@ -277,6 +277,11 @@ describe("Test CSV Mapper", () => {
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/": { ghi: "global", time: "" }
     });
+    // @ts-expect-error
+    weatherHandler.vm.mapTime({ target: { value: "timestamp" } });
+    expect(weatherHandler.vm.$data.mapping).toEqual({
+      "/": { ghi: "global", time: "timestamp" }
+    });
   });
   it("test use free headers", async () => {
     const propsData = {
