@@ -18,7 +18,7 @@ describe("test timeparameters", () => {
       {
         start: "2020-01-01T00:00+00:00",
         end: "2020-02-01T00:00+00:00",
-        step: 60,
+        step: 3600,
         timezone: "UTC"
       }
     ]);
@@ -33,7 +33,7 @@ describe("test timeparameters", () => {
       {
         start: "2020-01-01T00:00+00:00",
         end: "2020-01-02T00:00+00:00",
-        step: 60,
+        step: 3600,
         timezone: "UTC"
       }
     ]);
