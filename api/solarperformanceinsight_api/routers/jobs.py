@@ -209,7 +209,14 @@ async def post_job_data(
     job_id: UUID,
     data_id: UUID,
     file: UploadFile = File(
-        ..., description="A single file in the Apache Arrow file format"
+        ...,
+        description=(
+            "A single file in CSV format or Apache Arrow file format (default). "
+            "Specify the Content-Type of the file as either 'text/csv' or "
+            "'application/vnd.apache.arrow.file' as appropriate. Files with a "
+            "Content-Type of 'application/octet-stream' (curl default) will be "
+            "parsed as if they are Apache Arrow files."
+        ),
     ),
     storage: StorageInterface = Depends(StorageInterface),
 ):

@@ -124,7 +124,7 @@ def test_read_arrow(tbl, exp):
         ("text/csv", utils.read_csv),
         ("application/vnd.ms-excel", utils.read_csv),
         ("application/vnd.apache.arrow.file", utils.read_arrow),
-        httpfail("application/octet-stream", None),
+        ("application/octet-stream", utils.read_arrow),
         httpfail("application/json", None),
     ),
 )

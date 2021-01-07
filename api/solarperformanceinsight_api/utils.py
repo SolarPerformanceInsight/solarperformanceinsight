@@ -71,7 +71,10 @@ def verify_content_type(content_type: str) -> Callable[[IO], pd.DataFrame]:
     """Checks if we can read the content_type and returns the appropriate function for
     reading"""
     csv_types = ("text/csv", "application/vnd.ms-excel")
-    arrow_types = ("application/vnd.apache.arrow.file",)
+    arrow_types = (
+        "application/octet-stream",
+        "application/vnd.apache.arrow.file",
+    )
     # reject non csv/arrow
     if content_type not in csv_types and content_type not in arrow_types:
         raise HTTPException(
