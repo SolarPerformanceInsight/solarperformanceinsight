@@ -5,9 +5,9 @@
     <div v-if="errorState">
       {{ apiErrors }}
     </div>
-    <template v-if="!systemLoading && !errorState">
+    <template v-if="!errorState">
       Calculate Performance For System
-      <b>{{ system.definition.name }}</b>
+      <b>{{ system.name }}</b>
       <br />
       <template v-if="!jobSubmitted">
         <div class="my-1">
@@ -153,23 +153,18 @@
           <button class="mt-1" @click="submitJob">Get Started</button>
         </div>
       </template>
-      <transition name="fade">
-        <template v-if="jobSubmitted">
-          <job-handler :jobId="jobId" />
-        </template>
-      </transition>
     </template>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { StoredSystem } from "@/types/System";
+import { System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
 @Component
-export default class PredictPerformace extends Vue {
+export default class CalculateJobCreator extends Vue {
   @Prop() systemId!: string;
-  system!: StoredSystem;
+  @Prop() system!: System;
   calculate!: string;
   weather_granularity!: string;
   irradiance_type!: string;
@@ -180,27 +175,14 @@ export default class PredictPerformace extends Vue {
   // TODO: refactor common api/404 code
   apiErrors!: Record<string, any>;
   errorState!: boolean;
-  systemLoading!: boolean;
   timeParams!: Record<string, any>;
 
-  created() {
-    this.systemLoading = true;
-    if (this.systemId !== undefined) {
-      this.loadSystem();
-    } else {
-      this.apiErrors = { 404: "System not found." };
-      this.errorState = true;
-      this.systemLoading = false;
-    }
-  }
   data() {
     return {
       calculate: "predicted performance",
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
-      system: this.system,
-      systemLoading: this.systemLoading,
       apiErrors: {},
       errorState: false,
       temperature_type: "cell",
@@ -212,7 +194,7 @@ export default class PredictPerformace extends Vue {
   }
   get jobSpec() {
     return {
-      system_id: this.system.object_id,
+      system_id: this.systemId,
       job_type: {
         calculate: this.calculate
       },
@@ -229,6 +211,7 @@ export default class PredictPerformace extends Vue {
       const responseBody = await response.json();
       this.jobId = responseBody.object_id;
       this.jobSubmitted = true;
+      this.$emit("job-created", this.jobId);
     } else {
       this.errorState = true;
       if (response.status == 422) {
@@ -239,30 +222,6 @@ export default class PredictPerformace extends Vue {
           error: `Failed to start job with error code ${response.status}`
         };
       }
-    }
-  }
-  submitCalculation() {
-    // TODO: Check job status, if ready, submit.
-    console.log("Calculation submitted");
-  }
-  async loadSystem() {
-    this.systemLoading = true;
-    const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/${this.systemId}`, {
-      headers: new Headers({
-        Authorization: `Bearer ${token}`
-      })
-    });
-    if (response.ok) {
-      const system = await response.json();
-      this.system = new StoredSystem(system);
-      this.systemLoading = false;
-    } else {
-      this.errorState = true;
-      this.apiErrors = {
-        error: "System not found."
-      };
-      this.systemLoading = false;
     }
   }
 }
