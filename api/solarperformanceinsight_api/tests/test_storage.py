@@ -379,12 +379,17 @@ def test_get_job_status_wrong_owner(
 
 
 def test_get_job_data(
-    storage_interface, add_example_db_data, job_data_ids, job_data_meta, job_id
+    storage_interface,
+    add_example_db_data,
+    job_data_ids,
+    job_data_meta,
+    job_id,
+    arrow_job_data,
 ):
     with storage_interface.start_transaction() as st:
         data = st.get_job_data(job_id, job_data_ids[1])
     job_data_meta.definition.data_columns = []
-    assert data == (job_data_meta, b"binary data blob")
+    assert data == (job_data_meta, arrow_job_data)
 
 
 def test_get_job_data_empty(

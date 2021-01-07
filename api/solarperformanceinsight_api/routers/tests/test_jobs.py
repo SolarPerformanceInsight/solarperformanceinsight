@@ -2,12 +2,14 @@ from io import BytesIO, StringIO
 import uuid
 
 
+from fastapi import HTTPException
 import numpy as np
 import pandas as pd
 import pytest
 
 
 from solarperformanceinsight_api import models
+from solarperformanceinsight_api.routers import jobs
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
@@ -70,7 +72,57 @@ def test_delete_job(nocommit_transaction, client, job_id):
 def test_get_job_data(client, job_id, job_data_ids, job_data_meta):
     response = client.get(f"/jobs/{job_id}/data/{job_data_ids[1]}")
     assert response.status_code == 200
-    assert response.content == b"binary data blob"
+    assert response.content == (
+        b"time,performance\n2020-01-01 00:00:00+00:00,0\n"
+        b"2020-01-01 01:00:00+00:00,1\n"
+    )
+
+
+def test_get_job_data_arrow(
+    client, job_id, job_data_ids, job_data_meta, arrow_job_data
+):
+    response = client.get(
+        f"/jobs/{job_id}/data/{job_data_ids[1]}",
+        headers={"Accept": "application/vnd.apache.arrow.file"},
+    )
+    assert response.status_code == 200
+    assert response.content == arrow_job_data
+
+
+def test_get_job_data_bad_type(client, job_id, job_data_ids, job_data_meta):
+    response = client.get(
+        f"/jobs/{job_id}/data/{job_data_ids[1]}", headers={"Accept": "application/json"}
+    )
+    assert response.status_code == 406
+
+
+def test_convert_job_data():
+    out = jobs._convert_job_data(
+        b"thisiswrong",
+        "application/vnd.apache.arrow.file",
+        "application/vnd.apache.arrow.file",
+        lambda x: x,
+    )
+    assert out == b"thisiswrong"
+
+
+def test_convert_job_data_invalid():
+    with pytest.raises(HTTPException) as err:
+        jobs._convert_job_data(
+            b"thisiswrong", "application/vnd.apache.arrow.file", "text/csv", lambda x: x
+        )
+    assert err.value.status_code == 500
+
+
+def test_convert_job_data_bad_type():
+    with pytest.raises(HTTPException) as err:
+        jobs._convert_job_data(
+            b"thisiswrong",
+            "application/vnd.apache.arrow.file",
+            "text/html",
+            lambda x: x,
+        )
+    assert err.value.status_code == 400
 
 
 @pytest.fixture()

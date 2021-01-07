@@ -139,8 +139,9 @@ class CSVResponse(Response):
                 "application/vnd.apache.arrow.file": {},
                 "text/csv": {
                     "example": """time,performance
-2020-01-01T12:00:00Z,101.98
-2020-01-01T13:00:00Z,102.30"""
+2020-01-01 00:00:00+00:00,0
+2020-01-01 01:00:00+00:00,1
+"""
                 },
             },
             "description": "Return the data as an Apache Arrow file or a CSV.",
