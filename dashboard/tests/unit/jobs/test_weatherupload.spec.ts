@@ -130,7 +130,7 @@ const testMapping = {
     poa_diffuse: "d",
     module_temperature: "e"
   }
-}
+};
 
 // vue test setup
 const localVue = createLocalVue();
@@ -185,9 +185,13 @@ describe("Test Weather Upload", () => {
       localVue,
       propsData
     });
-    expect(weatherUpload.vm.$data.required).toEqual(
-      ["time", "poa_global", "poa_direct", "poa_diffuse", "module_temperature"]
-    );
+    expect(weatherUpload.vm.$data.required).toEqual([
+      "time",
+      "poa_global",
+      "poa_direct",
+      "poa_diffuse",
+      "module_temperature"
+    ]);
     // @ts-expect-error
     expect(weatherUpload.vm.totalMappings).toBe(5);
   });
@@ -211,11 +215,11 @@ describe("Test Weather Upload", () => {
     await flushPromises();
     expect(weatherUpload.findComponent(WeatherCSVMapper).exists()).toBe(true);
     expect(weatherUpload.vm.$data.csvData).toEqual({
-      "a": ["1"],
-      "b": ["2"],
-      "c": ["3"],
-      "d": ["4"],
-      "e": ["5"],
+      a: ["1"],
+      b: ["2"],
+      c: ["3"],
+      d: ["4"],
+      e: ["5"]
     });
     // @ts-expect-error
     weatherUpload.vm.processMapping(testMapping);
@@ -228,7 +232,8 @@ describe("Test Weather Upload", () => {
       "Token",
       testJob.object_id,
       testJob.data_objects[0].object_id,
-      testJob.data_objects[0].definition.data_columns.join(',')+"\n1,2,3,4,5\n"
+      testJob.data_objects[0].definition.data_columns.join(",") +
+        "\n1,2,3,4,5\n"
     );
   });
 });
