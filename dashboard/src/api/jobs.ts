@@ -18,7 +18,7 @@ export async function create(token: string, job: Record<string, any>) {
   return jobsRequest(token, "post", null, JSON.stringify(job));
 }
 export async function read(token: string, jobid: string) {
-  return jobsRequest(token, "get", null, null, `/${jobid}`);
+  return jobsRequest(token, "get", null, null, `${jobid}`);
 }
 export async function addData(
   token: string,
