@@ -6,9 +6,6 @@
       {{ apiErrors }}
     </div>
     <template v-if="!errorState">
-      Calculate Performance For System
-      <b>{{ system.name }}</b>
-      <br />
       <template v-if="!jobSubmitted">
         <div class="my-1">
           <div class="my-1">

@@ -2,121 +2,132 @@
 Component that handles basic job/workflows.
 -->
 <template>
-  <div class="job-handler">
-    <div v-if="this.errorState">
-      {{ this.errors }}
+  <div>
+    <div v-if="this.system">
+      <h3>Calculate Performance For System:
+      <b>{{ system.name }}</b>
+      </h3>
     </div>
-    <!-- Sidebar displaying job steps -->
-    <div v-else class="job-steps">
-      <button class="jobtab" :disabled="job" @click="step = 'setup'">
-        Setup Calculation
-        <br />
-        <span class="step-status">{{ setupStatus }}</span>
-      </button>
-      <button
-        class="jobtab"
-        :class="{ active: step == 'weather' }"
-        :disabled="!job"
-        @click="step = 'weather'"
-      >
-        Upload Weather Data
-        <br />
-        <span class="step-status">{{ weatherStatus }}</span>
-      </button>
-      <button
-        class="jobtab"
-        :disabled="!job"
-        :class="{ active: step == 'calculate' }"
-        @click="step = 'calculate'"
-      >
-        Submit Calculation
-        <br />
-        <span class="step-status">{{ submitStatus }}</span>
-      </button>
-      <button
-        class="jobtab"
-        :disabled="!job"
-        :class="{ active: step == 'results' }"
-        @click="step = 'results'"
-      >
-        Results
-        <br />
-        <span class="step-status">{{ resultsStatus }}</span>
-      </button>
-    </div>
-    <!-- Container to display active job step -->
-    <div class="active-job-step">
-      <template v-if="step == 'setup'">
-        <template v-if="jobType == 'calculate'">
-          <job-creator
-            @job-created="loadCreatedJob"
-            :systemId="systemId"
-            :system="system"
-          ></job-creator>
+    <div class="job-handler">
+      <div v-if="this.errorState">
+        {{ this.errors }}
+      </div>
+      <!-- Sidebar displaying job steps -->
+      <div v-else class="job-steps">
+        <button
+          class="jobtab"
+          :class="{ active: step == 'weather' }"
+          :disabled="job"
+          @click="step = 'setup'">
+          Setup Calculation
+          <br />
+          <span class="step-status">{{ setupStatus }}</span>
+        </button>
+        <button
+          class="jobtab"
+          :class="{ active: step == 'weather' }"
+          :disabled="!job"
+          @click="step = 'weather'"
+        >
+          Upload Weather Data
+          <br />
+          <span class="step-status">{{ weatherStatus }}</span>
+        </button>
+        <button
+          class="jobtab"
+          :disabled="!job"
+          :class="{ active: step == 'calculate' }"
+          @click="step = 'calculate'"
+        >
+          Submit Calculation
+          <br />
+          <span class="step-status">{{ submitStatus }}</span>
+        </button>
+        <button
+          class="jobtab"
+          :disabled="!job"
+          :class="{ active: step == 'results' }"
+          @click="step = 'results'"
+        >
+          Results
+          <br />
+          <span class="step-status">{{ resultsStatus }}</span>
+        </button>
+      </div>
+      <!-- Container to display active job step -->
+      <div class="active-job-step">
+        <template v-if="step == 'setup'">
+          <template v-if="jobType == 'calculate'">
+            <job-creator
+              @job-created="loadCreatedJob"
+              :systemId="systemId"
+              :system="system"
+            ></job-creator>
+          </template>
+          <template v-else-if="jobType == 'compare'">
+            Setup compare job
+          </template>
+          <template v-else-if="jobType == 'calculatepr'">
+            Setup calculate Performance Ratio job.
+          </template>
         </template>
-        <template v-else-if="jobType == 'compare'">
-          Setup compare job
-        </template>
-        <template v-else-if="jobType == 'calculatepr'">
-          Setup calculate Performance Ratio job.
-        </template>
-      </template>
-      <!-- Keep alive keeps the rendered components in this components cached
-           so that they don't get overwritten when different tabs are selected
-        -->
-      <keep-alive>
-        <!-- Weather upload step -->
-        <template v-if="step == 'weather'">
-          <!-- Usecase 1A & 1B -->
-          <weather-upload
-            @weather-uploaded="handleWeather"
-            :jobId="jobId"
-            :temperature_type="jobParameters.temperature_type"
-            :system="job.definition.system_definition"
-            :weather_granularity="jobParameters.weather_granularity"
-            :irradiance_type="jobParameters.irradiance_type"
-            :data_objects="weatherDataObjects"
-          >
-            <b>
-              Upload
-              <template
-                v-if="
-                  jobParameters.job_type.calculate == 'predicted performance'
-                "
-              >
-                Predicted
-              </template>
-              <template
-                v-if="
-                  jobParameters.job_type.calculate == 'expected performance'
-                "
-              >
-                Actual
-              </template>
-              Weather Data
-            </b>
-          </weather-upload>
-        </template>
+        <!-- Keep alive keeps the rendered components in this components cached
+             so that they don't get overwritten when different tabs are selected
+          -->
+        <keep-alive>
+          <!-- Weather upload step -->
+          <template v-if="step == 'weather'">
+            <!-- Usecase 1A & 1B -->
+            <weather-upload
+              @weather-uploaded="handleWeather"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :weather_granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="weatherDataObjects"
+            >
+              <b>
+                Upload
+                <template
+                  v-if="
+                    jobParameters.job_type.calculate == 'predicted performance'
+                  "
+                >
+                  Predicted
+                </template>
+                <template
+                  v-if="
+                    jobParameters.job_type.calculate == 'expected performance'
+                  "
+                >
+                  Actual
+                </template>
+                Weather Data
+              </b>
+            </weather-upload>
+          </template>
 
-        <!-- Performance upload step -->
-        <template v-else-if="step == 'performance'">
-          <!-- Use cases 2A 2B 2C-->
-          Not Implemented.
-        </template>
+          <!-- Performance upload step -->
+          <template v-else-if="step == 'performance'">
+            <!-- Use cases 2A 2B 2C-->
+            Not Implemented.
+          </template>
 
-        <!-- Calculation submission step -->
-        <template v-else-if="step == 'calculate'">
-          <button :disabled="jobStatus != 'prepared'">Compute</button>
-          <span v-if="jobStatus != 'prepared'">
-            Data must be uploaded before computation.
-            <br />
-          </span>
-        </template>
-        <!-- Error state -->
-        <template v-else-if="jobStatus == 'error'">
-          Something went wrong during report processing.
-        </template>
-      </keep-alive>
+          <!-- Calculation submission step -->
+          <template v-else-if="step == 'calculate'">
+            <button :disabled="jobStatus != 'prepared'">Compute</button>
+            <span v-if="jobStatus != 'prepared'">
+              Data must be uploaded before computation.
+              <br />
+            </span>
+          </template>
+          <!-- Error state -->
+          <template v-else-if="jobStatus == 'error'">
+            Something went wrong during report processing.
+          </template>
+        </keep-alive>
+      </div>
     </div>
   </div>
 </template>
