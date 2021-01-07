@@ -48,11 +48,11 @@ Component that handles basic job/workflows.
     <div class="active-job-step">
       <template v-if="step == 'setup'">
         <template v-if="jobType == 'calculate'">
-          <calculate-creator
+          <job-creator
             @job-created="loadCreatedJob"
             :systemId="systemId"
             :system="system"
-          ></calculate-creator>
+          ></job-creator>
         </template>
         <template v-else-if="jobType == 'compare'">
           Setup compare job
@@ -122,14 +122,14 @@ Component that handles basic job/workflows.
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import CalculateJobCreator from "@/components/jobs/CalculateJobCreator.vue";
+import JobCreator from "@/components/jobs/JobCreator.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import * as Jobs from "@/api/jobs";
 
-Vue.component("calculate-creator", CalculateJobCreator);
+Vue.component("job-creator", JobCreator);
 @Component
 export default class JobHandler extends Vue {
   @Prop() typeOfJob!: string;
