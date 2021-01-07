@@ -93,10 +93,11 @@ export default class WeatherUpload extends Vue {
       promptForMapping: false,
       headers: [],
       required: this.getRequired(),
-      mappingComplete: false
+      mappingComplete: false,
+      csvData: {},
     }
   }
-  mapAndStoreCSV(csv: string) {
+  storeCSV(csv: string) {
     // Parse the csv into an object mapping csv-headers to arrays of column
     // data.
     // TODO: parse first x lines for table to highlight mapping options
@@ -118,14 +119,14 @@ export default class WeatherUpload extends Vue {
     this.mappingComplete = true;
   }
   processFile(e: HTMLInputEvent) {
-    // Handle a CSV upload, hand of parsing to mapAndStoreCSV
+    // Handle a CSV upload, hand of parsing to storeCSV
     if (e.target.files !== null) {
       this.processingFile = true;
       const fileList = e.target.files;
       const file = e.target.files[0];
       const reader = new FileReader();
       // @ts-expect-error
-      reader.onload = f => this.mapAndStoreCSV(f.target.result);
+      reader.onload = f => this.storeCSV(f.target.result);
       reader.readAsText(file);
     }
   }
