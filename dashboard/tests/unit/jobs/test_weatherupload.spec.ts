@@ -214,13 +214,9 @@ describe("Test Weather Upload", () => {
     weatherUpload.vm.storeCSV(testCSV);
     await flushPromises();
     expect(weatherUpload.findComponent(WeatherCSVMapper).exists()).toBe(true);
-    expect(weatherUpload.vm.$data.csvData).toEqual({
-      a: ["1"],
-      b: ["2"],
-      c: ["3"],
-      d: ["4"],
-      e: ["5"]
-    });
+    expect(weatherUpload.vm.$data.csvData).toEqual([{
+      a: 1, b: 2, c: 3, d: 4, e: 5
+    }]);
     // @ts-expect-error
     weatherUpload.vm.processMapping(testMapping);
     expect(weatherUpload.vm.$data.mapping).toEqual(testMapping);
@@ -233,7 +229,7 @@ describe("Test Weather Upload", () => {
       testJob.object_id,
       testJob.data_objects[0].object_id,
       testJob.data_objects[0].definition.data_columns.join(",") +
-        "\n1,2,3,4,5\n"
+        "\r\n1,2,3,4,5"
     );
   });
 });
