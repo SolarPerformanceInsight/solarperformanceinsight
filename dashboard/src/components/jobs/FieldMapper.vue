@@ -1,11 +1,9 @@
 <!--
-Maps required and optional fields to headers.
+Maps required fields to headers.
 Takes the following properties
   - headers: Array<string> - An array of string headers available in the csv.
   - usedHeaders: Array<string> - An array for keeping track of headers that are
     already mapped.
-  - required: Array<string> - An array of required variables to map.
-  - optional: Array<string> - An array of optional fields to map.
   - comp: SystemComponent - The System, Inverter, or Array being mapped.
 
 Components using the mapper should react to events emitted from this component:
@@ -18,12 +16,9 @@ Components using the mapper should react to events emitted from this component:
     should be used to determine the location of the mapped System component.
 -->
 <template>
-  <div class="csv-mapper">
+  <div class="field-mapper">
     <div>
       <div class="metadata" v-if="metadata">
-        <b>Name:</b>
-        {{ metadata.name }}
-        <br />
         <template v-if="'make_model' in metadata">
           <template v-if="'parent' in metadata">
             <b>Module Make and Model:</b>
@@ -58,33 +53,11 @@ Components using the mapper should react to events emitted from this component:
           </template>
         </template>
       </div>
+      <slot></slot>
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
           {{ getDisplayName(field) }} (required):
-          <select @change="addMapping($event, field)">
-            <option>Not included</option>
-            <option
-              v-for="(u,i) in headers"
-              :key="u"
-              :name="u"
-              :value="u"
-              :disabled="usedHeaders.includes(u)"
-            >
-              <template v-if="u==''">
-                column {{ i+1 }}
-              </template>
-              <template v-else>
-                {{ u }}
-              </template>
-            </option>
-          </select>
-        </li>
-      </ul>
-      <!-- optional fields -->
-      <ul class="mapping-list">
-        <li v-for="field of optional" :key="field">
-          {{ getDisplayName(field) }}:
           <select @change="addMapping($event, field)">
             <option>Not included</option>
             <option
@@ -94,9 +67,7 @@ Components using the mapper should react to events emitted from this component:
               :value="u"
               :disabled="usedHeaders.includes(u)"
             >
-              <template v-if="u==''">
-                column {{ i+1 }}
-              </template>
+              <template v-if="u == ''">column {{ i + 1 }}</template>
               <template v-else>
                 {{ u }}
               </template>
@@ -118,10 +89,12 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
+interface MetadataWithDataObject {
+  data_object: Record<string, any>;
+  metadata: System | Inverter | PVArray;
+}
+
 type SystemComponent = System | Inverter | PVArray;
-type SystemComponentIndexed = SystemComponent & {
-  index: Array<number>;
-};
 
 // Maps variables to human friendly names
 const displayNames = {
@@ -143,10 +116,7 @@ const displayNames = {
 export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
-  @Prop() required!: Array<string>;
-  @Prop() optional!: Array<string>;
-  @Prop() comp!: SystemComponentIndexed;
-  @Prop() system!: StoredSystem;
+  @Prop() comp!: MetadataWithDataObject;
   mapping!: Record<string, string>;
 
   data() {
@@ -155,13 +125,14 @@ export default class FieldMapper extends Vue {
     };
   }
   get metadata() {
-    // If the component's index is longer than 1, we are working with an array.
-    if (this.comp.index.length > 1) {
-      const inverter = this.system.definition.inverters[this.comp.index[0]];
-      return { ...this.comp, parent: { ...inverter } };
-    } else {
-      return this.comp;
-    }
+    return this.comp.metadata;
+  }
+  get required() {
+    // return all required fields besides time, which is mapped at the
+    // file level
+    return this.comp.data_object.definition.data_columns.filter(
+      (x: string) => x != "time"
+    );
   }
   addMapping(event: any, variable: string) {
     const fileHeader = event.target.value;
@@ -179,22 +150,30 @@ export default class FieldMapper extends Vue {
       this.mapping[variable] = fileHeader;
       this.$emit("used-header", fileHeader);
     }
-    this.$emit("mapping-updated", { ...this.mapping, index: this.comp.index });
+    this.$emit("mapping-updated", {
+      ...this.mapping,
+      loc: this.comp.data_object.definition.schema_path
+    });
+    if (this.isValid()) {
+      this.$emit("mapping-complete");
+    }
   }
   getDisplayName(variable: string) {
     // @ts-expect-error
     return displayNames[variable];
   }
   isValid() {
-    return this.required.every(x => x in this.mapping);
+    return this.required.every((x: string) => x in this.mapping);
   }
 }
 </script>
 <style scoped>
 div.metadata {
-  border: solid 1px black;
 }
 .mapping-list li {
   margin-top: 0.5em;
+}
+.field-mapper {
+  padding-left: 1em;
 }
 </style>
