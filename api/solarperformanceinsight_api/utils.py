@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 from typing import Set, IO, Callable, List, Tuple
 
@@ -132,22 +133,32 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
 
 def reindex_timeseries(
     df: pd.DataFrame, jobtimeindex: models.JobTimeindex
-) -> Tuple[pd.DataFrame, List[pd.Timestamp], List[pd.Timestamp]]:
+) -> Tuple[pd.DataFrame, List[dt.datetime], List[dt.datetime]]:
     """Conforms a dataframe to the expected time index for a job"""
-    newdf = df.set_index("time").sort_index()
-    if newdf.index.tzinfo is None:
-        newdf = newdf.tz_localize(jobtimeindex.timezone)
+    # some annoying type behaviour
+    newdf: pd.DataFrame
+    newdf = df.set_index("time").sort_index()  # type: ignore
+    if newdf.index.tzinfo is None:  # type: ignore
+        newdf = newdf.tz_localize(jobtimeindex.timezone)  # type: ignore
     else:
-        newdf = newdf.tz_convert(jobtimeindex.timezone)
-    if not newdf.index.equals(jobtimeindex._time_range):
-        extra = newdf.index.difference(jobtimeindex._time_range).to_list()
-        missing = jobtimeindex._time_range.difference(newdf.index).to_list()
+        newdf = newdf.tz_convert(jobtimeindex.timezone)  # type: ignore
+    if not newdf.index.equals(jobtimeindex._time_range):  # type: ignore
+        extra = list(
+            newdf.index.difference(
+                jobtimeindex._time_range  # type: ignore
+            ).to_pydatetime()
+        )
+        missing = list(
+            jobtimeindex._time_range.difference(  # type: ignore
+                newdf.index
+            ).to_pydatetime()
+        )
     else:
         extra = []
         missing = []
-    newdf = newdf.reindex(jobtimeindex._time_range, copy=False)
-    newdf.index.name = "time"
-    newdf.reset_index(inplace=True)
+    newdf = newdf.reindex(jobtimeindex._time_range, copy=False)  # type: ignore
+    newdf.index.name = "time"  # type: ignore
+    newdf.reset_index(inplace=True)  # type: ignore
     return newdf, extra, missing
 
 

@@ -11,7 +11,7 @@ from pyarrow import feather
 import pytest
 
 
-from solarperformanceinsight_api import utils
+from solarperformanceinsight_api import utils, models
 
 
 httpfail = partial(
@@ -327,5 +327,119 @@ def test_dump_arrow_bytes(df):
     pd.testing.assert_frame_equal(df, new)
 
 
-def test_reindex_timeseries():
-    raise NotImplementedError()
+@pytest.mark.parametrize(
+    "inp,jti,exp_df,exp_extra,exp_missing",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="5min", periods=10
+                    ),
+                    "col0": [0, 1, 2, 3, 4.0, 5, 6, 7, 8, 9],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00Z",
+                "end": "2020-01-01T00:50Z",
+                "step": "05:00",
+                "timezone": None,
+            },
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="5min", periods=10
+                    ),
+                    "col0": [0, 1, 2, 3, 4.0, 5, 6, 7, 8, 9],
+                }
+            ),
+            [],
+            [],
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="5min", periods=10
+                    ),
+                    "col0": [0, 1, 2, 3, 4.0, 5, 6, 7, 8, 9],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00Z",
+                "end": "2020-01-01T00:45Z",
+                "step": "05:00",
+                "timezone": None,
+            },
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="5min", periods=9
+                    ),
+                    "col0": [0, 1, 2, 3, 4.0, 5, 6, 7, 8],
+                }
+            ),
+            [pd.Timestamp("2020-01-01T00:45Z")],
+            [],
+        ),
+        (
+            pd.DataFrame({"time": [pd.Timestamp("2020-01-01T00:15Z")], "other": [0.0]}),
+            {
+                "start": "2020-01-01T00:00Z",
+                "end": "2020-01-01T01:00Z",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="15min", periods=4
+                    ),
+                    "other": [np.nan, 0.0, np.nan, np.nan],
+                }
+            ),
+            [],
+            [
+                pd.Timestamp("2020-01-01T00:00Z"),
+                pd.Timestamp("2020-01-01T00:30Z"),
+                pd.Timestamp("2020-01-01T00:45Z"),
+            ],
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:15"),
+                        pd.Timestamp("2020-01-01T01:00"),
+                    ],
+                    "other": [0.0, 1.0],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00",
+                "end": "2020-01-01T01:00",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="2020-01-01T00:00Z", freq="15min", periods=4
+                    ),
+                    "other": [np.nan, 0.0, np.nan, np.nan],
+                }
+            ),
+            [pd.Timestamp("2020-01-01T01:00Z")],
+            [
+                pd.Timestamp("2020-01-01T00:00Z"),
+                pd.Timestamp("2020-01-01T00:30Z"),
+                pd.Timestamp("2020-01-01T00:45Z"),
+            ],
+        ),
+    ],
+)
+def test_reindex_timeseries(inp, jti, exp_df, exp_extra, exp_missing):
+    new, extra, missing = utils.reindex_timeseries(inp, models.JobTimeindex(**jti))
+    pd.testing.assert_frame_equal(new, exp_df)
+    assert extra == exp_extra
+    assert missing == exp_missing

@@ -368,6 +368,25 @@ def test_post_job_data_not_enough(client, job_id, job_data_ids, weather_df):
     assert response.status_code == 400
 
 
+def test_post_job_data_invalid_time_col(client, job_id, job_data_ids):
+    iob = BytesIO()
+    df = pd.DataFrame({"time": [0, -99.0, 88.0], "performance": [0, 1, 2.0]})
+    df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{job_id}/data/{job_data_ids[1]}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 400
+    assert "not be parsed as a timestamp" in response.json()["detail"]
+
+
 def test_post_job_data_duplicate_points(client, job_id, job_data_ids, weather_df):
     iob = BytesIO()
     ndf = weather_df.copy()
