@@ -103,8 +103,8 @@ export default class WeatherUpload extends Vue {
     // TODO: parse first x lines for table to highlight mapping options
     //   during selection
     // TODO: allow for specification of header row and row where data starts
-    const parsingResult = parseCSV(csv)
-    if (parsingResult.errors) {
+    const parsingResult = parseCSV(csv.trim());
+    if (parsingResult.errors.length > 0) {
       console.log("Bad csv");
     } else {
       this.csvData = parsingResult.data;
