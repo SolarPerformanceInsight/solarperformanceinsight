@@ -14,7 +14,8 @@
       min="1"
       max="60"
       step="1"
-    /> minutes
+    />
+    minutes
     <br />
     <b>Timezone:</b>
     <input @change="emitParams" v-model="timezone" class="timezone" />

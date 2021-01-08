@@ -61,7 +61,7 @@ Takes the following props that can be extracted from job metadata.
 import { Component, Vue, Prop } from "vue-property-decorator";
 import FileUpload from "@/components/FileUpload.vue";
 import { StoredSystem } from "@/types/System";
-import transposeCSV from "@/utils/transposeCSV";
+import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
 import { addData } from "@/api/jobs";
 
@@ -103,13 +103,15 @@ export default class WeatherUpload extends Vue {
     // TODO: parse first x lines for table to highlight mapping options
     //   during selection
     // TODO: allow for specification of header row and row where data starts
-    transposeCSV(csv)
-      .then((result) => {
-        this.csvData = result;
-        this.headers = Object.keys(result);
-        this.processingFile = false;
-        this.promptForMapping = true;
-      });
+    const parsingResult = parseCSV(csv)
+    if (parsingResult.errors) {
+      console.log("Bad csv");
+    } else {
+      this.csvData = parsingResult.data;
+      this.headers = parsingResult.meta.fields;
+      this.processingFile = false;
+      this.promptForMapping = true;
+    };
   }
   processMapping(newMapping: Record<string, Record<string, string>>) {
     // Handle a new mapping from the WeatherCSVMapper component, this is a
