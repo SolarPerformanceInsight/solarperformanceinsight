@@ -5,6 +5,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Path
 from pvlib.pvsystem import retrieve_sam  # type: ignore
+import pytz
 
 
 from .. import models
@@ -50,3 +51,9 @@ def get_sandia_inverter(
     return models.SandiaInverterParameters(
         **sandia_inverter_params[inverter_name].to_dict()
     )
+
+
+@router.get("/timezones", response_model=List[str])
+def get_timezones() -> List[str]:
+    """Get all recognized timezones"""
+    return pytz.all_timezones
