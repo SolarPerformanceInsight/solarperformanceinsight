@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 
-export default async function(csvString: string, previewLines: number) {
+export default function(csvString: string, previewLines = 0) {
   const parsed = Papa.parse(csvString, {
     header: true,
     dynamicTyping: true,
