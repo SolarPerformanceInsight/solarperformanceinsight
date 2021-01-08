@@ -108,10 +108,6 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
                 status_code=400,
                 detail='"time" column could not be parsed as a timestamp',
             )
-        if not (df["time"].dt.microsecond == 0).all():  # type: ignore
-            raise HTTPException(
-                status_code=400, detail='"time" column must only have second precision'
-            )
         # check for duplicates
         extra_times = len(df["time"]) - len(df["time"].unique())
         if extra_times != 0:
@@ -137,7 +133,9 @@ def reindex_timeseries(
     """Conforms a dataframe to the expected time index for a job"""
     # some annoying type behaviour
     newdf: pd.DataFrame
-    newdf = df.set_index("time").sort_index()  # type: ignore
+    newdf = df.copy()
+    newdf.loc[:, "time"] = newdf["time"].dt.round("1s")  # type: ignore
+    newdf = newdf.set_index("time").sort_index()  # type: ignore
     if newdf.index.tzinfo is None:  # type: ignore
         newdf = newdf.tz_localize(jobtimeindex.timezone)  # type: ignore
     else:

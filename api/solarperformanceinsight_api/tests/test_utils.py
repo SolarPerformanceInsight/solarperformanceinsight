@@ -151,7 +151,7 @@ def test_verify_content_type(inp, exp):
         ),
         httpfail(pd.DataFrame({"a": [0, 1], "b": [1, 2]}), ["c"], {"a", "b"}),
         httpfail(pd.DataFrame({"time": [0, 1], "b": [1, 2]}), ["time", "b"], set()),
-        httpfail(
+        (
             pd.DataFrame(
                 {
                     "time": [
@@ -351,6 +351,38 @@ def test_dump_arrow_bytes(df):
                         start="2020-01-01T00:00Z", freq="5min", periods=10
                     ),
                     "col0": [0, 1, 2, 3, 4.0, 5, 6, 7, 8, 9],
+                }
+            ),
+            [],
+            [],
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00:00.00877Z"),
+                        pd.Timestamp("2020-01-01T00:14:59.9871Z"),
+                        pd.Timestamp("2020-01-01T00:30Z"),
+                        pd.Timestamp("2020-01-01T00:45Z"),
+                    ],
+                    "col0": [0, 1, 2, 3.0],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00Z",
+                "end": "2020-01-01T00:50Z",
+                "step": "15:00",
+                "timezone": None,
+            },
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00Z"),
+                        pd.Timestamp("2020-01-01T00:15Z"),
+                        pd.Timestamp("2020-01-01T00:30Z"),
+                        pd.Timestamp("2020-01-01T00:45Z"),
+                    ],
+                    "col0": [0, 1, 2, 3.0],
                 }
             ),
             [],
