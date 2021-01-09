@@ -8,32 +8,9 @@
     <template v-if="!errorState">
       <template v-if="!jobSubmitted">
         <div class="my-1">
-          <div class="my-1">
-            I want to calculate the system output using...
-            <br />
-            <div class="ml-1 mt-1">
-              <input
-                id="predicted performance"
-                value="predicted performance"
-                type="radio"
-                v-model="calculate"
-              />
-              <label for="predicted performance">
-                weather data provided when the system was designed.
-              </label>
-              <br />
-              <input
-                id="expected performance"
-                value="expected performance"
-                type="radio"
-                v-model="calculate"
-              />
-              <label for="expected performance">
-                actual weather data during system operation.
-              </label>
-              <br />
-            </div>
-          </div>
+          <component
+            v-bind:is="jobParamComponent"
+            @new-job-type-params="setJobTypeParams"/>
           <div class="my-1">
             My data file includes:
             <br />
@@ -158,11 +135,21 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
+
+import CalculateJobParams from "@/components/jobs/CalculateJobParams.vue";
+import CompareJobParams from "@/components/jobs/CompareJobParams.vue";
+import CalculatePRJobParams from "@/components/jobs/CalculatePRJobParams.vue";
+
+Vue.component("calculate-job-params", CalculateJobParams);
+Vue.component("compare-job-params", CompareJobParams);
+Vue.component("calculatepr-job-params", CalculatePRJobParams)
+
 @Component
-export default class CalculateJobCreator extends Vue {
+export default class JobParameters extends Vue {
   @Prop() systemId!: string;
   @Prop() system!: System;
-  calculate!: string;
+  @Prop() jobClass!: string;
+  job_type!: Record<string, string>;
   weather_granularity!: string;
   irradiance_type!: string;
   temperature_type!: string;
@@ -173,10 +160,11 @@ export default class CalculateJobCreator extends Vue {
   apiErrors!: Record<string, any>;
   errorState!: boolean;
   timeParams!: Record<string, any>;
+  jobSetupComponent!: string;
 
   data() {
     return {
-      calculate: "predicted performance",
+      job_type: {},
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
@@ -192,9 +180,7 @@ export default class CalculateJobCreator extends Vue {
   get jobSpec() {
     return {
       system_id: this.systemId,
-      job_type: {
-        calculate: this.calculate
-      },
+      job_type: this.job_type,
       time_parameters: this.timeParams,
       weather_granularity: this.weather_granularity,
       irradiance_type: this.irradiance_type,
@@ -220,6 +206,13 @@ export default class CalculateJobCreator extends Vue {
         };
       }
     }
+  }
+  get jobParamComponent() {
+    return `${this.jobClass}-job-params`;
+  }
+  setJobTypeParams(newParams: Record<string, string>){
+    console.log("Setting");
+    this.job_type = newParams;
   }
 }
 </script>

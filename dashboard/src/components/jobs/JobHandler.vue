@@ -4,9 +4,28 @@ Component that handles basic job/workflows.
 <template>
   <div>
     <div v-if="this.system">
-      <h3>Calculate Performance For System:
-      <b>{{ system.name }}</b>
-      </h3>
+      <h1 class="job-handler-title">
+        <template v-if="jobClass == 'calculate'">
+          Calculate
+          <template v-if="job">
+            {{ jobType.calculate }}
+          </template>
+          Performance
+        </template>
+        <template v-if="jobClass == 'compare'">
+          Compare
+          <template v-if="job">
+            {{ jobType.compare }}
+          </template>
+          <template v-else>
+          Performance
+          </template>
+        </template>
+        <template v-if="jobClass == 'calculatepr'">
+          Calculate Weather Adjusted Performance Ratio
+        </template>
+        For: {{ system.name }}
+      </h1>
     </div>
     <div class="job-handler">
       <div v-if="this.errorState">
@@ -57,19 +76,12 @@ Component that handles basic job/workflows.
       <!-- Container to display active job step -->
       <div class="active-job-step">
         <template v-if="step == 'setup'">
-          <template v-if="jobType == 'calculate'">
-            <job-creator
-              @job-created="loadCreatedJob"
-              :systemId="systemId"
-              :system="system"
-            ></job-creator>
-          </template>
-          <template v-else-if="jobType == 'compare'">
-            Setup compare job
-          </template>
-          <template v-else-if="jobType == 'calculatepr'">
-            Setup calculate Performance Ratio job.
-          </template>
+          <job-params
+            @job-created="loadCreatedJob"
+            :systemId="systemId"
+            :system="system"
+            :jobClass="jobClass"
+          ></job-params>
         </template>
         <!-- Keep alive keeps the rendered components in this components cached
              so that they don't get overwritten when different tabs are selected
@@ -133,14 +145,14 @@ Component that handles basic job/workflows.
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import JobCreator from "@/components/jobs/JobCreator.vue";
+import JobParams from "@/components/jobs/JobParams.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import * as Jobs from "@/api/jobs";
 
-Vue.component("job-creator", JobCreator);
+Vue.component("job-params", JobParams);
 @Component
 export default class JobHandler extends Vue {
   @Prop() typeOfJob!: string;
@@ -211,13 +223,12 @@ export default class JobHandler extends Vue {
       this.step = "setup";
     }
   }
-  get jobType() {
+  get jobClass() {
     // Returns a generic job type of 'calculate', 'compare' or 'calculatepr'
     if (this.job) {
       // If we're past the creation step, infer job type from the job
-      const jobTypeParams = this.jobParameters.job_type;
-      if ("performance_granularity" in jobTypeParams) {
-        if ("compare" in jobTypeParams) {
+      if ("performance_granularity" in this.jobType) {
+        if ("compare" in this.jobType) {
           return "compare";
         } else {
           return "calculatepr";
@@ -229,6 +240,12 @@ export default class JobHandler extends Vue {
       // Expect that the job type was passed as a prop
       return this.typeOfJob;
     }
+  }
+  get jobType() {
+    if (this.job) {
+      return this.jobParameters.job_type;
+    }
+    return null;
   }
   get weatherDataObjects() {
     // Get data objects pertaining to weather data
@@ -360,5 +377,11 @@ export default class JobHandler extends Vue {
 .active-job-step {
   grid-area: main;
   padding-left: 1em;
+}
+h1 {
+  font-size: 1.25em;
+}
+h1.job-handler-title {
+  text-transform: capitalize;
 }
 </style>
