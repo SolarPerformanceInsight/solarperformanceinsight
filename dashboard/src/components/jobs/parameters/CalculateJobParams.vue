@@ -44,14 +44,14 @@ export default class CalculateJobParams extends Vue {
 
   data() {
     return {
-      calculate: "predicted performance",
+      calculate: "predicted performance"
     };
   }
   mounted() {
     this.emitParams();
   }
   emitParams() {
-    this.$emit("new-job-type-params", {calculate: this.calculate});
+    this.$emit("new-job-type-params", { calculate: this.calculate });
   }
 }
 </script>

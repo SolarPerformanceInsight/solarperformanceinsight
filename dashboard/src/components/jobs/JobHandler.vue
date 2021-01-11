@@ -25,7 +25,7 @@ Component that handles basic job/workflows.
             {{ jobType.compare }}
           </template>
           <template v-else>
-          Performance
+            Performance
           </template>
         </template>
         <template v-if="jobClass == 'calculatepr'">
@@ -45,16 +45,13 @@ Component that handles basic job/workflows.
           class="jobtab"
           :class="{ active: step == 'setup' }"
           :disabled="job"
-          @click="step = 'setup'">
+          @click="step = 'setup'"
+        >
           Setup Calculation
           <br />
           <span class="step-status">{{ setupStatus }}</span>
         </button>
-        <button
-          v-if="dataSteps.length == 0"
-          class="jobtab"
-          disabled
-        >
+        <button v-if="dataSteps.length == 0" class="jobtab" disabled>
           Upload Data
           <br />
           <span class="step-status">{{ submitStatus }}</span>
@@ -148,7 +145,9 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :weather_granularity="
+                jobParameters.job_type.performance_granularity
+              "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -163,7 +162,9 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :weather_granularity="
+                jobParameters.job_type.performance_granularity
+              "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -178,7 +179,9 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :weather_granularity="
+                jobParameters.job_type.performance_granularity
+              "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -186,7 +189,7 @@ Component that handles basic job/workflows.
             </weather-upload>
           </template>
         </keep-alive>
-          <!-- Performance upload step -->
+        <!-- Performance upload step -->
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
@@ -338,11 +341,13 @@ export default class JobHandler extends Vue {
 
   get dataSteps() {
     if (this.job) {
-      return this.dataObjects.map((x: any) => {
-        return x.definition.type
-      }).filter((v: string, i: number, self: Array<string>) => {
-        return self.indexOf(v) === i;
-      });
+      return this.dataObjects
+        .map((x: any) => {
+          return x.definition.type;
+        })
+        .filter((v: string, i: number, self: Array<string>) => {
+          return self.indexOf(v) === i;
+        });
     }
     return [];
   }

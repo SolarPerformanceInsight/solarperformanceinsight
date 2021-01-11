@@ -83,7 +83,7 @@ export default class CompareJobParams extends Vue {
   data() {
     return {
       compare: "predicted and actual performance",
-	  performance_granularity: "system"
+      performance_granularity: "system"
     };
   }
   mounted() {
@@ -91,9 +91,9 @@ export default class CompareJobParams extends Vue {
   }
   emitParams() {
     this.$emit("new-job-type-params", {
-	  compare: this.compare,
-	  performance_granularity: this.performance_granularity
-	});
+      compare: this.compare,
+      performance_granularity: this.performance_granularity
+    });
   }
 }
 </script>

@@ -2,7 +2,7 @@
 -->
 <template>
   <div class="calculatepr-params">
-	<div class="my-1">
+    <div class="my-1">
       I will provide performance data as:
       <br />
       <div class="ml-1 mt-1">

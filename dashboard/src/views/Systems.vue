@@ -48,7 +48,8 @@
                 name: 'Compare Performance',
                 params: { systemId: uuid }
               }"
-              tag="button">
+              tag="button"
+            >
               Compare Performance
             </router-link>
           </span>
@@ -58,7 +59,8 @@
                 name: 'Calculate Performance Ratio',
                 params: { systemId: uuid }
               }"
-              tag="button">
+              tag="button"
+            >
               Calculate PR
             </router-link>
           </span>

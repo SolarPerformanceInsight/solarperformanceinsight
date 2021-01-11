@@ -10,7 +10,8 @@
         <div class="my-1">
           <component
             v-bind:is="jobParamComponent"
-            @new-job-type-params="setJobTypeParams"/>
+            @new-job-type-params="setJobTypeParams"
+          />
           <div class="my-1">
             My weather data file includes:
             <br />
@@ -142,7 +143,7 @@ import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobPar
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
-Vue.component("calculatepr-job-params", CalculatePRJobParams)
+Vue.component("calculatepr-job-params", CalculatePRJobParams);
 
 @Component
 export default class JobParameters extends Vue {
@@ -210,7 +211,7 @@ export default class JobParameters extends Vue {
   get jobParamComponent() {
     return `${this.jobClass}-job-params`;
   }
-  setJobTypeParams(newParams: Record<string, string>){
+  setJobTypeParams(newParams: Record<string, string>) {
     this.job_type = newParams;
   }
 }

@@ -214,9 +214,15 @@ describe("Test Weather Upload", () => {
     weatherUpload.vm.storeCSV(testCSV);
     await flushPromises();
     expect(weatherUpload.findComponent(WeatherCSVMapper).exists()).toBe(true);
-    expect(weatherUpload.vm.$data.csvData).toEqual([{
-      a: 1, b: 2, c: 3, d: 4, e: 5
-    }]);
+    expect(weatherUpload.vm.$data.csvData).toEqual([
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 4,
+        e: 5
+      }
+    ]);
     // @ts-expect-error
     weatherUpload.vm.processMapping(testMapping);
     expect(weatherUpload.vm.$data.mapping).toEqual(testMapping);
