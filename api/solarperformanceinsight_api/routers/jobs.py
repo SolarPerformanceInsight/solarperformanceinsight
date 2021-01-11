@@ -235,6 +235,20 @@ async def post_job_data(
     df = read_fnc(file.file)
     await file.close()
     utils.validate_dataframe(df, expected_columns)
+
+    try:
+        uploaded_period = str(
+            pd.tseries.frequencies.to_offset(  # type: ignore
+                df["time"].diff().mode().iloc[0]
+            )  # type: ignore
+        )
+    except Exception:  # pragma: no cover
+        uploaded_period = "Unknown"
+    periods = models.DataPeriods(
+        expected=str(job.definition.parameters.time_parameters._time_range.freq),
+        uploaded=uploaded_period,
+    )
+
     # will fail w/o time column
     df, extra_times, missing_times = utils.reindex_timeseries(
         df, job.definition.parameters.time_parameters
@@ -249,16 +263,6 @@ async def post_job_data(
             ),
         )
 
-    try:
-        uploaded_period = str(
-            pd.tseries.frequencies.to_offset(df["time"].diff().mode().iloc[0])
-        )
-    except Exception:  # pragma: no cover
-        uploaded_period = "Unknown"
-    periods = models.DataPeriods(
-        expected=str(job.definition.parameters.time_parameters._time_range.freq),
-        uploaded=uploaded_period,
-    )
     arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(df))
     with storage.start_transaction() as st:
         st.add_job_data(

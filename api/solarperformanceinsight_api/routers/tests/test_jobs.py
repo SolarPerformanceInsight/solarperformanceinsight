@@ -407,13 +407,16 @@ def test_post_job_data_duplicate_points(client, job_id, job_data_ids, weather_df
 
 def test_post_job_data_too_many_datapoints(client, job_id, job_data_ids, weather_df):
     iob = BytesIO()
-    ndf = weather_df.copy().iloc[::2]
-    ndf.loc[:, "time"] += pd.Timedelta("500d")
-    ndf.index = ndf.index + 100000
-    o = pd.concat(
-        [weather_df.iloc[:-10], ndf.loc[weather_df.index[-1] :]], ignore_index=True
-    ).reset_index(drop=True)
-    o.to_feather(iob)
+    dr = pd.date_range(
+        weather_df.loc[0, "time"], end=weather_df.iloc[-1]["time"], freq="5min"
+    )
+    ndf = pd.DataFrame(
+        {
+            "time": dr,
+            **{c: np.random.randn(len(dr)) for c in weather_df.columns if c != "time"},
+        }
+    )
+    ndf.to_feather(iob)
     iob.seek(0)
     response = client.post(
         f"/jobs/{job_id}/data/{job_data_ids[0]}",
@@ -427,10 +430,10 @@ def test_post_job_data_too_many_datapoints(client, job_id, job_data_ids, weather
     )
     assert response.status_code == 200
     rjson = response.json()
-    assert rjson["number_of_extra_rows"] == len(o) - len(weather_df) + 10
+    assert rjson["number_of_extra_rows"] == len(ndf) - len(weather_df)
     assert rjson["data_periods"] == {
         "expected": "<15 * Minutes>",
-        "uploaded": "<15 * Minutes>",  # still more weather points
+        "uploaded": "<5 * Minutes>",
     }
 
 
