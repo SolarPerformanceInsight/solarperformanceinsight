@@ -81,7 +81,7 @@ export default class WeatherUpload extends Vue {
   mapping!: Record<string, Record<string, string>>;
   promptForMapping!: boolean;
   headers!: Array<string>;
-  csvData!: Array<Record<string, any>>;
+  csvData!: Array<Record<string, Array<string | number>>>;
   required!: Array<string>;
   mappingComplete!: boolean;
   processingFile!: boolean;
@@ -94,7 +94,7 @@ export default class WeatherUpload extends Vue {
       headers: [],
       required: this.getRequired(),
       mappingComplete: false,
-      csvData: {},
+      csvData: [{}],
     }
   }
   storeCSV(csv: string) {
@@ -107,10 +107,9 @@ export default class WeatherUpload extends Vue {
     if (parsingResult.errors.length > 0) {
       console.log("Bad csv");
     } else {
-      // @ts-expect-error
       this.csvData = parsingResult.data;
-      // @ts-expect-error
-      this.headers = parsingResult.meta.fields;
+      const headers = parsingResult.meta.fields;
+      this.headers =  headers ? headers: [];
       this.processingFile = false;
       this.promptForMapping = true;
     };
