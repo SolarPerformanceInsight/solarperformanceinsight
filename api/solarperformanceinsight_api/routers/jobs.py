@@ -14,6 +14,7 @@ from fastapi import (
     Header,
     HTTPException,
 )
+import pandas as pd
 from pydantic.types import UUID
 
 
@@ -247,16 +248,17 @@ async def post_job_data(
                 "data upload to conform to the job's stated time index."
             ),
         )
-    percent_extra = len(extra_times) / len(df.index) * 100
-    if percent_extra > 10:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"There were over {percent_extra:0.2f}% additional rows compared "
-                "to the number of expected rows according to the job's time parameters."
-                " Please double check your data upload."
-            ),
+
+    try:
+        uploaded_period = str(
+            pd.tseries.frequencies.to_offset(df["time"].diff().mode().iloc[0])
         )
+    except Exception:  # pragma: no cover
+        uploaded_period = "Unknown"
+    periods = models.DataPeriods(
+        expected=str(job.definition.parameters.time_parameters._time_range.freq),
+        uploaded=uploaded_period,
+    )
     arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(df))
     with storage.start_transaction() as st:
         st.add_job_data(
@@ -274,6 +276,7 @@ async def post_job_data(
         number_of_expected_rows=len(df.index),
         number_of_extra_rows=len(extra_times),
         number_of_missing_rows=len(missing_times),
+        data_periods=periods,
         extra_times=extra_times,
         missing_times=missing_times,
         number_of_missing_values=missing_vals,

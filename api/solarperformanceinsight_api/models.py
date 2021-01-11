@@ -967,6 +967,11 @@ class StoredJob(StoredObject):
         }
 
 
+class DataPeriods(BaseModel):
+    expected: str = Field(..., description="Expected period of the data")
+    uploaded: str = Field(..., description="Most common period of the uploaded data")
+
+
 class DataParsingStats(BaseModel):
     number_of_expected_rows: int = Field(
         ..., description="Number of total rows expected in the data upload."
@@ -978,6 +983,7 @@ class DataParsingStats(BaseModel):
     number_of_missing_rows: int = Field(
         ..., description="Number of rows that were missing but expected in the upload."
     )
+    data_periods: DataPeriods
     extra_times: List[dt.datetime] = Field(
         ...,
         description=(
