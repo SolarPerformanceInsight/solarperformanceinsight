@@ -86,9 +86,9 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 import ModelField from "@/components/ModelField.vue";
-import InvertersView from "@/components/Inverters.vue";
+import InvertersView from "@/components/model/Inverters.vue";
 Vue.component("model-field", ModelField);
-Vue.component("inverters-view", ModelField);
+Vue.component("inverters-view", InvertersView);
 
 describe("Test SystemSpec view", () => {
   it("Test load system", async () => {

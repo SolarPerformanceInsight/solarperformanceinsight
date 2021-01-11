@@ -16,22 +16,22 @@
             <br />
             <div class="ml-1 mt-1">
               <input
-                id="predicted"
-                value="predicted"
+                id="predicted performance"
+                value="predicted performance"
                 type="radio"
-                v-model="workflow"
+                v-model="calculate"
               />
-              <label for="predicted">
+              <label for="predicted performance">
                 weather data provided when the system was designed.
               </label>
               <br />
               <input
-                id="expected"
-                value="expected"
+                id="expected performance"
+                value="expected performance"
                 type="radio"
-                v-model="workflow"
+                v-model="calculate"
               />
-              <label for="expected">
+              <label for="expected performance">
                 actual weather data during system operation.
               </label>
               <br />
@@ -45,14 +45,19 @@
                 id="standard"
                 value="standard"
                 type="radio"
-                v-model="weather_type"
+                v-model="irradiance_type"
               />
               <label for="standard">
                 global horizontal (GHI), direct normal (DNI), and diffuse
                 horizontal (DHI) irradiance.
               </label>
               <br />
-              <input id="poa" value="poa" type="radio" v-model="weather_type" />
+              <input
+                id="poa"
+                value="poa"
+                type="radio"
+                v-model="irradiance_type"
+              />
               <label for="poa">
                 global plane of array (POA global), direct plane of array (POA
                 direct), and diffuse plane of array (POA diffuse) irradiance.
@@ -62,7 +67,7 @@
                 id="effective"
                 value="effective"
                 type="radio"
-                v-model="weather_type"
+                v-model="irradiance_type"
               />
               <label for="effective">
                 effective irradiance.
@@ -78,7 +83,7 @@
                 id="cell"
                 value="cell"
                 type="radio"
-                v-model="temperature"
+                v-model="temperature_type"
               />
               <label for="cell">
                 Cell temperature is included in my data.
@@ -88,14 +93,19 @@
                 id="module"
                 value="module"
                 type="radio"
-                v-model="temperature"
+                v-model="temperature_type"
               />
               <label for="module">
                 Calculate cell temperature from module temperature and
                 irradiance in my data.
               </label>
               <br />
-              <input id="air" value="air" type="radio" v-model="temperature" />
+              <input
+                id="air"
+                value="air"
+                type="radio"
+                v-model="temperature_type"
+              />
               <label for="air">
                 Calculate cell temperature from irradiance, air temperature, and
                 windspeed in my data.
@@ -139,34 +149,13 @@
               <br />
             </div>
           </div>
+          <time-parameters @new-timeparams="storeTimeParams" />
           <button class="mt-1" @click="submitJob">Get Started</button>
         </div>
       </template>
       <transition name="fade">
         <template v-if="jobSubmitted">
-          <div v-if="workflow == 'predicted'">
-            <br />
-            <weather-upload
-              :temperature="temperature"
-              :system="system"
-              :weather_granularity="weather_granularity"
-              :weather_type="weather_type"
-            >
-              <b>Step 1. Upload weather data</b>
-            </weather-upload>
-            <button @click="submitCalculation">Submit Calculation</button>
-            <li>Display Result</li>
-          </div>
-          <div v-if="workflow == 'expected'">
-            Steps:
-            <br />
-            <ol>
-              <li>register job(user clicks "get started")</li>
-              <li>user uploads actual weather data</li>
-              <li>submit calculation</li>
-              <li>Display Result</li>
-            </ol>
-          </div>
+          <job-handler :jobId="jobId" />
         </template>
       </transition>
     </template>
@@ -176,21 +165,23 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredSystem } from "@/types/System";
-
+import * as Jobs from "@/api/jobs";
 @Component
 export default class PredictPerformace extends Vue {
   @Prop() systemId!: string;
   system!: StoredSystem;
-  workflow!: string;
+  calculate!: string;
   weather_granularity!: string;
-  weather_type!: string;
-  temperature!: string;
+  irradiance_type!: string;
+  temperature_type!: string;
   jobSubmitted!: boolean;
+  jobId!: string;
 
   // TODO: refactor common api/404 code
   apiErrors!: Record<string, any>;
   errorState!: boolean;
   systemLoading!: boolean;
+  timeParams!: Record<string, any>;
 
   created() {
     this.systemLoading = true;
@@ -204,21 +195,54 @@ export default class PredictPerformace extends Vue {
   }
   data() {
     return {
-      workflow: "predicted",
+      calculate: "predicted performance",
       jobSubmitted: false,
       weather_granularity: "system",
-      weather_type: "standard",
+      irradiance_type: "standard",
       system: this.system,
       systemLoading: this.systemLoading,
       apiErrors: {},
       errorState: false,
-      temperature: "cell"
+      temperature_type: "cell",
+      jobId: null
     };
   }
-  submitJob() {
-    this.jobSubmitted = true;
+  storeTimeParams(timeParams: Record<string, any>) {
+    this.timeParams = timeParams;
+  }
+  get jobSpec() {
+    return {
+      system_id: this.system.object_id,
+      job_type: {
+        calculate: this.calculate
+      },
+      time_parameters: this.timeParams,
+      weather_granularity: this.weather_granularity,
+      irradiance_type: this.irradiance_type,
+      temperature_type: this.temperature_type
+    };
+  }
+  async submitJob() {
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.create(token, this.jobSpec);
+    if (response.ok) {
+      const responseBody = await response.json();
+      this.jobId = responseBody.object_id;
+      this.jobSubmitted = true;
+    } else {
+      this.errorState = true;
+      if (response.status == 422) {
+        const responseBody = await response.json();
+        this.apiErrors = responseBody.detail;
+      } else {
+        this.apiErrors = {
+          error: `Failed to start job with error code ${response.status}`
+        };
+      }
+    }
   }
   submitCalculation() {
+    // TODO: Check job status, if ready, submit.
     console.log("Calculation submitted");
   }
   async loadSystem() {
