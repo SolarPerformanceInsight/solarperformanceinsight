@@ -37,6 +37,10 @@ jobs:
           fail_ci_if_error: true
         if: ${{ always() }}
 
+      - name: Check build errors
+        run: |
+          npm run --prefix dashboard build
+
   lint-javascript:
     runs-on: ubuntu-latest
 
