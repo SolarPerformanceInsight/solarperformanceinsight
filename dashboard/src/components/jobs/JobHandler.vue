@@ -51,24 +51,16 @@ Component that handles basic job/workflows.
           <span class="step-status">{{ setupStatus }}</span>
         </button>
         <button
+          v-for="dataStep of dataSteps"
+          :key="dataStep"
           class="jobtab"
-          :class="{ active: step == 'weather' }"
+          :class="{ active: step == dataStep }"
           :disabled="!job"
-          @click="step = 'weather'"
+          @click="step = dataStep"
         >
-          Upload Weather Data
+          Upload {{ dataStep }}
           <br />
-          <span class="step-status">{{ originalWeatherStatus }}</span>
-        </button>
-        <button
-          class="jobtab"
-          :class="{ active: step == 'weather' }"
-          :disabled="!job"
-          @click="step = 'weather'"
-        >
-          Upload Performance Data
-          <br />
-          <span class="step-status">{{ expectedPerformanceStatus }}</span>
+          <span class="step-status">{{ dataStepStatus[dataStep] }}</span>
         </button>
         <button
           class="jobtab"
@@ -265,30 +257,22 @@ export default class JobHandler extends Vue {
       return this.typeOfJob;
     }
   }
+
   get jobType() {
     if (this.job) {
       return this.jobParameters.job_type;
     }
     return null;
   }
-  get weatherDataObjects() {
-    // Get data objects pertaining to weather data
-    return this.dataObjects.filter((x: any) =>
-      x.definition.type.includes("weather")
-    );
-  }
-  get performanceDataObjects() {
-    // Get data objects pertaining to performance
-    return this.dataObjects.filter((x: any) =>
-      x.definition.type.includes("performance")
-    );
-  }
+
   get dataObjects() {
     return this.job.data_objects;
   }
+
   get jobParameters() {
     return this.job.definition.parameters;
   }
+
   get jobStatus() {
     if (this.job) {
       return this.job.status.status;
@@ -296,34 +280,45 @@ export default class JobHandler extends Vue {
       return "nonexistent";
     }
   }
-  get setupStatus() {
+
+  get dataSteps() {
     if (this.job) {
-      return "Complete";
-    } else {
-      return "Requires setup";
+      return this.dataObjects.map((x: any) => {
+        return x.definition.type
+      }).filter((v: string, i: number, self: Array<string>) => {
+        return self.indexOf(v) === i;
+      });
     }
+    return [];
   }
-  // Helpers for getting the status of different types of job data.
-  get originalWeatherStatus() {
-    return this.dataObjectStatus('original weather data');
+
+  get dataStepStatus() {
+    // Returns an object with keys of data_object types and values of status
+    // strings for printing in the template above
+    const dataStatus: Record<string, string> = {};
+    for (const dataStep of this.dataSteps) {
+      dataStatus[dataStep] = this.dataObjectStatus(dataStep);
+    }
+    return dataStatus;
   }
-  get actualWeatherStatus() {
-    return this.dataObjectStatus('actual weather data');
+
+  dataObjectsPresent(jobDataType = "any") {
+    // Checks if all data objects with `type` of jobDataType are present
+    let filterfunc = (x: any) => x;
+    if (jobDataType != "any") {
+      filterfunc = (x: any) => x.definition.type == jobDataType;
+    }
+    return this.dataObjects.filter(
+      filterfunc
+    ).every(
+      (obj: any) => obj.definition.present
+    );
   }
-  get predictedPerformanceStatus() {
-    return this.dataObjectStatus('predicted performance data');
-  }
-  get expectedPerformanceStatus() {
-    return this.dataObjectStatus('expected performance data');
-  }
-  get actualPerformanceStatus() {
-    return this.dataObjectStatus('actual performance data');
-  }
+
   dataObjectStatus(jobDataType = "any") {
     // Returns a status to display for the given job data type
     if (this.job) {
-      if (this.dataObjects.filter((x: any) => x.definition.type == jobDataType)
-            .every((obj: any) => obj.definition.present)) {
+      if (this.dataObjectsPresent(jobDataType)) {
         return "Complete";
       } else {
         return "Needs data";
@@ -332,6 +327,25 @@ export default class JobHandler extends Vue {
       return "Calculation Setup Required";
     }
   }
+
+  get jobSteps() {
+    const steps = ["setup"];
+    if (this.job) {
+      // Add in data steps
+      steps.concat(this.dataSteps);
+      steps.concat(["submit", "results"]);
+    }
+    return steps;
+  }
+
+  get setupStatus() {
+    if (this.job) {
+      return "Complete";
+    } else {
+      return "Requires setup";
+    }
+  }
+
   get performanceStatus() {
     if (this.job) {
       return "Needs data";
@@ -341,7 +355,7 @@ export default class JobHandler extends Vue {
   }
   get submitStatus() {
     if (this.job) {
-      if (this.originalWeatherStatus == "Complete") {
+      if (this.dataObjectsPresent()) {
         return "Ready For Calculation";
       } else {
         return "Data Upload Required";
@@ -391,7 +405,7 @@ export default class JobHandler extends Vue {
 <style scoped>
 .job-handler {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 250px 1fr;
   grid-template-areas: "sidebar main";
   gap: 0;
 }
