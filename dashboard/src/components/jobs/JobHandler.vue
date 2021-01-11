@@ -163,7 +163,7 @@ export default class JobHandler extends Vue {
   system!: System;
   step!: string;
   errorState!: boolean;
-  errors: Record<string, any>;
+  errors!: Record<string, any>;
 
   created() {
     if (this.jobId) {
