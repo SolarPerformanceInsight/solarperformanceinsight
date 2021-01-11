@@ -136,9 +136,9 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
 
-import CalculateJobParams from "@/components/jobs/CalculateJobParams.vue";
-import CompareJobParams from "@/components/jobs/CompareJobParams.vue";
-import CalculatePRJobParams from "@/components/jobs/CalculatePRJobParams.vue";
+import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
+import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
+import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);

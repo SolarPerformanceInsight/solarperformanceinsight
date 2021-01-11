@@ -4,6 +4,13 @@ Component that handles basic job/workflows.
 <template>
   <div>
     <div v-if="this.system">
+      <!-- Determine how to display the page header. We could be in one of two
+           states here.
+           - Job setup state: No job exists. Display generic "calculate",
+               "compare" or "calculate pr" header"
+           - Job exists: We have the type of job, display a more descriptive
+               page header e.g. "Compare predicted and expected performance"
+       -->
       <h1 class="job-handler-title">
         <template v-if="jobClass == 'calculate'">
           Calculate
@@ -27,6 +34,7 @@ Component that handles basic job/workflows.
         For: {{ system.name }}
       </h1>
     </div>
+
     <div class="job-handler">
       <div v-if="this.errorState">
         {{ this.errors }}
@@ -50,7 +58,17 @@ Component that handles basic job/workflows.
         >
           Upload Weather Data
           <br />
-          <span class="step-status">{{ weatherStatus }}</span>
+          <span class="step-status">{{ originalWeatherStatus }}</span>
+        </button>
+        <button
+          class="jobtab"
+          :class="{ active: step == 'weather' }"
+          :disabled="!job"
+          @click="step = 'weather'"
+        >
+          Upload Performance Data
+          <br />
+          <span class="step-status">{{ expectedPerformanceStatus }}</span>
         </button>
         <button
           class="jobtab"
@@ -73,6 +91,7 @@ Component that handles basic job/workflows.
           <span class="step-status">{{ resultsStatus }}</span>
         </button>
       </div>
+
       <!-- Container to display active job step -->
       <div class="active-job-step">
         <template v-if="step == 'setup'">
@@ -145,7 +164,7 @@ Component that handles basic job/workflows.
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import JobParams from "@/components/jobs/JobParams.vue";
+import JobParams from "@/components/jobs/parameters/JobParams.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
@@ -211,7 +230,12 @@ export default class JobHandler extends Vue {
   setStep() {
     if (this.job) {
       if (this.job.status.status == "incomplete") {
-        this.step = "weather";
+        // Determine the needed upload steps
+        if ('calculate' in this.jobType) {
+          this.step = "weather";
+        } else {
+          this.step = "performance";
+        }
       } else if (this.job.status.status == "error") {
         this.step = "error";
       } else if (this.job.status.status == "prepared") {
@@ -279,10 +303,27 @@ export default class JobHandler extends Vue {
       return "Requires setup";
     }
   }
-  get weatherStatus() {
+  // Helpers for getting the status of different types of job data.
+  get originalWeatherStatus() {
+    return this.dataObjectStatus('original weather data');
+  }
+  get actualWeatherStatus() {
+    return this.dataObjectStatus('actual weather data');
+  }
+  get predictedPerformanceStatus() {
+    return this.dataObjectStatus('predicted performance data');
+  }
+  get expectedPerformanceStatus() {
+    return this.dataObjectStatus('expected performance data');
+  }
+  get actualPerformanceStatus() {
+    return this.dataObjectStatus('actual performance data');
+  }
+  dataObjectStatus(jobDataType = "any") {
+    // Returns a status to display for the given job data type
     if (this.job) {
-      const a = 1;
-      if (this.job.data_objects.every((obj: any) => obj.definition.present)) {
+      if (this.dataObjects.filter((x: any) => x.definition.type == jobDataType)
+            .every((obj: any) => obj.definition.present)) {
         return "Complete";
       } else {
         return "Needs data";
@@ -300,7 +341,7 @@ export default class JobHandler extends Vue {
   }
   get submitStatus() {
     if (this.job) {
-      if (this.weatherStatus == "Complete") {
+      if (this.originalWeatherStatus == "Complete") {
         return "Ready For Calculation";
       } else {
         return "Data Upload Required";
