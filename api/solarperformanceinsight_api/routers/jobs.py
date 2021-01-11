@@ -239,8 +239,8 @@ async def post_job_data(
     try:
         uploaded_period = str(
             pd.tseries.frequencies.to_offset(  # type: ignore
-                df["time"].diff().mode().iloc[0]
-            )  # type: ignore
+                df["time"].diff().mode().iloc[0]  # type: ignore
+            )
         )
     except Exception:  # pragma: no cover
         uploaded_period = "Unknown"
