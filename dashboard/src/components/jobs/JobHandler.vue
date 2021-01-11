@@ -43,7 +43,7 @@ Component that handles basic job/workflows.
       <div v-else class="job-steps">
         <button
           class="jobtab"
-          :class="{ active: step == 'weather' }"
+          :class="{ active: step == 'setup' }"
           :disabled="job"
           @click="step = 'setup'">
           Setup Calculation
@@ -51,17 +51,28 @@ Component that handles basic job/workflows.
           <span class="step-status">{{ setupStatus }}</span>
         </button>
         <button
-          v-for="dataStep of dataSteps"
-          :key="dataStep"
+          v-if="dataSteps.length == 0"
           class="jobtab"
-          :class="{ active: step == dataStep }"
-          :disabled="!job"
-          @click="step = dataStep"
+          disabled
         >
-          Upload {{ dataStep }}
+          Upload Data
           <br />
-          <span class="step-status">{{ dataStepStatus[dataStep] }}</span>
+          <span class="step-status">{{ submitStatus }}</span>
         </button>
+        <template v-if="dataSteps.length > 0">
+          <button
+            v-for="dataStep of dataSteps"
+            :key="dataStep"
+            class="jobtab"
+            :class="{ active: step == dataStep }"
+            :disabled="!job"
+            @click="step = dataStep"
+          >
+            Upload {{ dataStep }}
+            <br />
+            <span class="step-status">{{ dataStepStatus[dataStep] }}</span>
+          </button>
+        </template>
         <button
           class="jobtab"
           :disabled="!job"
@@ -88,6 +99,7 @@ Component that handles basic job/workflows.
       <div class="active-job-step">
         <template v-if="step == 'setup'">
           <job-params
+            v-if="jobClass"
             @job-created="loadCreatedJob"
             :systemId="systemId"
             :system="system"
@@ -99,7 +111,7 @@ Component that handles basic job/workflows.
           -->
         <keep-alive>
           <!-- Weather upload step -->
-          <template v-if="step == 'weather'">
+          <template v-if="step == 'original weather data'">
             <!-- Usecase 1A & 1B -->
             <weather-upload
               @weather-uploaded="handleWeather"
@@ -108,37 +120,76 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :weather_granularity="jobParameters.weather_granularity"
               :irradiance_type="jobParameters.irradiance_type"
-              :data_objects="weatherDataObjects"
+              :data_objects="filteredDataObjects(step)"
             >
-              <b>
-                Upload
-                <template
-                  v-if="
-                    jobParameters.job_type.calculate == 'predicted performance'
-                  "
-                >
-                  Predicted
-                </template>
-                <template
-                  v-if="
-                    jobParameters.job_type.calculate == 'expected performance'
-                  "
-                >
-                  Actual
-                </template>
-                Weather Data
-              </b>
+              <b>Upload Original Weather Data</b>
             </weather-upload>
           </template>
-
-          <!-- Performance upload step -->
-          <template v-else-if="step == 'performance'">
-            <!-- Use cases 2A 2B 2C-->
-            Not Implemented.
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'actual weather data'">
+            <weather-upload
+              @weather-uploaded="handleWeather"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :weather_granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Weather Data</b>
+            </weather-upload>
           </template>
-
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'predicted performance data'">
+            <weather-upload
+              @weather-uploaded="handleWeather"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Predicted Performance</b>
+            </weather-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'expected performance data'">
+            <weather-upload
+              @weather-uploaded="handleWeather"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Expected Performance</b>
+            </weather-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'actual performance data'">
+            <weather-upload
+              @weather-uploaded="handleWeather"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :weather_granularity="jobParameters.job_type.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Performance</b>
+            </weather-upload>
+          </template>
+        </keep-alive>
+          <!-- Performance upload step -->
+        <keep-alive>
           <!-- Calculation submission step -->
-          <template v-else-if="step == 'calculate'">
+          <template v-if="step == 'calculate'">
             <button :disabled="jobStatus != 'prepared'">Compute</button>
             <span v-if="jobStatus != 'prepared'">
               Data must be uploaded before computation.
@@ -222,12 +273,16 @@ export default class JobHandler extends Vue {
   setStep() {
     if (this.job) {
       if (this.job.status.status == "incomplete") {
-        // Determine the needed upload steps
-        if ('calculate' in this.jobType) {
-          this.step = "weather";
-        } else {
-          this.step = "performance";
+        // Set current step to first job data type missing any data
+        const dataStatus = this.dataStepStatus;
+        let theStep = Object.keys(dataStatus)[0];
+        for (const dataStep in dataStatus) {
+          if (!dataStatus[dataStep]) {
+            theStep = dataStatus[dataStep];
+            break;
+          }
         }
+        this.step = theStep;
       } else if (this.job.status.status == "error") {
         this.step = "error";
       } else if (this.job.status.status == "prepared") {
@@ -301,16 +356,19 @@ export default class JobHandler extends Vue {
     }
     return dataStatus;
   }
-
+  filteredDataObjects(jobDataType = "any") {
+    // Returns the data objects for the job with the type of `jobDataType`.
+    // Special `any` value returns all data objects
+    if (jobDataType != "any") {
+      return this.dataObjects.filter(
+        (x: any) => x.definition.type == jobDataType
+      );
+    }
+    return this.dataObjects;
+  }
   dataObjectsPresent(jobDataType = "any") {
     // Checks if all data objects with `type` of jobDataType are present
-    let filterfunc = (x: any) => x;
-    if (jobDataType != "any") {
-      filterfunc = (x: any) => x.definition.type == jobDataType;
-    }
-    return this.dataObjects.filter(
-      filterfunc
-    ).every(
+    return this.filteredDataObjects(jobDataType).every(
       (obj: any) => obj.definition.present
     );
   }

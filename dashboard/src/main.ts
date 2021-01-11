@@ -30,8 +30,8 @@ import TemperatureParametersView from "@/components/model/TemperatureParameters.
 import JobTimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import TrackingParametersView from "@/components/model/TrackingParameters.vue";
 import SystemView from "@/components/model/System.vue";
-import WeatherUpload from "@/components/jobs/WeatherUpload.vue";
-import WeatherCSVMapper from "@/components/jobs/WeatherCSVMapper.vue";
+import CSVUpload from "@/components/jobs/CSVUpload.vue";
+import CSVMapper from "@/components/jobs/CSVMapper.vue";
 
 import "./assets/css/styles.css";
 
@@ -96,8 +96,8 @@ Vue.component("tracking-parameters", TrackingParametersView);
 Vue.component("temperature-parameters", TemperatureParametersView);
 Vue.component("time-parameters", JobTimeParameters);
 Vue.component("system-view", SystemView);
-Vue.component("weather-upload", WeatherUpload);
-Vue.component("weather-csv-mapper", WeatherCSVMapper);
+Vue.component("csv-upload", CSVUpload);
+Vue.component("csv-mapper", CSVMapper);
 
 new Vue({
   router,

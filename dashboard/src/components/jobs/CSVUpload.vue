@@ -5,7 +5,7 @@ Takes the following props that can be extracted from job metadata.
     - "module": requires that "module_temperature" be provided in the file.
     - "cell": requires that "cell_temperature" be provided in the file.
     - "air": requires that "temp_air" and "wind_speed" be provided".
-  - weather_type: string - Type of irradiance found in weather data. One of:
+  - irradiance_type: string - Type of irradiance found in weather data. One of:
     - "standard": requires "ghi", "dni", and "dhi" provided in the file.
     - "poa": requires "poa_global", "poa_direct", and "poa_diffuse" provided in
       the file.
@@ -20,19 +20,19 @@ Takes the following props that can be extracted from job metadata.
   - data_objects: array - Array of data objects created by the api.
 -->
 <template>
-  <div class="weather-upload">
+  <div class="csv-upload">
   <slot>Upload your weather data</slot>
   <br />
-  <label for="weather-upload">Select a weather file:</label>
+  <label for="csv-upload">Select a file with {{ dataType }}:</label>
   <input
-    id="weather-upload"
+    id="csv-upload"
     type="file"
     accept="text/csv"
     @change="processFile"/>
     <template v-if="processingFile">
-      <div class="loading-wheel">Processing File</div>
+      <div class="loading-container"><div class="loading">Processing File...</div></div>
     </template>
-    <template v-if="promptForMapping">
+    <template v-if="promptForMapping && !processingFile">
       <div class="warning" v-if="headers.length < totalMappings">
         Warning: It looks like you may not have enough data in this file. The
         file contains {{headers.length}} columns and {{ totalMappings }}
@@ -40,7 +40,7 @@ Takes the following props that can be extracted from job metadata.
         for <template v-if="weather_granularity == 'system'">the</template>
         <template v-else>each</template> {{ weather_granularity }}).
       </div>
-      <weather-csv-mapper
+      <csv-mapper
         @mapping-complete="processMapping"
         @mapping-incomplete="mappingComplete=false"
         :system="system"
@@ -52,7 +52,7 @@ Takes the following props that can be extracted from job metadata.
            variables. Data can be uploaded using the button below once the
            required variables are mapped to columns for
            {{ weather_granularity == 'system' ? 'the system': `each ${weather_granularity}` }}.</p>
-      </weather-csv-mapper>
+      </csv-mapper>
       <button :disabled="!mappingComplete" @click="uploadData">Upload Data</button><span v-if="!mappingComplete">All required fields must be mapped before upload</span>
     </template>
   </div>
@@ -71,7 +71,7 @@ interface HTMLInputEvent extends Event {
 
 
 @Component
-export default class WeatherUpload extends Vue {
+export default class CSVUpload extends Vue {
   @Prop() jobId!: string;
   @Prop() weather_granularity!: string;
   @Prop() irradiance_type!: string;
@@ -96,6 +96,9 @@ export default class WeatherUpload extends Vue {
       mappingComplete: false,
       csvData: [{}],
     }
+  }
+  get dataType() {
+    return this.data_objects[0].definition.type;
   }
   storeCSV(csv: string) {
     // Parse the csv into an object mapping csv-headers to arrays of column
@@ -146,7 +149,7 @@ export default class WeatherUpload extends Vue {
           console.log(`Location ${loc} uploaded.`);
         });
     }
-    this.$emit("weather-uploaded");
+    this.$emit("data-uploaded");
   }
   getRequired() {
     // May need to be updated if required fields are ever different for weather

@@ -12,7 +12,7 @@
             v-bind:is="jobParamComponent"
             @new-job-type-params="setJobTypeParams"/>
           <div class="my-1">
-            My data file includes:
+            My weather data file includes:
             <br />
             <div class="ml-1 mt-1">
               <input
@@ -211,7 +211,6 @@ export default class JobParameters extends Vue {
     return `${this.jobClass}-job-params`;
   }
   setJobTypeParams(newParams: Record<string, string>){
-    console.log("Setting");
     this.job_type = newParams;
   }
 }
