@@ -64,12 +64,22 @@ def job_data_ids():
 
 
 @pytest.fixture(scope="session")
+def job_result_ids():
+    return str(uuid1()), str(uuid1())
+
+
+@pytest.fixture(scope="session")
 def otherid():
     return str(uuid1())
 
 
 @pytest.fixture(scope="session")
 def other_job_data_id():
+    return str(uuid1())
+
+
+@pytest.fixture(scope="session")
+def other_job_result_id():
     return str(uuid1())
 
 
@@ -91,6 +101,8 @@ def standard_test_data(
     otherid,
     other_job_id,
     other_job_data_id,
+    other_job_result_id,
+    job_result_ids,
 ):
     curs = connection.cursor()
     curs.executemany(
@@ -119,6 +131,29 @@ def standard_test_data(
             (job_data_ids[2], job_id, "data2", "weather"),
             (job_data_ids[3], job_id, "data3", "performance"),
             (other_job_data_id, other_job_id, "other data", "weather"),
+        ),
+    )
+    curs.executemany(
+        "insert into job_results (id, job_id, schema_path, type, format, data)"
+        " values (uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s, %s, %s)",
+        (
+            (
+                job_result_ids[0],
+                job_id,
+                "/",
+                "ghi",
+                "application/vnd.apache.arrow.file",
+                b"dataz",
+            ),
+            (
+                job_result_ids[1],
+                job_id,
+                "/array",
+                "poa",
+                "application/json",
+                b"hereitis",
+            ),
+            (other_job_result_id, other_job_id, "/", "failure", "text/html", b"no"),
         ),
     )
     connection.commit()
