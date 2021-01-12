@@ -11,36 +11,13 @@ import Systems from "@/views/Systems.vue";
 
 import { domain, clientId, audience } from "../../auth_config.json";
 import { authGuard } from "../../src/auth/authGuard";
-import * as auth from "../../src/auth/auth";
+import { mockedAuthInstance, $auth } from "./mockauth";
 
 import { StoredSystem, System } from "@/types/System";
-import { APIValidator } from "@/types/validation/Validator";
-
-const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-
-const user = {
-  email: "testing@solaforecastarbiter.org",
-  email_verified: true,
-  sub: "auth0|5fa9596ccf64f9006e841a3a"
-};
-
-const $auth = {
-  isAuthenticated: true,
-  loading: false,
-  user: user,
-  logout: jest.fn(),
-  loginWithRedirect: jest.fn(),
-  getTokenSilently: jest.fn().mockReturnValue("Token")
-};
-
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
+import { $validator } from "./mockvalidator";
 
 const router = new VueRouter({ mode: "history", base: process.env.BASE_URL });
 const localVue = createLocalVue();
-
-const $validator = new APIValidator();
-$validator.getAPISpec = jest.fn().mockResolvedValue(APISpec);
 
 const store_system = new StoredSystem({
   object_id: "1",
@@ -72,6 +49,7 @@ global.fetch = jest.fn(() => Promise.resolve(fetchMock));
 beforeAll(() => {
   $validator.init();
 });
+
 beforeEach(() => {
   fetchMock = {
     // reset the mocked response so each test can alter as needed.
@@ -85,6 +63,7 @@ beforeEach(() => {
   }
   jest.clearAllMocks();
 });
+
 import ModelField from "@/components/ModelField.vue";
 import InvertersView from "@/components/model/Inverters.vue";
 Vue.component("model-field", ModelField);
