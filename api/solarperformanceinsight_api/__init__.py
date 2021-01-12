@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     mysql_database: str = "spi_data"
     mysql_use_ssl: bool = True
 
+    redis_host: str = "127.0.0.1"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_username: Optional[str] = None
+    redis_password: Optional[str] = None
+    redis_health_check_interval: int = 10
+
     class Config:
         env_prefix = "spi_"
 

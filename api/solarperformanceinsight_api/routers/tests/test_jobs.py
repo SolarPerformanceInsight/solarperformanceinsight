@@ -1,3 +1,4 @@
+import datetime as dt
 from io import BytesIO, StringIO
 import uuid
 
@@ -64,6 +65,38 @@ def test_get_job_status(client, job_id, job_status):
     response = client.get(f"/jobs/{job_id}/status")
     assert response.status_code == 200
     assert models.JobStatus(**response.json()) == job_status
+
+
+def test_get_job_status_running(client, job_id, mocker):
+    running = models.JobStatus(
+        status="running",
+        last_change=dt.datetime(2021, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.storage.StorageInterface.get_job_status",
+        return_value=models.JobStatus(status="queued", last_change=running.last_change),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.queuing.QueueManager.job_status",
+        return_value=running,
+    )
+    response = client.get(f"/jobs/{job_id}/status")
+    assert response.status_code == 200
+    assert models.JobStatus(**response.json()) == running
+
+
+def test_get_job_status_queued(client, job_id, mocker, mock_redis):
+    queued = models.JobStatus(
+        status="queued",
+        last_change=dt.datetime(2021, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.storage.StorageInterface.get_job_status",
+        return_value=queued,
+    )
+    response = client.get(f"/jobs/{job_id}/status")
+    assert response.status_code == 200
+    assert models.JobStatus(**response.json()) == queued
 
 
 def test_delete_job(nocommit_transaction, client, job_id):
@@ -479,7 +512,9 @@ def test_post_job_data_not_full_index(
     }
 
 
-def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weather_df):
+def test_upload_compute(
+    client, job_id, job_data_ids, nocommit_transaction, weather_df, async_queue
+):
     iob = BytesIO()
     weather_df.to_feather(iob)
     iob.seek(0)
@@ -497,7 +532,7 @@ def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weat
 
 
 def test_create_upload_compute_delete(
-    client, nocommit_transaction, new_job, weather_df
+    client, nocommit_transaction, new_job, weather_df, async_queue
 ):
     cr = client.post("/jobs/", data=new_job.json())
     assert cr.status_code == 201
