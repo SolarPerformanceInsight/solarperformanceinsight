@@ -185,10 +185,8 @@ describe("Test JobHandler", () => {
       weatherHandler.vm.filteredDataObjects("predicted performance data")
     ).toEqual([]);
     expect(weatherHandler.findComponent(CSVUpload).exists()).toBe(true);
-    expect(
-      weatherHandler
-        .find("b")
-        .text()
-    ).toBe("Upload Original Weather Data");
+    expect(weatherHandler.find("b").text()).toBe(
+      "Upload Original Weather Data"
+    );
   });
 });

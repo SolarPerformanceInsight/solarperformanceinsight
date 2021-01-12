@@ -145,9 +145,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="
-                jobParameters.job_type.performance_granularity
-              "
+              :granularity="jobParameters.job_type.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -162,9 +160,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="
-                jobParameters.job_type.performance_granularity
-              "
+              :granularity="jobParameters.job_type.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -179,9 +175,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="
-                jobParameters.job_type.performance_granularity
-              "
+              :granularity="jobParameters.job_type.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
