@@ -6,7 +6,7 @@ import CSVMapper from "@/components/jobs/CSVMapper.vue";
 import CSVUpload from "@/components/jobs/CSVUpload.vue";
 
 import * as Jobs from "@/api/jobs";
-import * as auth from "@/auth/auth";
+import { mockedAuthInstance, $auth } from "../mockauth";
 
 // test prop constants
 const testJob = {
@@ -136,26 +136,6 @@ const testMapping = {
 const localVue = createLocalVue();
 
 Vue.component("csv-mapper", CSVMapper);
-
-const user = {
-  email: "testing@solaforecastarbiter.org",
-  email_verified: true,
-  sub: "auth0|5fa9596ccf64f9006e841a3a"
-};
-
-const $auth = {
-  isAuthenticated: true,
-  loading: false,
-  user: user,
-  logout: jest.fn(),
-  loginWithRedirect: jest.fn(),
-  getTokenSilently: jest.fn().mockReturnValue("Token")
-};
-
-const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
 
 const mocks = {
   $auth
