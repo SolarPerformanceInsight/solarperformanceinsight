@@ -111,7 +111,7 @@ Component that handles basic job/workflows.
           <template v-if="step == 'original weather data'">
             <!-- Usecase 1A & 1B -->
             <csv-upload
-              @data-uploaded="handleWeather"
+              @data-uploaded="handleData"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
@@ -126,7 +126,7 @@ Component that handles basic job/workflows.
         <keep-alive>
           <template v-if="step == 'actual weather data'">
             <csv-upload
-              @data-uploaded="handleWeather"
+              @data-uploaded="handleData"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
@@ -141,7 +141,7 @@ Component that handles basic job/workflows.
         <keep-alive>
           <template v-if="step == 'predicted performance data'">
             <csv-upload
-              @data-uploaded="handleWeather"
+              @data-uploaded="handleData"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
@@ -156,7 +156,7 @@ Component that handles basic job/workflows.
         <keep-alive>
           <template v-if="step == 'expected performance data'">
             <csv-upload
-              @data-uploaded="handleWeather"
+              @data-uploaded="handleData"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
@@ -171,7 +171,7 @@ Component that handles basic job/workflows.
         <keep-alive>
           <template v-if="step == 'actual performance data'">
             <csv-upload
-              @data-uploaded="handleWeather"
+              @data-uploaded="handleData"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
@@ -212,6 +212,7 @@ import { PVArray } from "@/types/PVArray";
 import * as Jobs from "@/api/jobs";
 
 Vue.component("job-params", JobParams);
+
 @Component
 export default class JobHandler extends Vue {
   @Prop() typeOfJob!: string;
@@ -244,14 +245,18 @@ export default class JobHandler extends Vue {
       system: null
     };
   }
+
   loadCreatedJob(jobId: string) {
-    // Update route and trigger job loading.
+    // Callback for when setup completes. Pushes the new route of /jobs/<jobId>
+    // which sets the jobId prop. Then, load the job from the api to get the
+    // created data objects etc.
     this.$router.push({
       name: "Job View",
       params: { jobId: jobId }
     });
     this.loadJob();
   }
+
   async loadJob() {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.read(token, this.jobId);
@@ -267,6 +272,7 @@ export default class JobHandler extends Vue {
     this.loading = false;
     this.setStep();
   }
+
   setStep() {
     if (this.job) {
       if (this.job.status.status == "incomplete") {
@@ -355,6 +361,7 @@ export default class JobHandler extends Vue {
     }
     return dataStatus;
   }
+
   filteredDataObjects(jobDataType = "any") {
     // Returns the data objects for the job with the type of `jobDataType`.
     // Special `any` value returns all data objects
@@ -365,6 +372,7 @@ export default class JobHandler extends Vue {
     }
     return this.dataObjects;
   }
+
   dataObjectsPresent(jobDataType = "any") {
     // Checks if all data objects with `type` of jobDataType are present
     return this.filteredDataObjects(jobDataType).every(
@@ -403,13 +411,6 @@ export default class JobHandler extends Vue {
     }
   }
 
-  get performanceStatus() {
-    if (this.job) {
-      return "Needs data";
-    } else {
-      return "Calculation Setup Required";
-    }
-  }
   get submitStatus() {
     if (this.job) {
       if (this.dataObjectsPresent()) {
@@ -436,7 +437,7 @@ export default class JobHandler extends Vue {
       return "Calculation Setup Required";
     }
   }
-  handleWeather() {
+  handleData() {
     // reload the job to get current state of data-objects
     this.loadJob();
   }
