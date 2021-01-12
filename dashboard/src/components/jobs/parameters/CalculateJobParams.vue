@@ -9,23 +9,23 @@
         <div class="ml-1 mt-1">
           <input
             @change="emitParams"
-            id="predicted performance"
+            id="predicted-performance"
             value="predicted performance"
             type="radio"
             v-model="calculate"
           />
-          <label for="predicted performance">
+          <label for="predicted-performance">
             weather data provided when the system was designed.
           </label>
           <br />
           <input
             @change="emitParams"
-            id="expected performance"
+            id="expected-performance"
             value="expected performance"
             type="radio"
             v-model="calculate"
           />
-          <label for="expected performance">
+          <label for="expected-performance">
             actual weather data during system operation.
           </label>
           <br />

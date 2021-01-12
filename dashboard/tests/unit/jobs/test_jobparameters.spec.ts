@@ -13,6 +13,9 @@ import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import { SingleAxisTrackingParameters } from "@/types/Tracking";
 
+import * as Jobs from "@/api/jobs";
+import { mockedAuthInstance, $auth } from "../mockauth";
+
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
@@ -42,6 +45,28 @@ const defaultTimeParams = {
 // vue test setup
 const localVue = createLocalVue();
 
+const mockJobCreate = jest.spyOn(Jobs, "create");
+
+const mockJobResponse = {
+    ok: true,
+    json: jest.fn().mockResolvedValue({object_id: "jobid"}),
+    status: 201
+  };
+
+// @ts-expect-error
+mockJobCreate.mockResolvedValue(mockJobResponse);
+
+const mocks = {
+  $auth
+};
+
+beforeEach(() => {
+  // reset the response to a success so that special failure cases can change
+  // to whatever they want.
+  mockJobResponse.ok = true;
+  mockJobResponse.json = jest.fn().mockResolvedValue({object_id: "jobid"});
+  mockJobResponse.status = 201;
+});
 describe("Test Job Parameters", () => {
   it("test expected inputs exist", async () => {
     const propsData = {
@@ -51,7 +76,8 @@ describe("Test Job Parameters", () => {
     };
     const wrapper = mount(JobParams, {
       localVue,
-      propsData
+      propsData,
+      mocks
     });
     // @ts-expect-error
     expect(wrapper.vm.jobParamComponent).toBe("calculate-job-params");
@@ -89,6 +115,12 @@ describe("Test Job Parameters", () => {
       temperature_type: "cell"
     })
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
+    wrapper.find("button").trigger("click");
+    await flushPromises();
+
+    expect(mockJobCreate).toHaveBeenCalled();
+    // @ts-expect-error
+    expect(wrapper.emitted("job-created")[0]).toEqual(["jobid"]);
   });
   it("test loading calculate params", () => {
     const propsData = {
@@ -129,50 +161,35 @@ describe("Test Job Parameters", () => {
 });
 describe("Test Calculate Parameters", () => {
   it("test expected inputs exist", async () => {
-    const propsData = {
-      systemId: testSystem.object_id,
-      system: testSystem.definition,
-      jobClass: "calculate"
-    };
-    const wrapper = mount(JobParams, {
+    const wrapper = mount(CalculateJobParams, {
       localVue,
-      propsData
     });
+    expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
+    expect(wrapper.find("input#expected-performance").exists()).toBe(true);
+  });
+  it("test emits on change", async () => {
+    const wrapper = mount(CalculateJobParams, {
+      localVue,
+    });
+    expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
+    expect(wrapper.find("input#expected-performance").exists()).toBe(true);
+
+    await flushPromises();
+
     // @ts-expect-error
-    expect(wrapper.vm.jobParamComponent).toBe("calculate-job-params");
+    expect(wrapper.emitted("new-job-type-params")[0]).toEqual([{
+      calculate: "predicted performance"
+    }]);
 
-    // irradiance type
-    expect(wrapper.find("input#standard").exists()).toBe(true);
-    expect(wrapper.find("input#poa").exists()).toBe(true);
-    expect(wrapper.find("input#effective").exists()).toBe(true);
-
-    // temperature
-    expect(wrapper.find("input#cell").exists()).toBe(true);
-    expect(wrapper.find("input#module").exists()).toBe(true);
-    expect(wrapper.find("input#air").exists()).toBe(true);
-
-    // granularity
-    expect(wrapper.find("input#system").exists()).toBe(true);
-    expect(wrapper.find("input#inverter").exists()).toBe(true);
-    expect(wrapper.find("input#array").exists()).toBe(true);
-
-    const effective = wrapper.find("input#effective");
+    const expected = wrapper.find("input#expected-performance");
     // @ts-expect-error
-    effective.element.selected = true;
-    effective.trigger("change");
+    expected.element.selected = true;
+    expected.trigger("change");
 
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.jobSpec).toEqual({
-      system_id: testSystem.object_id,
-      job_type: {
-        calculate: "predicted performance"
-      },
-      time_parameters: defaultTimeParams,
-      weather_granularity: "system",
-      irradiance_type: "effective",
-      temperature_type: "cell"
-    })
-    expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
+    expect(wrapper.emitted("new-job-type-params")[1]).toEqual([{
+      calculate: "expected performance"
+    }]);
   });
 });
