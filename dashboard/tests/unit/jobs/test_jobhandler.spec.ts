@@ -3,7 +3,7 @@ import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
 import JobHandler from "@/components/jobs/JobHandler.vue";
-import WeatherUpload from "@/components/jobs/WeatherUpload.vue";
+import CSVUpload from "@/components/jobs/CSVUpload.vue";
 
 import * as Jobs from "@/api/jobs";
 import * as auth from "@/auth/auth";
@@ -90,7 +90,7 @@ const testJob = {
         step: "15:00",
         timezone: "UTC"
       },
-      weather_granularity: "array",
+      granularity: "array",
       irradiance_type: "poa",
       temperature_type: "module"
     }
@@ -123,7 +123,7 @@ const required = ["time", "ghi", "dni", "dhi"];
 // vue test setup
 const localVue = createLocalVue();
 
-Vue.component("weather-upload", WeatherUpload);
+Vue.component("csv-upload", CSVUpload);
 
 const mockedJobRead = jest.spyOn(Jobs, "read");
 
@@ -173,17 +173,22 @@ describe("Test JobHandler", () => {
     await flushPromises();
     expect(mockedJobRead).toHaveBeenLastCalledWith("Token", testJob.object_id);
     // @ts-expect-error
-    expect(weatherHandler.vm.jobType).toBe("calculate");
-    // @ts-expect-error
-    expect(weatherHandler.vm.weatherDataObjects).toEqual(testJob.data_objects);
-    // @ts-expect-error
-    expect(weatherHandler.vm.performanceDataObjects).toEqual([]);
-    expect(weatherHandler.findComponent(WeatherUpload).exists()).toBe(true);
+    expect(weatherHandler.vm.jobType).toEqual({
+      calculate: "predicted performance"
+    });
+    expect(
+      // @ts-expect-error
+      weatherHandler.vm.filteredDataObjects("original weather data")
+    ).toEqual(testJob.data_objects);
+    expect(
+      // @ts-expect-error
+      weatherHandler.vm.filteredDataObjects("predicted performance data")
+    ).toEqual([]);
+    expect(weatherHandler.findComponent(CSVUpload).exists()).toBe(true);
     expect(
       weatherHandler
         .find("b")
         .text()
-        .replace(/\n| /g, "")
-    ).toBe("UploadPredictedWeatherData");
+    ).toBe("Upload Original Weather Data");
   });
 });

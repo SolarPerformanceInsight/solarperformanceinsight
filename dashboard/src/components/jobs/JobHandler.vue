@@ -110,83 +110,83 @@ Component that handles basic job/workflows.
           <!-- Weather upload step -->
           <template v-if="step == 'original weather data'">
             <!-- Usecase 1A & 1B -->
-            <weather-upload
-              @weather-uploaded="handleWeather"
+            <csv-upload
+              @data-uploaded="handleWeather"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="jobParameters.weather_granularity"
+              :granularity="jobParameters.weather_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Original Weather Data</b>
-            </weather-upload>
+            </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'actual weather data'">
-            <weather-upload
-              @weather-uploaded="handleWeather"
+            <csv-upload
+              @data-uploaded="handleWeather"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="jobParameters.weather_granularity"
+              :granularity="jobParameters.weather_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Weather Data</b>
-            </weather-upload>
+            </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'predicted performance data'">
-            <weather-upload
-              @weather-uploaded="handleWeather"
+            <csv-upload
+              @data-uploaded="handleWeather"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="
+              :granularity="
                 jobParameters.job_type.performance_granularity
               "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Predicted Performance</b>
-            </weather-upload>
+            </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'expected performance data'">
-            <weather-upload
-              @weather-uploaded="handleWeather"
+            <csv-upload
+              @data-uploaded="handleWeather"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="
+              :granularity="
                 jobParameters.job_type.performance_granularity
               "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Expected Performance</b>
-            </weather-upload>
+            </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'actual performance data'">
-            <weather-upload
-              @weather-uploaded="handleWeather"
+            <csv-upload
+              @data-uploaded="handleWeather"
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :weather_granularity="
+              :granularity="
                 jobParameters.job_type.performance_granularity
               "
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Performance</b>
-            </weather-upload>
+            </csv-upload>
           </template>
         </keep-alive>
         <!-- Performance upload step -->

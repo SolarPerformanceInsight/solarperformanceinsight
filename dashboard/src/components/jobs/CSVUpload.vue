@@ -11,7 +11,7 @@ Takes the following props that can be extracted from job metadata.
       the file.
     - "effictive_irradiance": required "effective_irradiance" provided in the
       file.
-  - weather_granularity: string: What part of the spec the weather data is
+  - granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
     - "inverter": Data for each inverter in the file.
@@ -37,21 +37,21 @@ Takes the following props that can be extracted from job metadata.
         Warning: It looks like you may not have enough data in this file. The
         file contains {{headers.length}} columns and {{ totalMappings }}
         columns are expected ({{ required.join(", ") }}
-        for <template v-if="weather_granularity == 'system'">the</template>
-        <template v-else>each</template> {{ weather_granularity }}).
+        for <template v-if="granularity == 'system'">the</template>
+        <template v-else>each</template> {{ granularity }}).
       </div>
       <csv-mapper
         @mapping-complete="processMapping"
         @mapping-incomplete="mappingComplete=false"
         :system="system"
-        :weather_granularity="weather_granularity"
+        :granularity="granularity"
         :data_objects="data_objects"
         :headers="headers"
         :required="required" >
         <p>Select which columns in your file contain data for the required
            variables. Data can be uploaded using the button below once the
            required variables are mapped to columns for
-           {{ weather_granularity == 'system' ? 'the system': `each ${weather_granularity}` }}.</p>
+           {{ granularity == 'system' ? 'the system': `each ${granularity}` }}.</p>
       </csv-mapper>
       <button :disabled="!mappingComplete" @click="uploadData">Upload Data</button><span v-if="!mappingComplete">All required fields must be mapped before upload</span>
     </template>
@@ -73,7 +73,7 @@ interface HTMLInputEvent extends Event {
 @Component
 export default class CSVUpload extends Vue {
   @Prop() jobId!: string;
-  @Prop() weather_granularity!: string;
+  @Prop() granularity!: string;
   @Prop() irradiance_type!: string;
   @Prop() system!: StoredSystem;
   @Prop() temperature_type!: string;
@@ -118,7 +118,7 @@ export default class CSVUpload extends Vue {
     };
   }
   processMapping(newMapping: Record<string, Record<string, string>>) {
-    // Handle a new mapping from the WeatherCSVMapper component, this is a
+    // Handle a new mapping from the CSVMapper component, this is a
     // complete mapping, so set mappingComplete to true to enable upload
     // button.
     this.mapping = newMapping;
@@ -162,7 +162,7 @@ export default class CSVUpload extends Vue {
 }
 </script>
 <style scoped>
-div.weather-upload {
+div.csv-upload {
   border: 1px solid black;
   padding: 1em;
 }
