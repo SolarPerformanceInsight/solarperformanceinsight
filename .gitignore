@@ -175,6 +175,8 @@ pnpm-debug.log*
 *.sw?
 /.envrc
 
-# Cypress integration test output
+# Cypress integration directories we don't need to commit
 dashboard/cypress/videos
 dashboard/cypress/screenshots
+dashboard/cypress/plugins
+dashboard/cypress/support
