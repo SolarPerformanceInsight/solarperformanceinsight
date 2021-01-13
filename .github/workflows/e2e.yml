@@ -50,4 +50,3 @@ jobs:
           start: "npm run serve -- --port 8001, uvicorn solarperformanceinsight_api.main:app"
           wait-on: "http://localhost:8001, http://localhost:8000/docs"
           project: ./dashboard
-          working-directory: dashboard
