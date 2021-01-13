@@ -139,17 +139,25 @@ export default class CSVUpload extends Vue {
   async uploadData() {
     // function to call when all mapping has been completed. Should complete
     // the mapping process and post to the API
+    let success = true;
     for (const dataObject of this.data_objects) {
       // TODO: handle this on a single loc basis instead of looping all at once
       const loc = dataObject.definition.schema_path;
       const csv = mapToCSV(this.csvData, this.mapping[loc]);
       const token = await this.$auth.getTokenSilently();
-      addData(token, this.jobId, dataObject.object_id, csv)
-        .then(res => {
-          console.log(`Location ${loc} uploaded.`);
-        });
+      const response = await addData(
+        token,
+        this.jobId,
+        dataObject.object_id,
+        csv
+      );
+      if (!response.ok) {
+        success = false;
+      }
     }
-    this.$emit("data-uploaded");
+    if (success) {
+      this.$emit("data-uploaded");
+    }
   }
   getRequired() {
     // May need to be updated if required fields are ever different for weather
