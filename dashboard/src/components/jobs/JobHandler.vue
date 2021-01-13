@@ -413,9 +413,9 @@ export default class JobHandler extends Vue {
 
   get submitStatus() {
     if (this.job) {
-      if (this.job.status.status == "incomplete") {
+      if (this.jobStatus == "incomplete") {
         return "Data Upload Required";
-      } else if (this.job.status.status == "prepared") {
+      } else if (this.jobStatus == "prepared") {
         return "Ready For Calculation";
       } else {
         return "Submitted";
@@ -426,11 +426,11 @@ export default class JobHandler extends Vue {
   }
   get resultsStatus() {
     if (this.job) {
-      if (this.job.status.status == "running") {
+      if (this.jobStatus == "running") {
         return "Running";
-      } else if (this.job.status.status == "complete") {
+      } else if (this.jobStatus == "complete") {
         return "Ready";
-      } else if (this.job.status.status == "queued") {
+      } else if (this.jobStatus == "queued") {
         return "Queued";
       } else {
         return "Calculation Not Submitted";
