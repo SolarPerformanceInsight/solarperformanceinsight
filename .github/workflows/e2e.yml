@@ -47,6 +47,7 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-actions@v2
         with:
-          start: uvicorn solarperformanceinsight_api.main:app, npm run serve
-          wait-on: "http://localhost:8000", "http://localhost:8001"
+          start: npm run serve
+          wait-on: "http://localhost:8081"
           project: ./dashboard
+          working-directory: dashboard
