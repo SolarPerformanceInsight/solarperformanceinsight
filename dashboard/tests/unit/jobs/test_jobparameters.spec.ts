@@ -6,7 +6,7 @@ import JobParams from "@/components/jobs/parameters/JobParams.vue";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
-import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue"
+import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
@@ -41,17 +41,17 @@ const defaultTimeParams = {
   end: "2020-02-01T00:00+00:00",
   step: 3600,
   timezone: "UTC"
-}
+};
 // vue test setup
 const localVue = createLocalVue();
 
 const mockJobCreate = jest.spyOn(Jobs, "create");
 
 const mockJobResponse = {
-    ok: true,
-    json: jest.fn().mockResolvedValue({object_id: "jobid"}),
-    status: 201
-  };
+  ok: true,
+  json: jest.fn().mockResolvedValue({ object_id: "jobid" }),
+  status: 201
+};
 
 // @ts-expect-error
 mockJobCreate.mockResolvedValue(mockJobResponse);
@@ -64,7 +64,7 @@ beforeEach(() => {
   // reset the response to a success so that special failure cases can change
   // to whatever they want.
   mockJobResponse.ok = true;
-  mockJobResponse.json = jest.fn().mockResolvedValue({object_id: "jobid"});
+  mockJobResponse.json = jest.fn().mockResolvedValue({ object_id: "jobid" });
   mockJobResponse.status = 201;
 });
 describe("Test Job Parameters", () => {
@@ -113,7 +113,7 @@ describe("Test Job Parameters", () => {
       weather_granularity: "system",
       irradiance_type: "effective",
       temperature_type: "cell"
-    })
+    });
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
     wrapper.find("button").trigger("click");
     await flushPromises();
@@ -122,6 +122,45 @@ describe("Test Job Parameters", () => {
     // @ts-expect-error
     expect(wrapper.emitted("job-created")[0]).toEqual(["jobid"]);
   });
+  it("test post failure with api errors", async () => {
+    const propsData = {
+      systemId: testSystem.object_id,
+      system: testSystem.definition,
+      jobClass: "calculate"
+    };
+    const wrapper = mount(JobParams, {
+      localVue,
+      propsData,
+      mocks
+    });
+    mockJobResponse.ok = false;
+    mockJobResponse.status = 422;
+    (mockJobResponse.json = jest.fn().mockResolvedValue({ detail: "broken" })),
+      wrapper.find("button").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.find("div.errors").text()).toBe("broken");
+  });
+  it("test post failure without api errors", async () => {
+    const propsData = {
+      systemId: testSystem.object_id,
+      system: testSystem.definition,
+      jobClass: "calculate"
+    };
+    const wrapper = mount(JobParams, {
+      localVue,
+      propsData,
+      mocks
+    });
+    mockJobResponse.ok = false;
+    wrapper.find("button").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.find("div.errors").text()).toBe(
+      '{\n  "error": "Failed to start job with error code 201"\n}'
+    );
+  });
+
   it("test loading calculate params", () => {
     const propsData = {
       systemId: testSystem.object_id,
@@ -162,14 +201,14 @@ describe("Test Job Parameters", () => {
 describe("Test Calculate Parameters", () => {
   it("test expected inputs exist", async () => {
     const wrapper = mount(CalculateJobParams, {
-      localVue,
+      localVue
     });
     expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
     expect(wrapper.find("input#expected-performance").exists()).toBe(true);
   });
   it("test emits on change", async () => {
     const wrapper = mount(CalculateJobParams, {
-      localVue,
+      localVue
     });
     expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
     expect(wrapper.find("input#expected-performance").exists()).toBe(true);
@@ -177,9 +216,11 @@ describe("Test Calculate Parameters", () => {
     await flushPromises();
 
     // @ts-expect-error
-    expect(wrapper.emitted("new-job-type-params")[0]).toEqual([{
-      calculate: "predicted performance"
-    }]);
+    expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
+      {
+        calculate: "predicted performance"
+      }
+    ]);
 
     const expected = wrapper.find("input#expected-performance");
     // @ts-expect-error
@@ -188,8 +229,10 @@ describe("Test Calculate Parameters", () => {
 
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.emitted("new-job-type-params")[1]).toEqual([{
-      calculate: "expected performance"
-    }]);
+    expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
+      {
+        calculate: "expected performance"
+      }
+    ]);
   });
 });

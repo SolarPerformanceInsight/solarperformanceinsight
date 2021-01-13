@@ -2,7 +2,7 @@
 -->
 <template>
   <div class="calculate-performance">
-    <div v-if="errorState">
+    <div class="errors" v-if="errorState">
       {{ apiErrors }}
     </div>
     <template v-if="!errorState">
