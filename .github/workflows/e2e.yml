@@ -45,7 +45,7 @@ jobs:
           ./dbmate --wait up
 
       - name: Cypress run
-        uses: cypress-io/github-actions@v2
+        uses: cypress-io/github-action@v2
         with:
           start: npm run serve
           wait-on: "http://localhost:8081"
