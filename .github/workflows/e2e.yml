@@ -13,14 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-	  - uses: actions/setup-python@v2
-		with:
+      - uses: actions/setup-python@v2
+        with:
           python-version: 3.8
 
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '14'
-
 
       - uses: mirromutth/mysql-action@v1.1
         with:
@@ -37,7 +36,7 @@ jobs:
           pip install -e .
           pip list
 
-	  - name: Migrate database
+      - name: Migrate database
         env:
           DATABASE_URL: "mysql://root:testpassword@127.0.0.1:3306/spi_data"
         run: |
@@ -47,7 +46,7 @@ jobs:
 
       - name: Cypress run
         uses: cypress-io/github-actions@v2
-		with:
-		  start: uvicorn solarperformanceinsight_api.main:app, npm run serve -- --port 8001
-		  wait-on: "http://localhost:8000", "http://localhost:8001"
-		  project: ./dashboard
+        with:
+          start: uvicorn solarperformanceinsight_api.main:app, npm run serve -- --port 8001
+          wait-on: "http://localhost:8000", "http://localhost:8001"
+          project: ./dashboard
