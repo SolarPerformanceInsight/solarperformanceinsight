@@ -36,7 +36,7 @@ Component that handles basic job/workflows.
     </div>
 
     <div class="job-handler">
-      <div v-if="this.errorState">
+      <div class="errors" v-if="this.errorState">
         {{ this.errors }}
       </div>
       <!-- Sidebar displaying job steps -->
@@ -275,20 +275,20 @@ export default class JobHandler extends Vue {
 
   setStep() {
     if (this.job) {
-      if (this.job.status.status == "incomplete") {
+      if (this.jobStatus == "incomplete") {
         // Set current step to first job data type missing any data
         const dataStatus = this.dataStepStatus;
         let theStep = Object.keys(dataStatus)[0];
         for (const dataStep in dataStatus) {
-          if (!dataStatus[dataStep]) {
-            theStep = dataStatus[dataStep];
+          if (!(dataStatus[dataStep] == "Complete")) {
+            theStep = dataStep;
             break;
           }
         }
         this.step = theStep;
-      } else if (this.job.status.status == "error") {
+      } else if (this.jobStatus == "error") {
         this.step = "error";
-      } else if (this.job.status.status == "prepared") {
+      } else if (this.jobStatus == "prepared") {
         this.step = "calculate";
       } else {
         this.step = "results";
@@ -335,7 +335,7 @@ export default class JobHandler extends Vue {
     if (this.job) {
       return this.job.status.status;
     } else {
-      return "nonexistent";
+      return null;
     }
   }
 
@@ -394,11 +394,11 @@ export default class JobHandler extends Vue {
   }
 
   get jobSteps() {
-    const steps = ["setup"];
+    let steps = ["setup"];
     if (this.job) {
       // Add in data steps
-      steps.concat(this.dataSteps);
-      steps.concat(["submit", "results"]);
+      steps = steps.concat(this.dataSteps);
+      steps = steps.concat(["submit", "results"]);
     }
     return steps;
   }
@@ -413,10 +413,12 @@ export default class JobHandler extends Vue {
 
   get submitStatus() {
     if (this.job) {
-      if (this.dataObjectsPresent()) {
+      if (this.job.status.status == "incomplete") {
+        return "Data Upload Required";
+      } else if (this.job.status.status == "prepared") {
         return "Ready For Calculation";
       } else {
-        return "Data Upload Required";
+        return "Submitted";
       }
     } else {
       return "Calculation Setup Required";
