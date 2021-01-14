@@ -134,7 +134,6 @@ def _get_return_type(
 ) -> Tuple[Union[Type[CSVResponse], Type[ArrowResponse]], str]:
     type_ = AcceptableType(accept)
 
-    # resp: Union[Type[CSVResponse], Type[ArrowResponse]]
     if type_.matches("text/csv"):
         return CSVResponse, "text/csv"
     elif type_.matches("application/vnd.apache.arrow.file"):
@@ -317,7 +316,6 @@ async def list_job_results(
 
 @router.get(
     "/{job_id}/results/{result_id}",
-    response_class=CSVResponse,
     responses={
         **default_get_responses,
         406: {},
@@ -330,8 +328,13 @@ async def list_job_results(
 2020-01-01 01:00:00+00:00,1
 """
                 },
+                "application/json": {},
             },
-            "description": "Return the job result as an Apache Arrow file or a CSV.",
+            "description": (
+                "Return the job result as an Apache Arrow file or a CSV."
+                " If an error occured, this will always return application/json"
+                " with further details."
+            ),
         },
     },
 )
@@ -340,10 +343,12 @@ async def get_job_result(
     result_id: UUID,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-) -> Union[CSVResponse, ArrowResponse]:
+) -> Union[CSVResponse, ArrowResponse, Response]:
     # once queing is figured out, this will need to also probably
     # return JSON describing any errors
     resp, meta_type = _get_return_type(accept)
     with storage.start_transaction() as st:
         meta, data = st.get_job_result(job_id, result_id)
+    if meta.definition.type == models.JobResultTypeEnum.error:
+        return Response(content=data, media_type=meta.definition.data_format)
     return _convert_job_data(data, meta.definition.data_format, meta_type, resp)

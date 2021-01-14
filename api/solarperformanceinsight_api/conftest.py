@@ -1,7 +1,7 @@
 from base64 import b64decode
 from contextlib import contextmanager
 import datetime as dt
-from uuid import UUID
+from uuid import UUID, uuid1
 
 
 from fastapi.testclient import TestClient
@@ -271,3 +271,25 @@ def job_result_list():
     return [
         models.StoredJobResultMetadata(**ex) for ex in models.STORED_JOB_RESULT_EXAMPLES
     ]
+
+
+@pytest.fixture()
+def error_job_result(root_conn, job_id):
+    curs = root_conn.cursor()
+    newid = str(uuid1())
+    curs.execute(
+        "insert into job_results (id, job_id, schema_path, type, format, data) "
+        "values (uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s, %s, %s)",
+        (
+            newid,
+            job_id,
+            "/",
+            "error message",
+            "application/json",
+            '{"details": "Error in job"}',
+        ),
+    )
+    root_conn.commit()
+    yield newid, {"details": "Error in job"}
+    curs.execute("delete from job_results where id = uuid_to_bin(%s, 1)", newid)
+    root_conn.commit()

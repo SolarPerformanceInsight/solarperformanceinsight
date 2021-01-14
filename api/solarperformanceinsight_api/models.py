@@ -1023,6 +1023,8 @@ class JobResultMetadata(BaseModel):
 - weather data: Modeled weather/environment data for the array given in schema_path.
   Data has columns time, global plane-of-array irradiance (poa_global), and
   cell temperature.
+- error message: The result could not be computed. The result for this object will
+  be a JSON object describing the error.
 """,
     )
     schema_path: str = Field(

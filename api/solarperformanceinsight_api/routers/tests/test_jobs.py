@@ -561,3 +561,10 @@ def test_get_job_result(
     csvresp = client.get(f"/jobs/{complete_job_id}/results/{job_result_ids[1]}")
     assert csvresp.status_code == 200
     assert csvresp.text.startswith("time,performance")
+
+
+def test_get_job_result_error(client, error_job_result, job_id):
+    eid, res = error_job_result
+    response = client.get(f"/jobs/{job_id}/results/{eid}")
+    assert response.status_code == 200
+    assert response.json() == res
