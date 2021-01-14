@@ -211,7 +211,6 @@ begin
   CALL _add_example_data_0;
   CALL _add_example_data_1;
   CALL _add_example_data_2;
-  CALL _add_example_data_3;
 end;
 drop procedure _add_example_data_3;
 drop procedure `set_job_completion`;
