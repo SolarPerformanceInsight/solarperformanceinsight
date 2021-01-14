@@ -19,7 +19,7 @@ def test_list_jobs(client, stored_job):
     response = client.get("/jobs")
     jobs = [models.StoredJob(**j) for j in response.json()]
     assert response.status_code == 200
-    assert len(jobs) == 1
+    assert len(jobs) == 2
     assert jobs[0] == stored_job
 
 

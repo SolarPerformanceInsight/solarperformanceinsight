@@ -1005,3 +1005,71 @@ class DataParsingStats(BaseModel):
             "Does not include whole rows that were missing."
         ),
     )
+
+
+class JobResultTypeEnum(str, Enum):
+    performance = "performance data"
+    weather = "weather data"
+    error = "error message"
+    # will need other types for performance ratio etc.
+
+
+class JobResultMetadata(BaseModel):
+    type: JobResultTypeEnum = Field(
+        ...,
+        description="""Type of data in this result:
+- performance data: AC performance data at the level (system or inverter) given by
+  schema_path. Data has columns are time and performance.
+- weather data: Modeled weather/environment data for the array given in schema_path.
+  Data has columns time, global plane-of-array irradiance (poa_global), and
+  cell temperature.
+""",
+    )
+    schema_path: str = Field(
+        ..., description="Relative to PV system definition, i.e. /inverters/0/arrays/0"
+    )
+    data_format: str = Field(..., description="Format of the binary data")
+
+
+STORED_JOB_RESULT_EXAMPLES = [
+    {
+        "object_id": "d84bdf30-55f2-11eb-a03d-f4939feddd82",
+        "object_type": "job_result",
+        "created_at": "2021-01-12T13:05:00+00:00",
+        "modified_at": "2021-01-12T13:05:00+00:00",
+        "definition": {
+            "schema_path": "/inverters/0/arrays/0",
+            "type": "weather data",
+            "data_format": "application/vnd.apache.arrow.file",
+        },
+    },
+    {
+        "object_id": "e525466a-55f2-11eb-a03d-f4939feddd82",
+        "object_type": "job_result",
+        "created_at": "2021-01-12T13:05:00+00:00",
+        "modified_at": "2021-01-12T13:05:00+00:00",
+        "definition": {
+            "schema_path": "/inverters/0",
+            "type": "performance data",
+            "data_format": "application/vnd.apache.arrow.file",
+        },
+    },
+    {
+        "object_id": "e566a59c-55f2-11eb-a03d-f4939feddd82",
+        "object_type": "job_result",
+        "created_at": "2021-01-12T13:05:00+00:00",
+        "modified_at": "2021-01-12T13:05:00+00:00",
+        "definition": {
+            "schema_path": "/",
+            "type": "performance data",
+            "data_format": "application/vnd.apache.arrow.file",
+        },
+    },
+]
+
+
+class StoredJobResultMetadata(StoredObject):
+    definition: JobResultMetadata
+
+    class Config:
+        schema_extra = {"example": STORED_JOB_RESULT_EXAMPLES}

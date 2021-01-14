@@ -310,10 +310,12 @@ def test_create_job(storage_interface, add_example_db_data, job_def):
     assert out.definition == job_def
 
 
-def test_list_job(storage_interface, add_example_db_data, stored_job):
+def test_list_job(storage_interface, add_example_db_data, stored_job, complete_job_id):
     with storage_interface.start_transaction() as st:
         out = st.list_jobs()
-    assert out == [stored_job]
+    assert out[0] == stored_job
+    assert len(out) == 2
+    assert str(out[1].object_id) == complete_job_id
 
 
 def test_get_job(storage_interface, add_example_db_data, stored_job, job_id):
@@ -338,8 +340,13 @@ def test_get_job_wrong_owner(storage_interface, add_example_db_data, other_job_i
 
 def test_delete_job(storage_interface, add_example_db_data, job_id):
     with storage_interface.start_transaction() as st:
+        before = st.list_jobs()
+        assert len(before) == 2
+        assert str(before[0].object_id) == job_id
         st.delete_job(job_id)
-        assert len(st.list_jobs()) == 0
+        after = st.list_jobs()
+        assert len(after) == 1
+        assert str(after[0].object_id) != job_id
 
 
 def test_delete_job_dne(storage_interface, add_example_db_data):
@@ -497,3 +504,134 @@ def test_queue_job_already_complete(
         with storage_interface.start_transaction() as st:
             st.queue_job(job_id)
     assert err.value.status_code == 409
+
+
+def test_list_job_results(
+    storage_interface, complete_job_id, job_result_list, add_example_db_data
+):
+    with storage_interface.start_transaction() as st:
+        res = st.list_job_results(complete_job_id)
+    assert res == job_result_list
+
+
+def test_list_job_results_not_done(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        res = st.list_job_results(job_id)
+    assert res == []
+
+
+def test_list_job_results_dne(storage_interface, add_example_db_data, other_job_id):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.list_job_results(other_job_id)
+    assert err.value.status_code == 404
+
+
+def test_get_job_result(
+    storage_interface,
+    add_example_db_data,
+    complete_job_id,
+    job_result_ids,
+    job_result_list,
+    arrow_performance_job_result,
+    arrow_weather_job_result,
+):
+    for i, id_ in enumerate(job_result_ids):
+        with storage_interface.start_transaction() as st:
+            res, data = st.get_job_result(complete_job_id, id_)
+        assert res == job_result_list[i]
+        if i > 0:
+            assert data == arrow_performance_job_result
+        else:
+            assert data == arrow_weather_job_result
+
+
+def test_get_job_result_dne(
+    storage_interface, add_example_db_data, job_id, job_result_ids
+):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            res, data = st.get_job_result(job_id, job_result_ids[0])
+    assert err.value.status_code == 404
+
+
+def test_add_job_result_complete(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        newid = st.add_job_result(job_id, "/", "performance data", "text/csv", b"")
+        st.set_job_complete(job_id)
+
+        job_results = st.list_job_results(job_id)
+        status = st.get_job_status(job_id)
+
+    assert newid.object_id == job_results[0].object_id
+    assert status.status == "complete"
+
+
+def test_add_job_result_error(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        newid = st.add_job_result(job_id, "/", "error message", "application/json", b"")
+        st.set_job_error(job_id)
+
+        job_results = st.list_job_results(job_id)
+        status = st.get_job_status(job_id)
+
+    assert newid.object_id == job_results[0].object_id
+    assert status.status == "error"
+
+
+def test_add_job_result_no_status_update(
+    storage_interface, add_example_db_data, job_id
+):
+    with pytest.raises(storage.StorageTransactionError):
+        with storage_interface.start_transaction() as st:
+            st.add_job_result(job_id, "/", "performance data", "text/csv", b"")
+
+
+def test_add_job_result_already_complete(
+    storage_interface, add_example_db_data, complete_job_id
+):
+    with pytest.raises(storage.JobAlreadyComplete):
+        with storage_interface.start_transaction() as st:
+            st.add_job_result(complete_job_id, "/", "performance data", "text/csv", b"")
+
+
+def test_add_job_result_dne(storage_interface, add_example_db_data):
+    with pytest.raises(storage.JobResultFailure):
+        with storage_interface.start_transaction() as st:
+            st.add_job_result(uuid.uuid1(), "/", "performance data", "text/csv", b"")
+
+
+def test_add_job_bad_data(storage_interface, add_example_db_data, job_id):
+    with pytest.raises(storage.JobResultFailure):
+        with storage_interface.start_transaction() as st:
+            st.add_job_result(job_id, "/", "performance data" * 100, "text/csv", "")
+
+
+def test_set_job_complete(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        before = st.get_job_status(job_id)
+        st.set_job_complete(job_id)
+        after = st.get_job_status(job_id)
+    assert before.status != "complete"
+    assert after.status == "complete"
+
+
+def test_set_job_complete_dne(storage_interface, add_example_db_data):
+    with pytest.raises(storage.JobResultFailure):
+        with storage_interface.start_transaction() as st:
+            st.set_job_complete(uuid.uuid1())
+
+
+def test_set_job_error(storage_interface, add_example_db_data, job_id):
+    with storage_interface.start_transaction() as st:
+        before = st.get_job_status(job_id)
+        st.set_job_error(job_id)
+        after = st.get_job_status(job_id)
+    assert before.status != "error"
+    assert after.status == "error"
+
+
+def test_set_job_error_dne(storage_interface, add_example_db_data):
+    with pytest.raises(storage.JobResultFailure):
+        with storage_interface.start_transaction() as st:
+            st.set_job_error(uuid.uuid1())
