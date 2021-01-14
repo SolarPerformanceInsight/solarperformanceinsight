@@ -2,43 +2,18 @@
 -->
 <template>
   <div class="calculate-performance">
-    <div v-if="errorState">
+    <div class="errors" v-if="errorState">
       {{ apiErrors }}
     </div>
-    <template v-if="!systemLoading && !errorState">
-      Calculate Performance For System
-      <b>{{ system.definition.name }}</b>
-      <br />
+    <template v-if="!errorState">
       <template v-if="!jobSubmitted">
         <div class="my-1">
+          <component
+            v-bind:is="jobParamComponent"
+            @new-job-type-params="setJobTypeParams"
+          />
           <div class="my-1">
-            I want to calculate the system output using...
-            <br />
-            <div class="ml-1 mt-1">
-              <input
-                id="predicted performance"
-                value="predicted performance"
-                type="radio"
-                v-model="calculate"
-              />
-              <label for="predicted performance">
-                weather data provided when the system was designed.
-              </label>
-              <br />
-              <input
-                id="expected performance"
-                value="expected performance"
-                type="radio"
-                v-model="calculate"
-              />
-              <label for="expected performance">
-                actual weather data during system operation.
-              </label>
-              <br />
-            </div>
-          </div>
-          <div class="my-1">
-            My data file includes:
+            My weather data file includes:
             <br />
             <div class="ml-1 mt-1">
               <input
@@ -153,24 +128,29 @@
           <button class="mt-1" @click="submitJob">Get Started</button>
         </div>
       </template>
-      <transition name="fade">
-        <template v-if="jobSubmitted">
-          <job-handler :jobId="jobId" />
-        </template>
-      </transition>
     </template>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { StoredSystem } from "@/types/System";
+import { System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
+
+import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
+import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
+import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
+
+Vue.component("calculate-job-params", CalculateJobParams);
+Vue.component("compare-job-params", CompareJobParams);
+Vue.component("calculatepr-job-params", CalculatePRJobParams);
+
 @Component
-export default class PredictPerformace extends Vue {
+export default class JobParameters extends Vue {
   @Prop() systemId!: string;
-  system!: StoredSystem;
-  calculate!: string;
+  @Prop() system!: System;
+  @Prop() jobClass!: string;
+  job_type!: Record<string, string>;
   weather_granularity!: string;
   irradiance_type!: string;
   temperature_type!: string;
@@ -180,27 +160,15 @@ export default class PredictPerformace extends Vue {
   // TODO: refactor common api/404 code
   apiErrors!: Record<string, any>;
   errorState!: boolean;
-  systemLoading!: boolean;
   timeParams!: Record<string, any>;
+  jobSetupComponent!: string;
 
-  created() {
-    this.systemLoading = true;
-    if (this.systemId !== undefined) {
-      this.loadSystem();
-    } else {
-      this.apiErrors = { 404: "System not found." };
-      this.errorState = true;
-      this.systemLoading = false;
-    }
-  }
   data() {
     return {
-      calculate: "predicted performance",
+      job_type: {},
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
-      system: this.system,
-      systemLoading: this.systemLoading,
       apiErrors: {},
       errorState: false,
       temperature_type: "cell",
@@ -212,10 +180,8 @@ export default class PredictPerformace extends Vue {
   }
   get jobSpec() {
     return {
-      system_id: this.system.object_id,
-      job_type: {
-        calculate: this.calculate
-      },
+      system_id: this.systemId,
+      job_type: this.job_type,
       time_parameters: this.timeParams,
       weather_granularity: this.weather_granularity,
       irradiance_type: this.irradiance_type,
@@ -229,6 +195,7 @@ export default class PredictPerformace extends Vue {
       const responseBody = await response.json();
       this.jobId = responseBody.object_id;
       this.jobSubmitted = true;
+      this.$emit("job-created", this.jobId);
     } else {
       this.errorState = true;
       if (response.status == 422) {
@@ -241,29 +208,11 @@ export default class PredictPerformace extends Vue {
       }
     }
   }
-  submitCalculation() {
-    // TODO: Check job status, if ready, submit.
-    console.log("Calculation submitted");
+  get jobParamComponent() {
+    return `${this.jobClass}-job-params`;
   }
-  async loadSystem() {
-    this.systemLoading = true;
-    const token = await this.$auth.getTokenSilently();
-    const response = await fetch(`/api/systems/${this.systemId}`, {
-      headers: new Headers({
-        Authorization: `Bearer ${token}`
-      })
-    });
-    if (response.ok) {
-      const system = await response.json();
-      this.system = new StoredSystem(system);
-      this.systemLoading = false;
-    } else {
-      this.errorState = true;
-      this.apiErrors = {
-        error: "System not found."
-      };
-      this.systemLoading = false;
-    }
+  setJobTypeParams(newParams: Record<string, string>) {
+    this.job_type = newParams;
   }
 }
 </script>

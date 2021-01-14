@@ -109,7 +109,8 @@ const displayNames = {
   cell_temperature: "Cell Temperature",
   module_temperature: "Module Temperature",
   temp_air: "Air Temperature",
-  wind_speed: "Wind Speed"
+  wind_speed: "Wind Speed",
+  performance: "Performance (AC power)"
 };
 
 @Component

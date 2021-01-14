@@ -3,7 +3,7 @@ component that handles the csv headers of one file and master mapping for the
 system.
 Takes the following props:
   - headers: Array<string> - the csv headers to be mapped.
-  - weather_granularity: string: What part of the spec the weather data is
+  - granularity: string: What part of the spec the data is
     associated with. One of:
     - "system": System wide data in the file.
     - "inverter": Data for each inverter in the file.
@@ -13,7 +13,7 @@ Takes the following props:
 
 -->
 <template>
-  <div class="weather-csv-mapper">
+  <div class="csv-mapper">
     <div>
       <slot></slot>
       <div>
@@ -39,13 +39,13 @@ Takes the following props:
         </template>
       </div>
       <!-- Present a mapper for each System, Inverter, or Array (dependent on
-           weather granularity.
+           granularity.
         -->
       <div v-for="(component, i) of toMap" :key="i">
         <div>
           <div class="data-object-header">
             <span class="object-name">
-              <b class="granularity">{{ weather_granularity }}:</b>
+              <b class="granularity">{{ granularity }}:</b>
               {{ component.metadata.name }}
             </span>
             <span class="component-requirements">
@@ -89,7 +89,7 @@ Takes the following props:
               :comp="component"
             >
               <p>
-                What fields contain data for {{ weather_granularity }}
+                What fields contain data for {{ granularity }}
                 <b>{{ component.metadata.name }}</b>
                 ?
               </p>
@@ -113,9 +113,9 @@ interface HTMLInputEvent extends Event {
 Vue.component("field-mapper", FieldMapper);
 
 @Component
-export default class WeatherCSVMapper extends Vue {
+export default class CSVMapper extends Vue {
   @Prop() headers!: Array<string>;
-  @Prop() weather_granularity!: string;
+  @Prop() granularity!: string;
   @Prop() system!: System;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, string>;
@@ -146,14 +146,14 @@ export default class WeatherCSVMapper extends Vue {
      * - metadata: System | Inverter | PVArray - metadata of the object
      *     to be mapped.
      */
-    if (this.weather_granularity == "system") {
+    if (this.granularity == "system") {
       return this.data_objects.map(obj => {
         return {
           data_object: obj,
           metadata: this.system
         };
       });
-    } else if (this.weather_granularity == "inverter") {
+    } else if (this.granularity == "inverter") {
       return this.data_objects.map(obj => {
         // get the second element of the location, due to "" first element
         const index = parseInt(obj.definition.schema_path.split("/")[2]);
@@ -216,7 +216,7 @@ export default class WeatherCSVMapper extends Vue {
     // Create a unique ref name for a nested component. Used to store
     // references to nested components for checking that all mappings are
     // valid and complete.
-    return `${this.weather_granularity}_${index}`;
+    return `${this.granularity}_${index}`;
   }
   initDataObjectDisplay() {
     const visibleMap: Record<string, boolean> = {};

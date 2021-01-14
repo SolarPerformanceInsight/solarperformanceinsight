@@ -43,12 +43,24 @@
             </router-link>
           </span>
           <span class="system-cell">
-            <router-link to="/compare" tag="button">
+            <router-link
+              :to="{
+                name: 'Compare Performance',
+                params: { systemId: uuid }
+              }"
+              tag="button"
+            >
               Compare Performance
             </router-link>
           </span>
           <span class="system-cell">
-            <router-link to="/calculatepr" tag="button">
+            <router-link
+              :to="{
+                name: 'Calculate Performance Ratio',
+                params: { systemId: uuid }
+              }"
+              tag="button"
+            >
               Calculate PR
             </router-link>
           </span>
