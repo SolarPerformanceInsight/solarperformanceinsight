@@ -127,6 +127,27 @@ def ensure_user_exists(f: Callable) -> Callable:
     return wrapper
 
 
+class StorageTransactionError(Exception):
+    """Errors raised in StorageInterface from missing method calls needed
+    to complete a transaction"""
+
+    pass
+
+
+class JobAlreadyComplete(Exception):
+    """Raise when a job is already complete to tell a job worker to
+    quit and mark the job as complete instead of error"""
+
+    pass
+
+
+class JobResultFailure(Exception):
+    """Indicate errors adding job data that are the result of a server error that
+    should place the job in the FailedJobRegistry"""
+
+    pass
+
+
 class StorageInterface:
     def __init__(self, user: str = Depends(get_user_id)):
         self.user = user
@@ -144,12 +165,18 @@ class StorageInterface:
         connection = engine.connect()
         cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
         self._cursor = cursor
+        self._add_job_result_called = False
+        self._final_job_status_set = False
         try:
             yield self
         except Exception:
             connection.rollback()
             raise
         else:
+            if self._add_job_result_called and not self._final_job_status_set:
+                raise StorageTransactionError(
+                    "Job status must be set in a transaction adding job results"
+                )
             if self.commit:
                 connection.commit()
         finally:
@@ -346,3 +373,74 @@ class StorageInterface:
 
     def queue_job(self, job_id: UUID):
         self._call_procedure("queue_job", job_id)
+
+    def _parse_job_result_meta(
+        self,
+        result_meta: Dict[str, Any],
+    ) -> models.StoredJobResultMetadata:
+        result_meta["object_id"] = result_meta.pop("id")
+        result_meta["object_type"] = "job_result"
+        result_meta["definition"] = {
+            k: result_meta[k]
+            for k in models.JobResultMetadata.schema()["properties"].keys()
+        }
+        return models.StoredJobResultMetadata(**result_meta)
+
+    def list_job_results(self, job_id: UUID) -> List[models.StoredJobResultMetadata]:
+        out = self._call_procedure("get_job_result_metadata", job_id)
+        return [self._parse_job_result_meta(o) for o in out]
+
+    def get_job_result(
+        self, job_id: UUID, job_result_id: UUID
+    ) -> Tuple[models.StoredJobResultMetadata, bytes]:
+        out = self._call_procedure_for_single("get_job_result", job_id, job_result_id)
+        data = out.pop("data")
+        meta = self._parse_job_result_meta(out)
+        return meta, data
+
+    def _try_job_query(self, procedure_name, *args):
+        # this should only be used in a job worker, so raise job errors
+        # instead of trying to convert to a HTTPException
+        new_args = (self.user, *args)
+        query = f'CALL {procedure_name}({",".join(["%s"] * len(new_args))})'
+        try:
+            self.cursor.execute(query, new_args)
+        except (pymysql.err.IntegrityError, pymysql.err.OperationalError) as err:
+            if err.args[0] == 1062:
+                raise JobAlreadyComplete()
+            else:
+                raise JobResultFailure(err.args[1])
+        except pymysql.err.DataError as err:
+            raise JobResultFailure(err.args[1])
+        return self.cursor.fetchone()
+
+    def add_job_result(
+        self,
+        job_id: UUID,
+        schema_path: str,
+        data_type: str,
+        data_format: str,
+        data: bytes,
+    ) -> models.StoredObjectID:
+        self._add_job_result_called = True
+        created = self._try_job_query(
+            "add_job_result",
+            job_id,
+            schema_path,
+            data_type,
+            data_format,
+            data,
+        )
+        return models.StoredObjectID(
+            object_id=created["job_result_id"], object_type="job_result"
+        )
+
+    def _set_job_status(self, job_id: UUID, status: str):
+        self._final_job_status_set = True
+        self._try_job_query("set_job_completion", job_id, status)
+
+    def set_job_complete(self, job_id: UUID):
+        self._set_job_status(job_id, "complete")
+
+    def set_job_error(self, job_id: UUID):
+        self._set_job_status(job_id, "error")

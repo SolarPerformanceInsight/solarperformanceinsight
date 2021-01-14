@@ -3,7 +3,7 @@ import json
 from uuid import uuid1
 
 
-from pymysql.err import OperationalError, IntegrityError
+from pymysql.err import OperationalError, IntegrityError, DataError
 import pytest
 
 
@@ -450,9 +450,148 @@ def test_queue_job_badid(cursor, auth0_id, job_data_ids):
     assert err.value.args[0] == 1142
 
 
-def test_get_job_results():
-    pass
+def test_get_job_result_metadata(dictcursor, auth0_id, job_id, job_result_ids):
+    dictcursor.execute("call get_job_result_metadata(%s, %s)", (auth0_id, job_id))
+    res = dictcursor.fetchall()
+    assert len(res) == 2
+    res0 = res[0]
+    assert res0["id"] == job_result_ids[0]
+    assert res0["schema_path"] == "/"
+    assert res0["type"] == "ghi"
+    assert res0["data_format"] == "application/vnd.apache.arrow.file"
+    assert res0["created_at"] == res0["modified_at"]
+
+    res1 = res[1]
+    assert res1["id"] == job_result_ids[1]
+    assert res1["schema_path"] == "/array"
+    assert res1["type"] == "poa"
+    assert res1["data_format"] == "application/json"
 
 
-def test_add_job_results():
-    pass
+def test_get_job_result_metadata_baduser(cursor, bad_user, job_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute("call get_job_result_metadata(%s, %s)", (bad_user, job_id))
+    assert err.value.args[0] == 1142
+
+
+def test_get_job_result(dictcursor, auth0_id, job_result_ids, job_id):
+    dictcursor.execute(
+        "call get_job_result(%s, %s, %s)", (auth0_id, job_id, job_result_ids[0])
+    )
+    res = dictcursor.fetchone()
+    assert res["id"] == job_result_ids[0]
+    assert res["schema_path"] == "/"
+    assert res["type"] == "ghi"
+    assert res["data_format"] == "application/vnd.apache.arrow.file"
+    assert res["data"] == b"dataz"
+
+
+def test_get_job_result_baduser(cursor, bad_user, job_result_ids, job_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call get_job_result(%s, %s, %s)", (bad_user, job_id, job_result_ids[1])
+        )
+    assert err.value.args[0] == 1142
+
+
+def test_get_job_result_not_owned(cursor, auth0_id, job_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute("call get_job_result(%s, %s, %s)", (auth0_id, job_id, job_id))
+    assert err.value.args[0] == 1142
+
+
+def test_get_job_result_id_mismatch(cursor, auth0_id, job_id, other_job_result_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call get_job_result(%s, %s, %s)", (auth0_id, job_id, other_job_result_id)
+        )
+    assert err.value.args[0] == 1142
+
+
+def test_add_job_results(dictcursor, auth0_id, job_id):
+    dictcursor.execute("call get_job_result_metadata(%s, %s)", (auth0_id, job_id))
+    assert len(dictcursor.fetchall()) == 2
+
+    dictcursor.execute(
+        "call add_job_result(%s, %s, %s, %s, %s, %s)",
+        (
+            auth0_id,
+            job_id,
+            "/new",
+            "module_temperature",
+            "text/csv",
+            b"time,module_temperature\n0,1\n",
+        ),
+    )
+    newid = dictcursor.fetchone()["job_result_id"]
+    dictcursor.execute("call get_job_result_metadata(%s, %s)", (auth0_id, job_id))
+    assert len(dictcursor.fetchall()) == 3
+
+    dictcursor.execute("call get_job_result(%s, %s, %s)", (auth0_id, job_id, newid))
+    res = dictcursor.fetchone()
+    assert res["schema_path"] == "/new"
+    assert res["data"] == b"time,module_temperature\n0,1\n"
+
+
+def test_add_job_results_baduser(dictcursor, bad_user, job_id):
+    with pytest.raises(OperationalError) as err:
+        dictcursor.execute(
+            "call add_job_result(%s, %s, %s, %s, %s, %s)",
+            (
+                bad_user,
+                job_id,
+                "/new",
+                "module_temperature",
+                "text/csv",
+                b"time,module_temperature\n0,1\n",
+            ),
+        )
+    assert err.value.args[0] == 1142
+
+
+@pytest.mark.parametrize("status", ("complete", "error"))
+def test_add_job_results_badstatus(cursor, auth0_id, other_job_id, status):
+    cursor.execute(
+        "update jobs set status = %s where id = uuid_to_bin(%s, 1)",
+        (status, other_job_id),
+    )
+    with pytest.raises(IntegrityError) as err:
+        cursor.execute(
+            "call add_job_result(%s, %s, %s, %s, %s, %s)",
+            (
+                auth0_id,
+                other_job_id,
+                "/new",
+                "module_temperature",
+                "text/csv",
+                b"time,module_temperature\n0,1\n",
+            ),
+        )
+    assert err.value.args[0] == 1062
+
+
+@pytest.mark.parametrize("status", ("complete", "error"))
+def test_set_job_completion(dictcursor, auth0_id, job_id, status):
+    dictcursor.execute(
+        "call set_job_completion(%s, %s, %s)", (auth0_id, job_id, status)
+    )
+    dictcursor.execute("call get_job_status(%s, %s)", (auth0_id, job_id))
+    res = dictcursor.fetchone()
+    assert res["status"] == status
+
+
+def test_set_job_completion_baduser(dictcursor, bad_user, job_id):
+    with pytest.raises(OperationalError) as err:
+        dictcursor.execute(
+            "call set_job_completion(%s, %s, %s)", (bad_user, job_id, "error")
+        )
+    assert err.value.args[0] == 1142
+
+
+@pytest.mark.parametrize("status", ("created", "queued", "notstat"))
+def test_set_job_completion_bad_status(dictcursor, auth0_id, job_id, status):
+    with pytest.raises(DataError) as err:
+        dictcursor.execute(
+            "call set_job_completion(%s, %s, %s)", (auth0_id, job_id, status)
+        )
+    assert err.value.args[0] == 1265
