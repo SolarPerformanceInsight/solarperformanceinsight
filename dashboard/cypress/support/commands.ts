@@ -2,9 +2,9 @@ import jwt_decode from 'jwt-decode';
 
 Cypress.Commands.add('login', (username: string, password: string) => {
   cy.log(`Logging in as ${username}`);
-  const client_id = Cypress.env('auth_client_id');
-  const client_secret = Cypress.env('auth_client_secret');
-  const audience = Cypress.env('auth_audience');
+  const client_id = Cypress.env('AUTH_CLIENT_ID');
+  const client_secret = Cypress.env('AUTH_CLIENT_SECRET');
+  const audience = Cypress.env('AUTH_AUDIENCE');
   const scope = 'openid profile email offline_access';
 
   // Hardcode localStorage key. We can retrireve a token from the test application
@@ -13,7 +13,7 @@ Cypress.Commands.add('login', (username: string, password: string) => {
   if (localStorage.getItem(key) === null) {
     const options = {
       method: 'POST',
-      url: Cypress.env('auth_url'),
+      url: Cypress.env('AUTH_URL'),
       body: {
         grant_type: 'password',
         username,

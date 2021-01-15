@@ -5,14 +5,14 @@ describe("Test Dash", () => {
     cy.contains("Welcome to the solarperformance");
   });
   it("Connect to systems", () => {
-    cy.login(Cypress.env("auth_username"), Cypress.env("auth_password"));
+    cy.login(Cypress.env("AUTH_USERNAME"), Cypress.env("AUTH_PASSWORD"));
 
     cy.visit("http://localhost:8001");
 
     cy.contains("Successfully logged in.");
   });
   it("Connect to new System", () => {
-    cy.login(Cypress.env("auth_username"), Cypress.env("auth_password"));
+    cy.login(Cypress.env("AUTH_USERNAME"), Cypress.env("AUTH_PASSWORD"));
 
     cy.visit("http://localhost:8001/system/new");
 
