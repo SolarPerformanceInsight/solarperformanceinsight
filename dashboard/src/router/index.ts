@@ -6,7 +6,7 @@ import VueRouter, { RouteConfig } from "vue-router";
 import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
-import CalculatePerformance from "../views/Calculate.vue";
+import JobHandler from "../components/jobs/JobHandler.vue";
 import ComparePerformance from "../views/Compare.vue";
 import CalculatePR from "../views/CalculatePR.vue";
 import { authGuard } from "../auth/authGuard";
@@ -39,20 +39,38 @@ const routes: Array<RouteConfig> = [
   {
     path: "/system/:systemId/calculate",
     name: "Calculate Performance",
-    component: CalculatePerformance,
-    props: true,
+    component: JobHandler,
+    props: r => ({
+      systemId: r.params.systemId,
+      typeOfJob: "calculate"
+    }),
     beforeEnter: authGuard
   },
   {
-    path: "/compare",
+    path: "/system/:systemId/compare",
     name: "Compare Performance",
-    component: ComparePerformance,
+    component: JobHandler,
+    props: r => ({
+      systemId: r.params.systemId,
+      typeOfJob: "compare"
+    }),
     beforeEnter: authGuard
   },
   {
-    path: "/calculatepr",
+    path: "/system/:systemId/calculatepr",
     name: "Calculate Performance Ratio",
-    component: CalculatePR,
+    component: JobHandler,
+    props: r => ({
+      systemId: r.params.systemId,
+      typeOfJob: "calculatepr"
+    }),
+    beforeEnter: authGuard
+  },
+  {
+    path: "/jobs/:jobId",
+    name: "Job View",
+    component: JobHandler,
+    props: true,
     beforeEnter: authGuard
   }
 ];

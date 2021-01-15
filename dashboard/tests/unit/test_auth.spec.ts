@@ -14,34 +14,10 @@ import router from "@/router";
 import { SpiStore } from "@/store/store";
 import { domain, clientId, audience } from "../../auth_config.json";
 import { authGuard } from "../../src/auth/authGuard";
-import * as auth from "../../src/auth/auth";
-
-const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-
-const user = {
-  email: "testing@solaforecastarbiter.org",
-  email_verified: true,
-  sub: "auth0|5fa9596ccf64f9006e841a3a"
-};
-
-const $auth = {
-  isAuthenticated: true,
-  loading: false,
-  user: user,
-  logout: jest.fn(),
-  loginWithRedirect: jest.fn()
-};
-
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
+import { mockedAuthInstance, $auth } from "./mockauth";
+import { $validator } from "./mockvalidator";
 
 const localVue = createLocalVue();
-
-const $validator = {
-  getComponentSpec: (n: string) => {
-    "thing";
-  }
-};
 
 const mocks = {
   $auth,

@@ -2,7 +2,7 @@ import Vue from "vue";
 import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
-import WeatherCSVMapper from "@/components/jobs/WeatherCSVMapper.vue";
+import CSVMapper from "@/components/jobs/CSVMapper.vue";
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
 
 // test prop constants
@@ -128,11 +128,11 @@ describe("Test CSV Mapper", () => {
   it("test csvmapper methods", async () => {
     const propsData = {
       headers: headers,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
@@ -185,11 +185,11 @@ describe("Test CSV Mapper", () => {
     ];
     const propsData = {
       headers: headers,
-      weather_granularity: "inverter",
+      granularity: "inverter",
       system: testJob.definition.system_definition,
       data_objects: data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
@@ -224,11 +224,11 @@ describe("Test CSV Mapper", () => {
     ];
     const propsData = {
       headers: headers,
-      weather_granularity: "system",
+      granularity: "system",
       system: testJob.definition.system_definition,
       data_objects: data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
@@ -243,11 +243,11 @@ describe("Test CSV Mapper", () => {
   it("test map time methods", async () => {
     const propsData = {
       headers: headers,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
@@ -261,11 +261,11 @@ describe("Test CSV Mapper", () => {
   it("test update mapping", async () => {
     const propsData = {
       headers: headers,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
@@ -286,11 +286,11 @@ describe("Test CSV Mapper", () => {
   it("test use free headers", async () => {
     const propsData = {
       headers: headers,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherHandler = mount(WeatherCSVMapper, {
+    const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });

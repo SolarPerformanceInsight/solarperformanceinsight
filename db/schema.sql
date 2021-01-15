@@ -33,6 +33,27 @@ CREATE TABLE `job_data` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `job_results`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `job_results` (
+  `id` binary(16) NOT NULL DEFAULT (uuid_to_bin(uuid(),1)),
+  `job_id` binary(16) NOT NULL,
+  `schema_path` varchar(128) NOT NULL,
+  `type` varchar(32) NOT NULL,
+  `format` varchar(64) NOT NULL,
+  `data` longblob NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `job_result_id_key` (`job_id`),
+  CONSTRAINT `job_results_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `jobs`
 --
 
@@ -161,6 +182,29 @@ begin
       select 1 from jobs where user_id = get_user_binid(auth0id)
         and id = uuid_to_bin(jobid, 1)
         and id = (select job_id from job_data where id = uuid_to_bin(dataid, 1)));
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` FUNCTION `check_users_job_result`(auth0id varchar(32), jobid char(36), resultid char(36)) RETURNS tinyint(1)
+    READS SQL DATA
+    COMMENT 'Check if a job result exists and belongs to the user'
+begin
+    return exists(
+      select 1 from jobs where user_id = get_user_binid(auth0id)
+                           and id = uuid_to_bin(jobid, 1)
+                           and id = (select job_id from job_results where id = uuid_to_bin(resultid, 1)));
   end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -350,6 +394,7 @@ begin
   CALL _add_example_data_0;
   CALL _add_example_data_1;
   CALL _add_example_data_2;
+  CALL _add_example_data_3;
 end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -384,6 +429,46 @@ begin
     else
       signal sqlstate '42000' set message_text = 'Job data upload denied',
       mysql_errno = 1142;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`insert_objects`@`localhost` PROCEDURE `add_job_result`(auth0id varchar(32), jobid char(36),
+                            new_schema_path varchar(128), new_type varchar(32),
+                            new_format varchar(64), new_result longblob)
+    MODIFIES SQL DATA
+    COMMENT 'Add a result for a job'
+begin
+    declare newid char(36) default (uuid());
+    declare binid binary(16) default (uuid_to_bin(newid, 1));
+    declare binjobid binary(16) default (uuid_to_bin(jobid, 1));
+    declare allowed boolean default (check_users_job(auth0id, jobid));
+    declare status varchar(32) default (job_status_func(binjobid));
+
+    if allowed then
+      if status = 'complete' or status = 'error' then
+        signal sqlstate '42000' set message_text = 'Job already complete',
+        mysql_errno = 1062;
+      else
+        insert into job_results (id, job_id, schema_path, type, format, data)
+        values (binid, binjobid, new_schema_path, new_type, new_format, new_result);
+        select newid as job_result_id;
+      end if;
+    else
+      signal sqlstate '42000' set message_text = 'Job result upload denied',
+        mysql_errno = 1142;
     end if;
   end ;;
 DELIMITER ;
@@ -634,6 +719,65 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_job_result`(auth0id varchar(32), jobid char(36), resultid char(36))
+    READS SQL DATA
+    COMMENT 'Read the data for a single job result id'
+begin
+    declare binid binary(16) default (uuid_to_bin(resultid, 1));
+    declare allowed boolean default (check_users_job_result(auth0id, jobid, resultid));
+
+    if allowed then
+      select bin_to_uuid(id, 1) as id, bin_to_uuid(job_id, 1) as job_id,
+      schema_path, type, data, format as data_format, created_at, modified_at
+      from job_results where id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'Job result retrieval denied',
+        mysql_errno = 1142;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_job_result_metadata`(auth0id varchar(32), jobid char(36))
+    READS SQL DATA
+    COMMENT 'Get the metadata for a job result'
+begin
+    declare binid binary(16) default (uuid_to_bin(jobid, 1));
+    declare allowed boolean default (check_users_job(auth0id, jobid));
+
+    if allowed then
+      select bin_to_uuid(id, 1) as id, schema_path, type, format as data_format,
+      created_at, modified_at from job_results where job_id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'Job result metadata retrieval denied',
+      mysql_errno=1142;
+    end if;
+  end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`select_objects`@`localhost` PROCEDURE `get_job_status`(auth0id varchar(32), jobid char(36))
     READS SQL DATA
     COMMENT 'Get status of a job'
@@ -806,6 +950,35 @@ begin
   CALL _remove_example_data_0;
   CALL _remove_example_data_1;
 end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`update_objects`@`localhost` PROCEDURE `set_job_completion`(auth0id varchar(32), jobid char(36),
+                                newstatus enum('complete', 'error'))
+    MODIFIES SQL DATA
+    COMMENT 'Set the job as complete or error'
+begin
+    declare binid binary(16) default (uuid_to_bin(jobid, 1));
+    declare allowed boolean default (check_users_job(auth0id, jobid));
+
+    if allowed then
+      update jobs set status = newstatus where id = binid;
+    else
+      signal sqlstate '42000' set message_text = 'Setting job completion denied',
+        mysql_errno = 1142;
+    end if;
+  end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -1051,6 +1224,79 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `_add_example_data_3`()
+    MODIFIES SQL DATA
+begin
+  set @jobid = uuid_to_bin('4910c750-55f1-11eb-a03d-f4939feddd82', 1);
+  set @jobdataid = uuid_to_bin('5c22bdd0-55f1-11eb-a03d-f4939feddd82', 1);
+  set @userid = uuid_to_bin('17fbf1c6-34bd-11eb-af43-f4939feddd82', 1);
+  set @sysid = uuid_to_bin('6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9', 1);
+  set @extime = timestamp('2021-01-12 12:37');
+  set @uploadtime = timestamp('2021-01-12 12:42');
+  set @completetime = timestamp('2021-01-12 13:05');
+
+  set @sysjson = (select cast(definition as json) from systems where id = @sysid);
+  set @jobparams = '{"parameters": {
+      "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      "time_parameters": {
+        "start": "2021-01-11T00:00:00+00:00",
+        "end": "2021-01-11T23:59:59+00:00",
+        "step": "60:00",
+        "timezone": "UTC"
+      },
+      "weather_granularity": "system",
+      "job_type": {
+        "calculate": "expected performance"
+      },
+      "irradiance_type": "standard",
+      "temperature_type": "air"}}';
+  -- odd annoying way to make sure system def is also json
+  set @jobjson = json_set(@jobparams, '$.system_definition', json_value(@sysjson, '$' returning json));
+
+  insert into jobs (id, user_id, system_id, definition, status, created_at, modified_at) values (
+    @jobid, @userid, @sysid, @jobjson, 'complete', @extime, @completetime);
+  insert into job_data (id, job_id, schema_path, type, present, format, filename,
+                        created_at, modified_at, data)
+  values (
+    @jobdataid, @jobid, '/', 'actual weather data', true,
+    'application/vnd.apache.arrow.file', 'weather_data.csv', @extime, @uploadtime,
+    from_base64('QVJST1cxAAD/////8AQAABAAAAAAAAoADgAGAAUACAAKAAAAAAEEABAAAAAAAAoADAAAAAQACAAKAAAAYAMAAAQAAAABAAAADAAAAAgADAAEAAgACAAAAAgAAAAQAAAABgAAAHBhbmRhcwAAKwMAAHsiaW5kZXhfY29sdW1ucyI6IFtdLCAiY29sdW1uX2luZGV4ZXMiOiBbXSwgImNvbHVtbnMiOiBbeyJuYW1lIjogInRpbWUiLCAiZmllbGRfbmFtZSI6ICJ0aW1lIiwgInBhbmRhc190eXBlIjogImRhdGV0aW1ldHoiLCAibnVtcHlfdHlwZSI6ICJkYXRldGltZTY0W25zXSIsICJtZXRhZGF0YSI6IHsidGltZXpvbmUiOiAiVVRDIn19LCB7Im5hbWUiOiAiZ2hpIiwgImZpZWxkX25hbWUiOiAiZ2hpIiwgInBhbmRhc190eXBlIjogImludDY0IiwgIm51bXB5X3R5cGUiOiAiaW50NjQiLCAibWV0YWRhdGEiOiBudWxsfSwgeyJuYW1lIjogImRuaSIsICJmaWVsZF9uYW1lIjogImRuaSIsICJwYW5kYXNfdHlwZSI6ICJpbnQ2NCIsICJudW1weV90eXBlIjogImludDY0IiwgIm1ldGFkYXRhIjogbnVsbH0sIHsibmFtZSI6ICJkaGkiLCAiZmllbGRfbmFtZSI6ICJkaGkiLCAicGFuZGFzX3R5cGUiOiAiaW50NjQiLCAibnVtcHlfdHlwZSI6ICJpbnQ2NCIsICJtZXRhZGF0YSI6IG51bGx9LCB7Im5hbWUiOiAidGVtcF9haXIiLCAiZmllbGRfbmFtZSI6ICJ0ZW1wX2FpciIsICJwYW5kYXNfdHlwZSI6ICJpbnQ2NCIsICJudW1weV90eXBlIjogImludDY0IiwgIm1ldGFkYXRhIjogbnVsbH0sIHsibmFtZSI6ICJ3aW5kX3NwZWVkIiwgImZpZWxkX25hbWUiOiAid2luZF9zcGVlZCIsICJwYW5kYXNfdHlwZSI6ICJpbnQ2NCIsICJudW1weV90eXBlIjogImludDY0IiwgIm1ldGFkYXRhIjogbnVsbH1dLCAiY3JlYXRvciI6IHsibGlicmFyeSI6ICJweWFycm93IiwgInZlcnNpb24iOiAiMi4wLjAifSwgInBh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dHlwZSI6ICJpbnQ2NCIsICJtZXRhZGF0YSI6IG51bGx9LCB7Im5hbWUiOiAidGVtcF9haXIiLCAiZmllbGRfbmFtZSI6ICJ0ZW1wX2FpciIsICJwYW5kYXNfdHlwZSI6ICJpbnQ2NCIsICJudW1weV90eXBlIjogImludDY0IiwgIm1ldGFkYXRhIjogbnVsbH0sIHsibmFtZSI6ICJ3aW5kX3NwZWVkIiwgImZpZWxkX25hbWUiOiAid2luZF9zcGVlZCIsICJwYW5kYXNfdHlwZSI6ICJpbnQ2NCIsICJudW1weV90eXBlIjogImludDY0IiwgIm1ldGFkYXRhIjogbnVsbH1dLCAiY3JlYXRvciI6IHsibGlicmFyeSI6ICJweWFycm93IiwgInZlcnNpb24iOiAiMi4wLjAifSwgInBhbmRhc192ZXJzaW9uIjogIjEuMS40In0ABgAAABwBAADUAAAApAAAAHQAAAA8AAAABAAAAAz///8AAAECEAAAABwAAAAEAAAAAAAAAAoAAAB3aW5kX3NwZWVkAABI////AAAAAUAAAABA////AAABAhAAAAAcAAAABAAAAAAAAAAIAAAAdGVtcF9haXIAAAAAfP///wAAAAFAAAAAdP///wAAAQIQAAAAFAAAAAQAAAAAAAAAAwAAAGRoaQCo////AAAAAUAAAACg////AAABAhAAAAAUAAAABAAAAAAAAAADAAAAZG5pANT///8AAAABQAAAAMz///8AAAECEAAAABwAAAAEAAAAAAAAAAMAAABnaGkACAAMAAgABwAIAAAAAAAAAUAAAAAQABQACAAGAAcADAAAABAAEAAAAAAAAQoQAAAAIAAAAAQAAAAAAAAABAAAAHRpbWUAAAAACAAMAAYACAAIAAAAAAADAAQAAAADAAAAVVRDABgFAABBUlJPVzE='));
+
+  set @jobresult0 = uuid_to_bin('d84bdf30-55f2-11eb-a03d-f4939feddd82', 1);
+  set @jobresult1 = uuid_to_bin('e525466a-55f2-11eb-a03d-f4939feddd82', 1);
+  set @jobresult2 = uuid_to_bin('e566a59c-55f2-11eb-a03d-f4939feddd82', 1);
+
+  insert into job_results (id, job_id, schema_path, type, format,
+                           created_at, modified_at, data)
+  values (
+    @jobresult0, @jobid, '/inverters/0/arrays/0', 'weather data',
+    'application/vnd.apache.arrow.file', @completetime, @completetime,
+    from_base64('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')
+  ), (
+    @jobresult1, @jobid, '/inverters/0', 'performance data',
+    'application/vnd.apache.arrow.file', @completetime, @completetime,
+    from_base64('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')
+  ), (
+    @jobresult2, @jobid, '/', 'performance data',
+    'application/vnd.apache.arrow.file', @completetime, @completetime,
+    from_base64('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')
+  );
+
+end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`root`@`%` PROCEDURE `_remove_example_data_0`()
     MODIFIES SQL DATA
     COMMENT 'Remove example data from the database'
@@ -1117,5 +1363,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20201208224427'),
   ('20201214175739'),
   ('20201221161319'),
-  ('20210107162707');
+  ('20210107162707'),
+  ('20210112205531');
 UNLOCK TABLES;

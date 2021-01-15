@@ -19,7 +19,7 @@ def test_list_jobs(client, stored_job):
     response = client.get("/jobs")
     jobs = [models.StoredJob(**j) for j in response.json()]
     assert response.status_code == 200
-    assert len(jobs) == 1
+    assert len(jobs) == 2
     assert jobs[0] == stored_job
 
 
@@ -38,6 +38,8 @@ def test_get_job(client, stored_job, job_id):
         ("GET", "/jobs/{jobid}/data/{baddataid}"),
         ("DELETE", "/jobs/{other}"),
         ("POST", "/jobs/{other}/compute"),
+        ("GET", "/jobs/{other}/results"),
+        ("GET", "/jobs/{jobid}/results/{baddataid}"),
     ),
 )
 def test_job_404s(client, other_job_id, job_data_ids, fnc, endpoint, job_id):
@@ -523,3 +525,46 @@ def test_create_upload_compute_delete(
     assert resp.status_code == 204
     response = client.get(f"/jobs/{new_id}")
     assert response.status_code == 404
+
+
+def test_list_job_results(client, complete_job_id, job_result_list, job_id):
+    response = client.get(f"/jobs/{complete_job_id}/results")
+    assert response.status_code == 200
+    reslist = response.json()
+    assert len(reslist) == 3
+    assert [models.StoredJobResultMetadata(**r) for r in reslist] == job_result_list
+
+    response = client.get(f"/jobs/{job_id}/results")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_job_result(
+    client,
+    complete_job_id,
+    arrow_performance_job_result,
+    arrow_weather_job_result,
+    job_result_ids,
+):
+    for rid, res in (
+        (job_result_ids[0], arrow_weather_job_result),
+        (job_result_ids[1], arrow_performance_job_result),
+        (job_result_ids[2], arrow_performance_job_result),
+    ):
+        response = client.get(
+            f"/jobs/{complete_job_id}/results/{rid}",
+            headers={"Accept": "application/vnd.apache.arrow.file"},
+        )
+        assert response.status_code == 200
+        assert response.content == res
+
+    csvresp = client.get(f"/jobs/{complete_job_id}/results/{job_result_ids[1]}")
+    assert csvresp.status_code == 200
+    assert csvresp.text.startswith("time,performance")
+
+
+def test_get_job_result_error(client, error_job_result, job_id):
+    eid, res = error_job_result
+    response = client.get(f"/jobs/{job_id}/results/{eid}")
+    assert response.status_code == 200
+    assert response.json() == res

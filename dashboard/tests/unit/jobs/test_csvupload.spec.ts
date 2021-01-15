@@ -2,11 +2,11 @@ import Vue from "vue";
 import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
-import WeatherCSVMapper from "@/components/jobs/WeatherCSVMapper.vue";
-import WeatherUpload from "@/components/jobs/WeatherUpload.vue";
+import CSVMapper from "@/components/jobs/CSVMapper.vue";
+import CSVUpload from "@/components/jobs/CSVUpload.vue";
 
 import * as Jobs from "@/api/jobs";
-import * as auth from "@/auth/auth";
+import { mockedAuthInstance, $auth } from "../mockauth";
 
 // test prop constants
 const testJob = {
@@ -135,27 +135,7 @@ const testMapping = {
 // vue test setup
 const localVue = createLocalVue();
 
-Vue.component("weather-csv-mapper", WeatherCSVMapper);
-
-const user = {
-  email: "testing@solaforecastarbiter.org",
-  email_verified: true,
-  sub: "auth0|5fa9596ccf64f9006e841a3a"
-};
-
-const $auth = {
-  isAuthenticated: true,
-  loading: false,
-  user: user,
-  logout: jest.fn(),
-  loginWithRedirect: jest.fn(),
-  getTokenSilently: jest.fn().mockReturnValue("Token")
-};
-
-const mockedAuthInstance = jest.spyOn(auth, "getInstance");
-
-// @ts-expect-error
-mockedAuthInstance.mockImplementation(() => $auth);
+Vue.component("csv-mapper", CSVMapper);
 
 const mocks = {
   $auth
@@ -171,21 +151,21 @@ mockedDataPost.mockImplementation(jest.fn().mockResolvedValue(mockJobResponse));
 
 beforeEach(() => jest.clearAllMocks());
 
-describe("Test Weather Upload", () => {
+describe("Test CSV Upload", () => {
   it("Test getters and init", async () => {
     const propsData = {
       jobId: testJob.object_id,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       irradiance_type: testJob.definition.parameters.irradiance_type,
       temperature_type: testJob.definition.parameters.temperature_type,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherUpload = mount(WeatherUpload, {
+    const csvUpload = mount(CSVUpload, {
       localVue,
       propsData
     });
-    expect(weatherUpload.vm.$data.required).toEqual([
+    expect(csvUpload.vm.$data.required).toEqual([
       "time",
       "poa_global",
       "poa_direct",
@@ -193,36 +173,42 @@ describe("Test Weather Upload", () => {
       "module_temperature"
     ]);
     // @ts-expect-error
-    expect(weatherUpload.vm.totalMappings).toBe(5);
+    expect(csvUpload.vm.totalMappings).toBe(5);
   });
   it("Test store and map csv", async () => {
     const propsData = {
       jobId: testJob.object_id,
-      weather_granularity: testJob.definition.parameters.weather_granularity,
+      granularity: testJob.definition.parameters.weather_granularity,
       irradiance_type: testJob.definition.parameters.irradiance_type,
       temperature_type: testJob.definition.parameters.temperature_type,
       system: testJob.definition.system_definition,
       data_objects: testJob.data_objects
     };
-    const weatherUpload = mount(WeatherUpload, {
+    const csvUpload = mount(CSVUpload, {
       localVue,
       propsData,
       mocks
     });
-    expect(weatherUpload.findComponent(WeatherCSVMapper).exists()).toBe(false);
+    expect(csvUpload.findComponent(CSVMapper).exists()).toBe(false);
     // @ts-expect-error
-    weatherUpload.vm.storeCSV(testCSV);
+    csvUpload.vm.storeCSV(testCSV);
     await flushPromises();
-    expect(weatherUpload.findComponent(WeatherCSVMapper).exists()).toBe(true);
-    expect(weatherUpload.vm.$data.csvData).toEqual([{
-      a: 1, b: 2, c: 3, d: 4, e: 5
-    }]);
+    expect(csvUpload.findComponent(CSVMapper).exists()).toBe(true);
+    expect(csvUpload.vm.$data.csvData).toEqual([
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 4,
+        e: 5
+      }
+    ]);
     // @ts-expect-error
-    weatherUpload.vm.processMapping(testMapping);
-    expect(weatherUpload.vm.$data.mapping).toEqual(testMapping);
+    csvUpload.vm.processMapping(testMapping);
+    expect(csvUpload.vm.$data.mapping).toEqual(testMapping);
 
     // @ts-expect-error
-    await weatherUpload.vm.uploadData();
+    await csvUpload.vm.uploadData();
     await flushPromises();
     expect(mockedDataPost).toHaveBeenCalledWith(
       "Token",

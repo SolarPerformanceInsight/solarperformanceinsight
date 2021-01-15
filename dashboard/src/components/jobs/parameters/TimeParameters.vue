@@ -1,9 +1,9 @@
 <template>
   <div class="time-parameters">
-    <b>Start:</b>
+    <b>Start of the calculation period:</b>
     <input @change="emitParams" v-model="start" class="start" />
     <br />
-    <b>End:</b>
+    <b>End of the calculation period:</b>
     <input @change="emitParams" v-model="end" class="end" />
     <br />
     <b>Step:</b>

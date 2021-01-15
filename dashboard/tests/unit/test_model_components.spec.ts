@@ -2,8 +2,8 @@ import Vue from "vue";
 import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
-import { APIValidator } from "@/types/validation/Validator";
 import APISpec from "./openapi.json";
+import { $validator } from "./mockvalidator";
 
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
@@ -59,9 +59,6 @@ const parentComponent: Vue = mount({
     };
   }
 }).vm;
-
-const $validator = new APIValidator();
-$validator.getAPISpec = jest.fn().mockResolvedValue(APISpec);
 
 const mocks = {
   $validator
