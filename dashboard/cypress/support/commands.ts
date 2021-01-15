@@ -10,7 +10,7 @@ Cypress.Commands.add('login', (username: string, password: string) => {
   // Hardcode localStorage key. We can retrireve a token from the test application
   // and place it in localStorage with the dev apps id.
   const key = `@@auth0spajs@@::H93iiI1JcKgL5lFfRBD2XGdboHzzgUQf::https://app.solarperformanceinsight.org/api::openid profile email offline_access`;
-  if (localStorage.getItem(key) !== null) {
+  if (localStorage.getItem(key) === null) {
     const options = {
       method: 'POST',
       url: Cypress.env('auth_url'),
