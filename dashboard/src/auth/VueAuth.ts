@@ -89,7 +89,11 @@ export class VueAuth extends Vue {
       useRefreshTokens: true,
       redirect_uri: redirectUri,
       // store tokens in localStorage for test environment
-      cacheLocation: process.env.NODE_ENV == "test" ? "localstorage" : "memory"
+      cacheLocation: "memory"
+    };
+    if (process.env.NODE_ENV == "test") {
+      // Expect tokens stored in localStorage for test situations
+      clientOptions.cacheLocation = "localstorage";
     }
     // @ts-expect-error
     this.auth0Client = await createAuth0Client(clientOptions);
