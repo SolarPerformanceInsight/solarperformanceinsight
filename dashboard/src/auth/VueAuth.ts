@@ -90,10 +90,11 @@ export class VueAuth extends Vue {
       redirect_uri: redirectUri,
       cacheLocation: "memory"
     }
-    if (process.env.NODE_ENV != "production") {
+    if (process.env.NODE_ENV == "testing") {
       // store tokens in localStorage in dev situations to allow for testing
       clientOptions.cacheLocation = "localstorage";
     }
+    // @ts-expect-error
     this.auth0Client = await createAuth0Client(clientOptions);
 
     try {

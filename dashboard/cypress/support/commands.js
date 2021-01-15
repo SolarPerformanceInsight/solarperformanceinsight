@@ -1,20 +1,20 @@
 import jwt_decode from 'jwt-decode';
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Cypress {
-    interface Chainable<Subject> {
-      login(username: string, password: string): Chainable<Subject>;
-    }
-  }
-}
+//declare global {
+//  // eslint-disable-next-line @typescript-eslint/no-namespace
+//  namespace Cypress {
+//    interface Chainable<Subject> {
+//      login(username: string, password: string): Chainable<Subject>;
+//    }
+//  }
+//}
 
 Cypress.Commands.add('login', (username: string, password: string) => {
   cy.log(`Logging in as ${username}`);
   const client_id = Cypress.env('auth_client_id');
   const client_secret = Cypress.env('auth_client_secret');
   const audience = Cypress.env('auth_audience');
-  const scope = 'openid profile email';
+  const scope = 'openid profile email offline_access';
 
   const options = {
     method: 'POST',
@@ -48,5 +48,3 @@ Cypress.Commands.add('login', (username: string, password: string) => {
     window.localStorage.setItem(key, JSON.stringify(auth0Cache));
   });
 });
-
-export {};
