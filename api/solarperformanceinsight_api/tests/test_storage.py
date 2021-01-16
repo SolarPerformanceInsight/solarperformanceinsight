@@ -635,3 +635,67 @@ def test_set_job_error_dne(storage_interface, add_example_db_data):
     with pytest.raises(storage.JobResultFailure):
         with storage_interface.start_transaction() as st:
             st.set_job_error(uuid.uuid1())
+
+
+@pytest.fixture()
+def job_managment_interface(auth0_id, mocker):
+    mocker.patch(
+        "solarperformanceinsight_api.storage.engine",
+        new=storage.create_engine(
+            "mysql+pymysql://",
+            creator=storage._make_sql_connection_partial(user="qmanager"),
+        ).pool,
+    )
+    out = storage.JobManagementInterface()
+    out.commit = False
+    return out
+
+
+def test_list_status_of_jobs(
+    job_managment_interface, add_example_db_data, job_id, complete_job_id, other_job_id
+):
+    out = job_managment_interface.list_status_of_jobs()
+    assert out == {
+        job_id: "created",
+        other_job_id: "created",
+        complete_job_id: "complete",
+    }
+
+
+@pytest.fixture()
+def set_job_queued(job_id, root_conn):
+    curs = root_conn.cursor()
+    curs.execute(
+        "update jobs set status = 'queued' where id = uuid_to_bin(%s, 1)", job_id
+    )
+    root_conn.commit()
+    yield
+    curs.execute(
+        "update jobs set status = 'created' where id = uuid_to_bin(%s, 1)", job_id
+    )
+    root_conn.commit()
+
+
+def test_list_queued_jobs(
+    job_managment_interface, add_example_db_data, job_id, auth0_id, set_job_queued
+):
+    assert job_managment_interface.list_queued_jobs() == {job_id: auth0_id}
+
+
+def test_list_queued_jobs_none(
+    job_managment_interface, add_example_db_data, job_id, auth0_id
+):
+    assert job_managment_interface.list_queued_jobs() == {}
+
+
+def test_report_job_failure(
+    job_managment_interface, add_example_db_data, job_id, root_conn
+):
+    job_managment_interface.commit = True
+    msg = '{"message": "much fail"}'
+    new_id = job_managment_interface.report_job_failure(job_id, msg)
+    curs = root_conn.cursor()
+    curs.execute("select data from job_results where id = uuid_to_bin(%s, 1)", new_id)
+    assert curs.fetchone()[0] == msg.encode()
+    curs.execute("delete from job_results where id = uuid_to_bin(%s, 1)", new_id)
+    root_conn.commit()

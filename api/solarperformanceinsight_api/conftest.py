@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 import httpx
 import pymysql
 import pytest
-from rq import Queue
+from rq import Queue  # type: ignore
 
 
 from solarperformanceinsight_api.main import app
