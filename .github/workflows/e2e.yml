@@ -48,7 +48,7 @@ jobs:
         uses: cypress-io/github-action@v2
         env:
           CYPRESS_AUTH_AUDIENCE: ${{ secrets.CYPRESS_AUTH_AUDIENCE }}
-          CYPRESS_AUTH_URL: "https://solarperformanceinsight.us.auth0.com/oauth/token"
+          CYPRESS_AUTH_URL: ${{ secrets.CYPRESS_AUTH_URL }}
           CYPRESS_AUTH_CLIENT_ID: ${{ secrets.CYPRESS_AUTH_CLIENT_ID }}
           CYPRESS_AUTH_CLIENT_SECRET: ${{ secrets.CYPRESS_AUTH_CLIENT_SECRET }}
           CYPRESS_AUTH_PASSWORD: ${{ secrets.CYPRESS_AUTH_PASSWORD }}
