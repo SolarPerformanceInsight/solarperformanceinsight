@@ -43,7 +43,7 @@ jobs:
           curl -fsSL -o ./dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
           chmod +x ./dbmate
           ./dbmate --wait up
-      
+
       - name: Install dashboard
         run:  |
           cd dashboard
@@ -59,6 +59,6 @@ jobs:
           CYPRESS_AUTH_PASSWORD: ${{ secrets.CYPRESS_AUTH_PASSWORD }}
           CYPRESS_AUTH_USERNAME: ${{ secrets.CYPRESS_AUTH_USERNAME }}
         with:
-          start: "npm run serve -- --mode test --port 8001, uvicorn solarperformanceinsight_api.main:app"
+          start: "npm run serve -- --port 8001, uvicorn solarperformanceinsight_api.main:app"
           wait-on: "http://localhost:8001, http://localhost:8000/docs"
           working-directory: dashboard
