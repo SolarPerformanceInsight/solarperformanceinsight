@@ -1,12 +1,13 @@
 import json
 import logging
+from typing import Callable
 from uuid import UUID
 
 
 from fastapi import HTTPException
 
 
-from . import storage
+from . import storage, models
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ def run_job(job_id: UUID, user: str):
         if err.status_code == 404:
             # job doesn't exist or can't be fetched, so no point continuing
             return
-        else:
+        else:  # pragma: no cover
             raise
 
     job_func = lookup_job_compute_function(job)
@@ -40,7 +41,9 @@ def run_job(job_id: UUID, user: str):
             st.set_job_error(job_id)
 
 
-def lookup_job_compute_function(job):
+def lookup_job_compute_function(
+    job: models.StoredJob,
+) -> Callable[[models.StoredJob, storage.StorageInterface], None]:
     return dummy_func
 
 

@@ -309,10 +309,3 @@ def async_queue(mock_redis, mocker):
     q = Queue("jobs", connection=mock_redis)
     mocker.patch.object(queuing, "_get_queue", return_value=q)
     return q
-
-
-@pytest.fixture()
-def sync_queue(mock_redis, mocker):
-    q = Queue("jobs", connection=mock_redis, is_async=False)
-    mocker.patch.object(queuing, "_get_queue", return_value=q)
-    return q
