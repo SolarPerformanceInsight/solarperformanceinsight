@@ -30,6 +30,7 @@ export class VueAuth extends Vue {
   error?: Error;
 
   async getUser() {
+    // @ts-expect-error
     return new User(await this.auth0Client?.getUser());
   }
 
