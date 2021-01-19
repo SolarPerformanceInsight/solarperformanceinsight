@@ -44,11 +44,6 @@ jobs:
           chmod +x ./dbmate
           ./dbmate --wait up
 
-      - name: Install dashboard
-        run:  |
-          cd dashboard
-          npm install
-
       - name: Cypress run
         uses: cypress-io/github-action@v2
         env:
