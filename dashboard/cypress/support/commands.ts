@@ -21,7 +21,6 @@ Cypress.Commands.add('login', (username: string, password: string) => {
         audience,
         scope,
         client_id,
-        client_secret,
       },
     };
     cy.request(options).then(({ body }) => {
