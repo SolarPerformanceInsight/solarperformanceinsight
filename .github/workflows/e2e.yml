@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
@@ -47,8 +51,8 @@ jobs:
           CYPRESS_AUTH_AUDIENCE: "https://app.solarperformanceinsight.org/api"
           CYPRESS_AUTH_URL: "https://solarperformanceinsight.us.auth0.com/oauth/token"
           CYPRESS_AUTH_CLIENT_ID: "G7Cag1LvitX0sOUOrYz03xv6xyl3bE9s"
-          CYPRESS_AUTH_PASSWORD: "testing@solarperformanceinsight.org"
-          CYPRESS_AUTH_USERNAME: "Thepassword123!"
+          CYPRESS_AUTH_PASSWORD: "Thepassword123!"
+          CYPRESS_AUTH_USERNAME: "testing@solarperformanceinsight.org"
         with:
           start: "npm run serve -- --port 8001, uvicorn solarperformanceinsight_api.main:app"
           wait-on: "http://localhost:8001, http://localhost:8000/docs"
