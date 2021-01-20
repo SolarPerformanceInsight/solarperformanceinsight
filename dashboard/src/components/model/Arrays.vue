@@ -42,7 +42,10 @@ export default class ArraysView extends Vue {
   addArray(existingArray: PVArray | null) {
     let newArray: PVArray;
     if (existingArray) {
-      newArray = new PVArray(existingArray);
+      newArray = new PVArray({
+        ...existingArray,
+        name: `${ existingArray.name } copy`
+      });
     } else {
       let modParamClass: any = PVWattsModuleParameters;
       let tempParamClass: any = SAPMTemperatureParameters;
@@ -53,18 +56,21 @@ export default class ArraysView extends Vue {
 
       const modParams = new modParamClass({});
       const tempParams = new tempParamClass({});
+      const arrayName = `Array ${ this.pvarrays.length + 1 }`;
       if (
         this.pvarrays.length > 0 &&
         this.pvarrays.every(x => x.albedo === this.pvarrays[0].albedo)
       ) {
         const albedo: number = this.pvarrays[0].albedo;
         newArray = new PVArray({
+          name: arrayName,
           albedo: albedo,
           module_parameters: modParams,
           temperature_model_parameters: tempParams
         });
       } else {
         newArray = new PVArray({
+          name: arrayName,
           module_parameters: modParams,
           temperature_model_parameters: tempParams
         });
