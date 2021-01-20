@@ -30,6 +30,7 @@ export class VueAuth extends Vue {
   error?: Error;
 
   async getUser() {
+    // @ts-expect-error
     return new User(await this.auth0Client?.getUser());
   }
 
@@ -82,13 +83,20 @@ export class VueAuth extends Vue {
     auth0Options: Auth0Options
   ) {
     // Create a new instance of the SDK client using members of the given options object
-    this.auth0Client = await createAuth0Client({
+    const clientOptions = {
       domain: auth0Options.domain,
       client_id: auth0Options.clientId,
       audience: auth0Options.audience,
       useRefreshTokens: true,
-      redirect_uri: redirectUri
-    });
+      redirect_uri: redirectUri,
+      cacheLocation: "memory"
+    };
+    if (process.env.NODE_ENV == "development") {
+      // Expect tokens stored in localStorage for dev situations
+      clientOptions.cacheLocation = "localstorage";
+    }
+    // @ts-expect-error
+    this.auth0Client = await createAuth0Client(clientOptions);
 
     try {
       // If the user is returning to the app after authentication..

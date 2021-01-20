@@ -1,0 +1,65 @@
+name: SPI end-to-end tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: '8.0.21'
+          mysql database: 'spi_data'
+          mysql root password: 'testpassword'
+
+      - name: Install Python Dependencies
+        run: |
+          cd api
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+          pip install -e .
+          pip list
+
+      - name: Migrate database
+        env:
+          DATABASE_URL: "mysql://root:testpassword@127.0.0.1:3306/spi_data"
+        run: |
+          curl -fsSL -o ./dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x ./dbmate
+          ./dbmate --wait up
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        env:
+          CYPRESS_AUTH_AUDIENCE: "https://app.solarperformanceinsight.org/api"
+          CYPRESS_AUTH_URL: "https://solarperformanceinsight.us.auth0.com/oauth/token"
+          CYPRESS_AUTH_CLIENT_ID: "G7Cag1LvitX0sOUOrYz03xv6xyl3bE9s"
+          CYPRESS_AUTH_PASSWORD: "Thepassword123!"
+          CYPRESS_AUTH_USERNAME: "testing@solarperformanceinsight.org"
+        with:
+          start: "npm run serve -- --port 8001, uvicorn solarperformanceinsight_api.main:app"
+          wait-on: "http://localhost:8001, http://localhost:8000/docs"
+          working-directory: dashboard
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots

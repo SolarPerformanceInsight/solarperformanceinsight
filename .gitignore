@@ -174,3 +174,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 /.envrc
+
+# Cypress integration directories we don't need to commit
+dashboard/cypress/videos
+dashboard/cypress/screenshots
+dashboard/cypress/plugins
+dashboard/cypress.env.json
