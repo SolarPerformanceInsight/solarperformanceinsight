@@ -179,4 +179,3 @@ pnpm-debug.log*
 dashboard/cypress/videos
 dashboard/cypress/screenshots
 dashboard/cypress/plugins
-dashboard/cypress.env.json
