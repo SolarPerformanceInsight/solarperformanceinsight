@@ -23,6 +23,9 @@
       :definitions="definitions"
       field-name="longitude"
     />
+    <button :disabled="!locationValid" @click="lookupElevation">
+      Look Up Elevation
+    </button>
     <model-field
       :parameters="parameters"
       :errors="errors"
@@ -36,12 +39,10 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
-import {
-  SandiaInverterParameters,
-  PVWattsInverterParameters
-} from "@/types/InverterParameters";
+
+import { getElevation } from "@/utils/elevation";
 
 @Component
 export default class SystemView extends ModelBase {
@@ -58,6 +59,26 @@ export default class SystemView extends ModelBase {
     this.$validator
       .validate(this.apiComponentName, system)
       .then(this.setValidationResult);
+  }
+  get locationValid() {
+    return !("latitude" in this.errors) && !("longitude" in this.errors);
+  }
+  setElevation(results: Array<any>, status: any) {
+    console.log(results);
+    console.log(status);
+    if (status == "OK") {
+      const elevation: number = results[0].elevation;
+      this.parameters["elevation"] = elevation;
+    } else {
+      console.log("elevation fetch failed");
+    }
+  }
+  lookupElevation() {
+    getElevation(
+      this.parameters.latitude,
+      this.parameters.longitude,
+      this.setElevation
+    );
   }
 }
 </script>

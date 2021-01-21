@@ -44,7 +44,7 @@ export default class ArraysView extends Vue {
     if (existingArray) {
       newArray = new PVArray({
         ...existingArray,
-        name: `${ existingArray.name } copy`
+        name: `${existingArray.name} copy`
       });
     } else {
       let modParamClass: any = PVWattsModuleParameters;
@@ -56,7 +56,7 @@ export default class ArraysView extends Vue {
 
       const modParams = new modParamClass({});
       const tempParams = new tempParamClass({});
-      const arrayName = `Array ${ this.pvarrays.length + 1 }`;
+      const arrayName = `Array ${this.pvarrays.length + 1}`;
       if (
         this.pvarrays.length > 0 &&
         this.pvarrays.every(x => x.albedo === this.pvarrays[0].albedo)
