@@ -10,7 +10,7 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    servies:
+    services:
       redis:
         image: redis:6
         ports:
