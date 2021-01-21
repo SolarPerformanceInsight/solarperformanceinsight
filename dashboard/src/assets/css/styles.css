@@ -26,3 +26,38 @@ a:not([href]):hover {
 .mt-1 {
   margin-top: 1em;
 }
+/* transition for expanding objects similar to jquery's data-toggle */
+button.data-object-expander {
+  background-color: unset;
+  border-bottom: 2px solid black;
+  border-right: 2px solid black;
+  border-top: none;
+  border-left: none;
+  height: 1em;
+  width: 1em;
+  transform: rotate(45deg);
+  margin: 0 1em;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 25%;
+  transition: transform 0.5s;
+}
+button.data-object-expander.opened {
+  transform: rotate(225deg);
+}
+button.data-object-expander:hover {
+  cursor: pointer;
+}
+button.data-object-expander:focus {
+  outline: unset;
+}
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.5s;
+}
+.expand-enter,
+.expand-leave-to {
+  height: 0px;
+  opacity: 0;
+}

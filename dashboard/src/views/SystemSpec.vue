@@ -10,23 +10,25 @@
       </div>
       <template v-if="system">
         <h1 v-if="systemId == null">New System</h1>
-        <button
-          class="display-summary"
-          @click="displaySummary = !displaySummary"
-        >
-          Display JSON Summary
-        </button>
+
         <button class="download-system" @click="downloadSystem">
           Download System JSON
         </button>
         <button class="save-system" @click="saveSystem">Save System</button>
+        <file-upload @uploadSuccess="uploadSuccess" />
+        <div class="display-summary">
+          Display JSON Summary
+          <button
+            class="data-object-expander"
+            v-bind:class="{ opened: displaySummary }"
+            @click="displaySummary = !displaySummary"
+          ></button>
+        </div>
         <div v-if="displaySummary" class="model-summary">
-          <h1>Model Summary</h1>
           <pre>{{ JSON.stringify(system, null, 2) }}</pre>
         </div>
-        <file-upload @uploadSuccess="uploadSuccess" />
 
-        <b>Model:</b>
+        <b class="mt-1">Model:</b>
         <select v-model="model">
           <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
         </select>
@@ -241,5 +243,16 @@ a::after {
 }
 a.open::after {
   transform: rotate(180deg);
+}
+.display-summary {
+  border-bottom: 1px solid #444;
+  padding: 0.25em;
+  position: relative;
+  display: flex;
+}
+.model-summary {
+  padding: 0 1em;
+  background-color: #eee;
+  border: 1px solid #ddd;
 }
 </style>
