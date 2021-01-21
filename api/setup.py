@@ -27,4 +27,9 @@ if __name__ == "__main__":
             "root": "api/../..",
         },
         setup_requires=["setuptools_scm"],
+        entry_points={
+            "console_scripts": [
+                "spi-sync-jobs=solarperformanceinsight_api.queuing:sync_jobs"
+            ]
+        },
     )

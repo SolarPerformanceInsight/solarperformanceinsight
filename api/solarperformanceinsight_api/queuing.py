@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import logging
+import time
 from typing import Union, Type, Dict, Tuple, List
 from uuid import UUID
 
@@ -118,13 +119,15 @@ class QueueManager:
             if job_id not in all_jobs or job_id in jobs_to_remove_if_present:
                 self.delete_job(job_id)
                 i += 1
-        logger.info("Removed %s invalid jobs from the queues", i)
+        if i:
+            logger.info("Removed %s invalid jobs from the queues", i)
 
     def add_missing_jobs(self, queued_jobs: Dict[str, str]):
         """Add jobs to the queue that are missing but present in the database
         and not complete"""
         missing = set(queued_jobs.keys()) - set(self.q.job_ids)
-        logger.info("Enqueuing %s missing jobs", len(missing))
+        if len(missing):
+            logger.info("Enqueuing %s missing jobs", len(missing))
         for id_ in missing:
             self.enqueue_job(id_, queued_jobs[id_])
 
@@ -152,5 +155,43 @@ class QueueManager:
                     }
                 )
                 out.append((failed_job, msg))
-        logger.info("%s jobs processed from failed job registry", len(out))
+        if len(out):
+            logger.info("%s jobs processed from failed job registry", len(out))
         return out
+
+
+def _get_job_management_interface():  # pragma: no cover
+    from .storage import JobManagementInterface
+
+    return JobManagementInterface()
+
+
+def sync_jobs():
+    """Keep jobs between the RQ queue and database in sync"""
+    jmi = _get_job_management_interface()
+    qm = QueueManager()
+
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level="INFO")
+    while True:
+        try:
+            logger.info(
+                "Adding missing jobs, removing invalid jobs, and "
+                "cleaning up failed jobs"
+            )
+            # add missing jobs
+            with jmi.start_transaction() as jst:
+                queued_jobs = jst.list_queued_jobs()
+            qm.add_missing_jobs(queued_jobs)
+            # remove invalid
+            with jmi.start_transaction() as jst:
+                current_job_status = jst.list_status_of_jobs()
+            qm.remove_invalid_jobs(current_job_status)
+            # cleanup failed job registry
+            with jmi.start_transaction() as jst:
+                most_current_job_status = jst.list_status_of_jobs()
+                failed_jobs = qm.evaluate_failed_jobs(most_current_job_status)
+                for job_id, msg in failed_jobs:
+                    jst.report_job_failure(job_id, msg)
+            time.sleep(settings.sync_jobs_period)
+        except KeyboardInterrupt:
+            break

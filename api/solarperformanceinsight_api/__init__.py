@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     redis_password: Optional[str] = None
     redis_health_check_interval: int = 10
 
+    sync_jobs_period: int = 15
+
     class Config:
         env_prefix = "spi_"
 
