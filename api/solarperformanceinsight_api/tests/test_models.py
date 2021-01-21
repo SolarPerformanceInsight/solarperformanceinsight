@@ -393,3 +393,39 @@ def test_job_parameters_columns(irr, temp, expected, system_def):
     mod = models.Job(parameters=params, system_definition=system_def)
     assert mod._weather_columns == expected
     assert mod._performance_columns == ["time", "performance"]
+
+
+def test_inverter_multiple_arrays(system_def):
+    arrd = system_def.inverters[0].arrays[0].dict()
+    arr0 = models.PVArray(**{**deepcopy(arrd), "name": "Array 0"})
+    arr1 = models.PVArray(**{**deepcopy(arrd), "name": "Array 1"})
+
+    models.Inverter(
+        name="inverter",
+        make_model="make",
+        arrays=[arr0, arr1],
+        inverter_parameters=system_def.inverters[0].inverter_parameters,
+    )
+
+    arrd["tracking"] = {
+        "axis_tilt": 32,
+        "axis_azimuth": 180,
+        "gcr": 1.2,
+        "backtracking": True,
+    }
+    track0 = models.PVArray(**{**deepcopy(arrd), "name": "Track Array 0"})
+    track1 = models.PVArray(**{**deepcopy(arrd), "name": "Track Array 1"})
+    with pytest.raises(ValueError):
+        models.Inverter(
+            name="inverter",
+            make_model="make",
+            arrays=[track0, track1],
+            inverter_parameters=system_def.inverters[0].inverter_parameters,
+        )
+    # single array ok
+    models.Inverter(
+        name="inverter",
+        make_model="make",
+        arrays=[track0],
+        inverter_parameters=system_def.inverters[0].inverter_parameters,
+    )
