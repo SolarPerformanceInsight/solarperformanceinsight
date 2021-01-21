@@ -7,16 +7,19 @@ from fastapi.openapi.utils import get_openapi
 from prometheus_fastapi_instrumentator import Instrumentator  # type: ignore
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.rq import RqIntegration
 
 
-from . import auth, __version__, settings, storage
+from . import auth, __version__, settings, storage, queuing
 from .routers import systems, user, parameters, jobs
 
 
 app = FastAPI(title="Solar Performance Insight")
 app.add_middleware(CORSMiddleware, allow_origins=[])
 
-sentry_sdk.init(traces_sample_rate=settings.traces_sample_rate)
+sentry_sdk.init(
+    traces_sample_rate=settings.traces_sample_rate, integrations=[RqIntegration()]
+)
 app.add_middleware(SentryAsgiMiddleware)
 
 Instrumentator(
@@ -42,6 +45,7 @@ class LogFilter(logging.Filter):
 @app.on_event("startup")
 async def startup_event():  # pragma: no cover
     storage.engine.connect()
+    queuing.verify_redis_conn()
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(LogFilter)

@@ -1,3 +1,4 @@
+import datetime as dt
 from io import BytesIO, StringIO
 import uuid
 
@@ -6,9 +7,10 @@ from fastapi import HTTPException
 import numpy as np
 import pandas as pd
 import pytest
+from rq import SimpleWorker
 
 
-from solarperformanceinsight_api import models
+from solarperformanceinsight_api import models, storage
 from solarperformanceinsight_api.routers import jobs
 
 
@@ -64,6 +66,38 @@ def test_get_job_status(client, job_id, job_status):
     response = client.get(f"/jobs/{job_id}/status")
     assert response.status_code == 200
     assert models.JobStatus(**response.json()) == job_status
+
+
+def test_get_job_status_running(client, job_id, mocker):
+    running = models.JobStatus(
+        status="running",
+        last_change=dt.datetime(2021, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.storage.StorageInterface.get_job_status",
+        return_value=models.JobStatus(status="queued", last_change=running.last_change),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.queuing.QueueManager.job_status",
+        return_value=running,
+    )
+    response = client.get(f"/jobs/{job_id}/status")
+    assert response.status_code == 200
+    assert models.JobStatus(**response.json()) == running
+
+
+def test_get_job_status_queued(client, job_id, mocker, mock_redis):
+    queued = models.JobStatus(
+        status="queued",
+        last_change=dt.datetime(2021, 12, 11, 20, tzinfo=dt.timezone.utc),
+    )
+    mocker.patch(
+        "solarperformanceinsight_api.storage.StorageInterface.get_job_status",
+        return_value=queued,
+    )
+    response = client.get(f"/jobs/{job_id}/status")
+    assert response.status_code == 200
+    assert models.JobStatus(**response.json()) == queued
 
 
 def test_delete_job(nocommit_transaction, client, job_id):
@@ -479,7 +513,9 @@ def test_post_job_data_not_full_index(
     }
 
 
-def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weather_df):
+def test_upload_compute(
+    client, job_id, job_data_ids, nocommit_transaction, weather_df, async_queue
+):
     iob = BytesIO()
     weather_df.to_feather(iob)
     iob.seek(0)
@@ -497,7 +533,7 @@ def test_upload_compute(client, job_id, job_data_ids, nocommit_transaction, weat
 
 
 def test_create_upload_compute_delete(
-    client, nocommit_transaction, new_job, weather_df
+    client, nocommit_transaction, new_job, weather_df, async_queue
 ):
     cr = client.post("/jobs/", data=new_job.json())
     assert cr.status_code == 201
@@ -537,6 +573,79 @@ def test_list_job_results(client, complete_job_id, job_result_list, job_id):
     response = client.get(f"/jobs/{job_id}/results")
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_create_upload_compute_fail(
+    client, nocommit_transaction, new_job, weather_df, async_queue
+):
+    cr = client.post("/jobs/", data=new_job.json())
+    assert cr.status_code == 201
+    new_id = cr.json()["object_id"]
+    response = client.get(f"/jobs/{new_id}")
+    assert response.status_code == 200
+    stored_job = response.json()
+    assert len(stored_job["data_objects"]) == 1
+    data_id = stored_job["data_objects"][0]["object_id"]
+    iob = BytesIO()
+    weather_df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{new_id}/data/{data_id}",
+        files={"file": ("test.arrow", iob, "application/vnd.apache.arrow.file")},
+    )
+    assert response.status_code == 200
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "prepared"
+    response = client.post(f"/jobs/{new_id}/compute")
+    assert response.status_code == 202
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "queued"
+    w = SimpleWorker([async_queue], connection=async_queue.connection)
+    w.work(burst=True)
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "error"
+    response = client.get(f"/jobs/{new_id}/results")
+    rj = response.json()[0]
+    assert rj["definition"]["type"] == "error message"
+    rid = rj["object_id"]
+    response = client.get(f"/jobs/{new_id}/results/{rid}")
+    msg = response.json()["error"]["details"]
+    assert msg == "Job computation not implemented"
+
+
+def test_create_upload_delete_compute(
+    client, nocommit_transaction, new_job, weather_df, async_queue, mocker, auth0_id
+):
+    cr = client.post("/jobs/", data=new_job.json())
+    assert cr.status_code == 201
+    new_id = cr.json()["object_id"]
+    response = client.get(f"/jobs/{new_id}")
+    assert response.status_code == 200
+    stored_job = response.json()
+    assert len(stored_job["data_objects"]) == 1
+    data_id = stored_job["data_objects"][0]["object_id"]
+    iob = BytesIO()
+    weather_df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{new_id}/data/{data_id}",
+        files={"file": ("test.arrow", iob, "application/vnd.apache.arrow.file")},
+    )
+    assert response.status_code == 200
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "prepared"
+    response = client.post(f"/jobs/{new_id}/compute")
+    assert response.status_code == 202
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "queued"
+    with storage.StorageInterface(user=auth0_id).start_transaction() as st:
+        st.delete_job(new_id)
+
+    ww = SimpleWorker([async_queue], connection=async_queue.connection)
+    log = mocker.spy(ww, "log")
+    ww.work(burst=True)
+    # worker logs error when exception raised in job
+    assert log.error.call_count == 0
 
 
 def test_get_job_result(

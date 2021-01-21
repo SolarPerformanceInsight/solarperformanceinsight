@@ -8,3 +8,4 @@ schemathesis==2.7.5
 data-science-types==0.2.20
 mypy==0.790
 mypy-extensions==0.4.3
+fakeredis==1.4.5

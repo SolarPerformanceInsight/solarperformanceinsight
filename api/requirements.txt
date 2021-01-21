@@ -34,3 +34,5 @@ python-multipart==0.0.5
 pytz==2020.4
 pyarrow==2.0.0
 accept-types==0.4.1
+redis==3.5.3
+rq==1.7.0

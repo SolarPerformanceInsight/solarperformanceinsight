@@ -17,6 +17,10 @@ if __name__ == "__main__":
             "python-jose",
             "sentry_sdk",
             "sqlalchemy",
+            "requests",
+            "pyarrow",
+            "redis",
+            "rq",
         ],
         use_scm_version={
             "write_to": "api/solarperformanceinsight_api/_version.py",

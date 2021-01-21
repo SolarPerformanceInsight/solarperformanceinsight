@@ -444,3 +444,30 @@ class StorageInterface:
 
     def set_job_error(self, job_id: UUID):
         self._set_job_status(job_id, "error")
+
+
+class JobManagementInterface(StorageInterface):
+    """A special interface to the database (that requires different permissions)
+    to list all jobs and allow setting a failure message on a job.
+    """
+
+    def __init__(self):
+        self._cursor = None
+        self.commit = True
+
+    def list_status_of_jobs(self) -> Dict[str, str]:
+        with self.start_transaction() as st:
+            res = st._call_procedure("list_status_of_jobs", with_current_user=False)
+        return {r["job_id"]: r["status"] for r in res}
+
+    def list_queued_jobs(self) -> Dict[str, str]:
+        with self.start_transaction() as st:
+            res = st._call_procedure("list_queued_jobs", with_current_user=False)
+        return {r["job_id"]: r["user_id"] for r in res}
+
+    def report_job_failure(self, job_id: str, message: str) -> str:
+        with self.start_transaction() as st:
+            res = st._call_procedure_for_single(
+                "report_job_failure", job_id, message, with_current_user=False
+            )
+        return res["result_id"]
