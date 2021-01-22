@@ -71,8 +71,10 @@ Vue.config.productionTip = false;
 /* Instantiate a validator object and make it globally available via the
  * this.$validator.
  */
-const validator = new APIValidator();
-validator.init();
+const validatorObject = new APIValidator();
+validatorObject.init();
+
+const validator = Vue.observable(validatorObject);
 Vue.prototype.$validator = validator;
 
 Vue.use(Vuex);

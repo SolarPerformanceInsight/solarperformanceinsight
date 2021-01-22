@@ -1,5 +1,5 @@
 <template>
-  <div class="system">
+  <div class="system" v-if="validatorInit">
     <div v-if="exists" class="model-field">
       <b>Name:</b>
       <span>{{ parameters.name }}</span>
