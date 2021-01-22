@@ -114,3 +114,38 @@ def test_qmanager_evaluate_failed_jobs():
     out = qm.evaluate_failed_jobs(job_status)
     assert len(out) == 1
     assert out[0][0] == "0"
+
+
+def test_sync_jobs(mocker):
+    qm = queuing.QueueManager()
+    qm.job_func = run
+    job_status = {
+        "0": "queued",
+        "1": "queued",
+        "3": "queued",
+    }
+    qm.q.enqueue(fail, ValueError, "0 isnt 1", job_id="0")
+    w = SimpleWorker([qm.q], connection=qm.redis_conn)
+    w.work(burst=True)
+    assert len(qm.q.failed_job_registry) == 1
+
+    queued = {str(i): "user" for i in range(5)}
+    qm.enqueue_job("4", "user")
+    assert qm.q.job_ids == ["4"]
+
+    mocker.patch(
+        "solarperformanceinsight_api.queuing.time.sleep", side_effect=KeyboardInterrupt
+    )
+
+    jmi = mocker.MagicMock()
+    startt = jmi.start_transaction.return_value.__enter__.return_value
+    startt.list_queued_jobs.return_value = queued
+    startt.list_status_of_jobs.return_value = job_status
+    mocker.patch(
+        "solarperformanceinsight_api.queuing._get_job_management_interface",
+        return_value=jmi,
+    )
+    queuing.sync_jobs()
+    # 0 failed, 2 is missing
+    assert set(qm.q.job_ids) == {"1", "3"}
+    assert startt.report_job_failure.call_count == 1
