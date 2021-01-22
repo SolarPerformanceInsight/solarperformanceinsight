@@ -2,7 +2,10 @@
   <div class="arrays">
     <div class="arrays-list">
       <h2>Arrays</h2>
-      <button @click="addArray()">Add Array</button>
+      <button @click="addArray()" :disabled="!allFixed">Add Array</button>
+      <span v-if="!allFixed" class="warning-text">
+        Multiple arrays only supported for fixed tracking.
+      </span>
       <div class="msg warning" v-if="pvarrays.length == 0">
         Inverter requires at least one array.
       </div>
@@ -16,6 +19,8 @@
           :index="index"
           :parameters="pvarray"
           :model="model"
+          :allFixed="allFixed"
+          :numArrays="numArrays"
         />
       </ul>
     </div>
@@ -25,6 +30,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { PVArray } from "@/types/PVArray";
+import { FixedTrackingParameters } from "@/types/Tracking";
 import {
   PVWattsModuleParameters,
   PVSystModuleParameters
@@ -80,6 +86,14 @@ export default class ArraysView extends Vue {
   }
   removeArray(index: number) {
     this.pvarrays.splice(index, 1);
+  }
+  get allFixed() {
+    return this.pvarrays.reduce<boolean>((acc: boolean, arr: PVArray) => {
+      return acc && FixedTrackingParameters.isInstance(arr.tracking);
+    }, true);
+  }
+  get numArrays() {
+    return this.pvarrays.length;
   }
 }
 </script>
