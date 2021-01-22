@@ -268,6 +268,11 @@ def complete_job_id():
     return "4910c750-55f1-11eb-a03d-f4939feddd82"
 
 
+@pytest.fixture(scope="module")
+def complete_job_data_id():
+    return "5c22bdd0-55f1-11eb-a03d-f4939feddd82"
+
+
 @pytest.fixture()
 def job_result_list():
     return [

@@ -617,6 +617,61 @@ def test_create_upload_compute_fail(
     assert msg == "Job computation not implemented"
 
 
+def test_create_upload_compute_success(
+    client, nocommit_transaction, new_job, async_queue, mocker, weather_df
+):
+    new_job.irradiance_type = "standard"
+    cr = client.post("/jobs/", data=new_job.json())
+    assert cr.status_code == 201
+    new_id = cr.json()["object_id"]
+    response = client.get(f"/jobs/{new_id}")
+    assert response.status_code == 200
+    stored_job = response.json()
+    assert len(stored_job["data_objects"]) == 1
+    data_id = stored_job["data_objects"][0]["object_id"]
+    iob = BytesIO()
+    weather_df.rename(
+        columns={"poa_global": "ghi", "poa_diffuse": "dhi", "poa_direct": "dni"}
+    ).to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{new_id}/data/{data_id}",
+        files={"file": ("test.arrow", iob, "application/vnd.apache.arrow.file")},
+    )
+    assert response.status_code == 200
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "prepared"
+    response = client.post(f"/jobs/{new_id}/compute")
+    assert response.status_code == 202
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "queued"
+    w = SimpleWorker([async_queue], connection=async_queue.connection)
+    w.work(burst=True)
+    response = client.get(f"/jobs/{new_id}/status")
+    assert response.json()["status"] == "complete"
+    response = client.get(f"/jobs/{new_id}/results")
+    rj = response.json()
+    # system level weather, one inverter, one array
+    sp_type = {
+        (r["definition"]["schema_path"], r["definition"]["type"]): r["object_id"]
+        for r in rj
+    }
+    assert set(sp_type.keys()) == {
+        ("/", "monthly daytime summary"),
+        ("/", "daytime flag"),
+        ("/", "performance data"),
+        ("/inverters/0", "performance data"),
+        ("/inverters/0/arrays/0", "weather data"),
+    }
+    rid = sp_type[("/", "monthly daytime summary")]
+    response = client.get(f"/jobs/{new_id}/results/{rid}")
+    data = response.text
+    assert (
+        data.split("\n")[0]
+        == "month,performance,poa_global,effective_irradiance,cell_temperature"
+    )
+
+
 def test_create_upload_delete_compute(
     client, nocommit_transaction, new_job, weather_df, async_queue, mocker, auth0_id
 ):

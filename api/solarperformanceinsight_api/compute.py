@@ -35,14 +35,13 @@ def run_job(job_id: UUID, user: str):
         job_func(job, si)
     except Exception as err:
         logger.exception("Error for job %s", job_id)
+        try:
+            details = str(err.args[0])
+        except IndexError:
+            details = f"Raised {type(err)}"
+        msg = json.dumps({"error": {"details": details}})
         with si.start_transaction() as st:
-            st.add_job_result(
-                job_id,
-                "/",
-                "error message",
-                "application/json",
-                json.dumps({"error": {"details": str(err.args[0])}}),
-            )
+            st.add_job_result(job_id, "/", "error message", "application/json", msg)
             st.set_job_error(job_id)
 
 
@@ -54,7 +53,7 @@ def lookup_job_compute_function(
     return dummy_func
 
 
-def dummy_func(job, storage):
+def dummy_func(job, storage):  # pragma: no cover
     raise NotImplementedError("Job computation not implemented")
 
 
