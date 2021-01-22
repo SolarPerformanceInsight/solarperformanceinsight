@@ -194,7 +194,6 @@ def process_single_modelchain(
         poa_global, effective_irradiance, and cell_temperature over all arrays
     """
     # run chain
-    breakpoint()
     mc = getattr(chain, run_model_method)(weather_data)
     results = mc.results
     adjust = partial(_adjust_frame, tshift=tshift)

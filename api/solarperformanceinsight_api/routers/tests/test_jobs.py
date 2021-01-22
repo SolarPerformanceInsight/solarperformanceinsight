@@ -10,7 +10,7 @@ import pytest
 from rq import SimpleWorker
 
 
-from solarperformanceinsight_api import models, storage
+from solarperformanceinsight_api import models, storage, compute
 from solarperformanceinsight_api.routers import jobs
 
 
@@ -576,8 +576,12 @@ def test_list_job_results(client, complete_job_id, job_result_list, job_id):
 
 
 def test_create_upload_compute_fail(
-    client, nocommit_transaction, new_job, weather_df, async_queue
+    client, nocommit_transaction, new_job, weather_df, async_queue, mocker
 ):
+    mocker.patch(
+        "solarperformanceinsight_api.compute.lookup_job_compute_function",
+        return_value=compute.dummy_func,
+    )
     cr = client.post("/jobs/", data=new_job.json())
     assert cr.status_code == 201
     new_id = cr.json()["object_id"]
