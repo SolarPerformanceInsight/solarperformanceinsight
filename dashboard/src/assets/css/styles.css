@@ -61,3 +61,12 @@ button.data-object-expander:focus {
   height: 0px;
   opacity: 0;
 }
+
+.accessible-hidden {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+}
+.hidden {
+  display: none;
+}

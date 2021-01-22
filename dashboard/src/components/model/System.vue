@@ -43,6 +43,7 @@ import { Component, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 
 import { getElevation } from "@/utils/elevation";
+import { resetIndex } from "@/utils/fieldIndex";
 
 @Component
 export default class SystemView extends ModelBase {
@@ -50,6 +51,10 @@ export default class SystemView extends ModelBase {
   @Prop() parameters!: System;
   @Prop() model!: string;
 
+  mounted() {
+    // reset the value used for producing unique field ids
+    resetIndex();
+  }
   get apiComponentName() {
     return "PVSystem";
   }

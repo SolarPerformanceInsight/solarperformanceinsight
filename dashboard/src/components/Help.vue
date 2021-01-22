@@ -6,13 +6,17 @@ ups will close when the user clicks away.
 <template>
   <div class="help">
     <span v-if="helpText != undefined">
-      <button @click="toggleHelp" @hideHelp="hideHelp">
+      <button @click="toggleHelp" @hideHelp="hideHelp" tabindex="-1">
         ?
       </button>
+      <!-- accessible-hidden class used to keep the help text accessible as a
+           target for aria-describedby
+        -->
       <div
-        v-if="show"
+        v-bind:class="{ 'accessible-hidden': !show }"
         v-on:hide-help="hideHelp"
         v-click-away="hideHelp"
+        :id="tagId"
         class="help-wrapper"
       >
         {{ helpText }}
@@ -48,6 +52,7 @@ export default class HelpPopup extends Vue {
   show!: boolean;
 
   @Prop() helpText?: string;
+  @Prop() tagId!: string;
   data() {
     return {
       show: false
