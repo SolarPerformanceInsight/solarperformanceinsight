@@ -2,7 +2,9 @@
   <div class="arrays">
     <div class="arrays-list">
       <h2>Arrays</h2>
-      <button @click="addArray()" :disabled="!allFixed">Add Array</button>
+      <button class="add-array" @click="addArray()" :disabled="!allFixed">
+        Add Array
+      </button>
       <span v-if="!allFixed" class="warning-text">
         Multiple arrays only supported for fixed tracking.
       </span>

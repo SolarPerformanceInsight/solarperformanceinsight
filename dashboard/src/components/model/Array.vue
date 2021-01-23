@@ -1,8 +1,10 @@
 <template>
   <li>
+    <!--
     <b>Inverter Name:</b>
     {{ $parent.$parent.parameters.name }}
     <br />
+    -->
     <model-field
       :parameters="parameters"
       :errors="errors"
@@ -30,6 +32,7 @@
     <b>Tracking:</b>
     <input
       v-model="tracking"
+      class="fixed_tracking"
       type="radio"
       v-on:change="changeTracking"
       value="fixed"
@@ -38,6 +41,7 @@
     <input
       :disabled="numArrays > 1"
       v-model="tracking"
+      class="single_axis_tracking"
       type="radio"
       v-on:change="changeTracking"
       value="singleAxis"

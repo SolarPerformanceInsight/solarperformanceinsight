@@ -233,8 +233,8 @@ test("Instantiate Single Axis tracking", () => {
 
 test("Empty Inverter init", () => {
   const inverter = new Inverter({});
-  expect(inverter.name).toBe("New Inverter");
-  expect(inverter.make_model).toBe("ABC 520");
+  expect(inverter.name).toBe("");
+  expect(inverter.make_model).toBe("");
   expect(inverter.inverter_parameters instanceof SandiaInverterParameters);
   expect(inverter.losses).toStrictEqual(null);
   expect(inverter.arrays).toStrictEqual([]);
@@ -418,8 +418,8 @@ test("Empty pvwatts module parameters init", () => {
 
 test("Empty pvarray init", () => {
   const pvarray = new PVArray({});
-  expect(pvarray.name).toBe("New Array");
-  expect(pvarray.make_model).toBe("ABC 123");
+  expect(pvarray.name).toBe("");
+  expect(pvarray.make_model).toBe("");
   expect(
     pvarray.module_parameters instanceof PVSystModuleParameters
   ).toBeTruthy();
@@ -437,8 +437,8 @@ test("PVWatts array init", () => {
   array.tracking = new SingleAxisTrackingParameters({});
 
   const pvwattsArray = new PVArray(array);
-  expect(pvwattsArray.name).toBe("New Array");
-  expect(pvwattsArray.make_model).toBe("ABC 123");
+  expect(pvwattsArray.name).toBe("");
+  expect(pvwattsArray.make_model).toBe("");
   expect(
     pvwattsArray.module_parameters instanceof PVWattsModuleParameters
   ).toBeTruthy();
