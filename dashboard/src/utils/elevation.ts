@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /* Loads the google maps api and makes requests for elevations at a specific lat/lon
  *
  */
