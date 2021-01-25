@@ -6,6 +6,7 @@ from typing import List, Optional, Union, Type, Tuple
 from accept_types import AcceptableType  # type: ignore
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Response,
     Request,
     Depends,
@@ -20,7 +21,9 @@ from pydantic.types import UUID
 
 from . import default_get_responses
 from .. import models, utils
+from ..auth import get_user_id
 from ..storage import StorageInterface
+from ..queuing import QueueManager
 
 
 logger = logging.getLogger(__name__)
@@ -105,20 +108,31 @@ async def get_job(
     "/{job_id}/status", response_model=models.JobStatus, responses=default_get_responses
 )
 async def get_job_status(
-    job_id: UUID, storage: StorageInterface = Depends(StorageInterface)
+    job_id: UUID,
+    storage: StorageInterface = Depends(StorageInterface),
+    qm: QueueManager = Depends(QueueManager),
 ) -> models.JobStatus:
     with storage.start_transaction() as st:
-        return st.get_job_status(job_id)
+        db_status = st.get_job_status(job_id)
+    if db_status.status == "queued":
+        q_status = qm.job_status(job_id)
+        if q_status is not None:
+            return q_status
+    return db_status
 
 
 @router.delete(
     "/{job_id}", status_code=204, responses={**default_get_responses, 204: {}}
 )
 async def delete_job(
-    job_id: UUID, storage: StorageInterface = Depends(StorageInterface)
+    job_id: UUID,
+    background_tasks: BackgroundTasks,
+    storage: StorageInterface = Depends(StorageInterface),
+    qm: QueueManager = Depends(QueueManager),
 ):
     with storage.start_transaction() as st:
         st.delete_job(job_id)
+    background_tasks.add_task(qm.delete_job, job_id)
 
 
 class ArrowResponse(Response):
@@ -295,10 +309,14 @@ async def post_job_data(
 )
 async def compute_job(
     job_id: UUID,
+    background_tasks: BackgroundTasks,
     storage: StorageInterface = Depends(StorageInterface),
+    user: str = Depends(get_user_id),
+    qm: QueueManager = Depends(QueueManager),
 ):
     with storage.start_transaction() as st:
         st.queue_job(job_id)
+    background_tasks.add_task(qm.enqueue_job, job_id, user)
 
 
 @router.get(

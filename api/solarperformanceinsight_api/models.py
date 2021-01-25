@@ -316,7 +316,7 @@ class PVWattsInverterParameters(BaseModel):
     eta_inv_ref: float = Field(
         0.9637, description="Reference inverter efficiency, unitless"
     )
-    _modelchain_ac_model: str = PrivateAttr("pvwatts")
+    _modelchain_ac_model: str = PrivateAttr("pvwatts_multi")
 
 
 class SandiaInverterParameters(BaseModel):
@@ -379,7 +379,7 @@ class SandiaInverterParameters(BaseModel):
             " (i.e., night tare), W"
         ),
     )
-    _modelchain_ac_model: str = PrivateAttr("sandia")
+    _modelchain_ac_model: str = PrivateAttr("sandia_multi")
 
 
 class AOIModelEnum(str, Enum):
@@ -443,7 +443,6 @@ class Inverter(BaseModel):
         ...,
         description="List of PV arrays that are connected to this inverter",
         min_items=1,
-        max_items=1,  # only a single array until pvlib 0.9/#1076
     )
     losses: Optional[PVWattsLosses] = Field(
         {}, description="Parameters describing the array losses"
@@ -476,6 +475,18 @@ class Inverter(BaseModel):
             ("spectral_model", self.spectral_model),
             ("transposition_model", self.transposition_model),
         )
+
+    @root_validator
+    def check_only_one_array_for_tracker(cls, values):
+        arrays = values.get("arrays")
+        if arrays is not None and len(arrays) > 1:
+            for arr in arrays:
+                if isinstance(arr.tracking, SingleAxisTracking):
+                    raise ValueError(
+                        "Multiple arrays per inverter with any single axis "
+                        "trackers is not supported"
+                    )
+        return values
 
 
 class PVSystem(BaseModel):

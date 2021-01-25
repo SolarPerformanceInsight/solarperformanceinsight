@@ -17,10 +17,19 @@ if __name__ == "__main__":
             "python-jose",
             "sentry_sdk",
             "sqlalchemy",
+            "requests",
+            "pyarrow",
+            "redis",
+            "rq",
         ],
         use_scm_version={
             "write_to": "api/solarperformanceinsight_api/_version.py",
             "root": "api/../..",
         },
         setup_requires=["setuptools_scm"],
+        entry_points={
+            "console_scripts": [
+                "spi-sync-jobs=solarperformanceinsight_api.queuing:sync_jobs"
+            ]
+        },
     )

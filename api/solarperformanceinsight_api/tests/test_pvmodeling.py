@@ -1,3 +1,4 @@
+from copy import deepcopy
 from inspect import signature
 
 
@@ -22,12 +23,6 @@ def fixed_tracking():
     return models.FixedTracking(tilt=32, azimuth=180.9)
 
 
-def test_construct_tracker_fixed(fixed_tracking):
-    obj, od = pvmodeling.construct_tracker(fixed_tracking)
-    assert obj == PVSystem
-    assert od == {"surface_tilt": 32.0, "surface_azimuth": 180.9}
-
-
 @pytest.fixture()
 def single_axis_tracking():
     return models.SingleAxisTracking(
@@ -35,39 +30,35 @@ def single_axis_tracking():
     )
 
 
-def test_construct_tracker_single(single_axis_tracking):
-    obj, od = pvmodeling.construct_tracker(single_axis_tracking)
-    assert obj == SingleAxisTracker
-    assert od == {
-        "axis_tilt": 0.0,
-        "axis_azimuth": 179.8,
-        "backtrack": False,
-        "gcr": 1.8,
-    }
-
-
-def test_construct_tracker_err(system_def):
-    with pytest.raises(TypeError):
-        pvmodeling.construct_tracker(system_def)
-
-
-@pytest.fixture(params=["fixed", "single"])
+@pytest.fixture(params=["fixed", "single", "multi_fixed"])
 def either_tracker(request, system_def, fixed_tracking, single_axis_tracking):
     inv = system_def.inverters[0]
     if request.param == "fixed":
         inv.arrays[0].tracking = fixed_tracking
-        return inv, PVSystem
+        return inv, PVSystem, False
+    elif request.param == "multi_fixed":
+        inv.arrays[0].tracking = fixed_tracking
+        arr1 = deepcopy(inv.arrays[0])
+        arr1.name = "Array 2"
+        inv.arrays.append(arr1)
+        return inv, PVSystem, True
     else:
         inv.arrays[0].tracking = single_axis_tracking
-        return inv, SingleAxisTracker
+        return inv, SingleAxisTracker, False
 
 
 def test_construct_pvsystem(either_tracker):
-    inv, cls = either_tracker
+    inv, cls, multi = either_tracker
     out = pvmodeling.construct_pvsystem(inv)
     assert isinstance(out, cls)
-    assert isinstance(out.module_parameters, dict)
-    assert isinstance(out.temperature_model_parameters, dict)
+    if multi:
+        for mp in out.module_parameters:
+            assert isinstance(mp, dict)
+        for tmp in out.temperature_model_parameters:
+            assert isinstance(tmp, dict)
+    else:
+        assert isinstance(out.module_parameters, dict)
+        assert isinstance(out.temperature_model_parameters, dict)
     assert isinstance(out.inverter_parameters, dict)
 
 
