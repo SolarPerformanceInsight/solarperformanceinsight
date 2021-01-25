@@ -51,7 +51,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
         True:
         <input
           type="radio"
-          :id="fieldID + '_true'"
+          :id="fieldId + '_true'"
           :value="true"
           v-model="parameters[fieldName]"
           :aria-describedby="helpId"
@@ -61,7 +61,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
         False:
         <input
           type="radio"
-          :id="fieldID + '_false'"
+          :id="fieldId + '_false'"
           :value="false"
           v-model="parameters[fieldName]"
           :aria-describedby="helpId"
