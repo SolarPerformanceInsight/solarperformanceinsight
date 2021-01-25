@@ -122,9 +122,6 @@ export default class ModelField extends Vue {
   get helpId() {
     return `${this.fieldId}_help`;
   }
-  get labeledBy() {
-    return `${this.titleId} ${this.helpId}`;
-  }
 }
 </script>
 

@@ -69,8 +69,6 @@ export default class SystemView extends ModelBase {
     return !("latitude" in this.errors) && !("longitude" in this.errors);
   }
   setElevation(results: Array<any>, status: any) {
-    console.log(results);
-    console.log(status);
     if (status == "OK") {
       const elevation: number = results[0].elevation;
       this.parameters["elevation"] = elevation;
@@ -79,6 +77,7 @@ export default class SystemView extends ModelBase {
     }
   }
   lookupElevation() {
+    /* istanbul ignore next */
     getElevation(
       this.parameters.latitude,
       this.parameters.longitude,
