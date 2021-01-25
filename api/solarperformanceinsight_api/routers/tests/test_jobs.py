@@ -657,18 +657,18 @@ def test_create_upload_compute_success(
         for r in rj
     }
     assert set(sp_type.keys()) == {
-        ("/", "monthly daytime summary"),
+        ("/", "monthly summary"),
         ("/", "daytime flag"),
         ("/", "performance data"),
         ("/inverters/0", "performance data"),
         ("/inverters/0/arrays/0", "weather data"),
     }
-    rid = sp_type[("/", "monthly daytime summary")]
+    rid = sp_type[("/", "monthly summary")]
     response = client.get(f"/jobs/{new_id}/results/{rid}")
     data = response.text
-    assert (
-        data.split("\n")[0]
-        == "month,total_energy,poa_global,effective_irradiance,cell_temperature"
+    assert data.split("\n")[0] == (
+        "month,total_energy,plane_of_array_insolation,"
+        "effective_insolation,average_daytime_cell_temperature"
     )
 
 

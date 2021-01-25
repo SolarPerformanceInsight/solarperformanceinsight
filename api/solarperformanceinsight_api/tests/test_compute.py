@@ -444,7 +444,7 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     )
 
     month_avg = reslist[0]
-    assert month_avg.type == "monthly daytime summary"
+    assert month_avg.type == "monthly summary"
     iob = BytesIO(month_avg.data)
     iob.seek(0)
     month_df = pd.read_feather(iob)
@@ -452,5 +452,5 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     ser = month_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == 1.0
-    assert ser.loc["total_energy"] == 2.0
-    assert ser.loc["poa_global"] == 1.0
+    assert abs(ser.loc["total_energy"] - 2.0 / 1000) < 1e-8
+    assert abs(ser.loc["plane_of_array_insolation"] - 0.001) < 1e-8

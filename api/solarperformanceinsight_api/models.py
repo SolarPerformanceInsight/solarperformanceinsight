@@ -1026,7 +1026,7 @@ class JobResultTypeEnum(str, Enum):
     performance = "performance data"
     weather = "weather data"
     error = "error message"
-    monthy_summary = "monthly daytime summary"
+    monthy_summary = "monthly summary"
     daytime_flag = "daytime flag"
     # will need other types for performance ratio etc.
 
@@ -1040,8 +1040,8 @@ class JobResultMetadata(BaseModel):
 - weather data: Modeled weather/environment data for the array given in schema_path.
   Data has columns time, global plane-of-array irradiance (poa_global), and
   cell temperature.
-- monthly daytime summary: Monthly average of weather data and total AC energy for each
-  month only during the day-time.
+- monthly summary: Monthly total energy (kWh), plane of array insolation (kWh/m^2),
+  effective insolation (kWh/m^2), and average daytime cell temperature.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will

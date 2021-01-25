@@ -268,6 +268,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     store the inverter level performance, total system performance, array level weather,
     and a monthly summary to the database for retrieval
     """
+    job_time_range = job.definition.parameters.time_parameters._time_range
     summary = pd.DataFrame(
         {
             "performance": 0,  # type: ignore
@@ -276,7 +277,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
             "cell_temperature": 0,  # type: ignore
             "zenith": 0,  # type: ignore
         },
-        index=job.definition.parameters.time_parameters._time_range,
+        index=job_time_range,
     )
     summary.index.name = "time"  # type: ignore
     run_model_method = job.definition._model_chain_method
@@ -299,28 +300,51 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
         summary += array_summary  # type: ignore
         weather_count += 1
     # keep performance as sum, but make everything else average over inverters
-    total_performance = summary.pop("performance")
-    ac_energy = total_performance.resample("1h").mean()
-    monthly_energy = ac_energy.groupby(ac_energy.index.month).sum()
-    summary /= weather_count
+    total_performance = summary.pop("performance")  # type: ignore
+    # summary up to now is sum of array-averaged weather for each inverter
+    summary /= weather_count  # type: ignore
+    # summary is now average over inverters
     # average zenith
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
-    # will dump any nans and summary for a month may only have a single point and
-    # still be not NaN
-    daytime_summary = summary.loc[daytime]
-    months = daytime.groupby(daytime.index.month).mean().index
-    month_summary = (
-        daytime_summary.groupby(daytime_summary.index.month).mean().reindex(months)
+    # index of data actualy uploaded
+    input_data_range = daytime.dropna().index
+    # months in output according to job time range
+    months = job_time_range.month.unique().sort_values()  # type: ignore
+
+    # cell temp will be averaged over a month
+    daytime_cell_temp = summary.pop("cell_temperature").loc[daytime]  # type: ignore
+    avg_cell_temp = (
+        daytime_cell_temp.groupby(daytime_cell_temp.index.month).mean().reindex(months)
     )
-    month_summary.insert(0, "total_energy", monthly_energy.reindex(months))
+    # resample rest of summary for insolation
+    # only use data from input range
+    insolation = summary.loc[input_data_range].resample("1h").mean()
+    month_summary = (
+        insolation.groupby(insolation.index.month)
+        .sum()
+        .reindex(months)
+        .rename(
+            columns={
+                "poa_global": "plane_of_array_insolation",
+                "effective_irradiance": "effective_insolation",
+            }
+        )
+        / 1000
+    )  # kWh/m^2
+    ac_energy = total_performance.loc[input_data_range].resample("1h").mean()
+    monthly_energy = (
+        ac_energy.groupby(ac_energy.index.month).sum().reindex(months) / 1000
+    )  # kWh
+    month_summary.insert(0, "total_energy", monthly_energy)
+    month_summary.insert(
+        len(month_summary.columns), "average_daytime_cell_temperature", avg_cell_temp
+    )
     month_summary.index.name = "month"  # type: ignore
 
     result_list.extend(
         [
-            DBResult(
-                schema_path="/", type="monthly daytime summary", data=month_summary
-            ),
+            DBResult(schema_path="/", type="monthly summary", data=month_summary),
             DBResult(
                 schema_path="/",
                 type="daytime flag",
