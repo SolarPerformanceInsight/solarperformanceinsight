@@ -60,6 +60,7 @@ def dummy_func(job, storage):  # pragma: no cover
 def _get_data(
     job_id: UUID, data_id: UUID, si: storage.StorageInterface, shift: dt.timedelta
 ) -> pd.DataFrame:
+    """Get the data from the database and shift forward by `shift`"""
     with si.start_transaction() as st:
         meta, data = st.get_job_data(job_id, data_id)
     if meta.definition.data_format != "application/vnd.apache.arrow.file":
@@ -138,6 +139,7 @@ def save_results_to_db(
 def _adjust_frame(
     inp: Union[pd.Series, pd.DataFrame], name: str, tshift: dt.timedelta
 ) -> Union[pd.Series, pd.DataFrame]:
+    """Shift the object by -tshift and make sure index is named "time" """
     if not isinstance(inp, (pd.Series, pd.DataFrame)):
         raise TypeError(f"Expected pandas.Series or pandas.DataFrame not {type(inp)}")
 
@@ -260,6 +262,10 @@ def process_single_modelchain(
 
 
 def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
+    """Compute the performance, and other modeling variables, for the Job and
+    store the inverter level performance, total system performance, array level weather,
+    and a monthly summary to the database for retrieval
+    """
     summary = pd.DataFrame(
         {
             "performance": 0,  # type: ignore
@@ -278,6 +284,11 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     weather_count = 0.0
     # result from each inverter...
     result_list = []
+    # get weather data for each inverter as List[pd.DataFrame] to pass
+    # directly to the appropriate ModelChain run function for multiple arrays
+    # Weather data is shifted right by half the interval length and
+    # process_single_modelchain shifts the results back to original labels
+    # so that solar position used for modeling is midpoint of interval
     for i, weather_data in enumerate(generate_job_weather_data(job, si, tshift)):
         db_results, array_summary = process_single_modelchain(
             chains[i], weather_data, run_model_method, tshift, i
