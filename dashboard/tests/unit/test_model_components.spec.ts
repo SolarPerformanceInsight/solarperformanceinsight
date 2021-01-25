@@ -1155,29 +1155,6 @@ describe("Test System", () => {
     // @ts-expect-error
     expect("name" in wrapper.vm.errors).toBe(true);
   });
-  it("test set elevation", () => {
-    const propSystem = new System({});
-    const propsData = {
-      parameters: propSystem,
-      model: "pvwatts"
-    };
-    const wrapper = shallowMount(SystemView, {
-      localVue,
-      propsData,
-      mocks
-    });
-    expect(propsData.parameters.elevation).toBe(propSystem.elevation);
-
-    // @ts-expect-error
-    wrapper.vm.setElevation([{ elevation: 20 }], "OK");
-
-    expect(propsData.parameters.elevation).toBe(20);
-
-    // @ts-expect-error
-    wrapper.vm.setElevation([{ elevation: 200 }], "BAD");
-
-    expect(propsData.parameters.elevation).toBe(20);
-  });
 });
 
 /*

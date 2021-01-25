@@ -73,21 +73,11 @@ export default class SystemView extends ModelBase {
   get locationValid() {
     return !("latitude" in this.errors) && !("longitude" in this.errors);
   }
-  setElevation(results: Array<any>, status: any) {
-    if (status == "OK") {
-      const elevation: number = results[0].elevation;
-      this.parameters["elevation"] = elevation;
-    } else {
-      console.log("elevation fetch failed");
-    }
-  }
   lookupElevation() {
     /* istanbul ignore next */
-    getElevation(
-      this.parameters.latitude,
-      this.parameters.longitude,
-      this.setElevation
-    );
+    getElevation(this.parameters.latitude, this.parameters.longitude)
+      .then((elevation: number) => (this.parameters.elevation = elevation))
+      .catch(error => console.log(error.message));
   }
 }
 </script>
