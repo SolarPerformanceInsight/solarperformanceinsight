@@ -90,7 +90,6 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ModelBase from "@/components/ModelBase.vue";
 import { getIndex } from "@/utils/fieldIndex";
 
 @Component

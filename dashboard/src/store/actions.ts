@@ -1,4 +1,4 @@
-import { System, StoredSystem } from "../types/System";
+import { StoredSystem } from "../types/System";
 
 export const actions = {
   async fetchSystems(context: any) {

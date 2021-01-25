@@ -11,6 +11,7 @@ type Auth0PluginOptions = {
 };
 
 /** Define a default action to perform after authentication */
+// eslint-disable-next-line
 const DEFAULT_REDIRECT_CALLBACK = (appState: { targetUrl: string }) =>
   window.history.replaceState({}, document.title, window.location.pathname);
 

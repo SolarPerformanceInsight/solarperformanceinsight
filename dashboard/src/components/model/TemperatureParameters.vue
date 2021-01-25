@@ -52,7 +52,7 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 
 // Update with many classes of inverter parameters to check for type before
 // choosing a display.
