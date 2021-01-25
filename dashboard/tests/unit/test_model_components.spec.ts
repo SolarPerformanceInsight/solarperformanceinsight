@@ -1169,15 +1169,14 @@ describe("Test System", () => {
     expect(propsData.parameters.elevation).toBe(propSystem.elevation);
 
     // @ts-expect-error
-    wrapper.vm.setElevation([{elevation: 20}], "OK");
+    wrapper.vm.setElevation([{ elevation: 20 }], "OK");
 
     expect(propsData.parameters.elevation).toBe(20);
 
     // @ts-expect-error
-    wrapper.vm.setElevation([{elevation: 200}], "BAD");
+    wrapper.vm.setElevation([{ elevation: 200 }], "BAD");
 
     expect(propsData.parameters.elevation).toBe(20);
-
   });
 });
 
