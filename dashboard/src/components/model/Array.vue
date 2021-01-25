@@ -1,10 +1,5 @@
 <template>
   <li>
-    <!--
-    <b>Inverter Name:</b>
-    {{ $parent.$parent.parameters.name }}
-    <br />
-    -->
     <model-field
       :parameters="parameters"
       :errors="errors"
