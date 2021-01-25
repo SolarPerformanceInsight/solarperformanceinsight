@@ -1040,7 +1040,7 @@ class JobResultMetadata(BaseModel):
 - weather data: Modeled weather/environment data for the array given in schema_path.
   Data has columns time, global plane-of-array irradiance (poa_global), and
   cell temperature.
-- monthly daytime summary: Monthly average of performance and weather data for each
+- monthly daytime summary: Monthly average of weather data and total AC energy for each
   month only during the day-time.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.

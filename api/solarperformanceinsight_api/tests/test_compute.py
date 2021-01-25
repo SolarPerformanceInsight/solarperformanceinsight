@@ -452,5 +452,5 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     ser = month_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == 1.0
-    assert ser.loc["performance"] == 2.0
+    assert ser.loc["total_energy"] == 2.0
     assert ser.loc["poa_global"] == 1.0

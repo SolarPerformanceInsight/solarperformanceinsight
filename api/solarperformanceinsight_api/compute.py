@@ -299,18 +299,11 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
         summary += array_summary  # type: ignore
         weather_count += 1
     # keep performance as sum, but make everything else average over inverters
-    summary = summary.div(  # type: ignore
-        pd.Series(
-            {
-                "performance": 1.0,
-                **{
-                    col: weather_count
-                    for col in summary.columns
-                    if col != "performance"
-                },
-            }
-        )
-    )
+    total_performance = summary.pop("performance")
+    ac_energy = total_performance.resample("1h").mean()
+    monthly_energy = ac_energy.groupby(ac_energy.index.month).sum()
+    summary /= weather_count
+    # average zenith
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
     # will dump any nans and summary for a month may only have a single point and
@@ -320,6 +313,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     month_summary = (
         daytime_summary.groupby(daytime_summary.index.month).mean().reindex(months)
     )
+    month_summary.insert(0, "total_energy", monthly_energy.reindex(months))
     month_summary.index.name = "month"  # type: ignore
 
     result_list.extend(
@@ -333,7 +327,9 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
                 data=daytime.to_frame(),
             ),
             DBResult(
-                schema_path="/", type="performance data", data=summary[["performance"]]
+                schema_path="/",
+                type="performance data",
+                data=total_performance.to_frame(),
             ),
         ]
     )

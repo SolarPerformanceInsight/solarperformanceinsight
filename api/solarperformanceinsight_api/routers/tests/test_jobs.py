@@ -668,7 +668,7 @@ def test_create_upload_compute_success(
     data = response.text
     assert (
         data.split("\n")[0]
-        == "month,performance,poa_global,effective_irradiance,cell_temperature"
+        == "month,total_energy,poa_global,effective_irradiance,cell_temperature"
     )
 
 
