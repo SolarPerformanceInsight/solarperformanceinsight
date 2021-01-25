@@ -118,7 +118,6 @@ export default class SystemSpec extends Vue {
       apiErrors: {}
     };
   }
-  components = ["system-view", "file-upload"];
   uploadSuccess(fileMetadata: string) {
     const metadata = JSON.parse(fileMetadata);
     const system = new System(metadata);
@@ -126,6 +125,7 @@ export default class SystemSpec extends Vue {
     this.inferModel();
   }
 
+  /* istanbul ignore next */
   downloadSystem() {
     const contents = new Blob([JSON.stringify(this.system, null, 2)], {
       type: "application/json;charset=utf-8;"
@@ -170,6 +170,7 @@ export default class SystemSpec extends Vue {
     if (response.ok) {
       const system = await response.json();
       this.system = new System(system.definition);
+      this.inferModel();
       this.loading = false;
     } else {
       this.errorState = true;
