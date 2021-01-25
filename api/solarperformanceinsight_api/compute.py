@@ -49,7 +49,7 @@ def lookup_job_compute_function(
     job: models.StoredJob,
 ) -> Callable[[models.StoredJob, storage.StorageInterface], None]:
     if isinstance(job.definition.parameters.job_type, models.CalculatePerformanceJob):
-        return run_modelchain
+        return run_performance_job
     return dummy_func
 
 
@@ -120,6 +120,20 @@ class DBResult(models.JobResultMetadata):
         )
         super().__init__(**kwargs)
 
+    def __repr__(self):  # pragma: no cover
+        return f"DBResult(schema_path='{self.schema_path}', type='{self.type}', data=<{len(self.data)} bytes>)"  # NOQA
+
+
+def save_results_to_db(
+    job_id: UUID, result_list: List[DBResult], si: storage.StorageInterface
+):
+    with si.start_transaction() as st:
+        for result in result_list:
+            st.add_job_result(
+                job_id, result.schema_path, result.type, result.data_format, result.data
+            )
+        st.set_job_complete(job_id)
+
 
 def _adjust_frame(
     inp: Union[pd.Series, pd.DataFrame], name: str, tshift: dt.timedelta
@@ -150,7 +164,7 @@ def _get_index(
         out = val[index]
         if isinstance(out, (pd.DataFrame, pd.Series)):
             return out
-        else:  # issue describe in pvlib#1139
+        else:  # issue described in pvlib/pvlib-python#1139
             # nans for now
             return pd.Series(
                 None, index=result.ac.index, dtype=float, name=prop
@@ -245,7 +259,7 @@ def process_single_modelchain(
     return out, summary_frame
 
 
-def run_modelchain(job: models.StoredJob, si: storage.StorageInterface):
+def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     summary = pd.DataFrame(
         {
             "performance": 0,  # type: ignore
@@ -286,9 +300,13 @@ def run_modelchain(job: models.StoredJob, si: storage.StorageInterface):
     )
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
-
+    # will dump any nans and summary for a month may only have a single point and
+    # still be not NaN
     daytime_summary = summary.loc[daytime]
-    month_summary = daytime_summary.groupby(daytime_summary.index.month).mean()
+    months = daytime.groupby(daytime.index.month).mean().index
+    month_summary = (
+        daytime_summary.groupby(daytime_summary.index.month).mean().reindex(months)
+    )
     month_summary.index.name = "month"  # type: ignore
 
     result_list.extend(
@@ -307,14 +325,3 @@ def run_modelchain(job: models.StoredJob, si: storage.StorageInterface):
         ]
     )
     save_results_to_db(job.object_id, result_list, si)
-
-
-def save_results_to_db(
-    job_id: UUID, result_list: List[DBResult], si: storage.StorageInterface
-):
-    with si.start_transaction() as st:
-        for result in result_list:
-            st.add_job_result(
-                job_id, result.schema_path, result.type, result.data_format, result.data
-            )
-        st.set_job_complete(job_id)
