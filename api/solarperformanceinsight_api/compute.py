@@ -91,16 +91,18 @@ def generate_job_weather_data(
     ):
         data_id = data_id_by_schema_path["/"]
         df = _get_data(job_id, data_id, si, shift)
-        for _ in range(num_inverters):
-            yield [df.copy()]
+        for i in range(num_inverters):
+            num_arrays = len(job.definition.system_definition.inverters[i].arrays)
+            yield [df.copy()] * num_arrays
     elif (
         job.definition.parameters.weather_granularity
         == models.WeatherGranularityEnum.inverter
     ):
         for i in range(num_inverters):
+            num_arrays = len(job.definition.system_definition.inverters[i].arrays)
             data_id = data_id_by_schema_path[f"/inverters/{i}"]
             df = _get_data(job_id, data_id, si, shift)
-            yield [df]
+            yield [df] * num_arrays
     else:
         for i in range(num_inverters):
             num_arrays = len(job.definition.system_definition.inverters[i].arrays)

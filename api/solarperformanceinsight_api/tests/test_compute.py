@@ -206,6 +206,31 @@ def test_generate_job_weather_data_system(stored_job, auth0_id, mocker):
     )
 
 
+def test_generate_job_weather_data_system_multi_array(stored_job, auth0_id, mocker):
+    tshift = dt.timedelta(minutes=5)
+    si = storage.StorageInterface(user=auth0_id)
+    arr = stored_job.definition.system_definition.inverters[0].arrays[0]
+    stored_job.definition.system_definition.inverters[0].arrays = [arr, arr]
+
+    def mockgetdata(job_id, data_id, si, shift):
+        assert shift == tshift
+        return pd.DataFrame({"jid": job_id, "did": data_id}, index=[0])
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    ndo = deepcopy(stored_job.data_objects[0])
+    ndo.object_id = uuid1()
+    ndo.definition.schema_path = "/"
+
+    stored_job.definition.parameters.weather_granularity = "system"
+    stored_job.data_objects = [ndo]
+    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    assert len(genlist) == 1
+    assert len(genlist[0]) == 2
+
+
 def test_generate_job_weather_data_inverter(stored_job, auth0_id, mocker):
     tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
@@ -234,6 +259,37 @@ def test_generate_job_weather_data_inverter(stored_job, auth0_id, mocker):
     genlist = list(gen)
     # returns list of dataframes for each item
     assert genlist == [[i] for i in ids]
+
+
+def test_generate_job_weather_data_inverter_multi_array(stored_job, auth0_id, mocker):
+    tshift = dt.timedelta(minutes=5)
+    si = storage.StorageInterface(user=auth0_id)
+
+    def mockgetdata(job_id, data_id, si, shift):
+        assert shift == tshift
+        return (job_id, data_id)
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    do = stored_job.data_objects[0]
+    new_do = []
+    ids = []
+    for i in range(3):
+        ndo = deepcopy(do)
+        ndo.object_id = uuid1()
+        ids.append((stored_job.object_id, ndo.object_id))
+        ndo.definition.schema_path = f"/inverters/{i}"
+        new_do.append(ndo)
+    inv = deepcopy(stored_job.definition.system_definition.inverters[0])
+    inv.arrays = [inv.arrays[0], inv.arrays[0]]
+    stored_job.definition.system_definition.inverters = [inv, inv, inv]
+    stored_job.definition.parameters.weather_granularity = "inverter"
+    stored_job.data_objects = new_do
+    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    # returns list of dataframes for each item
+    assert genlist == [[i, i] for i in ids]
 
 
 def test_generate_job_weather_data_array(stored_job, auth0_id, mocker):
