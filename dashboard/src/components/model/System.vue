@@ -23,15 +23,20 @@
       :definitions="definitions"
       field-name="longitude"
     />
-    <button :disabled="!locationValid" @click="lookupElevation">
-      Look Up Elevation
-    </button>
     <model-field
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
       field-name="elevation"
-    />
+    >
+      <button
+        class="elevation-button"
+        :disabled="!locationValid"
+        @click="lookupElevation"
+      >
+        Look Up Elevation
+      </button>
+    </model-field>
     <inverters-view :inverters="parameters.inverters" :model="model" />
   </div>
 </template>
@@ -90,5 +95,8 @@ export default class SystemView extends ModelBase {
 <style scoped>
 div {
   text-align: left;
+}
+.elevation-button {
+  margin: 0 0.25em;
 }
 </style>

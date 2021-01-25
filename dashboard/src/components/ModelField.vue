@@ -76,7 +76,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
       :aria-describedby="helpId"
       v-model="parameters[fieldName]"
     />
-
+    <slot></slot>
     <help
       :helpText="definitions.properties[fieldName].description"
       :tagId="helpId"
