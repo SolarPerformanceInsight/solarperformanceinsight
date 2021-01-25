@@ -1,6 +1,5 @@
 import Vue from "vue";
-import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import CSVMapper from "@/components/jobs/CSVMapper.vue";
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
@@ -114,8 +113,6 @@ const testJob = {
 };
 
 const headers = ["timestamp", "global", "direct", "diffuse"];
-
-const usedHeaders: Array<string> = [];
 
 // vue test setup
 const localVue = createLocalVue();

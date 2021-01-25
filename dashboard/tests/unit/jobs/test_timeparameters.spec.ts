@@ -1,6 +1,5 @@
-import Vue from "vue";
 import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import JobTimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 

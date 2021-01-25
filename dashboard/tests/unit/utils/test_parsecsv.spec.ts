@@ -22,7 +22,6 @@ describe("Test parseCSV", () => {
     ]);
   });
   it("Test bad csv", () => {
-    let error: any;
     const result = parseCSV("a,b,c\n1");
     expect(result.errors).toEqual([
       {

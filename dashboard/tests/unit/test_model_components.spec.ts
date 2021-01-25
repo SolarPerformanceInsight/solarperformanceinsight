@@ -904,23 +904,6 @@ describe("Test Inverter", () => {
     ).toBe(true);
     expect(PVWattsLosses.isInstance(propsData.parameters.losses)).toBe(true);
   });
-  it("pvwatts", () => {
-    const propsData = {
-      parameters: new Inverter({
-        inverter_parameters: new PVWattsInverterParameters({}),
-        losses: new PVWattsLosses({})
-      }),
-      model: "pvwatts",
-      index: 0
-    };
-    // @ts-expect-error
-    const wrapper = shallowMount(InverterView, {
-      localVue,
-      propsData,
-      parentComponent,
-      mocks
-    });
-  });
   it("test loadInverterParameters", () => {
     const propsData = {
       parameters: new Inverter({
@@ -1182,9 +1165,9 @@ describe("Test model base", () => {
     const ucField = wrapper.find("input");
 
     // @ts-expect-error
-    const spy = jest.spyOn(wrapper.vm, "setValidationResult");
+    jest.spyOn(wrapper.vm, "setValidationResult");
     // @ts-expect-error
-    const valspy = jest.spyOn(wrapper.vm, "validate");
+    jest.spyOn(wrapper.vm, "validate");
 
     // @ts-expect-error
     expect(ucField.element.type).toEqual("number");
