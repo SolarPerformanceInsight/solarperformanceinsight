@@ -1,4 +1,3 @@
-import { shallowMount } from "@vue/test-utils";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
@@ -191,16 +190,6 @@ test("Instantiate pvwatts system from object", () => {
       ).toBeTruthy();
     }
   }
-});
-
-test("PVArray Instance", () => {
-  const array: PVArray = new PVArray(
-    pvsyst_test_system["inverters"][0]["arrays"][0]
-  );
-});
-
-test("Inverter Instance", () => {
-  const inverter: Inverter = new Inverter(pvsyst_test_system["inverters"][0]);
 });
 
 test("Instantiate fixed tracking", () => {

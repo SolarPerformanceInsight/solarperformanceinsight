@@ -5,16 +5,10 @@ import VueRouter from "vue-router";
 import { createLocalVue, mount } from "@vue/test-utils";
 
 import Home from "@/views/Home.vue";
-import HomeContent from "@/views/HomeContent.vue";
-import Systems from "@/views/Systems.vue";
-import SystemSpec from "@/views/SystemSpec.vue";
 import App from "@/App.vue";
 import router from "@/router";
 
-import { SpiStore } from "@/store/store";
-import { domain, clientId, audience } from "../../auth_config.json";
-import { authGuard } from "../../src/auth/authGuard";
-import { mockedAuthInstance, $auth } from "./mockauth";
+import { $auth } from "./mockauth";
 import { $validator } from "./mockvalidator";
 
 const localVue = createLocalVue();

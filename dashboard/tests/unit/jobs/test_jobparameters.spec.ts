@@ -1,6 +1,6 @@
 import Vue from "vue";
 import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
@@ -11,10 +11,9 @@ import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
-import { SingleAxisTrackingParameters } from "@/types/Tracking";
 
 import * as Jobs from "@/api/jobs";
-import { mockedAuthInstance, $auth } from "../mockauth";
+import { $auth } from "../mockauth";
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);

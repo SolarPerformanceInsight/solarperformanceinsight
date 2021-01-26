@@ -1,14 +1,11 @@
 /* Primary router for the dashboard. Any routes that require authentication
  * should be registered with `beforeEnter: authGuard`.
  */
-import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import SystemSpec from "../views/SystemSpec.vue";
 import Systems from "../views/Systems.vue";
 import HomeContent from "../views/HomeContent.vue";
 import JobHandler from "../components/jobs/JobHandler.vue";
-import ComparePerformance from "../views/Compare.vue";
-import CalculatePR from "../views/CalculatePR.vue";
 import { authGuard } from "../auth/authGuard";
 
 const routes: Array<RouteConfig> = [

@@ -1,6 +1,5 @@
-import Vue from "vue";
 import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
 

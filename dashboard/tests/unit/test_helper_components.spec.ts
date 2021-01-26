@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { createLocalVue, mount } from "@vue/test-utils";
+import { mount } from "@vue/test-utils";
 
 import flushPromises from "flush-promises";
 

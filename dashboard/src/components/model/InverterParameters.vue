@@ -100,7 +100,7 @@
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
 
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import {
   SandiaInverterParameters,
   PVWattsInverterParameters

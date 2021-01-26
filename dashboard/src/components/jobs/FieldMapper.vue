@@ -80,8 +80,7 @@ Components using the mapper should react to events emitted from this component:
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import FileUpload from "@/components/FileUpload.vue";
-import { StoredSystem, System } from "@/types/System";
+import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 

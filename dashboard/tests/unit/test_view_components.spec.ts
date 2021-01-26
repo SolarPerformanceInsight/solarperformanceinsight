@@ -1,17 +1,13 @@
 import Vue from "vue";
-import Vuex from "vuex";
 import VueRouter from "vue-router";
-import APISpec from "./openapi.json";
 import flushPromises from "flush-promises";
 
-import { createLocalVue, mount, shallowMount } from "@vue/test-utils";
+import { createLocalVue, shallowMount } from "@vue/test-utils";
 
 import SystemSpec from "@/views/SystemSpec.vue";
 import Systems from "@/views/Systems.vue";
 
-import { domain, clientId, audience } from "../../auth_config.json";
-import { authGuard } from "../../src/auth/authGuard";
-import { mockedAuthInstance, $auth } from "./mockauth";
+import { $auth } from "./mockauth";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";

@@ -55,7 +55,7 @@ if (process.env.NODE_ENV == "production") {
     dsn:
       "https://624f863de69b4b1dabddc48e04329c5e@o481024.ingest.sentry.io/5528970",
     integrations: [new VueIntegration({ Vue })],
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line
     beforeSend(event, hint) {
       // Check if it is an exception, and if so, show the report dialog
       if (event.exception) {
