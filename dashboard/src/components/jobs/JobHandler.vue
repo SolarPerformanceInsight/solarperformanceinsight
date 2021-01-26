@@ -193,6 +193,9 @@ Component that handles basic job/workflows.
               <br />
             </span>
           </template>
+          <template v-else-if="step == 'results'">
+            <job-results :jobId="jobId" :system="system"></job-results>
+          </template>
           <!-- Error state -->
           <template v-else-if="jobStatus == 'error'">
             Something went wrong during report processing.
@@ -205,11 +208,12 @@ Component that handles basic job/workflows.
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
-
+import JobResults from "@/components/jobs/JobResults.vue";
 import { StoredSystem, System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
 
 Vue.component("job-params", JobParams);
+Vue.component("job-results", JobResults);
 
 @Component
 export default class JobHandler extends Vue {
