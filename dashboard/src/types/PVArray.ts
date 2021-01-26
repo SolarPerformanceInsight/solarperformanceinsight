@@ -26,8 +26,8 @@ export class PVArray {
   strings: number;
 
   constructor({
-    name = "New Array",
-    make_model = "ABC 123",
+    name = "",
+    make_model = "",
     module_parameters = new PVSystModuleParameters({}),
     temperature_model_parameters = new PVSystTemperatureParameters({}),
     tracking = new FixedTrackingParameters({}),

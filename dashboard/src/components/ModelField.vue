@@ -27,29 +27,60 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
 -->
 <template>
   <div class="model-field">
-    <b>{{ title }}:</b>
+    <label class="field_label" :id="titleId">{{ title }}:</label>
 
     <input
       v-if="inputType == 'number'"
       type="number"
+      :id="fieldId"
+      :aria-labelledby="titleId"
+      :aria-describedby="helpId"
       step="any"
       v-model.number="parameters[fieldName]"
     />
     <input
       v-if="inputType == 'integer'"
+      :id="fieldId"
+      :aria-labelledby="titleId"
+      :aria-describedby="helpId"
       type="number"
       v-model.number="parameters[fieldName]"
     />
     <template v-if="inputType == 'boolean'">
-      True:
-      <input type="radio" :value="true" v-model="parameters[fieldName]" />
-      False:
-      <input type="radio" :value="false" v-model="parameters[fieldName]" />
+      <label>
+        True:
+        <input
+          type="radio"
+          :id="fieldId + '_true'"
+          :value="true"
+          v-model="parameters[fieldName]"
+          :aria-describedby="helpId"
+        />
+      </label>
+      <label>
+        False:
+        <input
+          type="radio"
+          :id="fieldId + '_false'"
+          :value="false"
+          v-model="parameters[fieldName]"
+          :aria-describedby="helpId"
+        />
+      </label>
     </template>
 
-    <input v-if="inputType == 'string'" v-model="parameters[fieldName]" />
-
-    <help :helpText="definitions.properties[fieldName].description" />
+    <input
+      v-if="inputType == 'string'"
+      :id="fieldId"
+      :aria-labelledby="titleId"
+      :aria-describedby="helpId"
+      v-model="parameters[fieldName]"
+    />
+    <slot></slot>
+    <help
+      :helpText="definitions.properties[fieldName].description"
+      :tagId="helpId"
+    />
     <br />
     <span class="errors" style="color: #F00;" v-if="fieldName in errors">
       {{ errors[fieldName] }}
@@ -60,6 +91,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import ModelBase from "@/components/ModelBase.vue";
+import { getIndex } from "@/utils/fieldIndex";
 
 @Component
 export default class ModelField extends Vue {
@@ -67,12 +99,28 @@ export default class ModelField extends Vue {
   @Prop() parameters!: Record<string, any>;
   @Prop() definitions!: Record<string, any>;
   @Prop() errors!: Record<string, any>;
+  fieldIndex!: number;
+
+  data() {
+    return {
+      fieldIndex: getIndex()
+    };
+  }
 
   get title() {
     return this.definitions.properties[this.fieldName].title;
   }
   get inputType() {
     return this.definitions.properties[this.fieldName].type;
+  }
+  get fieldId() {
+    return `field_${this.fieldIndex}`;
+  }
+  get titleId() {
+    return `${this.fieldId}_title`;
+  }
+  get helpId() {
+    return `${this.fieldId}_help`;
   }
 }
 </script>

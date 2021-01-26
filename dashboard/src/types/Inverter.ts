@@ -13,8 +13,8 @@ export class Inverter {
   arrays: Array<PVArray>;
 
   constructor({
-    name = "New Inverter",
-    make_model = "ABC 520",
+    name = "",
+    make_model = "",
     inverter_parameters = new SandiaInverterParameters({}),
     losses = null,
     arrays = []

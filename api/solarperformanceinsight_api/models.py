@@ -293,7 +293,7 @@ class PVWattsLosses(BaseModel):
     mismatch: float = Field(2.0, description="Mismatch loss, %")
     wiring: float = Field(2.0, description="Wiring loss, %")
     connections: float = Field(0.5, description="Connections loss, %")
-    lid: float = Field(1.5, description="Light induced degradation, %")
+    lid: float = Field(1.5, title="LID", description="Light induced degradation, %")
     nameplate_rating: float = Field(1.0, description="Nameplate Rating loss, %")
     age: float = Field(0.0, description="Age loss, %")
     availability: float = Field(3.0, description="Availability loss, %")

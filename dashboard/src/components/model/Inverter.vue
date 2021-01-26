@@ -1,8 +1,5 @@
 <template>
   <li>
-    <b>System Name:</b>
-    {{ $parent.$parent.parameters.name }}
-    <br />
     <model-field
       :parameters="parameters"
       :errors="errors"

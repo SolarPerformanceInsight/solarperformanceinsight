@@ -1,8 +1,5 @@
 <template>
   <li>
-    <b>Inverter Name:</b>
-    {{ $parent.$parent.parameters.name }}
-    <br />
     <model-field
       :parameters="parameters"
       :errors="errors"
@@ -30,18 +27,24 @@
     <b>Tracking:</b>
     <input
       v-model="tracking"
+      class="fixed_tracking"
       type="radio"
       v-on:change="changeTracking"
       value="fixed"
     />
     Fixed
     <input
+      :disabled="numArrays > 1"
       v-model="tracking"
+      class="single_axis_tracking"
       type="radio"
       v-on:change="changeTracking"
       value="singleAxis"
     />
     Single Axis
+    <span v-if="numArrays > 1" class="warning-text">
+      Only supported for single array inverter.
+    </span>
     <tracking-parameters
       :tracking="tracking"
       :parameters="parameters.tracking"
@@ -67,7 +70,11 @@
 
     <button class="remove-array" @click="removeArray">Remove Array</button>
     <br />
-    <button class="duplicate-array" @click="duplicateArray">
+    <button
+      class="duplicate-array"
+      @click="duplicateArray"
+      :disabled="!allFixed"
+    >
       Duplicate Array
     </button>
   </li>
@@ -102,6 +109,9 @@ export default class ArrayView extends ModelBase {
   @Prop() parameters!: PVArray;
   @Prop() index!: number;
   @Prop() model!: string;
+  @Prop() allFixed!: boolean;
+  @Prop() numArrays!: number;
+
   tracking!: string;
 
   data() {
@@ -152,10 +162,10 @@ export default class ArrayView extends ModelBase {
   }
 
   removeArray() {
-    this.$emit("array-removed", this.index); //.pvarrays.splice(this.index, 1);
+    this.$emit("array-removed", this.index);
   }
   duplicateArray() {
-    this.$emit("array-added", this.parameters); //parent.pvarrays.push(new PVArray(this.parameters));
+    this.$emit("array-added", this.parameters);
   }
   get apiComponentName() {
     return "PVArray";

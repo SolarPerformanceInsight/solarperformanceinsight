@@ -151,9 +151,11 @@ const fetchBody = new StoredSystem({
   created_at: "2021-01-01T00:00+00:00",
   modified_at: "2021-01-01T00:00+00:00",
   definition: new System({
+    name: "New System",
     inverters: [
       new Inverter({
-        arrays: [new PVArray({})]
+        name: "New Inverter",
+        arrays: [new PVArray({ name: "New Array" })]
       })
     ]
   })

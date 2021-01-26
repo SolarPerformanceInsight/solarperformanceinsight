@@ -69,10 +69,13 @@ if (process.env.NODE_ENV == "production") {
 Vue.config.productionTip = false;
 
 /* Instantiate a validator object and make it globally available via the
- * this.$validator.
+ * this.$validator. We wrap it in Vue.observable so that we can wait for it to
+ * be initialized before rendering.
  */
-const validator = new APIValidator();
-validator.init();
+const validatorObject = new APIValidator();
+validatorObject.init();
+
+const validator = Vue.observable(validatorObject);
 Vue.prototype.$validator = validator;
 
 Vue.use(Vuex);

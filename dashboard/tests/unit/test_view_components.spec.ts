@@ -14,6 +14,13 @@ import { authGuard } from "../../src/auth/authGuard";
 import { mockedAuthInstance, $auth } from "./mockauth";
 
 import { StoredSystem, System } from "@/types/System";
+import { Inverter } from "@/types/Inverter";
+import {
+  PVWattsInverterParameters,
+  SandiaInverterParameters
+} from "@/types/InverterParameters.ts";
+import { modelSpecs } from "@/types/ModelSpecification";
+
 import { $validator } from "./mockvalidator";
 
 const router = new VueRouter({ mode: "history", base: process.env.BASE_URL });
@@ -172,6 +179,72 @@ describe("Test SystemSpec view", () => {
       error: "API responded with status code: 500"
     });
     expect(router.push).not.toHaveBeenCalled();
+  });
+  it("Test infer pvwatts", async () => {
+    fetchMock.json = jest.fn().mockResolvedValue({
+      definition: new System({
+        inverters: [
+          new Inverter({
+            inverter_parameters: new PVWattsInverterParameters({})
+          })
+        ]
+      })
+    });
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      propsData: {
+        systemId: "someid"
+      },
+      mocks,
+      router
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.model).toBe("pvwatts");
+    // @ts-expect-error
+    expect(wrapper.vm.modelSpec).toEqual(modelSpecs["pvwatts"]);
+  });
+  it("Test infer pvwatts", async () => {
+    fetchMock.json = jest.fn().mockResolvedValue({
+      definition: new System({
+        inverters: [
+          new Inverter({
+            inverter_parameters: new SandiaInverterParameters({})
+          })
+        ]
+      })
+    });
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      propsData: {
+        systemId: "someid"
+      },
+
+      mocks,
+      router
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.model).toBe("pvsyst");
+    // @ts-expect-error
+    expect(wrapper.vm.modelSpec).toEqual(modelSpecs["pvsyst"]);
+  });
+  it("Test upload handling", async () => {
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      mocks,
+      router
+    });
+    await flushPromises();
+    const theSystem = new System({
+      inverters: [
+        new Inverter({
+          inverter_parameters: new SandiaInverterParameters({})
+        })
+      ]
+    });
+    const theString = JSON.stringify(theSystem);
+    // @ts-expect-error
+    wrapper.vm.uploadSuccess(theString);
+    expect(wrapper.vm.$data.system).toEqual(theSystem);
   });
 });
 describe("Test Systems view", () => {

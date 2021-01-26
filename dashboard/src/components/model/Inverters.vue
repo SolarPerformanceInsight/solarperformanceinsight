@@ -39,7 +39,10 @@ export default class InvertersView extends Vue {
   addInverter(existingInverter: Inverter | null) {
     let newInverter: Inverter;
     if (existingInverter) {
-      newInverter = new Inverter(existingInverter);
+      newInverter = new Inverter({
+        ...existingInverter,
+        name: `${existingInverter.name} copy`
+      });
     } else {
       let paramClass: any = PVWattsInverterParameters;
       let lossClass: any = PVWattsLosses;
@@ -48,6 +51,7 @@ export default class InvertersView extends Vue {
         lossClass = null;
       }
       newInverter = new Inverter({
+        name: `Inverter ${this.inverters.length + 1}`,
         inverter_parameters: new paramClass({}),
         losses: lossClass ? new lossClass({}) : null
       });
