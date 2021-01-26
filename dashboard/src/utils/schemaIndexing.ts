@@ -1,6 +1,5 @@
 import { System } from "@/types/System";
 
-
 export function indexSystemFromSchemaPath(
   system: System,
   schemaPath: Array<string> | string
@@ -20,23 +19,23 @@ export function indexSystemFromSchemaPath(
   if (!indices.length) {
     throw new Error("Invalid System Index: Empty");
   }
-  let comp: any = system;
+  component = system;
 
   while (indices.length) {
     // @ts-expect-error
-    let index: string | number = indices.shift();
+    const index: string | number = indices.shift();
 
     try {
-        comp = comp[index];
+      component = component[index];
     } catch (error) {
-      // Handle if index does not exist in comp, should only occur if system
+      // Handle if index does not exist in component, should only occur if system
       // parameter is null/undefined
       throw new error("invalid system index");
     }
     // If value is null/undefined index was invalid
-    if (comp == null) {
-      throw new Error("Invalid System Index")
+    if (component == null) {
+      throw new Error("Invalid System Index");
     }
   }
-  return comp;
+  return component;
 }
