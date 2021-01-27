@@ -55,7 +55,7 @@ if (process.env.NODE_ENV == "production") {
     dsn:
       "https://624f863de69b4b1dabddc48e04329c5e@o481024.ingest.sentry.io/5528970",
     integrations: [new VueIntegration({ Vue })],
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line
     beforeSend(event, hint) {
       // Check if it is an exception, and if so, show the report dialog
       if (event.exception) {
@@ -69,10 +69,13 @@ if (process.env.NODE_ENV == "production") {
 Vue.config.productionTip = false;
 
 /* Instantiate a validator object and make it globally available via the
- * this.$validator.
+ * this.$validator. We wrap it in Vue.observable so that we can wait for it to
+ * be initialized before rendering.
  */
-const validator = new APIValidator();
-validator.init();
+const validatorObject = new APIValidator();
+validatorObject.init();
+
+const validator = Vue.observable(validatorObject);
 Vue.prototype.$validator = validator;
 
 Vue.use(Vuex);

@@ -207,8 +207,6 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
 
 import { StoredSystem, System } from "@/types/System";
-import { Inverter } from "@/types/Inverter";
-import { PVArray } from "@/types/PVArray";
 import * as Jobs from "@/api/jobs";
 
 Vue.component("job-params", JobParams);

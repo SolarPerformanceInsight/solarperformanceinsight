@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import JobHandler from "@/components/jobs/JobHandler.vue";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
@@ -12,13 +12,12 @@ import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import CSVUpload from "@/components/jobs/CSVUpload.vue";
 
 import * as Jobs from "@/api/jobs";
-import { mockedAuthInstance, $auth } from "../mockauth";
+import { $auth } from "../mockauth";
 import router from "@/router";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
-import { SingleAxisTrackingParameters } from "@/types/Tracking";
 
 const testJob = {
   object_id: "e1772e64-43ac-11eb-92c2-f4939feddd82",
@@ -120,12 +119,6 @@ const testJob = {
   ]
 };
 
-const headers = ["timestamp", "global", "direct", "diffuse"];
-
-const usedHeaders: Array<string> = [];
-
-const required = ["time", "ghi", "dni", "dhi"];
-
 // vue test setup
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -151,9 +144,11 @@ const fetchBody = new StoredSystem({
   created_at: "2021-01-01T00:00+00:00",
   modified_at: "2021-01-01T00:00+00:00",
   definition: new System({
+    name: "New System",
     inverters: [
       new Inverter({
-        arrays: [new PVArray({})]
+        name: "New Inverter",
+        arrays: [new PVArray({ name: "New Array" })]
       })
     ]
   })

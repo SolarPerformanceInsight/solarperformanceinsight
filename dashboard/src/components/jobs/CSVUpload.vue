@@ -21,45 +21,56 @@ Takes the following props that can be extracted from job metadata.
 -->
 <template>
   <div class="csv-upload">
-  <slot>Upload your weather data</slot>
-  <br />
-  <label for="csv-upload">Select a file with {{ dataType }}:</label>
-  <input
-    id="csv-upload"
-    type="file"
-    accept="text/csv"
-    @change="processFile"/>
+    <slot>Upload your weather data</slot>
+    <br />
+    <label for="csv-upload">Select a file with {{ dataType }}:</label>
+    <input
+      id="csv-upload"
+      type="file"
+      accept="text/csv"
+      @change="processFile"
+    />
     <template v-if="processingFile">
-      <div class="loading-container"><div class="loading">Processing File...</div></div>
+      <div class="loading-container">
+        <div class="loading">Processing File...</div>
+      </div>
     </template>
     <template v-if="promptForMapping && !processingFile">
       <div class="warning" v-if="headers.length < totalMappings">
         Warning: It looks like you may not have enough data in this file. The
-        file contains {{headers.length}} columns and {{ totalMappings }}
-        columns are expected ({{ required.join(", ") }}
-        for <template v-if="granularity == 'system'">the</template>
-        <template v-else>each</template> {{ granularity }}).
+        file contains {{ headers.length }} columns and
+        {{ totalMappings }} columns are expected ({{ required.join(", ") }} for
+        <template v-if="granularity == 'system'">the</template>
+        <template v-else>each</template>
+        {{ granularity }}).
       </div>
       <csv-mapper
         @mapping-complete="processMapping"
-        @mapping-incomplete="mappingComplete=false"
+        @mapping-incomplete="mappingComplete = false"
         :system="system"
         :granularity="granularity"
         :data_objects="data_objects"
         :headers="headers"
-        :required="required" >
-        <p>Select which columns in your file contain data for the required
-           variables. Data can be uploaded using the button below once the
-           required variables are mapped to columns for
-           {{ granularity == 'system' ? 'the system': `each ${granularity}` }}.</p>
+        :required="required"
+      >
+        <p>
+          Select which columns in your file contain data for the required
+          variables. Data can be uploaded using the button below once the
+          required variables are mapped to columns for
+          {{ granularity == "system" ? "the system" : `each ${granularity}` }}.
+        </p>
       </csv-mapper>
-      <button :disabled="!mappingComplete" @click="uploadData">Upload Data</button><span v-if="!mappingComplete">All required fields must be mapped before upload</span>
+      <button :disabled="!mappingComplete" @click="uploadData">
+        Upload Data
+      </button>
+      <span v-if="!mappingComplete">
+        All required fields must be mapped before upload
+      </span>
     </template>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import FileUpload from "@/components/FileUpload.vue";
 import { StoredSystem } from "@/types/System";
 import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
@@ -68,7 +79,6 @@ import { addData } from "@/api/jobs";
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
-
 
 @Component
 export default class CSVUpload extends Vue {
@@ -94,8 +104,8 @@ export default class CSVUpload extends Vue {
       headers: [],
       required: this.getRequired(),
       mappingComplete: false,
-      csvData: [{}],
-    }
+      csvData: [{}]
+    };
   }
   get dataType() {
     return this.data_objects[0].definition.type;
@@ -112,10 +122,10 @@ export default class CSVUpload extends Vue {
     } else {
       this.csvData = parsingResult.data;
       const headers = parsingResult.meta.fields;
-      this.headers =  headers ? headers: [];
+      this.headers = headers ? headers : [];
       this.processingFile = false;
       this.promptForMapping = true;
-    };
+    }
   }
   processMapping(newMapping: Record<string, Record<string, string>>) {
     // Handle a new mapping from the CSVMapper component, this is a
@@ -128,7 +138,6 @@ export default class CSVUpload extends Vue {
     // Handle a CSV upload, hand of parsing to storeCSV
     if (e.target.files !== null) {
       this.processingFile = true;
-      const fileList = e.target.files;
       const file = e.target.files[0];
       const reader = new FileReader();
       // @ts-expect-error
@@ -169,9 +178,3 @@ export default class CSVUpload extends Vue {
   }
 }
 </script>
-<style scoped>
-div.csv-upload {
-  border: 1px solid black;
-  padding: 1em;
-}
-</div>

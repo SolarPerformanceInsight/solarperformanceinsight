@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { createLocalVue, mount } from "@vue/test-utils";
+import { mount } from "@vue/test-utils";
 
 import flushPromises from "flush-promises";
 
@@ -10,15 +10,22 @@ describe("test help popup", () => {
     const wrapper = mount(HelpPopup, {
       propsData: { helpText: "Helpful" }
     });
-    expect(wrapper.find("div.help-wrapper").exists()).toBe(false);
+    expect(wrapper.find("div.help-wrapper").classes()).toContain(
+      "accessible-hidden"
+    );
     const expand = wrapper.find("button");
     expand.trigger("click");
     await Vue.nextTick();
     expect(wrapper.find("div.help-wrapper").exists()).toBe(true);
     expect(wrapper.find("div.help-wrapper").text()).toEqual("Helpful");
+    expect(wrapper.find("div.help-wrapper").classes()).not.toContain(
+      "accessible-hidden"
+    );
     expand.trigger("click");
     await Vue.nextTick();
-    expect(wrapper.find("div.help-wrapper").exists()).toBe(false);
+    expect(wrapper.find("div.help-wrapper").classes()).toContain(
+      "accessible-hidden"
+    );
   });
 });
 

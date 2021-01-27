@@ -1,12 +1,12 @@
 import Vue from "vue";
 import flushPromises from "flush-promises";
-import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { createLocalVue, mount } from "@vue/test-utils";
 
 import CSVMapper from "@/components/jobs/CSVMapper.vue";
 import CSVUpload from "@/components/jobs/CSVUpload.vue";
 
 import * as Jobs from "@/api/jobs";
-import { mockedAuthInstance, $auth } from "../mockauth";
+import { $auth } from "../mockauth";
 
 // test prop constants
 const testJob = {
@@ -115,10 +115,6 @@ const testJob = {
     }
   ]
 };
-
-const headers = ["timestamp", "global", "direct", "diffuse"];
-
-const usedHeaders: Array<string> = [];
 
 const testCSV = "a,b,c,d,e\n1,2,3,4,5";
 

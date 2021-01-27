@@ -18,6 +18,9 @@ import { Component, Vue } from "vue-property-decorator";
 export default class ModelBase extends Vue {
   errors: Record<string, any> = {};
 
+  get validatorInit() {
+    return this.$validator.initialized;
+  }
   get definitions() {
     /* Get the api definition of this object */
     return this.$validator.getComponentSpec(this.apiComponentName);

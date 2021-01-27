@@ -528,7 +528,9 @@ describe("Test array", () => {
         tracking: new FixedTrackingParameters({})
       }),
       model: "pvwatts",
-      index: 0
+      index: 0,
+      allFixed: true,
+      numArrays: 1
     };
     // @ts-expect-error
     const wrapper = shallowMount(ArrayView, {
@@ -689,11 +691,60 @@ describe("PV Arrays", () => {
     const arr = wrapper.findComponent(ArrayView);
     arr.vm.$emit("array-added", propsData.pvarrays[0]);
     expect(propsData.pvarrays).toHaveLength(2);
-    expect(propsData.pvarrays[0]).toEqual(propsData.pvarrays[1]);
-    propsData.pvarrays[1].name = "array 2";
+    const firstArrayName = propsData.pvarrays[0].name;
+    expect(propsData.pvarrays[1]).toEqual({
+      ...propsData.pvarrays[0],
+      name: firstArrayName + " copy"
+    });
     arr.vm.$emit("array-removed", 0);
     expect(propsData.pvarrays).toHaveLength(1);
-    expect(propsData.pvarrays[0].name).toBe("array 2");
+    expect(propsData.pvarrays[0].name).toBe(firstArrayName + " copy");
+  });
+  it("Test addition disabling", async () => {
+    const propsData = {
+      pvarrays: [
+        new PVArray({
+          tracking: new SingleAxisTrackingParameters({})
+        })
+      ],
+      model: "pvwatts"
+    };
+    // @ts-expect-error
+    const wrapper = mount(ArraysView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    const firstArray = wrapper.findComponent(ArrayView);
+    expect(firstArray.exists()).toBe(true);
+    expect("disabled" in wrapper.find("button.add-array").attributes()).toBe(
+      true
+    );
+
+    // @ts-expect-error
+    expect(wrapper.vm.allFixed).toBe(false);
+  });
+  it("Test singleaxis disabling", async () => {
+    const propsData = {
+      pvarrays: [new PVArray({}), new PVArray({})],
+      model: "pvwatts"
+    };
+    // @ts-expect-error
+    const wrapper = mount(ArraysView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    // @ts-expect-error
+    expect(wrapper.vm.allFixed).toBe(true);
+
+    const arrays = wrapper.findAllComponents(ArrayView);
+    arrays.wrappers.forEach(arrWrapper => {
+      const trackingRadio = arrWrapper.find("input.single_axis_tracking");
+      expect("disabled" in trackingRadio.attributes()).toBe(true);
+    });
   });
 });
 
@@ -853,23 +904,6 @@ describe("Test Inverter", () => {
     ).toBe(true);
     expect(PVWattsLosses.isInstance(propsData.parameters.losses)).toBe(true);
   });
-  it("pvwatts", () => {
-    const propsData = {
-      parameters: new Inverter({
-        inverter_parameters: new PVWattsInverterParameters({}),
-        losses: new PVWattsLosses({})
-      }),
-      model: "pvwatts",
-      index: 0
-    };
-    // @ts-expect-error
-    const wrapper = shallowMount(InverterView, {
-      localVue,
-      propsData,
-      parentComponent,
-      mocks
-    });
-  });
   it("test loadInverterParameters", () => {
     const propsData = {
       parameters: new Inverter({
@@ -946,11 +980,12 @@ describe("Test inverter listing", () => {
     const arr = wrapper.findComponent(InverterView);
     arr.vm.$emit("inverter-added", propsData.inverters[0]);
     expect(propsData.inverters).toHaveLength(2);
-    expect(propsData.inverters[0]).toEqual(propsData.inverters[1]);
-    propsData.inverters[1].name = "inverter 2";
+    expect(propsData.inverters[1]).toEqual({
+      ...propsData.inverters[0],
+      name: propsData.inverters[0].name + " copy"
+    });
     arr.vm.$emit("inverter-removed", 0);
     expect(propsData.inverters).toHaveLength(1);
-    expect(propsData.inverters[0].name).toBe("inverter 2");
   });
 });
 
@@ -1130,9 +1165,9 @@ describe("Test model base", () => {
     const ucField = wrapper.find("input");
 
     // @ts-expect-error
-    const spy = jest.spyOn(wrapper.vm, "setValidationResult");
+    jest.spyOn(wrapper.vm, "setValidationResult");
     // @ts-expect-error
-    const valspy = jest.spyOn(wrapper.vm, "validate");
+    jest.spyOn(wrapper.vm, "validate");
 
     // @ts-expect-error
     expect(ucField.element.type).toEqual("number");

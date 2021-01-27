@@ -8,7 +8,7 @@ export class System {
   inverters: Inverter[];
 
   constructor({
-    name = "New System",
+    name = "",
     latitude = 0,
     longitude = 0,
     elevation = 0,
