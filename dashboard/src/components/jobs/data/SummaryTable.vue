@@ -6,10 +6,12 @@
           <th v-for="(header, i) of headers" :key="i">
             {{ header }}
           </th>
-        <tr/>
+        </tr>
+
+        <tr />
       </thead>
       <tbody>
-        <tr v-for="(row, i) of rows" :key="i" >
+        <tr v-for="(row, i) of rows" :key="i">
           <td v-for="(val, j) of row" :key="j">
             {{ val }}
           </td>
@@ -21,12 +23,19 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 
-@Component export default class SummaryTable extends Vue {
+@Component
+export default class SummaryTable extends Vue {
   @Prop() data!: any;
 
   get headers() {
     // maybe determine grouping/leftmost column label dynamically?
-    return ["month", "AC Energy", "Global Plane of Array Irradiance", "Effective Irradiance", "Cell Temperature"];
+    return [
+      "month",
+      "AC Energy",
+      "Global Plane of Array Irradiance",
+      "Effective Irradiance",
+      "Cell Temperature"
+    ];
   }
   get rows() {
     return [
@@ -41,7 +50,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
       ["September", 99.87, 400, 359, 25],
       ["October", 99.87, 400, 359, 25],
       ["November", 99.87, 400, 359, 25],
-      ["December", 99.87, 400, 359, 25],
+      ["December", 99.87, 400, 359, 25]
     ];
   }
 }
@@ -53,7 +62,7 @@ table {
   grid-template-columns: repeat(var(--numCol), auto);
 }
 table th {
-  padding: .5em;
+  padding: 0.5em;
   text-align: left;
 }
 thead,
@@ -62,9 +71,9 @@ tr {
   display: contents;
 }
 td {
-  padding: .5em;
+  padding: 0.5em;
 }
-tr:nth-child(even) td{
+tr:nth-child(even) td {
   background-color: #eee;
 }
 </style>

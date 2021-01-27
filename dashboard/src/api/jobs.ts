@@ -30,6 +30,20 @@ export async function addData(
   data.append("file", new Blob([csv], { type: "text/csv" }));
   return jobsRequest(token, "post", null, data, `${jobId}/data/${dataId}`);
 }
+export async function getData(
+  token: string,
+  jobId: string,
+  dataId: string,
+  accept = "application/vnd.apache.arrow.file"
+) {
+  return jobsRequest(
+    token,
+    "get",
+    { Accept: accept },
+    null,
+    `${jobId}/data/${dataId}`
+  );
+}
 export async function getResults(token: string, jobId: string) {
   return jobsRequest(token, "get", null, null, `${jobId}/results`);
 }
