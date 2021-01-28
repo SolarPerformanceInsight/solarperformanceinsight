@@ -28,6 +28,7 @@ FROM node:14-buster as jsbuild
 COPY ./dashboard js
 RUN cd js && \
     npm install && \
+    npm run postinstall && \
     npm run build
 
 FROM basepython as wheelbuild

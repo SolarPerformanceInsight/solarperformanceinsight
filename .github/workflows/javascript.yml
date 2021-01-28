@@ -24,6 +24,7 @@ jobs:
         run:  |
           cd dashboard
           npm install
+          npm run postinstall
 
       - name: Test
         run: |
@@ -53,6 +54,7 @@ jobs:
         run:  |
           cd dashboard
           npm install
+          npm run postinstall
 
       - name: Lint
         run: |
