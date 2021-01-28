@@ -2,17 +2,26 @@
 Component for handling display/download of job results.
 -->
 <template>
-  <div class="job-results">
-    Selected:
-    <input type="radio" v-model="selected" value="summary" />
-    summary
-    <input type="radio" v-model="selected" value="data" />
-    data
-    <summary-table v-if="selected == 'summary'"></summary-table>
-    <timeseries-plot
-      v-if="selected == 'data'"
-      :tableData="tableData"
-    ></timeseries-plot>
+  <div v-if="results" class="job-results">
+    <div v-for="(label, id) in labelledResults" :key="id">
+      <input
+        type="radio"
+        @change="loadResultData"
+        v-model="selected"
+        :value="id"
+      />
+      {{ label }}
+    </div>
+    <!--<pre>
+      {{ results }}
+    </pre>-->
+    <template v-if="tableData && resultObject">
+      <summary-table
+        v-if="resultObject.definition.type.includes('summary')"
+        :tableData="tableData"
+      ></summary-table>
+      <timeseries-plot v-else :tableData="tableData"></timeseries-plot>
+    </template>
   </div>
 </template>
 <script lang="ts">
@@ -25,6 +34,7 @@ import TimeseriesPlot from "@/components/jobs/data/Timeseries.vue";
 import { System } from "@/types/System";
 
 import * as Jobs from "@/api/jobs";
+import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 
 Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
@@ -38,16 +48,35 @@ export default class JobResults extends Vue {
   tableData!: any;
 
   created() {
-    this.loadResults();
-    this.loadDataResult("bah");
+    this.loadResults().then(() => {
+      this.selectSummary();
+      this.loadResultData();
+    });
   }
   data() {
     return {
-      results: {},
+      results: null,
       loading: true,
-      selected: "summary",
-      tableData: null,
+      selected: "",
+      tableData: null
     };
+  }
+  get labelledResults() {
+    const labelled = {};
+    if (this.results.length) {
+      this.results.forEach((result: Record<string, any>) => {
+        const systemComponent = indexSystemFromSchemaPath(
+          this.system,
+          result.definition.schema_path
+        );
+        const label = `${systemComponent.name} ${result.definition.type}`;
+        // @ts-expect-error
+        labelled[result.object_id] = label;
+      });
+      return labelled;
+    } else {
+      return null;
+    }
   }
   async loadResults() {
     const token = await this.$auth.getTokenSilently();
@@ -59,14 +88,32 @@ export default class JobResults extends Vue {
       console.log("Couldn't load results");
     }
   }
-  async loadDataResult(dataId: string) {
-    const jobId = "eb7f3708-601e-11eb-8c35-0242ac110002";
-    dataId = "eb7f4faa-601e-11eb-8c35-0242ac110002";
+  async loadResultData() {
+    // Set Table to null to avoid drawing the plot before loaded.
+    this.tableData = null;
     const token = await this.$auth.getTokenSilently();
-    const response = await Jobs.getData(token, jobId, dataId).then(response =>
-      response.arrayBuffer()
-    );
+    const response = await Jobs.getSingleResult(
+      token,
+      this.jobId,
+      this.selected
+    ).then(response => response.arrayBuffer());
     this.tableData = Table.from([new Uint8Array(response)]);
+  }
+  get resultObject() {
+    for (let i = 0; i < this.results.length; i++) {
+      if (this.results[i].object_id == this.selected) {
+        return this.results[i];
+      }
+    }
+    return null;
+  }
+  selectSummary() {
+    this.selected = this.results[0].object_id;
+    for (let i = 0; i < this.results.length; i++) {
+      if (this.results[i].definition.type.includes("summary")) {
+        this.selected = this.results[i].object_id;
+      }
+    }
   }
 }
 </script>

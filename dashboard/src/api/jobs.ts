@@ -47,12 +47,19 @@ export async function getData(
 export async function getResults(token: string, jobId: string) {
   return jobsRequest(token, "get", null, null, `${jobId}/results`);
 }
-export async function getSingleResults(
+export async function getSingleResult(
   token: string,
   jobId: string,
-  resultId: string
+  resultId: string,
+  accept = "application/vnd.apache.arrow.file"
 ) {
-  return jobsRequest(token, "get", null, null, `${jobId}/results/${resultId}`);
+  return jobsRequest(
+    token,
+    "get",
+    { Accept: accept },
+    null,
+    `${jobId}/results/${resultId}`
+  );
 }
 export async function compute(token: string, jobId: string) {
   return jobsRequest(token, "post", null, null, `${jobId}/compute`);

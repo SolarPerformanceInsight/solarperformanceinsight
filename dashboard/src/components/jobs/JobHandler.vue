@@ -187,7 +187,9 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button :disabled="jobStatus != 'prepared'" @click="computeJob">Compute</button>
+            <button :disabled="jobStatus != 'prepared'" @click="computeJob">
+              Compute
+            </button>
             <span v-if="jobStatus != 'prepared'">
               Data must be uploaded before computation.
               <br />

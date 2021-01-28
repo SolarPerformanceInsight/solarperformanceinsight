@@ -11,9 +11,9 @@
         <tr />
       </thead>
       <tbody>
-        <tr v-for="(row, i) of rows" :key="i">
-          <td v-for="(val, j) of row" :key="j">
-            {{ val }}
+        <tr v-for="(row, i) of tableData" :key="i">
+          <td v-for="(col, j) of headers" :key="j">
+            {{ row[col] }}
           </td>
         </tr>
       </tbody>
@@ -25,33 +25,11 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 
 @Component
 export default class SummaryTable extends Vue {
-  @Prop() data!: any;
+  @Prop() tableData!: any;
 
   get headers() {
     // maybe determine grouping/leftmost column label dynamically?
-    return [
-      "month",
-      "AC Energy",
-      "Global Plane of Array Irradiance",
-      "Effective Irradiance",
-      "Cell Temperature"
-    ];
-  }
-  get rows() {
-    return [
-      ["January", 99.87, 400, 359, 25],
-      ["February", 99.87, 400, 359, 25],
-      ["March", 99.87, 400, 359, 25],
-      ["April", 99.87, 400, 359, 25],
-      ["May", 99.87, 400, 359, 25],
-      ["June", 99.87, 400, 359, 25],
-      ["July", 99.87, 400, 359, 25],
-      ["August", 99.87, 400, 359, 25],
-      ["September", 99.87, 400, 359, 25],
-      ["October", 99.87, 400, 359, 25],
-      ["November", 99.87, 400, 359, 25],
-      ["December", 99.87, 400, 359, 25]
-    ];
+    return this.tableData.schema.fields.map((x: any) => x.name);
   }
 }
 </script>
