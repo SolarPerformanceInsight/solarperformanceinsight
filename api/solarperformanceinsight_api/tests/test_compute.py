@@ -75,7 +75,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 compare="expected and actual performance",
                 performance_granularity="system",
             ),
-            compute.dummy_func,
+            compute.compare_expected_and_actual,
         ),
     ],
 )
@@ -521,3 +521,33 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     assert ser.loc["month"] == "January"
     assert abs(ser.loc["total_energy"] - 2.0) < 1e-8
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8
+
+
+def test_compare_expected_and_actual(
+    stored_job, auth0_id, nocommit_transaction, mocker
+):
+    si = storage.StorageInterface(user=auth0_id)
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+
+    expected = pd.DataFrame({"performance": [1.0]}, index=pd.Index([1.0]))
+    mocker.patch(
+        "solarperformanceinsight_api.compute._calculate_performance",
+        return_value=[expected, []],
+    )
+    compute.compare_expected_and_actual(stored_job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 1
+
+    summary = reslist[0]
+    assert summary.type == "actual vs expected energy"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == 1.0
+    assert ser.loc["expected_energy"] == 1.0
+    assert ser.loc["actual_energy"] == 1.0
+    assert ser.loc["difference"] == 0.0

@@ -51,6 +51,12 @@ def lookup_job_compute_function(
 ) -> Callable[[models.StoredJob, storage.StorageInterface], None]:
     if isinstance(job.definition.parameters.job_type, models.CalculatePerformanceJob):
         return run_performance_job
+    elif (
+        isinstance(job.definition.parameters.job_type, models.ComparePerformanceJob)
+        and job.definition.parameters.job_type.compare
+        == models.CompareEnum.expected_actual
+    ):
+        return compare_expected_and_actual
     return dummy_func
 
 
@@ -290,7 +296,9 @@ def process_single_modelchain(
     return out, summary_frame
 
 
-def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
+def _calculate_performance(
+    job: models.StoredJob, si: storage.StorageInterface
+) -> Tuple[pd.DataFrame, List[DBResult]]:
     """Compute the performance, and other modeling variables, for the Job and
     store the inverter level performance, total system performance, array level weather,
     and a monthly summary to the database for retrieval
@@ -385,5 +393,53 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
                 data=total_performance.to_frame(),
             ),
         ]
+    )
+    return monthly_energy, result_list
+
+
+def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
+    montlhy_energy, result_list = _calculate_performance(job, si)
+    save_results_to_db(job.object_id, result_list, si)
+
+
+def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+    monthly_energy, result_list = _calculate_performance(job, si)
+    # performance granularity validation means there won't be system level
+    # perfromance and inverter level that you wouldn't want to sum
+    performance_data_ids = [
+        do.object_id
+        for do in job.data_objects
+        if do.definition.type == models.JobDataTypeEnum.actual_performance
+    ]
+    months = (
+        (job.definition.parameters.time_parameters._time_range)
+        .month.unique()  # type: ignore
+        .sort_values()
+    )
+    expected = monthly_energy["performance"]  # type: ignore
+    actual_performance = sum(
+        _get_data(job.object_id, did, si) for did in performance_data_ids
+    )[
+        "performance"
+    ]  # type: ignore
+    actual_energy = actual_performance.resample("1h").mean()  # type: ignore
+    actual_monthly_energy = (
+        actual_energy.groupby(actual_energy.index.month).sum().reindex(months)
+    )
+    diff = actual_monthly_energy - expected
+    ratio = actual_monthly_energy / expected
+    comparison_summary = pd.DataFrame(
+        {
+            "actual_energy": actual_monthly_energy,
+            "expected_energy": expected,
+            "difference": diff,
+            "ratio": ratio,
+        }
+    )
+    comparison_summary.index.name = "month"  # type: ignore
+    result_list.append(
+        DBResult(
+            schema_path="/", type="actual vs expected energy", data=comparison_summary
+        )
     )
     save_results_to_db(job.object_id, result_list, si)

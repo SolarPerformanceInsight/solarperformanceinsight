@@ -1057,6 +1057,7 @@ class JobResultTypeEnum(str, Enum):
     error = "error message"
     monthy_summary = "monthly summary"
     daytime_flag = "daytime flag"
+    actual_vs_expected = "actual vs expected energy"
     # will need other types for performance ratio etc.
 
 
@@ -1071,6 +1072,8 @@ class JobResultMetadata(SPIBase):
   cell temperature.
 - monthly summary: Monthly total energy (Wh), plane of array insolation (Wh/m^2),
   effective insolation (Wh/m^2), and average daytime cell temperature.
+- actual vs expected energy: Monthly totals of actual energy (Wh), expected energy (Wh),
+  the difference (actial - expected) (Wh), and the ratio of actual / expected.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will
