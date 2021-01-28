@@ -2,7 +2,7 @@ import datetime as dt
 from functools import partial
 import json
 import logging
-from typing import Callable, Generator, Union, List, Tuple
+from typing import Callable, Generator, Union, List, Tuple, Optional
 from uuid import UUID
 
 
@@ -58,7 +58,7 @@ def dummy_func(job, storage):  # pragma: no cover
 
 
 def _get_data(
-    job_id: UUID, data_id: UUID, si: storage.StorageInterface, shift: dt.timedelta
+    job_id: UUID, data_id: UUID, si: storage.StorageInterface
 ) -> pd.DataFrame:
     """Get the data from the database and shift forward by `shift`"""
     with si.start_transaction() as st:
@@ -67,11 +67,11 @@ def _get_data(
         raise TypeError(
             f"Data for /jobs/{job_id}/data/{data_id} not in Apache Arrow format"
         )
-    return utils.read_arrow(data).set_index("time").shift(freq=shift)  # type: ignore
+    return utils.read_arrow(data).set_index("time")  # type: ignore
 
 
 def generate_job_weather_data(
-    job: models.StoredJob, si: storage.StorageInterface, shift: dt.timedelta
+    job: models.StoredJob, si: storage.StorageInterface
 ) -> Generator[List[pd.DataFrame], None, None]:
     """Generator to fetch job data at the inverter level to run a ModelChain"""
     data_id_by_schema_path = {
@@ -85,32 +85,30 @@ def generate_job_weather_data(
     }
     job_id = job.object_id
     num_inverters = len(job.definition.system_definition.inverters)
-    if (
-        job.definition.parameters.weather_granularity
-        == models.WeatherGranularityEnum.system
-    ):
+    weather_granularity = job.definition.parameters.weather_granularity
+
+    if weather_granularity == models.WeatherGranularityEnum.system:
         data_id = data_id_by_schema_path["/"]
-        df = _get_data(job_id, data_id, si, shift)
+        df = _get_data(job_id, data_id, si)
         for i in range(num_inverters):
             num_arrays = len(job.definition.system_definition.inverters[i].arrays)
             yield [df.copy()] * num_arrays
-    elif (
-        job.definition.parameters.weather_granularity
-        == models.WeatherGranularityEnum.inverter
-    ):
+    elif weather_granularity == models.WeatherGranularityEnum.inverter:
         for i in range(num_inverters):
             num_arrays = len(job.definition.system_definition.inverters[i].arrays)
             data_id = data_id_by_schema_path[f"/inverters/{i}"]
-            df = _get_data(job_id, data_id, si, shift)
+            df = _get_data(job_id, data_id, si)
             yield [df] * num_arrays
-    else:
+    elif weather_granularity == models.WeatherGranularityEnum.array:
         for i in range(num_inverters):
             num_arrays = len(job.definition.system_definition.inverters[i].arrays)
             data_ids = [
                 data_id_by_schema_path[f"/inverters/{i}/arrays/{j}"]
                 for j in range(num_arrays)
             ]
-            yield [_get_data(job_id, data_id, si, shift) for data_id in data_ids]
+            yield [_get_data(job_id, data_id, si) for data_id in data_ids]
+    else:
+        raise ValueError(f"Unknown weather granularity {weather_granularity}")
 
 
 class DBResult(models.JobResultMetadata):
@@ -139,7 +137,9 @@ def save_results_to_db(
 
 
 def _adjust_frame(
-    inp: Union[pd.Series, pd.DataFrame], name: str, tshift: dt.timedelta
+    inp: Union[pd.Series, pd.DataFrame],
+    tshift: dt.timedelta,
+    name: Optional[str] = None,
 ) -> Union[pd.Series, pd.DataFrame]:
     """Shift the object by -tshift and make sure index is named "time" """
     if not isinstance(inp, (pd.Series, pd.DataFrame)):
@@ -149,13 +149,10 @@ def _adjust_frame(
         raise TypeError("Expected input to have a DatetimeIndex")
 
     out = inp.shift(freq=-tshift)  # type: ignore
-    if isinstance(out, pd.DataFrame):
-        out.index.name = "time"  # type: ignore
-        return out
-    else:
+    out.index.name = "time"  # type: ignore
+    if isinstance(out, pd.Series):
         out.name = name  # type: ignore
-        out.index.name = "time"  # type: ignore
-        return out
+    return out
 
 
 def _get_index(
@@ -195,7 +192,8 @@ def process_single_modelchain(
     weather_data : List[pandas.DataFrame]
         The data that will be passed to chain.run_model
     run_model_method : str
-        The method of chain to used calculate results, i.e. run_model or run_from_poa
+        The method of chain to used calculate results, i.e. run_model,
+        run_model_from_poa, run_model_from_effective_irradiance
     tshift : dt.timedelta
         Weather data should already be shifted forward by this amount, so final results
         will be shifted by -1 * tshift.
@@ -206,16 +204,22 @@ def process_single_modelchain(
     -------
     inverter_results : List[DBResult]
         List of DBResult objects that can be inserted into the database
+        including AC performance for each inverter and weather (poa_global,
+        effective_irradiance, cell_temperature) for each array
     summary_frame : pd.DataFrame
         A frame with the AC performance result, zenith angle, and average of
         poa_global, effective_irradiance, and cell_temperature over all arrays
     """
     # run chain
-    mc = getattr(chain, run_model_method)(weather_data)
+    mc = getattr(chain, run_model_method)(
+        [d.shift(freq=tshift) for d in weather_data]  # type: ignore
+    )
     results = mc.results
     adjust = partial(_adjust_frame, tshift=tshift)
-    performance = adjust(results.ac, "performance")
-    summary_frame = pd.DataFrame(
+    performance: pd.DataFrame = adjust(
+        results.ac, name="performance"
+    ).to_frame()  # type: ignore
+    weather_sum = pd.DataFrame(
         {
             "poa_global": 0,  # type: ignore
             "effective_irradiance": 0,  # type: ignore
@@ -223,28 +227,43 @@ def process_single_modelchain(
         },
         index=performance.index,
     )
-    summary_frame.index.name = "time"  # type: ignore
+
     # make nice result output
     num_arrays = len(mc.system.arrays)
     out = []
     for i in range(num_arrays):
-        weather: pd.DataFrame = adjust(  # type: ignore
-            _get_index(results, "total_irrad", i)[["poa_global"]], "poa_global"
-        )
-        weather.loc[:, "effective_irradiance"] = adjust(  # type: ignore
-            _get_index(results, "effective_irradiance", i), "effective_irradiance"
-        )
-        weather.loc[:, "cell_temperature"] = adjust(  # type: ignore
-            _get_index(results, "cell_temperature", i), "cell_temperature"
-        )
-        summary_frame += weather  # type: ignore
+        array_weather: pd.DataFrame = _get_index(results, "total_irrad", i)[
+            ["poa_global"]
+        ].copy()  # type: ignore
+        # copy avoids setting values on a copy of slice later
+        array_weather.loc[:, "effective_irradiance"] = _get_index(
+            results, "effective_irradiance", i
+        )  # type: ignore
+        array_weather.loc[:, "cell_temperature"] = _get_index(
+            results, "cell_temperature", i
+        )  # type: ignore
+        weather_sum += adjust(array_weather)  # type: ignore
         out.append(
             DBResult(
                 schema_path=f"/inverters/{inverter_num}/arrays/{i}",
                 type="weather data",
-                data=weather,
+                data=array_weather,
             )
         )
+    # mean
+    weather_avg: pd.DataFrame = weather_sum / num_arrays  # type: ignore
+    adjusted_zenith: pd.DataFrame = adjust(
+        results.solar_position[["zenith"]]
+    )  # type: ignore
+    summary_frame = pd.concat(
+        [
+            performance,
+            weather_avg,
+            adjusted_zenith,
+        ],
+        axis=1,
+    )
+    summary_frame.index.name = "time"  # type: ignore
     out.append(
         DBResult(
             schema_path=f"/inverters/{inverter_num}",
@@ -252,14 +271,6 @@ def process_single_modelchain(
             data=performance,
         )
     )
-    # mean
-    summary_frame /= num_arrays  # type: ignore
-    summary_frame.insert(0, "performance", performance)  # type: ignore
-    summary_frame.insert(
-        len(summary_frame.columns),
-        "zenith",
-        adjust(results.solar_position["zenith"], "zenith"),  # type: ignore
-    )  # type: ignore
     return out, summary_frame
 
 
@@ -286,7 +297,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     tshift = job.definition.parameters.time_parameters.step / 2
     chains = construct_modelchains(job.definition.system_definition)
 
-    weather_count = 0.0
+    weather_count = 0
     # result from each inverter...
     result_list = []
     # get weather data for each inverter as List[pd.DataFrame] to pass
@@ -294,7 +305,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     # Weather data is shifted right by half the interval length and
     # process_single_modelchain shifts the results back to original labels
     # so that solar position used for modeling is midpoint of interval
-    for i, weather_data in enumerate(generate_job_weather_data(job, si, tshift)):
+    for i, weather_data in enumerate(generate_job_weather_data(job, si)):
         db_results, array_summary = process_single_modelchain(
             chains[i], weather_data, run_model_method, tshift, i
         )

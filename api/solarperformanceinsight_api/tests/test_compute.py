@@ -84,18 +84,16 @@ def test_lookup_compute_function(stored_job, job_type, exp):
 
 def test_get_data(complete_job_id, complete_job_data_id, auth0_id):
     si = storage.StorageInterface(user=auth0_id)
-    shift = dt.timedelta(minutes=30) / 2
     assert isinstance(
-        compute._get_data(complete_job_id, complete_job_data_id, si, shift),
+        compute._get_data(complete_job_id, complete_job_data_id, si),
         pd.DataFrame,
     )
 
 
 def test_get_data_bad(job_id, job_data_ids, auth0_id):
     si = storage.StorageInterface(user=auth0_id)
-    shift = dt.timedelta(minutes=30) / 2
     with pytest.raises(TypeError):
-        compute._get_data(job_id, job_data_ids[0], si, shift)
+        compute._get_data(job_id, job_data_ids[0], si)
 
 
 def test_DBResult_setting():
@@ -173,18 +171,16 @@ def test_save_results_to_db(job_id, nocommit_transaction, auth0_id):
     ],
 )
 def test_adjust_frame(inp, name, shift, expected_index):
-    out = compute._adjust_frame(inp, name, shift)
+    out = compute._adjust_frame(inp, shift, name)
     pd.testing.assert_index_equal(out.index, expected_index)
     if isinstance(out, pd.Series):
         assert out.name == name
 
 
 def test_generate_job_weather_data_system(stored_job, auth0_id, mocker):
-    tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
 
-    def mockgetdata(job_id, data_id, si, shift):
-        assert shift == tshift
+    def mockgetdata(job_id, data_id, si):
         return pd.DataFrame({"jid": job_id, "did": data_id}, index=[0])
 
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
@@ -195,7 +191,7 @@ def test_generate_job_weather_data_system(stored_job, auth0_id, mocker):
 
     stored_job.definition.parameters.weather_granularity = "system"
     stored_job.data_objects = [ndo]
-    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    gen = compute.generate_job_weather_data(stored_job, si)
     assert str(type(gen)) == "<class 'generator'>"
     genlist = list(gen)
     assert len(genlist) == 1
@@ -207,13 +203,11 @@ def test_generate_job_weather_data_system(stored_job, auth0_id, mocker):
 
 
 def test_generate_job_weather_data_system_multi_array(stored_job, auth0_id, mocker):
-    tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
     arr = stored_job.definition.system_definition.inverters[0].arrays[0]
     stored_job.definition.system_definition.inverters[0].arrays = [arr, arr]
 
-    def mockgetdata(job_id, data_id, si, shift):
-        assert shift == tshift
+    def mockgetdata(job_id, data_id, si):
         return pd.DataFrame({"jid": job_id, "did": data_id}, index=[0])
 
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
@@ -224,7 +218,7 @@ def test_generate_job_weather_data_system_multi_array(stored_job, auth0_id, mock
 
     stored_job.definition.parameters.weather_granularity = "system"
     stored_job.data_objects = [ndo]
-    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    gen = compute.generate_job_weather_data(stored_job, si)
     assert str(type(gen)) == "<class 'generator'>"
     genlist = list(gen)
     assert len(genlist) == 1
@@ -232,11 +226,9 @@ def test_generate_job_weather_data_system_multi_array(stored_job, auth0_id, mock
 
 
 def test_generate_job_weather_data_inverter(stored_job, auth0_id, mocker):
-    tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
 
-    def mockgetdata(job_id, data_id, si, shift):
-        assert shift == tshift
+    def mockgetdata(job_id, data_id, si):
         return (job_id, data_id)
 
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
@@ -254,7 +246,7 @@ def test_generate_job_weather_data_inverter(stored_job, auth0_id, mocker):
     stored_job.definition.system_definition.inverters = [inv, inv, inv]
     stored_job.definition.parameters.weather_granularity = "inverter"
     stored_job.data_objects = new_do
-    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    gen = compute.generate_job_weather_data(stored_job, si)
     assert str(type(gen)) == "<class 'generator'>"
     genlist = list(gen)
     # returns list of dataframes for each item
@@ -262,11 +254,9 @@ def test_generate_job_weather_data_inverter(stored_job, auth0_id, mocker):
 
 
 def test_generate_job_weather_data_inverter_multi_array(stored_job, auth0_id, mocker):
-    tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
 
-    def mockgetdata(job_id, data_id, si, shift):
-        assert shift == tshift
+    def mockgetdata(job_id, data_id, si):
         return (job_id, data_id)
 
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
@@ -285,7 +275,7 @@ def test_generate_job_weather_data_inverter_multi_array(stored_job, auth0_id, mo
     stored_job.definition.system_definition.inverters = [inv, inv, inv]
     stored_job.definition.parameters.weather_granularity = "inverter"
     stored_job.data_objects = new_do
-    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    gen = compute.generate_job_weather_data(stored_job, si)
     assert str(type(gen)) == "<class 'generator'>"
     genlist = list(gen)
     # returns list of dataframes for each item
@@ -293,11 +283,9 @@ def test_generate_job_weather_data_inverter_multi_array(stored_job, auth0_id, mo
 
 
 def test_generate_job_weather_data_array(stored_job, auth0_id, mocker):
-    tshift = dt.timedelta(minutes=5)
     si = storage.StorageInterface(user=auth0_id)
 
-    def mockgetdata(job_id, data_id, si, shift):
-        assert shift == tshift
+    def mockgetdata(job_id, data_id, si):
         return (job_id, data_id)
 
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
@@ -320,7 +308,7 @@ def test_generate_job_weather_data_array(stored_job, auth0_id, mocker):
     stored_job.definition.system_definition.inverters = [inv, inv, inv]
     stored_job.definition.parameters.weather_granularity = "array"
     stored_job.data_objects = new_do
-    gen = compute.generate_job_weather_data(stored_job, si, tshift)
+    gen = compute.generate_job_weather_data(stored_job, si)
     assert str(type(gen)) == "<class 'generator'>"
     genlist = list(gen)
     assert len(genlist[0]) == 2
@@ -329,6 +317,14 @@ def test_generate_job_weather_data_array(stored_job, auth0_id, mocker):
     assert genlist[1][1][1] == "1_1"
     # returns list of dataframes for each inverter
     assert genlist == ids
+
+
+def test_generate_job_weather_data_fail(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+
+    stored_job.definition.parameters.weather_granularity = "unknown"
+    with pytest.raises(ValueError):
+        list(compute.generate_job_weather_data(stored_job, si))
 
 
 def test_get_index():
@@ -355,15 +351,15 @@ def test_get_index():
 def test_process_single_modelchain(mocker):
     tshift = dt.timedelta(minutes=5)
     df = pd.DataFrame({"poa_global": [1.0]}, index=[pd.Timestamp("2020-01-01T12:00")])
+    df.index.name = "time"
     shifted = df.shift(freq=-tshift)
-    shifted.index.name = "time"
 
     class Res:
         ac = df["poa_global"]
         total_irrad = (df, df)
         effective_irradiance = (df, df)
         cell_temperature = (df, df)
-        solar_position = {"zenith": df}
+        solar_position = pd.DataFrame({"zenith": 91.0}, index=df.index)
 
     class Sys:
         arrays = [0, 1]
@@ -379,8 +375,9 @@ def test_process_single_modelchain(mocker):
     with pytest.raises(AttributeError):
         compute.process_single_modelchain(MC(), [df], "run_from_poa", tshift, 0)
 
+    # shifted (df - 5min) goes in, and shifted right (df) goes to be processed
     dblist, summary = compute.process_single_modelchain(
-        MC(), [df], "run_model", tshift, 0
+        MC(), [shifted], "run_model", tshift, 0
     )
     pd.testing.assert_frame_equal(
         summary,
@@ -390,7 +387,7 @@ def test_process_single_modelchain(mocker):
                 "poa_global": [1.0],
                 "effective_irradiance": [1.0],
                 "cell_temperature": [1.0],
-                "zenith": [1.0],
+                "zenith": [91.0],
             },
             index=shifted.index,
         ),
