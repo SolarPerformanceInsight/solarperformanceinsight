@@ -105,6 +105,29 @@ def test_delete_job(nocommit_transaction, client, job_id):
     assert response.status_code == 204
 
 
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ("text/csv", (jobs.CSVResponse, "text/csv")),
+        ("text/*", (jobs.CSVResponse, "text/csv")),
+        ("*/*", (jobs.CSVResponse, "text/csv")),
+        (
+            "application/vnd.apache.arrow.file",
+            (jobs.ArrowResponse, "application/vnd.apache.arrow.file"),
+        ),
+        ("application/*", (jobs.ArrowResponse, "application/vnd.apache.arrow.file")),
+        (None, (jobs.CSVResponse, "text/csv")),
+        pytest.param(
+            "application/json",
+            (),
+            marks=pytest.mark.xfail(strict=True, raises=HTTPException),
+        ),
+    ],
+)
+def test_get_return_type(inp, exp):
+    assert jobs._get_return_type(inp) == exp
+
+
 def test_get_job_data(client, job_id, job_data_ids, job_data_meta):
     response = client.get(f"/jobs/{job_id}/data/{job_data_ids[1]}")
     assert response.status_code == 200
