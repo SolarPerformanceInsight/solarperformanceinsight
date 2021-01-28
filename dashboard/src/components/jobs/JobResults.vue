@@ -45,7 +45,8 @@ export default class JobResults extends Vue {
     return {
       results: {},
       loading: true,
-      selected: "summary"
+      selected: "summary",
+      tableData: null,
     };
   }
   async loadResults() {

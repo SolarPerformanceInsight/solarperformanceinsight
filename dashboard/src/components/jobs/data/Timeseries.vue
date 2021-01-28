@@ -34,11 +34,15 @@ export default class TimeseriesPlot extends Vue {
   }
   get yData() {return this.tableData.getColumn("ghi").toArray();}
   get xData() {
-    return this.tableData.getColumn("time").toArray().map(
-      (x: number) => {
-        return new Date(x * 1000);
-      }
-    );
+    // Have to build times manually because calling .toArray() on the time
+    // column results in a double length array with alternative 0 values
+    // with apache-arrow 3.0.0
+    const index = this.tableData.getColumn("time");
+    const dateTimes: Array<Date> = [];
+    for (let i = 0; i < index.length; i ++) {
+      dateTimes.push(new Date(index.get(i)));
+    }
+    return dateTimes;
   }
   get plotData(): Partial<Plotly.PlotData>[] {
     return [{
