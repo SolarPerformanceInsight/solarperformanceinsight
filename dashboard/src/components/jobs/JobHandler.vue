@@ -187,7 +187,7 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button :disabled="jobStatus != 'prepared'">Compute</button>
+            <button :disabled="jobStatus != 'prepared'" @click="computeJob">Compute</button>
             <span v-if="jobStatus != 'prepared'">
               Data must be uploaded before computation.
               <br />
@@ -460,6 +460,15 @@ export default class JobHandler extends Vue {
       this.errors = {
         error: "System not found."
       };
+    }
+  }
+  async computeJob() {
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.compute(token, this.jobId);
+    if (response.ok) {
+      this.loadJob();
+    } else {
+      console.log("Could not compute");
     }
   }
 }

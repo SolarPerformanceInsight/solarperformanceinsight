@@ -54,3 +54,6 @@ export async function getSingleResults(
 ) {
   return jobsRequest(token, "get", null, null, `${jobId}/results/${resultId}`);
 }
+export async function compute(token: string, jobId: string) {
+  return jobsRequest(token, "post", null, null, `${jobId}/compute`);
+}
