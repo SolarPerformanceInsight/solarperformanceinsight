@@ -12,7 +12,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Table } from "apache-arrow";
-import Plotly from "plotly.js";
+import Plotly from "plotly.js-basic-dist";
 
 @Component
 export default class TimeseriesPlot extends Vue {
