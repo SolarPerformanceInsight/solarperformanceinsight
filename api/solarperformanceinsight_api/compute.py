@@ -60,7 +60,7 @@ def dummy_func(job, storage):  # pragma: no cover
 def _get_data(
     job_id: UUID, data_id: UUID, si: storage.StorageInterface
 ) -> pd.DataFrame:
-    """Get the data from the database and shift forward by `shift`"""
+    """Get the data from the database."""
     with si.start_transaction() as st:
         meta, data = st.get_job_data(job_id, data_id)
     if meta.definition.data_format != "application/vnd.apache.arrow.file":
@@ -195,8 +195,8 @@ def process_single_modelchain(
         The method of chain to used calculate results, i.e. run_model,
         run_model_from_poa, run_model_from_effective_irradiance
     tshift : dt.timedelta
-        Weather data should already be shifted forward by this amount, so final results
-        will be shifted by -1 * tshift.
+        Amount by which to shift weather data before running the chain.
+        Typically half the interval length.
     inverter_num : int
         Which inverter in the full system this chain is for
 
