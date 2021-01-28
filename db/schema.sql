@@ -395,6 +395,7 @@ begin
   CALL _add_example_data_1;
   CALL _add_example_data_2;
   CALL _add_example_data_3;
+  CALL _add_example_data_4;
 end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1386,6 +1387,28 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `_add_example_data_4`()
+    MODIFIES SQL DATA
+begin
+  update jobs set definition = json_merge_patch(
+    definition,
+    '{"parameters": {"time_parameters": {"start": "2021-01-10T00:00:00+00:00", "end": "2021-01-10T23:59:59+00:00"}}}')
+   where id = uuid_to_bin('4910c750-55f1-11eb-a03d-f4939feddd82', 1);
+end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`root`@`%` PROCEDURE `_remove_example_data_0`()
     MODIFIES SQL DATA
     COMMENT 'Remove example data from the database'
@@ -1454,5 +1477,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20201221161319'),
   ('20210107162707'),
   ('20210112205531'),
-  ('20210112213845');
+  ('20210112213845'),
+  ('20210122173304');
 UNLOCK TABLES;

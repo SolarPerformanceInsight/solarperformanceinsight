@@ -307,7 +307,7 @@ class PVWattsInverterParameters(BaseModel):
         ...,
         description=(
             "DC power input which produces the rated AC output power at the "
-            "nominal DC voltage of the inverter"
+            "nominal DC voltage of the inverter, W"
         ),
     )
     eta_inv_nom: float = Field(
@@ -881,6 +881,7 @@ class Job(BaseModel):
     _data_items: List[JobDataItem] = PrivateAttr()
     _weather_columns: List[str] = PrivateAttr()
     _performance_columns: List[str] = PrivateAttr(["time", "performance"])
+    _model_chain_method: str = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -893,10 +894,13 @@ class Job(BaseModel):
         ]
         if self.parameters.irradiance_type == IrradianceTypeEnum.effective:
             cols += ["effective_irradiance"]
+            self._model_chain_method = "run_model_from_effective_irradiance"
         elif self.parameters.irradiance_type == IrradianceTypeEnum.poa:
             cols += ["poa_global", "poa_direct", "poa_diffuse"]
+            self._model_chain_method = "run_model_from_poa"
         else:
             cols += ["ghi", "dni", "dhi"]
+            self._model_chain_method = "run_model"
         if self.parameters.temperature_type == TemperatureTypeEnum.cell:
             cols += ["cell_temperature"]
         elif self.parameters.temperature_type == TemperatureTypeEnum.module:
@@ -1022,6 +1026,8 @@ class JobResultTypeEnum(str, Enum):
     performance = "performance data"
     weather = "weather data"
     error = "error message"
+    monthy_summary = "monthly summary"
+    daytime_flag = "daytime flag"
     # will need other types for performance ratio etc.
 
 
@@ -1034,6 +1040,10 @@ class JobResultMetadata(BaseModel):
 - weather data: Modeled weather/environment data for the array given in schema_path.
   Data has columns time, global plane-of-array irradiance (poa_global), and
   cell temperature.
+- monthly summary: Monthly total energy (Wh), plane of array insolation (Wh/m^2),
+  effective insolation (Wh/m^2), and average daytime cell temperature.
+- daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
+  solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will
   be a JSON object describing the error.
 """,
