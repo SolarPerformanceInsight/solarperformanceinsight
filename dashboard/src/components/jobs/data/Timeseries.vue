@@ -1,6 +1,6 @@
 <template>
   <div class="timeseries-plot">
-    Plot:
+    Variable:
     <select v-model="column">
       <option v-for="(field, i) in availableFields" :key="i">
         {{ field }}
@@ -16,10 +16,8 @@ import Plotly from "plotly.js";
 
 @Component
 export default class TimeseriesPlot extends Vue {
-  // Add apache modulea and load the table
-  @Prop() tableData!: Table;
-  // Expected to tell us how to find data
-  @Prop() dataType!: string;
+  @Prop() timeseriesData!: Table;
+  @Prop() title!: string;
   column!: string;
 
   id = "thePlot";
@@ -30,13 +28,13 @@ export default class TimeseriesPlot extends Vue {
     };
   }
   get yData() {
-    return this.tableData.getColumn(this.column).toArray();
+    return this.timeseriesData.getColumn(this.column).toArray();
   }
   get xData() {
     // Have to build times manually because calling .toArray() on the time
     // column results in a double length array with alternative 0 values
     // with apache-arrow 3.0.0
-    const index = this.tableData.getColumn("time");
+    const index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
     for (let i = 0; i < index.length; i++) {
       dateTimes.push(new Date(index.get(i)));
@@ -53,12 +51,16 @@ export default class TimeseriesPlot extends Vue {
     ];
   }
   get availableFields() {
-    return this.tableData.schema.fields
+    return this.timeseriesData.schema.fields
       .map(x => x.name)
       .filter(x => x !== "time");
   }
+  get plotTitle() {
+    return `${this.title} ${this.column}`;
+  }
   get layout() {
     return {
+      title: this.plotTitle,
       xaxis: {
         title: "Time"
       },
@@ -74,6 +76,10 @@ export default class TimeseriesPlot extends Vue {
   @Watch("column")
   redraw() {
     Plotly.react(this.id, this.plotData, this.layout);
+  }
+  @Watch("timeseriesData")
+  changeData() {
+    this.column = this.availableFields[0];
   }
 }
 </script>
