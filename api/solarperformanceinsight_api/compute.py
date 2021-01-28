@@ -190,7 +190,7 @@ def process_single_modelchain(
 
     Parameters
     ----------
-    chain : pvlib.ModelChain
+    chain : pvlib.modelchain.ModelChain
         The chain to run
     weather_data : List[pandas.DataFrame]
         The data that will be passed to chain.run_model
@@ -281,6 +281,8 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     )
     summary.index.name = "time"  # type: ignore
     run_model_method = job.definition._model_chain_method
+    # compute solar position at the middle of the interval
+    # positive value assumes left (beginning) label convention
     tshift = job.definition.parameters.time_parameters.step / 2
     chains = construct_modelchains(job.definition.system_definition)
 
@@ -307,7 +309,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     # average zenith
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
-    # index of data actualy uploaded
+    # index of data actually uploaded
     input_data_range = daytime.dropna().index
     # months in output according to job time range
     months = job_time_range.month.unique().sort_values()  # type: ignore
