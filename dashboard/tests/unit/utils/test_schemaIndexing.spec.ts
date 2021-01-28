@@ -24,6 +24,9 @@ const testSystem = new System({
 });
 
 describe("Test indexing into system", () => {
+  it("get root system", () => {
+    expect(indexSystemFromSchemaPath(testSystem, "/")).toEqual(testSystem);
+  });
   it("get array 1 inv 1 with string", () => {
     expect(
       indexSystemFromSchemaPath(testSystem, "/inverters/0/arrays/0")

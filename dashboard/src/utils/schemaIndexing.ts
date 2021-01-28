@@ -21,10 +21,13 @@ export function indexSystemFromSchemaPath(
   }
   component = system;
 
-  while (indices.length) {
-    // @ts-expect-error
-    const index: string | number = indices.shift();
+  // Pull first index, so the "" that exists for the root component does not
+  // fail, and when we have a valid non-falsy index we'll traverse the system
+  // as expected.
+  // @ts-expect-error
+  let index: string | number = indices.shift();
 
+  while (index) {
     try {
       component = component[index];
     } catch (error) {
@@ -36,6 +39,8 @@ export function indexSystemFromSchemaPath(
     if (component == null) {
       throw new Error("Invalid System Index");
     }
+    // @ts-expect-error
+    index = indices.shift();
   }
   return component;
 }
