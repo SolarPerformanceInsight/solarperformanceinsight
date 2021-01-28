@@ -307,7 +307,7 @@ class PVWattsInverterParameters(BaseModel):
         ...,
         description=(
             "DC power input which produces the rated AC output power at the "
-            "nominal DC voltage of the inverter"
+            "nominal DC voltage of the inverter, W"
         ),
     )
     eta_inv_nom: float = Field(
@@ -1040,8 +1040,8 @@ class JobResultMetadata(BaseModel):
 - weather data: Modeled weather/environment data for the array given in schema_path.
   Data has columns time, global plane-of-array irradiance (poa_global), and
   cell temperature.
-- monthly summary: Monthly total energy (kWh), plane of array insolation (kWh/m^2),
-  effective insolation (kWh/m^2), and average daytime cell temperature.
+- monthly summary: Monthly total energy (Wh), plane of array insolation (Wh/m^2),
+  effective insolation (Wh/m^2), and average daytime cell temperature.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will

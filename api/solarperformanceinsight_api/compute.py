@@ -343,12 +343,11 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
                 "effective_irradiance": "effective_insolation",
             }
         )
-        / 1000
-    )  # kWh/m^2
+    )  # Wh/m^2
     ac_energy = total_performance.loc[input_data_range].resample("1h").mean()
     monthly_energy = (
-        ac_energy.groupby(ac_energy.index.month).sum().reindex(months) / 1000
-    )  # kWh
+        ac_energy.groupby(ac_energy.index.month).sum().reindex(months)
+    )  # Wh
     month_summary.insert(0, "total_energy", monthly_energy)
     month_summary.insert(
         len(month_summary.columns), "average_daytime_cell_temperature", avg_cell_temp
