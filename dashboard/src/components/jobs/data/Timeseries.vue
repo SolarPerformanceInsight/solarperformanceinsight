@@ -18,6 +18,7 @@ import Plotly from "plotly.js-basic-dist";
 export default class TimeseriesPlot extends Vue {
   @Prop() timeseriesData!: Table;
   @Prop() title!: string;
+  config = { responsive: true };
   column!: string;
 
   id = "thePlot";
@@ -71,11 +72,11 @@ export default class TimeseriesPlot extends Vue {
   }
   async mounted() {
     this.column = this.availableFields[0];
-    await Plotly.react(this.id, this.plotData, this.layout);
+    await Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
   @Watch("column")
   redraw() {
-    Plotly.react(this.id, this.plotData, this.layout);
+    Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
   @Watch("timeseriesData")
   changeData() {
