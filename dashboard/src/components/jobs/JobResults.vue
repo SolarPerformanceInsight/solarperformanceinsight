@@ -80,15 +80,38 @@ export default class JobResults extends Vue {
   summaryData!: Record<string, any>;
   loadedSummaryData!: Array<string>;
 
-  created() {
+  // for tracking the setTimeout callback used for reloading the job
+  timeout!: any;
+
+  activated() {
     if (this.jobStatus == "complete") {
-      this.loadResults().then(() => {
-        this.loadSummaryResults();
-        // @ts-expect-error
-        this.selected = Object.keys(this.labelledTimeseriesResults)[0];
-        this.loadTimeseriesData();
-      });
+      if (!this.results) {
+        this.initializeResults();
+      }
+    } else {
+      this.awaitCompletion();
     }
+  }
+  deactivated() {
+    clearTimeout(this.timeout);
+  }
+  awaitCompletion() {
+    // emit an event to fetch the job and check the new status
+    this.$emit("reload-job");
+    if (this.jobStatus == "complete") {
+      this.initializeResults();
+    } else {
+      // If the job was not complete, check for
+      this.timeout = setTimeout(this.awaitCompletion, 1000);
+    }
+  }
+  initializeResults() {
+    this.loadResults().then(() => {
+      this.loadSummaryResults();
+      // @ts-expect-error
+      this.selected = Object.keys(this.labelledTimeseriesResults)[0];
+      this.loadTimeseriesData();
+    });
   }
   data() {
     return {

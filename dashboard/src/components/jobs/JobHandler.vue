@@ -196,7 +196,11 @@ Component that handles basic job/workflows.
             </span>
           </template>
           <template v-else-if="step == 'results'">
-            <job-results :job="job" :system="system"></job-results>
+            <job-results
+              @reload-job="fetchJob"
+              :job="job"
+              :system="system"
+            ></job-results>
           </template>
           <!-- Error state -->
           <template v-else-if="jobStatus == 'error'">
@@ -260,8 +264,7 @@ export default class JobHandler extends Vue {
     });
     this.loadJob();
   }
-
-  async loadJob() {
+  async fetchJob() {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.read(token, this.jobId);
     if (response.ok) {
@@ -273,6 +276,9 @@ export default class JobHandler extends Vue {
         error: "Job not found."
       };
     }
+  }
+  async loadJob() {
+    await this.fetchJob();
     this.loading = false;
     this.setStep();
   }
