@@ -7,11 +7,9 @@ Component for handling display/download of job results.
       <div v-for="(label, id) in labelledSummaryResults" :key="id">
         <h2 class="summary-header">{{ label }}</h2>
         Download:
-        <button @click="downloadSummaryData('text/csv', label, id)">CSV</button>
+        <button @click="downloadData('text/csv', label, id)">CSV</button>
         <button
-          @click="
-            downloadSummaryData('application/vnd.apache.arrow.file', label, id)
-          "
+          @click="downloadData('application/vnd.apache.arrow.file', label, id)"
         >
           Apache Arrow
         </button>
@@ -23,19 +21,19 @@ Component for handling display/download of job results.
       </div>
       <h2 class="timeseries-header">Timeseries Results</h2>
       <p>Select a timeseries result below to view a plot of the data</p>
-      <div v-for="(label, id) in labelledTimeseriesResults" :key="id">
-        <label>
-          <input
-            type="radio"
-            @change="loadTimeseriesData"
-            v-model="selected"
-            :value="id"
-          />
+      <select v-model="selected" @change="loadTimeseriesData">
+        <option value="">Select a timeseries result</option>
+        <option
+          v-for="(label, id) in labelledTimeseriesResults"
+          :key="id"
+          :value="id"
+        >
           {{ label }}
-        </label>
-      </div>
+        </option>
+      </select>
       <template v-if="timeseriesData && selected">
         <timeseries-plot
+          @download-timeseries="downloadTimeseries"
           :timeseriesData="timeseriesData"
           :title="labelledTimeseriesResults[selected]"
         ></timeseries-plot>
@@ -108,9 +106,6 @@ export default class JobResults extends Vue {
   initializeResults() {
     this.loadResults().then(() => {
       this.loadSummaryResults();
-      // @ts-expect-error
-      this.selected = Object.keys(this.labelledTimeseriesResults)[0];
-      this.loadTimeseriesData();
     });
   }
   data() {
@@ -183,9 +178,11 @@ export default class JobResults extends Vue {
     return Table.from([new Uint8Array(response)]);
   }
   async loadTimeseriesData() {
-    // Set Table to null to avoid drawing the plot before loaded.
-    const timeseriesTable = await this.loadResultData(this.selected);
-    this.timeseriesData = timeseriesTable;
+    if (this.selected != "") {
+      // Set Table to null to avoid drawing the plot before loaded.
+      const timeseriesTable = await this.loadResultData(this.selected);
+      this.timeseriesData = timeseriesTable;
+    }
   }
   get resultObject() {
     for (let i = 0; i < this.results.length; i++) {
@@ -210,11 +207,15 @@ export default class JobResults extends Vue {
       });
     }
   }
-  async downloadSummaryData(
-    contentType: string,
-    label: string,
-    dataId: string
-  ) {
+  async downloadTimeseries(contentType: string) {
+    this.downloadData(
+      contentType,
+      // @ts-expect-error
+      this.labelledTimeseriesResults[this.selected],
+      this.selected
+    );
+  }
+  async downloadData(contentType: string, label: string, dataId: string) {
     const token = await this.$auth.getTokenSilently();
     const fileContents = await Jobs.getSingleResult(
       token,

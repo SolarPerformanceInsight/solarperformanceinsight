@@ -1,5 +1,11 @@
 <template>
   <div class="timeseries-plot">
+    Download:
+    <button @click="downloadData('text/csv')">CSV</button>
+    <button @click="downloadData('application/vnd.apache.arrow.file')">
+      Apache Arrow
+    </button>
+    <br />
     Variable:
     <select v-model="column">
       <option v-for="(field, i) in availableFields" :key="i">
@@ -21,6 +27,7 @@ export default class TimeseriesPlot extends Vue {
   config = { responsive: true };
   column!: string;
 
+  // should update to be unique if we want multiple plots on a page
   id = "thePlot";
 
   data() {
@@ -81,6 +88,9 @@ export default class TimeseriesPlot extends Vue {
   @Watch("timeseriesData")
   changeData() {
     this.column = this.availableFields[0];
+  }
+  downloadData(contentType: string) {
+    this.$emit("download-timeseries", contentType);
   }
 }
 </script>
