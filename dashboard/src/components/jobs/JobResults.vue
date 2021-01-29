@@ -2,41 +2,56 @@
 Component for handling display/download of job results.
 -->
 <template>
-  <div v-if="results" class="job-results">
-    <div v-for="(label, id) in labelledSummaryResults" :key="id">
-      <h2 class="summary-header">{{ label }}</h2>
-      Download:
-      <button
-        @click="downloadSummaryData('text/csv', label, id)"
-       > CSV</button>
-       <button
-        @click="downloadSummaryData('application/vnd.apache.arrow.file', label, id)"
-       > Apache Arrow</button>
+  <div v-if="job">
+    <div v-if="results" class="job-results">
+      <div v-for="(label, id) in labelledSummaryResults" :key="id">
+        <h2 class="summary-header">{{ label }}</h2>
+        Download:
+        <button @click="downloadSummaryData('text/csv', label, id)">CSV</button>
+        <button
+          @click="
+            downloadSummaryData('application/vnd.apache.arrow.file', label, id)
+          "
+        >
+          Apache Arrow
+        </button>
 
-      <summary-table
-        v-if="loadedSummaryData.includes(id)"
-        :tableData="summaryData[id]"
-      ></summary-table>
+        <summary-table
+          v-if="loadedSummaryData.includes(id)"
+          :tableData="summaryData[id]"
+        ></summary-table>
+      </div>
+      <h2 class="timeseries-header">Timeseries Results</h2>
+      <p>Select a timeseries result below to view a plot of the data</p>
+      <div v-for="(label, id) in labelledTimeseriesResults" :key="id">
+        <label>
+          <input
+            type="radio"
+            @change="loadTimeseriesData"
+            v-model="selected"
+            :value="id"
+          />
+          {{ label }}
+        </label>
+      </div>
+      <template v-if="timeseriesData && selected">
+        <timeseries-plot
+          :timeseriesData="timeseriesData"
+          :title="labelledTimeseriesResults[selected]"
+        ></timeseries-plot>
+      </template>
     </div>
-    <h2 class="timeseries-header">Timeseries Results</h2>
-    <p>Select a timeseries result below to view a plot of the data</p>
-    <div v-for="(label, id) in labelledTimeseriesResults" :key="id">
-      <label>
-        <input
-          type="radio"
-          @change="loadTimeseriesData"
-          v-model="selected"
-          :value="id"
-        />
-        {{ label }}
-      </label>
+    <div v-else>
+      <template v-if="jobStatus == 'queued'">
+        The calculation is queued and waiting for processing.
+      </template>
+      <template v-else-if="jobStatus == 'running'">
+        The calculation is running and will be ready soon.
+      </template>
+      <template v-else>
+        Calculation has not been submitted.
+      </template>
     </div>
-    <template v-if="timeseriesData && selected">
-      <timeseries-plot
-        :timeseriesData="timeseriesData"
-        :title="labelledTimeseriesResults[selected]"
-      ></timeseries-plot>
-    </template>
   </div>
 </template>
 <script lang="ts">
@@ -56,7 +71,7 @@ Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
 @Component
 export default class JobResults extends Vue {
-  @Prop() jobId!: string;
+  @Prop() job!: Record<string, any>;
   @Prop() system!: System;
   loading!: boolean;
   selected!: string;
@@ -66,12 +81,14 @@ export default class JobResults extends Vue {
   loadedSummaryData!: Array<string>;
 
   created() {
-    this.loadResults().then(() => {
-      this.loadSummaryResults();
-      // @ts-expect-error
-      this.selected = Object.keys(this.labelledTimeseriesResults)[0];
-      this.loadTimeseriesData();
-    });
+    if (this.jobStatus == "complete") {
+      this.loadResults().then(() => {
+        this.loadSummaryResults();
+        // @ts-expect-error
+        this.selected = Object.keys(this.labelledTimeseriesResults)[0];
+        this.loadTimeseriesData();
+      });
+    }
   }
   data() {
     return {
@@ -155,6 +172,12 @@ export default class JobResults extends Vue {
     }
     return null;
   }
+  get jobId() {
+    return this.job.object_id;
+  }
+  get jobStatus() {
+    return this.job.status.status;
+  }
   loadSummaryResults() {
     // Load summary data all at once to display all tables
     for (const object_id in this.labelledSummaryResults) {
@@ -167,7 +190,7 @@ export default class JobResults extends Vue {
   async downloadSummaryData(
     contentType: string,
     label: string,
-    dataId: string,
+    dataId: string
   ) {
     const token = await this.$auth.getTokenSilently();
     const fileContents = await Jobs.getSingleResult(

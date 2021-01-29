@@ -196,7 +196,7 @@ Component that handles basic job/workflows.
             </span>
           </template>
           <template v-else-if="step == 'results'">
-            <job-results :jobId="jobId" :system="system"></job-results>
+            <job-results :job="job" :system="system"></job-results>
           </template>
           <!-- Error state -->
           <template v-else-if="jobStatus == 'error'">
