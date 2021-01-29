@@ -242,7 +242,8 @@ def process_single_modelchain(
         array_weather.loc[:, "cell_temperature"] = _get_index(
             results, "cell_temperature", i
         )  # type: ignore
-        weather_sum += adjust(array_weather)  # type: ignore
+        array_weather = adjust(array_weather)  # type: ignore
+        weather_sum += array_weather  # type: ignore
         out.append(
             DBResult(
                 schema_path=f"/inverters/{inverter_num}/arrays/{i}",

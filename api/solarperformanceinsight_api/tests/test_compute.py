@@ -399,6 +399,13 @@ def test_process_single_modelchain(mocker):
         "/inverters/0/arrays/0",
         "/inverters/0/arrays/1",
     }
+    inv0arr0_weather = pd.read_feather(BytesIO(dblist[1].data))
+    exp_weather = shifted.copy()
+    exp_weather.loc[:, "effective_irradiance"] = 1.0
+    exp_weather.loc[:, "cell_temperature"] = 1.0
+    pd.testing.assert_frame_equal(
+        inv0arr0_weather, exp_weather.astype("float32").reset_index()
+    )
 
 
 def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker):
