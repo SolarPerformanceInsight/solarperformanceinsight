@@ -51,12 +51,14 @@ jobs:
           chmod +x ./dbmate
           ./dbmate --wait up
 
+      - name: Run js postinstall
+        run: |
+          cd dashboard
+          npm run postinstall
+
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
-          install-command: |
-            npm install
-            npm run postinstall
           start: "npm run serve -- --port 8001, uvicorn solarperformanceinsight_api.main:app"
           wait-on: "http://localhost:8001, http://localhost:8000/docs"
           working-directory: dashboard
