@@ -5,6 +5,14 @@ Component for handling display/download of job results.
   <div v-if="results" class="job-results">
     <div v-for="(label, id) in labelledSummaryResults" :key="id">
       <h2 class="summary-header">{{ label }}</h2>
+      Download:
+      <button
+        @click="downloadSummaryData('text/csv', label, id)"
+       > CSV</button>
+       <button
+        @click="downloadSummaryData('application/vnd.apache.arrow.file', label, id)"
+       > Apache Arrow</button>
+
       <summary-table
         v-if="loadedSummaryData.includes(id)"
         :tableData="summaryData[id]"
@@ -42,6 +50,7 @@ import { System } from "@/types/System";
 
 import * as Jobs from "@/api/jobs";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
+import downloadFile from "@/utils/downloadFile";
 
 Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
@@ -154,6 +163,26 @@ export default class JobResults extends Vue {
         this.loadedSummaryData.push(object_id);
       });
     }
+  }
+  async downloadSummaryData(
+    contentType: string,
+    label: string,
+    dataId: string,
+  ) {
+    const token = await this.$auth.getTokenSilently();
+    const fileContents = await Jobs.getSingleResult(
+      token,
+      this.jobId,
+      dataId,
+      contentType
+    ).then(response => response.blob());
+
+    const filenameLabel = label.replace(/\s/g, "_");
+    let filename = `${filenameLabel}.arrow`;
+    if (contentType.includes("csv")) {
+      filename = `${filenameLabel}.csv`;
+    }
+    downloadFile(filename, fileContents);
   }
 }
 </script>

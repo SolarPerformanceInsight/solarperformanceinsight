@@ -86,6 +86,8 @@ import {
 import SystemView from "@/components/model/System.vue";
 import FileUpload from "@/components/FileUpload.vue";
 
+import downloadFile from "@/utils/downloadFile";
+
 Vue.component("system-view", SystemView);
 Vue.component("file-upload", FileUpload);
 
@@ -131,17 +133,7 @@ export default class SystemSpec extends Vue {
       type: "application/json;charset=utf-8;"
     });
     const filename = `${this.system.name}.json`;
-    if (navigator.msSaveBlob) {
-      navigator.msSaveBlob(contents, filename);
-    } else {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(contents);
-      link.download = filename;
-      link.target = "_blank";
-      link.style.visibility = "hidden";
-      link.dispatchEvent(new MouseEvent("click"));
-      link.remove();
-    }
+    downloadFile(filename, contents);
   }
 
   get modelSpec() {
