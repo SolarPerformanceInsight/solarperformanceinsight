@@ -187,11 +187,20 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button :disabled="jobStatus != 'prepared'">Compute</button>
+            <button :disabled="jobStatus != 'prepared'" @click="computeJob">
+              Compute
+            </button>
             <span v-if="jobStatus != 'prepared'">
               Data must be uploaded before computation.
               <br />
             </span>
+          </template>
+          <template v-else-if="step == 'results'">
+            <job-results
+              @reload-job="fetchJob"
+              :job="job"
+              :system="system"
+            ></job-results>
           </template>
           <!-- Error state -->
           <template v-else-if="jobStatus == 'error'">
@@ -205,11 +214,12 @@ Component that handles basic job/workflows.
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
-
+import JobResults from "@/components/jobs/JobResults.vue";
 import { StoredSystem, System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
 
 Vue.component("job-params", JobParams);
+Vue.component("job-results", JobResults);
 
 @Component
 export default class JobHandler extends Vue {
@@ -254,8 +264,7 @@ export default class JobHandler extends Vue {
     });
     this.loadJob();
   }
-
-  async loadJob() {
+  async fetchJob() {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.read(token, this.jobId);
     if (response.ok) {
@@ -267,6 +276,9 @@ export default class JobHandler extends Vue {
         error: "Job not found."
       };
     }
+  }
+  async loadJob() {
+    await this.fetchJob();
     this.loading = false;
     this.setStep();
   }
@@ -456,6 +468,15 @@ export default class JobHandler extends Vue {
       this.errors = {
         error: "System not found."
       };
+    }
+  }
+  async computeJob() {
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.compute(token, this.jobId);
+    if (response.ok) {
+      this.loadJob();
+    } else {
+      console.log("Could not compute");
     }
   }
 }

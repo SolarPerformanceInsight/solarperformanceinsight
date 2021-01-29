@@ -51,6 +51,11 @@ jobs:
           chmod +x ./dbmate
           ./dbmate --wait up
 
+      - name: Run js postinstall
+        run: |
+          cd dashboard
+          npm run postinstall
+
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
