@@ -146,6 +146,8 @@ class CSVResponse(Response):
 def _get_return_type(
     accept: Optional[str],
 ) -> Tuple[Union[Type[CSVResponse], Type[ArrowResponse]], str]:
+    if accept is None:
+        accept = "*/*"
     type_ = AcceptableType(accept)
 
     if type_.matches("text/csv"):
