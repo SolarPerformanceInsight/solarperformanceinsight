@@ -36,6 +36,7 @@ Component for handling display/download of job results.
           @download-timeseries="downloadTimeseries"
           :timeseriesData="timeseriesData"
           :title="labelledTimeseriesResults[selected]"
+          :tz="jobTimezone"
         ></timeseries-plot>
       </template>
     </div>
@@ -197,6 +198,9 @@ export default class JobResults extends Vue {
   }
   get jobStatus() {
     return this.job.status.status;
+  }
+  get jobTimezone() {
+    return this.job.definition.parameters.time_parameters.timezone;
   }
   loadSummaryResults() {
     // Load summary data all at once to display all tables
