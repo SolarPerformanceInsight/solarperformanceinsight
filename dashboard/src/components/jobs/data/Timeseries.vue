@@ -47,7 +47,6 @@ export default class TimeseriesPlot extends Vue {
     // with apache-arrow 3.0.0
     const index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
-    console.log(this.tz);
     for (let i = 0; i < index.length; i++) {
       dateTimes.push(adjustPlotTime(index.get(i), this.tz));
     }
