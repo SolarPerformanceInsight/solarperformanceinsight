@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit",
+    "test:unit": "TZ=America/Denver vue-cli-service test:unit",
+    "cy:run": "cypress run",
     "lint": "vue-cli-service lint",
     "postinstall": "./rename_plotly_types.sh"
   },

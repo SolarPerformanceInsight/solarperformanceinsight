@@ -55,5 +55,14 @@ def get_sandia_inverter(
 
 @router.get("/timezones", response_model=List[str])
 def get_timezones() -> List[str]:
-    """Get all recognized timezones"""
-    return pytz.all_timezones
+    """Get current and GMT timezones"""
+    # returned zones all compatible with luxon 1.25.0
+    tzs = [
+        tz
+        for tz in pytz.common_timezones
+        if not tz.startswith("US/") and tz not in ("America/Nuuk", "Antarctica/McMurdo")
+    ]
+    tzs += [
+        tz for tz in pytz.all_timezones if tz.startswith("Etc/GMT") and tz != "Etc/GMT0"
+    ]
+    return tzs
