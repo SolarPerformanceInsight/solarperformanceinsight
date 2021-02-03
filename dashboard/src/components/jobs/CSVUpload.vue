@@ -16,7 +16,7 @@ Takes the following props that can be extracted from job metadata.
     - "system": System wide data in the file.
     - "inverter": Data for each inverter in the file.
     - "array": Data for each array in the file.
-  - system: StoredSystem: The system to map data onto.
+  - system: System: The system to map data onto.
   - data_objects: array - Array of data objects created by the api.
 -->
 <template>
@@ -37,9 +37,9 @@ Takes the following props that can be extracted from job metadata.
     </template>
     <template v-if="promptForMapping && !processingFile">
       <div class="warning" v-if="headers.length < totalMappings">
-        Warning: It looks like you may not have enough data in this file. The
-        file contains {{ headers.length }} columns and
-        {{ totalMappings }} columns are expected ({{ required.join(", ") }} for
+        Warning: You may not have enough data in this file. The file contains
+        {{ headers.length }} columns and
+        {{ totalMappings }} columns are expected (one time column and {{ required.filter(x => x != "time").join(", ") }} for
         <template v-if="granularity == 'system'">the</template>
         <template v-else>each</template>
         {{ granularity }}).
@@ -66,14 +66,25 @@ Takes the following props that can be extracted from job metadata.
       <span v-if="!mappingComplete">
         All required fields must be mapped before upload
       </span>
+      <div v-if="uploadingData">
+        <ul class="upload-statuses">
+          <li v-for="(o, i) in uploadStatuses" :key="i">
+            {{ o.component.name }}:
+            <span v-if="o.status == 'uploading'" class="loading-container"></span>
+            <span v-else-if="['waiting', 'done'].includes(o.status)"><b>{{ o.status }}</b></span>
+            <span v-else class="warning-text">{{ o.status }}</span>
+          </li>
+        </ul>
+      </div>
     </template>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { StoredSystem } from "@/types/System";
+import { System } from "@/types/System";
 import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
+import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 import { addData } from "@/api/jobs";
 
 interface HTMLInputEvent extends Event {
@@ -85,7 +96,7 @@ export default class CSVUpload extends Vue {
   @Prop() jobId!: string;
   @Prop() granularity!: string;
   @Prop() irradiance_type!: string;
-  @Prop() system!: StoredSystem;
+  @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, Record<string, string>>;
@@ -95,6 +106,9 @@ export default class CSVUpload extends Vue {
   required!: Array<string>;
   mappingComplete!: boolean;
   processingFile!: boolean;
+  uploadingData!: boolean;
+  uploadStatuses!: Record<string, any>;
+
 
   data() {
     return {
@@ -104,7 +118,9 @@ export default class CSVUpload extends Vue {
       headers: [],
       required: this.getRequired(),
       mappingComplete: false,
-      csvData: [{}]
+      csvData: [{}],
+      uploadingData: false,
+      uploadStatuses: {}
     };
   }
   get dataType() {
@@ -146,11 +162,25 @@ export default class CSVUpload extends Vue {
     }
   }
   async uploadData() {
+    // initialize variables for displaying uploa progress to the user
+    for (const dataObject of this.data_objects) {
+      const initialStatus = {
+        status: "waiting",
+        component: indexSystemFromSchemaPath(
+          this.system,
+          dataObject.definition.schema_path
+        )
+      };
+      // Use set so updloadStatuses is reactive
+      this.$set(this.uploadStatuses, dataObject.object_id, initialStatus);
+    }
+    this.uploadingData = true;
     // function to call when all mapping has been completed. Should complete
     // the mapping process and post to the API
     let success = true;
     for (const dataObject of this.data_objects) {
       // TODO: handle this on a single loc basis instead of looping all at once
+      this.uploadStatuses[dataObject.object_id].status = "uploading";
       const loc = dataObject.definition.schema_path;
       const csv = mapToCSV(this.csvData, this.mapping[loc]);
       const token = await this.$auth.getTokenSilently();
@@ -162,10 +192,14 @@ export default class CSVUpload extends Vue {
       );
       if (!response.ok) {
         success = false;
+        const details = await response.json();
+        this.uploadStatuses[dataObject.object_id].status = details.detail;
+      } else {
+        this.uploadStatuses[dataObject.object_id].status = "done";
       }
     }
     if (success) {
-      this.$emit("data-uploaded");
+      //this.$emit("data-uploaded");
     }
   }
   getRequired() {
@@ -174,7 +208,8 @@ export default class CSVUpload extends Vue {
     return this.data_objects[0].definition.data_columns;
   }
   get totalMappings() {
-    return this.required.length * this.data_objects.length;
+    const nonTimeRequired = this.required.filter(x => x != "time");
+    return 1 + nonTimeRequired.length * this.data_objects.length;
   }
 }
 </script>

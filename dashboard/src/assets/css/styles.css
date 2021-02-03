@@ -70,3 +70,7 @@ button.data-object-expander:focus {
 .hidden {
   display: none;
 }
+ul.upload-statuses {
+  list-style: none;
+  padding-left: 0;
+}
