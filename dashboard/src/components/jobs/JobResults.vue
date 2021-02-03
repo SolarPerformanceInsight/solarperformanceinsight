@@ -46,9 +46,15 @@ Component for handling display/download of job results.
       <template v-else-if="jobStatus == 'running'">
         The calculation is running and will be ready soon.
       </template>
+      <template v-else-if="jobStatus == 'error'">
+        An error occured while processing the calculation.
+      </template>
       <template v-else>
         Calculation has not been submitted.
       </template>
+    </div>
+    <div v-if="errors">
+      {{ errors }}
     </div>
   </div>
 </template>
@@ -77,6 +83,7 @@ export default class JobResults extends Vue {
   timeseriesData!: any;
   summaryData!: Record<string, any>;
   loadedSummaryData!: Array<string>;
+  errors!: string;
 
   // for tracking the setTimeout callback used for reloading the job
   timeout!: any;
@@ -87,20 +94,36 @@ export default class JobResults extends Vue {
         this.initializeResults();
       }
     } else {
-      this.awaitCompletion();
+      this.pollUntilComplete();
     }
   }
   deactivated() {
     clearTimeout(this.timeout);
   }
-  awaitCompletion() {
-    // emit an event to fetch the job and check the new status
-    this.$emit("reload-job");
-    if (this.jobStatus == "complete") {
+  async pollUntilComplete() {
+    const token = await this.$auth.getTokenSilently();
+    this.awaitCompletion(token);
+  }
+  async awaitCompletion(token: string) {
+    // fetch the job status until we find something meaningful to report.
+    const statusRequest = await Jobs.jobStatus(token, this.job.object_id).then(
+      response => response.json()
+    );
+    const jobStatus = statusRequest.status;
+    if (jobStatus != this.jobStatus) {
+      // Emit an event to reload the job when the status has changed so that
+      // JobHandler can react accordingly.
+      this.$emit("reload-job");
+    }
+    if (jobStatus == "complete") {
+      // load results when complete
       this.initializeResults();
+    } else if (jobStatus == "error") {
+      // Render an error and discontinue polling
+      this.errors = "Job calculation failed.";
     } else {
-      // If the job was not complete, check for
-      this.timeout = setTimeout(this.awaitCompletion, 1000);
+      // Wait 1 second and poll for status update
+      this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
     }
   }
   initializeResults() {
@@ -115,7 +138,8 @@ export default class JobResults extends Vue {
       selected: "",
       timeseriesData: null,
       summaryData: {},
-      loadedSummaryData: []
+      loadedSummaryData: [],
+      errors: null
     };
   }
   get labelledSummaryResults() {
