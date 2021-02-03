@@ -181,7 +181,7 @@ def convert_to_arrow(df: pd.DataFrame) -> pa.Table:
             for col, val in df.iloc[:1].items()  # type: ignore
         )
         table = pa.Table.from_pandas(df, schema=schema)
-    except pa.lib.ArrowInvalid as err:
+    except pa.lib.ArrowInvalid as err:  # pragma: no cover
         logger.error(err.args[0])
         raise HTTPException(status_code=400, detail=err.args[0])
     return table
