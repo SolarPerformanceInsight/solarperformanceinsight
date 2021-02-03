@@ -208,6 +208,7 @@ def test_validate_dataframe(inp, cols, exp):
             ),
             pa.Table.from_arrays(
                 [
+                    pa.array([0.1, 0.2], type=pa.float32()),
                     pa.array(
                         [
                             dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
@@ -215,9 +216,8 @@ def test_validate_dataframe(inp, cols, exp):
                         ],
                         type=pa.timestamp("s", tz="UTC"),
                     ),
-                    pa.array([0.1, 0.2], type=pa.float32()),
                 ],
-                names=["time", "a"],
+                names=["a", "time"],
             ),
         ),
         (
@@ -233,6 +233,7 @@ def test_validate_dataframe(inp, cols, exp):
             ),
             pa.Table.from_arrays(
                 [
+                    pa.array([-999, 129], type=pa.int64()),
                     pa.array(
                         [
                             dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
@@ -240,23 +241,22 @@ def test_validate_dataframe(inp, cols, exp):
                         ],
                         type=pa.timestamp("s", tz="UTC"),
                     ),
-                    pa.array([-999, 129], type=pa.float32()),
                     pa.array([0.1, 0.2], type=pa.float32()),
                 ],
-                names=["time", "b", "a"],
+                names=["b", "time", "a"],
             ),
         ),
-        httpfail(
+        (
             pd.DataFrame(
                 {"a": [0.1, 0.2], "time": ["one", "two"]},
             ),
-            None,
-        ),
-        httpfail(
-            pd.DataFrame(
-                {"a": [0.1, 0.2], "b": ["one", "two"]},
+            pa.Table.from_arrays(
+                [
+                    pa.array([0.1, 0.2], type=pa.float32()),
+                    pa.array(["one", "two"]),
+                ],
+                names=["a", "time"],
             ),
-            None,
         ),
         # non-localized ok
         (
@@ -272,6 +272,7 @@ def test_validate_dataframe(inp, cols, exp):
             ),
             pa.Table.from_arrays(
                 [
+                    pa.array([-999, 129], type=pa.int64()),
                     pa.array(
                         [
                             dt.datetime(2020, 1, 1),
@@ -279,10 +280,9 @@ def test_validate_dataframe(inp, cols, exp):
                         ],
                         type=pa.timestamp("s"),
                     ),
-                    pa.array([-999, 129], type=pa.float32()),
                     pa.array([0.1, 0.2], type=pa.float32()),
                 ],
-                names=["time", "b", "a"],
+                names=["b", "time", "a"],
             ),
         ),
     ),

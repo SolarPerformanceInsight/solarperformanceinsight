@@ -455,6 +455,6 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     assert len(month_df.index) == 12
     ser = month_df.iloc[0]
     assert len(ser) == 5
-    assert ser.loc["month"] == 1.0
+    assert ser.loc["month"] == "January"
     assert abs(ser.loc["total_energy"] - 2.0) < 1e-8
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8

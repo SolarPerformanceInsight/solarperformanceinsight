@@ -6,7 +6,7 @@ from typing import Set, IO, Callable, List, Tuple
 from fastapi import HTTPException
 import pandas as pd
 from pandas.errors import EmptyDataError, ParserError  # type: ignore
-from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype  # type: ignore
+import pandas.api.types as pdtypes  # type: ignore
 import pyarrow as pa  # type: ignore
 
 
@@ -103,7 +103,7 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             status_code=400, detail="Data is missing column(s) " + ", ".join(diff)
         )
     if "time" in expected:
-        if not is_datetime64_any_dtype(df["time"]):
+        if not pdtypes.is_datetime64_any_dtype(df["time"]):
             raise HTTPException(
                 status_code=400,
                 detail='"time" column could not be parsed as a timestamp',
@@ -117,7 +117,7 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             )
     bad_types = []
     for col in expected - {"time"}:
-        if not is_numeric_dtype(df[col]):
+        if not pdtypes.is_numeric_dtype(df[col]):
             bad_types.append(col)
     if bad_types:
         raise HTTPException(
@@ -160,25 +160,26 @@ def reindex_timeseries(
     return newdf, extra, missing
 
 
-def convert_to_arrow(df: pd.DataFrame) -> pa.Table:
-    """Convert a DataFrame into an Arrow Table setting a time column to
-    have second precision and any other columns to use float32"""
-    cols = df.columns
-    # save on storage by using single floats
-    schema = pa.schema((col, pa.float32()) for col in cols if col != "time")
-    if "time" in cols:
-        if not is_datetime64_any_dtype(df["time"]):
-            raise HTTPException(
-                status_code=400, detail='"time" column is not a datetime'
-            )
-        if not hasattr(df["time"].dtype, "tz"):  # type: ignore
-            tz = None
-        else:
-            tz = df["time"].dtype.tz  # type: ignore
+def _map_pandas_val_to_arrow_dtypes(ser: pd.Series) -> pa.DataType:
+    # save on storage w/ second precisison timestamps and float32
+    dtype = ser.dtype  # type: ignore
+    if pdtypes.is_datetime64_any_dtype(dtype):
+        return pa.timestamp("s", tz=getattr(dtype, "tz", None))
+    elif pdtypes.is_float_dtype(dtype):
+        return pa.float32()
+    else:
+        return pa.array(ser, from_pandas=True).type
 
-        # no need to save timestamps at ns precision
-        schema = schema.insert(0, pa.field("time", pa.timestamp("s", tz=tz)))
+
+def convert_to_arrow(df: pd.DataFrame) -> pa.Table:
+    """Convert a DataFrame into an Arrow Table setting datetime columns to
+    have second precision, float columns to be float32, and infer other types
+    """
     try:
+        schema = pa.schema(
+            (col, _map_pandas_val_to_arrow_dtypes(val))
+            for col, val in df.iloc[:1].items()  # type: ignore
+        )
         table = pa.Table.from_pandas(df, schema=schema)
     except pa.lib.ArrowInvalid as err:
         logger.error(err.args[0])
