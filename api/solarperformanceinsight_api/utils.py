@@ -173,7 +173,9 @@ def _map_pandas_val_to_arrow_dtypes(ser: pd.Series) -> pa.DataType:
 
 def convert_to_arrow(df: pd.DataFrame) -> pa.Table:
     """Convert a DataFrame into an Arrow Table setting datetime columns to
-    have second precision, float columns to be float32, and infer other types
+    have second precision, float columns to be float32, and infer other types.
+    Errors are likely if the first row of a column is NA and the column isn't a
+    float.
     """
     try:
         schema = pa.schema(
@@ -181,7 +183,7 @@ def convert_to_arrow(df: pd.DataFrame) -> pa.Table:
             for col, val in df.iloc[:1].items()  # type: ignore
         )
         table = pa.Table.from_pandas(df, schema=schema)
-    except pa.lib.ArrowInvalid as err:  # pragma: no cover
+    except pa.lib.ArrowInvalid as err:
         logger.error(err.args[0])
         raise HTTPException(status_code=400, detail=err.args[0])
     return table

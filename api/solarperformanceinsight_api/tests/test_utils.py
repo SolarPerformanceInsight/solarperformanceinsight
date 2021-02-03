@@ -285,6 +285,35 @@ def test_validate_dataframe(inp, cols, exp):
                 names=["b", "time", "a"],
             ),
         ),
+        (
+            pd.DataFrame(
+                {"nanfloat": [None, 1.0], "nans": [pd.NA, pd.NA], "str": ["a", "b"]}
+            ),
+            pa.Table.from_arrays(
+                [
+                    pa.array([None, 1.0], type=pa.float32()),
+                    pa.array([None, None], type=pa.null()),
+                    pa.array(["a", "b"], type=pa.string()),
+                ],
+                names=["nanfloat", "nans", "str"],
+            ),
+        ),
+        httpfail(
+            pd.DataFrame(
+                {
+                    "nanint": [pd.NA, 3],  # arrow doesn't like this
+                }
+            ),
+            None,
+        ),
+        httpfail(
+            pd.DataFrame(
+                {
+                    "nanstr": [pd.NA, "string"],
+                }
+            ),
+            None,
+        ),
     ),
 )
 def test_convert_to_arrow(df, tbl):
