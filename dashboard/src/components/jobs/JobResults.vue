@@ -53,9 +53,6 @@ Component for handling display/download of job results.
         Calculation has not been submitted.
       </template>
     </div>
-    <div v-if="errors">
-      {{ errors }}
-    </div>
   </div>
 </template>
 <script lang="ts">
@@ -83,7 +80,6 @@ export default class JobResults extends Vue {
   timeseriesData!: any;
   summaryData!: Record<string, any>;
   loadedSummaryData!: Array<string>;
-  errors!: string;
 
   // for tracking the setTimeout callback used for reloading the job
   timeout!: any;
@@ -119,8 +115,8 @@ export default class JobResults extends Vue {
       // load results when complete
       this.initializeResults();
     } else if (jobStatus == "error") {
-      // Render an error and discontinue polling
-      this.errors = "Job calculation failed.";
+      // discontinue polling
+      return;
     } else {
       // Wait 1 second and poll for status update
       this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
