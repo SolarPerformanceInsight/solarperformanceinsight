@@ -1,3 +1,4 @@
+84;0;0c
 <template>
   <div class="timeseries-plot">
     Download:
@@ -19,11 +20,13 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Table } from "apache-arrow";
 import Plotly from "plotly.js-basic-dist";
+import adjustPlotTime from "@/utils/adjustPlotTimes";
 
 @Component
 export default class TimeseriesPlot extends Vue {
   @Prop() timeseriesData!: Table;
   @Prop() title!: string;
+  @Prop() tz!: string;
   config = { responsive: true };
   column!: string;
 
@@ -45,7 +48,7 @@ export default class TimeseriesPlot extends Vue {
     const index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
     for (let i = 0; i < index.length; i++) {
-      dateTimes.push(new Date(index.get(i)));
+      dateTimes.push(adjustPlotTime(index.get(i), this.tz));
     }
     return dateTimes;
   }
@@ -70,7 +73,7 @@ export default class TimeseriesPlot extends Vue {
     return {
       title: this.plotTitle,
       xaxis: {
-        title: "Time"
+        title: `Time (${this.tz})`
       },
       yaxis: {
         title: this.column
