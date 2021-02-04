@@ -1,3 +1,4 @@
+import calendar
 import datetime as dt
 from functools import partial
 import json
@@ -353,7 +354,8 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     month_summary.insert(
         len(month_summary.columns), "average_daytime_cell_temperature", avg_cell_temp
     )
-    month_summary.index.name = "month"  # type: ignore
+    month_name_index = pd.Index([calendar.month_name[i] for i in months], name="month")
+    month_summary.index = month_name_index
 
     result_list.extend(
         [
