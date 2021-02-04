@@ -20,10 +20,11 @@ Takes the following props:
         <!-- Time mapping for the whole file -->
         <b>Timestamp column:</b>
         <select @change="mapTime">
-          <option value="" disabled selected>
+          <option @mouseover="fireSelect(null)" value="" disabled selected>
             Unmapped
           </option>
           <option
+            @mouseover="fireSelect(u)"
             v-for="(u, i) in headers"
             :key="u"
             :name="u"
@@ -189,10 +190,20 @@ export default class CSVMapper extends Vue {
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
+    this.emitMapping();
+  }
+  emitMapping() {
+    const mapObject = {
+      mapping: this.mapping,
+      complete: false
+    };
+    if (this.isValid) {
+      mapObject.complete = true;
+    }
+    this.$emit("new-mapping", mapObject);
   }
   checkValidity() {
     // Check that all child components are completely mapped.
-    // emits a "mapping-complete" event with the full mapping if valid.
     const componentValidity: Record<string, boolean> = {};
 
     for (const ref in this.$refs) {
@@ -203,11 +214,6 @@ export default class CSVMapper extends Vue {
     this.isValid =
       Object.values(componentValidity).every(x => x === true) &&
       this.timeMapped;
-    if (this.isValid) {
-      this.$emit("mapping-complete", this.mapping);
-    } else {
-      this.$emit("mapping-incomplete");
-    }
   }
   refName(index: number) {
     // Create a unique ref name for a nested component. Used to store
@@ -230,11 +236,22 @@ export default class CSVMapper extends Vue {
     const timeHeader = event.target.value;
     this.timeField = timeHeader;
     this.useHeader(this.timeField);
-    for (const loc in this.mapping) {
-      // @ts-expect-error
-      this.mapping[loc]["time"] = this.timeField;
+    for (const dataObject of this.data_objects) {
+      const loc = dataObject.definition.schema_path;
+      // update the time field or create a mapping
+      if (loc in this.mapping) {
+        // @ts-expect-error
+        this.mapping[loc]["time"] = this.timeField;
+      } else {
+        // @ts-expect-error
+        this.mapping[loc] = { time: this.timeField };
+      }
     }
     this.checkValidity();
+    this.emitMapping();
+  }
+  fireSelect(selected: string | null) {
+    this.$emit("option-hovered", selected);
   }
 }
 </script>

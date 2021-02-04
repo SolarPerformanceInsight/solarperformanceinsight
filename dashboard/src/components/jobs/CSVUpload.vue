@@ -72,9 +72,15 @@ Takes the following props that can be extracted from job metadata.
     </template>
     <transition name="fade">
       <div v-if="promptForMapping && !processingFile">
+        <csv-preview
+          :headers="headers"
+          :csvData="csvPreview"
+          :mapping="headerMapping"
+          :currentlySelected="currentSelection"
+        />
         <csv-mapper
-          @mapping-complete="processMapping"
-          @mapping-incomplete="mappingComplete = false"
+          @option-hovered="updateSelected"
+          @new-mapping="processMapping"
           :system="system"
           :granularity="granularity"
           :data_objects="data_objects"
@@ -124,6 +130,10 @@ import mapToCSV from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 import { addData } from "@/api/jobs";
 
+import CSVPreview from "@/components/jobs/data/CSVPreview.vue";
+
+Vue.component("csv-preview", CSVPreview);
+
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
@@ -151,6 +161,9 @@ export default class CSVUpload extends Vue {
   uploadingData!: boolean;
   uploadStatuses!: Record<string, any>;
 
+  // passed to preview to highlight columns
+  currentSelection!: string | null;
+
   data() {
     return {
       mapping: {},
@@ -164,7 +177,8 @@ export default class CSVUpload extends Vue {
       uploadingData: false,
       uploadStatuses: {},
       headerLine: 1,
-      dataStartLine: 2
+      dataStartLine: 2,
+      currentSelection: null
     };
   }
   get dataType() {
@@ -196,7 +210,6 @@ export default class CSVUpload extends Vue {
     }
     const parsingResult = parseCSV(csv.trim());
     if (parsingResult.errors.length > 0) {
-      console.log(parsingResult.errors);
       const errors: Record<string, any> = {};
       parsingResult.errors.forEach((error, index) => {
         let message = error.message;
@@ -232,12 +245,15 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     }
     this.processingFile = false;
   }
-  processMapping(newMapping: Record<string, Record<string, string>>) {
-    // Handle a new mapping from the CSVMapper component, this is a
-    // complete mapping, so set mappingComplete to true to enable upload
-    // button.
-    this.mapping = newMapping;
-    this.mappingComplete = true;
+  processMapping(mapObject: {
+    mapping: Record<string, Record<string, string>>;
+    complete: boolean;
+  }) {
+    // Handle a new mapping from the CSVMapper component
+    for (const loc in mapObject.mapping) {
+      this.$set(this.mapping, loc, mapObject.mapping[loc]);
+    }
+    this.mappingComplete = mapObject.complete;
   }
   processFile(e: HTMLInputEvent) {
     // Handle a CSV upload, hand of parsing to storeCSV
@@ -290,7 +306,7 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       }
     }
     if (success) {
-      //this.$emit("data-uploaded");
+      this.$emit("data-uploaded");
     }
   }
   getRequired() {
@@ -306,6 +322,31 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     if (this.headerLine >= this.dataStartLine) {
       this.dataStartLine = this.headerLine + 1;
     }
+  }
+  get csvPreview() {
+    return this.csvData.slice(0, 5);
+  }
+  updateSelected(selected: string | null) {
+    this.currentSelection = selected;
+  }
+  get headerMapping() {
+    // Special mapping of headers to expected variables for the csv preview
+    const newMap: Record<string, any> = {};
+    for (const header of this.headers) {
+      newMap[header] = null;
+    }
+    // Invert mappings so they are accessible by header
+    for (const loc in this.mapping) {
+      const mapping = this.mapping[loc];
+      for (const variable in mapping) {
+        const header = mapping[variable];
+        if (variable == "time" && newMap.time) {
+          continue;
+        }
+        newMap[header] = variable;
+      }
+    }
+    return newMap;
   }
 }
 </script>
