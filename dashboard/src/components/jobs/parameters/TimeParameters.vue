@@ -17,12 +17,21 @@
     />
     minutes
     <br />
-    <b>Timezone:</b>
-    <input @change="emitParams" v-model="timezone" class="timezone" />
+    <label for="timezoneSelect"><b>Timezone:</b></label>
+    <select
+      @change="emitParams"
+      v-model="timezone"
+      class="timezone"
+      name="timezoneSelect"
+    >
+      <option v-for="tz in timezoneList" :key="tz">{{ tz }}</option>
+    </select>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import Timezones from "@/constants/timezones.json";
+import { LocalZone } from "luxon";
 
 @Component
 export default class JobTimeParameters extends Vue {
@@ -30,13 +39,14 @@ export default class JobTimeParameters extends Vue {
   end!: string;
   timezone!: string;
   step!: number;
+  timezoneList: Array<string> = Timezones;
 
   data() {
     return {
       start: "2020-01-01T00:00+00:00",
       end: "2020-02-01T00:00+00:00",
       step: 60,
-      timezone: "UTC"
+      timezone: new LocalZone().name
     };
   }
   mounted() {

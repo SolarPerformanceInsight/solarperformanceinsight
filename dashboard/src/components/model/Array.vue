@@ -10,12 +10,6 @@
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
-      field-name="albedo"
-    />
-    <model-field
-      :parameters="parameters"
-      :errors="errors"
-      :definitions="definitions"
       field-name="modules_per_string"
     />
     <model-field
@@ -23,6 +17,29 @@
       :errors="errors"
       :definitions="definitions"
       field-name="strings"
+    />
+    <label for="albedoSelect">Surface Type:</label>
+    <select id="albedoSelect" name="albedoSelect" @change="changeAlbedo">
+      <option value="" disable selected></option>
+      <option
+        v-for="k in Object.keys(surfaceTypes)"
+        :key="k"
+        :name="k"
+        :value="k"
+      >
+        {{ k }}
+      </option>
+    </select>
+    <slot></slot>
+    <help
+      :helpText="'Fill in albedo based on some common surface types.'"
+      :tagId="'albedoSelect'"
+    />
+    <model-field
+      :parameters="parameters"
+      :errors="errors"
+      :definitions="definitions"
+      field-name="albedo"
     />
     <b>Tracking:</b>
     <input
@@ -82,6 +99,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch } from "vue-property-decorator";
+import SurfaceTypes from "@/constants/surface_albedo.json";
 import { PVArray } from "@/types/PVArray";
 import {
   PVSystModuleParameters,
@@ -113,6 +131,7 @@ export default class ArrayView extends ModelBase {
   @Prop() numArrays!: number;
 
   tracking!: string;
+  surfaceTypes: Record<string, number> = SurfaceTypes;
 
   data() {
     return {
@@ -142,6 +161,10 @@ export default class ArrayView extends ModelBase {
         {}
       );
     }
+  }
+
+  changeAlbedo(e: HTMLInputEvent) {
+    this.parameters.albedo = this.surfaceTypes[e.target.value];
   }
 
   changeTracking(e: HTMLInputEvent) {
