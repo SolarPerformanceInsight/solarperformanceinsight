@@ -54,7 +54,7 @@ Takes the following props:
                 Missing Fields
               </span>
               <span v-else>
-                Field Mapping Complete
+                Ready for Upload
               </span>
               <!-- Text to alert user that the component requires data
                    Uncomment when multi-file capability is added.
