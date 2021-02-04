@@ -200,7 +200,7 @@ describe("Test CSV Upload", () => {
       }
     ]);
     // @ts-expect-error
-    csvUpload.vm.processMapping(testMapping);
+    csvUpload.vm.processMapping({ mapping: testMapping, complete: true });
     expect(csvUpload.vm.$data.mapping).toEqual(testMapping);
 
     // @ts-expect-error
