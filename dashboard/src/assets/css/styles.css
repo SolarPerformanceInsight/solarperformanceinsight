@@ -70,7 +70,28 @@ button.data-object-expander:focus {
 .hidden {
   display: none;
 }
-ul.upload-statuses {
-  list-style: none;
-  padding-left: 0;
+
+.loading-container {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 125px;
+  height: 125px;
+  animation: spin 2s linear infinite;
+  box-sizing: border-box;
+  display: inline-block; /* allows use on spans */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Fase transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }

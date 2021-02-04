@@ -219,14 +219,6 @@ export default class JobParameters extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
 .ml-1 {
   margin-left: 1em;
 }
