@@ -72,15 +72,6 @@ Takes the following props that can be extracted from job metadata.
     </template>
     <transition name="fade">
       <div v-if="promptForMapping && !processingFile">
-        <div class="warning" v-if="headers.length < totalMappings">
-          Warning: You may not have enough data in this file. The file contains
-          {{ headers.length }} columns and {{ totalMappings }} columns are
-          expected (one time column and
-          {{ required.filter(x => x != "time").join(", ") }} for
-          <template v-if="granularity == 'system'">the</template>
-          <template v-else>each</template>
-          {{ granularity }}).
-        </div>
         <csv-mapper
           @mapping-complete="processMapping"
           @mapping-incomplete="mappingComplete = false"
@@ -153,7 +144,7 @@ export default class CSVUpload extends Vue {
   mappingComplete!: boolean;
 
   processingFile!: boolean;
-  processingErrors!: Record<string, string>;
+  processingErrors!: Record<string, any>;
   headerLine!: number;
   dataStartLine!: number;
 
@@ -218,14 +209,28 @@ export default class CSVUpload extends Vue {
         };
       });
       this.processingErrors = errors;
-      this.processingFile = false;
     } else {
-      this.csvData = parsingResult.data;
       const headers = parsingResult.meta.fields;
-      this.headers = headers ? headers : [];
-      this.processingFile = false;
-      this.promptForMapping = true;
+      if (headers && headers.length < this.totalMappings) {
+        // Handle case where CSV is parsable but does not contain enough data
+        this.processingErrors = {
+          0: {
+            type: "Too Few Columns",
+            message: `You do not have enough data in this file. The file contains
+${headers ? headers.length : 0} columns and ${
+              this.totalMappings
+            } columns are expected (one
+time column, and ${this.required.filter(x => x != "time").join(", ")} for
+${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
+          }
+        };
+      } else {
+        this.csvData = parsingResult.data;
+        this.headers = headers ? headers : [];
+        this.promptForMapping = true;
+      }
     }
+    this.processingFile = false;
   }
   processMapping(newMapping: Record<string, Record<string, string>>) {
     // Handle a new mapping from the CSVMapper component, this is a
