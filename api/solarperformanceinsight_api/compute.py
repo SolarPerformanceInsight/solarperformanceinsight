@@ -242,7 +242,7 @@ def process_single_modelchain(
         array_weather.loc[:, "poa_global"] = _get_index(
             results, "total_irrad", i
         ).get(  # type: ignore
-            "poa_global"
+            "poa_global", float("NaN")
         )
         array_weather.loc[:, "cell_temperature"] = _get_index(
             results, "cell_temperature", i
