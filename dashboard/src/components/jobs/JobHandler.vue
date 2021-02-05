@@ -62,7 +62,12 @@ Component that handles basic job/workflows.
             :key="dataStep"
             class="jobtab"
             :class="{ active: step == dataStep }"
-            :disabled="!job || ['calculate', 'queued', 'running', 'complete'].includes(jobStatus)"
+            :disabled="
+              !job ||
+                ['calculate', 'queued', 'running', 'complete'].includes(
+                  jobStatus
+                )
+            "
             @click="step = dataStep"
           >
             Upload {{ dataStep }}
