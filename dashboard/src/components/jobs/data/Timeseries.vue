@@ -90,7 +90,11 @@ export default class TimeseriesPlot extends Vue {
   }
   @Watch("timeseriesData")
   changeData() {
+    const originalCol = this.column;
     this.column = this.availableFields[0];
+    if (this.column == originalCol) {
+      this.redraw();
+    }
   }
   downloadData(contentType: string) {
     this.$emit("download-timeseries", contentType);

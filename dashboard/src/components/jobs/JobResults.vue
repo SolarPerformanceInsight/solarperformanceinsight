@@ -150,7 +150,7 @@ export default class JobResults extends Vue {
           this.system,
           result.definition.schema_path
         );
-        const label = `${systemComponent.name} ${result.definition.type}`;
+        const label = `${systemComponent.name} ${result.definition.type} (${result.definition.schema_path})`;
         // @ts-expect-error
         labelled[result.object_id] = label;
       });
