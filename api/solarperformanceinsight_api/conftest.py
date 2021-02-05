@@ -331,13 +331,13 @@ def single_axis_tracking():
     )
 
 
-@pytest.fixture(params=["fixed", "single", "multi_fixed"])
+@pytest.fixture(params=["fixed_axis", "single_axis", "multi_array_fixed"])
 def either_tracker(request, system_def, fixed_tracking, single_axis_tracking):
     inv = system_def.inverters[0]
-    if request.param == "fixed":
+    if request.param == "fixed_axis":
         inv.arrays[0].tracking = fixed_tracking
         return inv, PVSystem, False
-    elif request.param == "multi_fixed":
+    elif request.param == "multi_array_fixed":
         inv.arrays[0].tracking = fixed_tracking
         arr1 = deepcopy(inv.arrays[0])
         arr1.name = "Array 2"

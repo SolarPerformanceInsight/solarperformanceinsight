@@ -350,35 +350,61 @@ def test_get_index():
     assert pd.isna(nans).all()
 
 
+# pytest param ids are helpful finding combos that fail
+@pytest.mark.parametrize(
+    "tempcols",
+    (
+        # pytest parm ids are
+        pytest.param(["temp_air", "wind_speed"], id="standard_temp"),
+        pytest.param(["temp_air"], id="air_temp_only"),
+        pytest.param(["module_temperature"], id="module_temp"),
+        pytest.param(["cell_temperature"], id="cell_temp"),
+        pytest.param(["module_temperature", "wind_speed"], id="module_temp+ws"),
+        pytest.param(["cell_temperature", "wind_speed"], id="cell_temp+ws"),
+    ),
+)
 @pytest.mark.parametrize(
     "method,colmap",
     (
-        ("run_model", {}),
-        (
+        pytest.param("run_model", {}, id="run_model"),
+        pytest.param(
             "run_model_from_poa",
             {"ghi": "poa_global", "dni": "poa_direct", "dhi": "poa_diffuse"},
+            id="run_model_poa",
         ),
-        (
+        pytest.param(
             "run_model_from_effective_irradiance",
             {"ghi": "effective_irradiance", "dni": "noped", "dhi": "nah"},
+            id="run_model_eff",
         ),
     ),
 )
-def test_process_single_modelchain(system_def, either_tracker, method, colmap):
+def test_process_single_modelchain(
+    system_def, either_tracker, method, colmap, tempcols
+):
     # full run through a modelchain with a fixed tilt single array,
     # fixed tilt two array, and single axis tracker single array
     tshift = dt.timedelta(minutes=5)
-    df = pd.DataFrame(
+    index = pd.DatetimeIndex([pd.Timestamp("2020-01-01T12:00:00-07:00")], name="time")
+    tempdf = pd.DataFrame(
+        {
+            "temp_air": [25.0],
+            "wind_speed": [10.0],
+            "module_temperature": [30.0],
+            "cell_temperature": [32.0],
+            "poa_global": [1100.0],
+        },
+        index=index,
+    )[tempcols]
+    irrad = pd.DataFrame(
         {
             "ghi": [1100.0],
             "dni": [1000.0],
             "dhi": [100.0],
-            "temp_air": [25.0],
-            "wind_speed": [10.0],
         },
-        index=[pd.Timestamp("2020-01-01T12:00:00-07:00")],
+        index=index,
     ).rename(columns=colmap)
-    df.index.name = "time"
+    df = pd.concat([irrad, tempdf], axis=1)
     inv, _, multi = either_tracker
     location = Location(latitude=32.1, longitude=-110.8, altitude=2000, name="test")
     pvsys = pvmodeling.construct_pvsystem(inv)
