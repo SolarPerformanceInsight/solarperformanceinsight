@@ -222,8 +222,8 @@ def process_single_modelchain(
     ).to_frame()  # type: ignore
     weather_sum = pd.DataFrame(
         {
-            "poa_global": 0,  # type: ignore
             "effective_irradiance": 0,  # type: ignore
+            "poa_global": 0,  # type: ignore
             "cell_temperature": 0,  # type: ignore
         },
         index=performance.index,
@@ -233,13 +233,17 @@ def process_single_modelchain(
     num_arrays = len(mc.system.arrays)
     out = []
     for i in range(num_arrays):
-        array_weather: pd.DataFrame = _get_index(results, "total_irrad", i)[
-            ["poa_global"]
-        ].copy()  # type: ignore
-        # copy avoids setting values on a copy of slice later
-        array_weather.loc[:, "effective_irradiance"] = _get_index(
+        array_weather: pd.DataFrame = _get_index(
             results, "effective_irradiance", i
+        ).to_frame(
+            "effective_irradiance"
         )  # type: ignore
+        # total irrad empty if effective irradiance supplied initially
+        array_weather.loc[:, "poa_global"] = _get_index(
+            results, "total_irrad", i
+        ).get(  # type: ignore
+            "poa_global"
+        )
         array_weather.loc[:, "cell_temperature"] = _get_index(
             results, "cell_temperature", i
         )  # type: ignore
@@ -254,9 +258,17 @@ def process_single_modelchain(
         )
     # mean
     weather_avg: pd.DataFrame = weather_sum / num_arrays  # type: ignore
-    adjusted_zenith: pd.DataFrame = adjust(
-        results.solar_position[["zenith"]]
-    )  # type: ignore
+    adjusted_zenith: pd.DataFrame
+    # not calculate if effective irradiance is provided
+    if results.solar_position is not None:
+        adjusted_zenith = adjust(results.solar_position[["zenith"]])  # type: ignore
+    else:
+        # calculate solar position making sure to shift times and shift back
+        adjusted_zenith = adjust(
+            mc.location.get_solarposition(
+                weather_avg.index.shift(freq=tshift)  # type: ignore
+            )[["zenith"]]
+        )  # type: ignore
     summary_frame = pd.concat(
         [
             performance,
