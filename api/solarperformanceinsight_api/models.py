@@ -90,6 +90,14 @@ def UserString(default: Any = Undefined, *, title: str = None, description: str 
     )
 
 
+class PVLibBase(BaseModel):
+    """Provide a `pvlib_dict` method to convert parameters if needed
+    for using in pvlib"""
+
+    def pvlib_dict(self):
+        return self.dict()
+
+
 class FixedTracking(BaseModel):
     """Parameters for a fixed tilt array"""
 
@@ -135,7 +143,7 @@ class SingleAxisTracking(BaseModel):
     )
 
 
-class PVsystModuleParameters(BaseModel):
+class PVsystModuleParameters(PVLibBase):
     """Parameters for the modules that make up an array in a PVsyst-like model"""
 
     alpha_sc: float = Field(
@@ -191,7 +199,7 @@ class PVsystModuleParameters(BaseModel):
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
 
 
-class PVWattsModuleParameters(BaseModel):
+class PVWattsModuleParameters(PVLibBase):
     """Parameters for the modules that make up an array in a PVWatts-like model"""
 
     pdc0: float = Field(
@@ -201,11 +209,16 @@ class PVWattsModuleParameters(BaseModel):
     gamma_pdc: float = Field(
         ...,
         description=(
-            "Temperature coefficient of power in units of 1/C. "
-            "Typically -0.002 to -0.005 per degree C"
+            "Temperature coefficient of power in units of %/C. "
+            "Typically -0.2 to -0.5 % per degree C"
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("pvwatts")
+
+    def pvlib_dict(self):
+        """Convert to a dict pvlib understands for `module_parameters`
+        i.e. scale gamma_pdc to 1/C"""
+        return {k: v / 100 if k == "gamma_pdc" else v for k, v in self.dict().items()}
 
 
 class PVsystTemperatureParameters(BaseModel):
