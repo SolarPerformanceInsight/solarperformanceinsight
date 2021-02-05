@@ -62,7 +62,7 @@ Components using the mapper should react to events emitted from this component:
             <option>Not included</option>
             <option
               v-for="(u, i) in headers"
-              :key="u"
+              :key="i"
               :name="u"
               :value="u"
               :disabled="usedHeaders.includes(u)"

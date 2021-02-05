@@ -26,7 +26,7 @@ Takes the following props:
           <option
             @mouseover="fireSelect(u)"
             v-for="(u, i) in headers"
-            :key="u"
+            :key="i"
             :name="u"
             :value="u"
             :disabled="usedHeaders.includes(u)"
