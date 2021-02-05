@@ -8,8 +8,8 @@ from uuid import UUID, uuid1
 from fakeredis import FakeRedis  # type: ignore
 from fastapi.testclient import TestClient
 import httpx
-from pvlib.pvsystem import PVSystem
-from pvlib.tracking import SingleAxisTracker
+from pvlib.pvsystem import PVSystem  # type: ignore
+from pvlib.tracking import SingleAxisTracker  # type: ignore
 import pymysql
 import pytest
 from rq import Queue  # type: ignore
