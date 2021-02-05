@@ -5,7 +5,6 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Path
 from pvlib.pvsystem import retrieve_sam  # type: ignore
-import pytz
 
 
 from .. import models
@@ -51,18 +50,3 @@ def get_sandia_inverter(
     return models.SandiaInverterParameters(
         **sandia_inverter_params[inverter_name].to_dict()
     )
-
-
-@router.get("/timezones", response_model=List[str])
-def get_timezones() -> List[str]:
-    """Get current and GMT timezones"""
-    # returned zones all compatible with luxon 1.25.0
-    tzs = [
-        tz
-        for tz in pytz.common_timezones
-        if not tz.startswith("US/") and tz not in ("America/Nuuk", "Antarctica/McMurdo")
-    ]
-    tzs += [
-        tz for tz in pytz.all_timezones if tz.startswith("Etc/GMT") and tz != "Etc/GMT0"
-    ]
-    return tzs

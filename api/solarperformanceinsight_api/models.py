@@ -4,6 +4,7 @@ from typing import Union, List, Optional, Any, Tuple, Dict
 
 
 import pandas as pd
+import pvlib  # type: ignore
 from pydantic import BaseModel, Field, PrivateAttr, validator, root_validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID
@@ -67,6 +68,14 @@ SYSTEM_EXAMPLE = dict(
         )
     ],
 )
+# all compatible with luxon 1.25.0, most commen + Etc/GMT+offset
+TIMEZONES = [
+    tz
+    for tz in pytz.common_timezones
+    if not tz.startswith("US/") and tz not in ("America/Nuuk", "Antarctica/McMurdo")
+] + [tz for tz in pytz.all_timezones if tz.startswith("Etc/GMT") and tz != "Etc/GMT0"]
+SURFACE_ALBEDOS = pvlib.irradiance.SURFACE_ALBEDOS
+TEMPERATURE_PARAMETERS = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS
 
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, underscore
@@ -650,10 +659,8 @@ class JobTimeindex(BaseModel):
 
     @validator("timezone")
     def check_tz(cls, v):
-        if v is not None and v not in pytz.all_timezones:
-            raise ValueError(
-                "Unrecognized timezone, timezone must be one of pytz.all_timezones"
-            )
+        if v is not None and v not in TIMEZONES:
+            raise ValueError("Unrecognized timezone")
         return v
 
 

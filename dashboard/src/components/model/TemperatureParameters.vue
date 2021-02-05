@@ -1,5 +1,12 @@
 <template>
   <div class="temperature-parameters">
+    <label for="mountDefaults"><b>Defaults:</b></label>
+    <select @change="mounting" name="mountDefaults">
+      <option value="" disable selected></option>
+      <option v-for="k in mountOptions" :key="k" :name="k" :value="k">
+        {{ k }}
+      </option>
+    </select>
     <div v-if="model == 'pvsyst'">
       <model-field
         :parameters="parameters"
@@ -51,7 +58,7 @@
 
 <script lang="ts">
 import ModelBase from "@/components/ModelBase.vue";
-
+import DefaultParams from "@/constants/temp_params.json";
 import { Component, Prop, Watch } from "vue-property-decorator";
 
 // Update with many classes of inverter parameters to check for type before
@@ -67,6 +74,13 @@ export default class TemperatureParametersView extends ModelBase {
 
   @Prop() model!: string;
   errors: Record<string, any> = {};
+  defaultMap: Record<
+    string,
+    Record<
+      string,
+      Partial<PVSystTemperatureParameters> | SAPMTemperatureParameters
+    >
+  > = DefaultParams;
 
   get apiComponentName() {
     let componentName: string;
@@ -83,6 +97,26 @@ export default class TemperatureParametersView extends ModelBase {
     this.$validator
       .validate(this.apiComponentName, newParams)
       .then(this.setValidationResult);
+  }
+
+  get mountOptions() {
+    let params: Array<string>;
+    if (this.model == "pvsyst") {
+      params = Object.keys(this.defaultMap.pvsyst);
+    } else {
+      params = Object.keys(this.defaultMap.sapm);
+    }
+    return params;
+  }
+  mounting(event: any) {
+    const mountOpt = event.target.value;
+    let newvals;
+    if (this.model == "pvsyst") {
+      newvals = this.defaultMap.pvsyst[mountOpt];
+    } else {
+      newvals = this.defaultMap.sapm[mountOpt];
+    }
+    this.parameters = Object.assign(this.parameters, newvals);
   }
 }
 </script>
