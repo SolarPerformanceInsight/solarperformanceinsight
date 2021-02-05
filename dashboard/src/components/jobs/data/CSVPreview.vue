@@ -11,7 +11,7 @@
       <table class="csv-mapping=preview" :style="`--numCol: ` + numCol">
         <thead>
           <tr>
-            <th><b>Headers</b></th>
+            <th><b>CSV Headers</b></th>
             <th
               v-for="(header, i) of headers"
               :key="i"
@@ -39,7 +39,7 @@
             </td>
           </tr>
           <tr v-for="(row, i) of csvData" :key="i">
-            <td></td>
+            <td><b>Data Row {{ i+1 }}</b></td>
             <td
               v-for="(col, j) of headers"
               :key="j"
