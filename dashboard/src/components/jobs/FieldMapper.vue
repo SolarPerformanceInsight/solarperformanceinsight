@@ -58,7 +58,10 @@ Components using the mapper should react to events emitted from this component:
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
           {{ getDisplayName(field) }} (required):
-          <select @change="addMapping($event, field)">
+          <select
+            @change="addMapping($event, field)"
+            v-model="selectValues[field]"
+          >
             <option>Not included</option>
             <option
               v-for="(u, i) in headers"
@@ -79,7 +82,7 @@ Components using the mapper should react to events emitted from this component:
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
@@ -118,10 +121,15 @@ export default class FieldMapper extends Vue {
   @Prop() usedHeaders!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
   mapping!: Record<string, string>;
+  selectValues!: Record<string, string>;
 
+  created() {
+    this.initSelectValues();
+  }
   data() {
     return {
-      mapping: {}
+      mapping: {},
+      selectValues: {}
     };
   }
   get metadata() {
@@ -133,6 +141,12 @@ export default class FieldMapper extends Vue {
     return this.comp.data_object.definition.data_columns.filter(
       (x: string) => x != "time"
     );
+  }
+  emitMapping() {
+    this.$emit("mapping-updated", {
+      ...this.mapping,
+      loc: this.comp.data_object.definition.schema_path
+    });
   }
   addMapping(event: any, variable: string) {
     const fileHeader = event.target.value;
@@ -150,10 +164,7 @@ export default class FieldMapper extends Vue {
       this.mapping[variable] = fileHeader;
       this.$emit("used-header", fileHeader);
     }
-    this.$emit("mapping-updated", {
-      ...this.mapping,
-      loc: this.comp.data_object.definition.schema_path
-    });
+    this.emitMapping();
   }
   getDisplayName(variable: string) {
     // @ts-expect-error
@@ -161,6 +172,16 @@ export default class FieldMapper extends Vue {
   }
   isValid() {
     return this.required.every((x: string) => x in this.mapping);
+  }
+  @Watch("headers")
+  reset() {
+    this.mapping = {};
+    this.initSelectValues();
+  }
+  initSelectValues() {
+    this.required.forEach((field: string) => {
+      this.selectValues[field] = "Not included";
+    });
   }
 }
 </script>

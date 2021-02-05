@@ -19,7 +19,7 @@ Takes the following props:
       <div>
         <!-- Time mapping for the whole file -->
         <b>Timestamp column:</b>
-        <select @change="mapTime">
+        <select @change="mapTime" v-model="timeField">
           <option @mouseover="fireSelect(null)" value="" disabled selected>
             Unmapped
           </option>
@@ -102,7 +102,7 @@ Takes the following props:
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
 interface HTMLInputEvent extends Event {
@@ -252,6 +252,11 @@ export default class CSVMapper extends Vue {
   }
   fireSelect(selected: string | null) {
     this.$emit("option-hovered", selected);
+  }
+  @Watch("headers", { deep: true })
+  resetMapping() {
+    this.timeField = "";
+    this.usedHeaders = [];
   }
 }
 </script>

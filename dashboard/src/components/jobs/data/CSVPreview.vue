@@ -39,7 +39,9 @@
             </td>
           </tr>
           <tr v-for="(row, i) of csvData" :key="i">
-            <td><b>Data Row {{ i+1 }}</b></td>
+            <td>
+              <b>Data Row {{ i + 1 }}</b>
+            </td>
             <td
               v-for="(col, j) of headers"
               :key="j"

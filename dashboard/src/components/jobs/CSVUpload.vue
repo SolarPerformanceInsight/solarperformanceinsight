@@ -25,7 +25,6 @@ Takes the following props that can be extracted from job metadata.
     <br />
     <label for="header-line">CSV headers are on line:</label>
     <input
-      :disabled="processingFile || promptForMapping"
       id="header-line"
       type="number"
       step="1"
@@ -36,11 +35,11 @@ Takes the following props that can be extracted from job metadata.
     <br />
     <label for="data-start-line">Data begins on line:</label>
     <input
-      :disabled="processingFile || promptForMapping"
       id="data-start-line"
       type="number"
       step="1"
       :min="headerLine + 1"
+      @change="adjustHeaderDataLine"
       v-model.number="dataStartLine"
     />
     <br />
@@ -59,11 +58,11 @@ Takes the following props that can be extracted from job metadata.
         </div>
       </div>
     </template>
-    <template v-if="processingErrors">
+    <template v-if="parsingErrors">
       <div class="warning">
         Errors encountered processing your csv.
         <ul>
-          <li v-for="(error, i) of processingErrors" :key="i">
+          <li v-for="(error, i) of parsingErrors" :key="i">
             <b>{{ error.type }}</b>
             : {{ error.message }}
           </li>
@@ -71,13 +70,17 @@ Takes the following props that can be extracted from job metadata.
       </div>
     </template>
     <transition name="fade">
-      <div v-if="promptForMapping && !processingFile">
+      <div v-if="!processingFile && csv">
         <csv-preview
           :headers="headers"
           :csvData="csvPreview"
           :mapping="headerMapping"
           :currentlySelected="currentSelection"
         />
+      </div>
+    </transition>
+    <transition name="fade">
+      <div v-if="promptForMapping && !processingFile">
         <csv-mapper
           @option-hovered="updateSelected"
           @new-mapping="processMapping"
@@ -149,12 +152,13 @@ export default class CSVUpload extends Vue {
   mapping!: Record<string, Record<string, string>>;
   promptForMapping!: boolean;
   headers!: Array<string>;
+  csv!: string;
   csvData!: Array<Record<string, Array<string | number>>>;
   required!: Array<string>;
   mappingComplete!: boolean;
 
   processingFile!: boolean;
-  processingErrors!: Record<string, any>;
+  parsingErrors!: Record<string, any> | null;
   headerLine!: number;
   dataStartLine!: number;
 
@@ -168,11 +172,12 @@ export default class CSVUpload extends Vue {
     return {
       mapping: {},
       processingFile: false,
-      processingErrors: null,
+      parsingErrors: null,
       promptForMapping: false,
       headers: [],
       required: this.getRequired(),
       mappingComplete: false,
+      csv: "",
       csvData: [{}],
       uploadingData: false,
       uploadStatuses: {},
@@ -184,9 +189,7 @@ export default class CSVUpload extends Vue {
   get dataType() {
     return this.data_objects[0].definition.type;
   }
-  storeCSV(csv: string) {
-    // Parse the csv into an object mapping csv-headers to arrays of column
-    // data.
+  removeMetadata(csv: string) {
     if (!(this.headerLine == 1 && this.dataStartLine == 2)) {
       // Determine the characters used for line separation
       const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
@@ -208,6 +211,21 @@ export default class CSVUpload extends Vue {
       }
       csv = headerString + lineSep + csv;
     }
+    return csv;
+  }
+  storeCSV(csv: string | null) {
+    this.promptForMapping = false;
+    this.csvData = [{}];
+    this.mapping = {};
+    if (csv) {
+      this.csv = csv;
+    } else {
+      csv = this.csv;
+    }
+    this.parsingErrors = null;
+    // Parse the csv into an object mapping csv-headers to arrays of column
+    // data.
+    csv = this.removeMetadata(csv);
     const parsingResult = parseCSV(csv.trim());
     if (parsingResult.errors.length > 0) {
       const errors: Record<string, any> = {};
@@ -221,12 +239,12 @@ export default class CSVUpload extends Vue {
           message: message
         };
       });
-      this.processingErrors = errors;
+      this.parsingErrors = errors;
     } else {
       const headers = parsingResult.meta.fields;
       if (headers && headers.length < this.totalMappings) {
         // Handle case where CSV is parsable but does not contain enough data
-        this.processingErrors = {
+        this.parsingErrors = {
           0: {
             type: "Too Few Columns",
             message: `You do not have enough data in this file. The file contains
@@ -237,6 +255,7 @@ time column, and ${this.required.filter(x => x != "time").join(", ")} for
 ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
           }
         };
+        this.csvData = [{}];
       } else {
         this.csvData = parsingResult.data;
         this.headers = headers ? headers : [];
@@ -322,6 +341,7 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     if (this.headerLine >= this.dataStartLine) {
       this.dataStartLine = this.headerLine + 1;
     }
+    this.adjustHeaderDataLine();
   }
   get csvPreview() {
     return this.csvData.slice(0, 5);
@@ -347,6 +367,13 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       }
     }
     return newMap;
+  }
+  adjustHeaderDataLine() {
+    if (this.promptForMapping) {
+      this.processingFile = true;
+      this.promptForMapping = false;
+      this.storeCSV(null);
+    }
   }
 }
 </script>
