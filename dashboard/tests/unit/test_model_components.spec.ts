@@ -167,6 +167,65 @@ describe("Tests temperature parameters", () => {
     });
     expectAllModelFields(wrapper, propsData.parameters);
   });
+  it("setting pvsyst defaults", async () => {
+    const propsData = {
+      parameters: new PVSystTemperatureParameters({}),
+      model: "pvsyst"
+    };
+    const wrapper = mount(TemperatureParametersView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    const initial = Object.assign({}, propsData.parameters);
+    wrapper
+      .find("select[name=mountDefaults]")
+      .findAll("option")
+      .at(2)
+      .trigger("change");
+    await Vue.nextTick();
+    const new_u_c = wrapper.props("parameters").u_c;
+    expect(new_u_c).not.toBe(initial.u_c);
+    // eta_m isn't set in json
+    expect(wrapper.props("parameters").eta_m).toBe(initial.eta_m);
+    wrapper
+      .find("select[name=mountDefaults]")
+      .findAll("option")
+      .at(1)
+      .trigger("change");
+    expect(wrapper.props("parameters").u_c).not.toBe(new_u_c);
+  });
+  it("setting pvwatts defaults", async () => {
+    const propsData = {
+      parameters: new SAPMTemperatureParameters({}),
+      model: "pvwatts"
+    };
+    const wrapper = mount(TemperatureParametersView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    const initial = Object.assign({}, wrapper.props("parameters"));
+    wrapper
+      .find("select[name=mountDefaults]")
+      .findAll("option")
+      .at(2)
+      .trigger("change");
+    await Vue.nextTick();
+    const new_params = Object.assign({}, wrapper.props("parameters"));
+    for (const prop in initial) {
+      expect(new_params[prop]).not.toBe(initial[prop]);
+    }
+    wrapper
+      .find("select[name=mountDefaults]")
+      .findAll("option")
+      .at(1)
+      .trigger("change");
+    await Vue.nextTick();
+    for (const prop in new_params) {
+      expect(wrapper.props("parameters")).not.toBe(new_params[prop]);
+    }
+  });
 });
 
 /*
@@ -610,6 +669,32 @@ describe("Test array", () => {
         propsData.parameters.temperature_model_parameters
       )
     ).toBe(true);
+  });
+  it("tests choosing surface type", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVWattsModuleParameters({}),
+        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvwatts",
+      index: 0
+    };
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    expect(wrapper.props("parameters").albedo).toBe(0);
+    const surfaceTypeSelect = wrapper.find("select[name=albedoSelect]");
+    expect(surfaceTypeSelect.exists()).toBe(true);
+    const opt = surfaceTypeSelect.findAll("option").at(2);
+    expect(opt.exists()).toBe(true);
+    opt.trigger("change");
+    await Vue.nextTick();
+    expect(wrapper.props("parameters").albedo).toBeGreaterThan(0);
   });
 });
 
