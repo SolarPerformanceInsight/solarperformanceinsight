@@ -4,7 +4,7 @@ from typing import Union, List, Optional, Any, Tuple, Dict
 
 
 import pandas as pd
-import pvlib
+import pvlib  # type: ignore
 from pydantic import BaseModel, Field, PrivateAttr, validator, root_validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID

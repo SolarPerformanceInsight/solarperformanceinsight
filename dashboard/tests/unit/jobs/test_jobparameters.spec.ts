@@ -39,7 +39,7 @@ const defaultTimeParams = {
   start: "2020-01-01T00:00+00:00",
   end: "2020-02-01T00:00+00:00",
   step: 3600,
-  timezone: "UTC"
+  timezone: "America/Denver"
 };
 // vue test setup
 const localVue = createLocalVue();

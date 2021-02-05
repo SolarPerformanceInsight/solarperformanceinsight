@@ -20,7 +20,7 @@
     />
     <label for="albedoSelect">Surface Type:</label>
     <select id="albedoSelect" name="albedoSelect" @change="changeAlbedo">
-      <option value="" disable selected></option>
+      <option value="" disable selected>manually set albedo</option>
       <option
         v-for="k in Object.keys(surfaceTypes)"
         :key="k"
