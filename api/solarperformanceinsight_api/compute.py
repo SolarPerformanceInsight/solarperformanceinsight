@@ -259,11 +259,13 @@ def process_single_modelchain(
     # mean
     weather_avg: pd.DataFrame = weather_sum / num_arrays  # type: ignore
     adjusted_zenith: pd.DataFrame
-    # not calculate if effective irradiance is provided
+    # not calculated if effective irradiance is provided
     if results.solar_position is not None:
         adjusted_zenith = adjust(results.solar_position[["zenith"]])  # type: ignore
     else:
         # calculate solar position making sure to shift times and shift back
+        # modelchain passes through air temperature and pressure, but that only
+        # affects apparent_zenith
         adjusted_zenith = adjust(
             mc.location.get_solarposition(
                 weather_avg.index.shift(freq=tshift)  # type: ignore
