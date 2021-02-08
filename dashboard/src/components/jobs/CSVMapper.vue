@@ -76,7 +76,7 @@ Takes the following props:
               v-bind:class="{ opened: dataObjectDisplay[refName(i)] }"
             ></button>
           </div>
-          <div v-if="dataObjectDisplay[refName(i)]">
+          <div>
             <!-- ref argument here is used to determine if the mapping is complete
                (all objects have all required fields mapped).
           -->
@@ -88,6 +88,7 @@ Takes the following props:
               :headers="headers"
               :usedHeaders="usedHeaders"
               :comp="component"
+              :show="dataObjectDisplay[refName(i)]"
             >
               <p>
                 What fields contain data for {{ granularity }}

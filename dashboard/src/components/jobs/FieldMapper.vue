@@ -17,7 +17,7 @@ Components using the mapper should react to events emitted from this component:
 -->
 <template>
   <div class="field-mapper">
-    <div>
+    <div v-if="show">
       <div class="metadata" v-if="metadata">
         <template v-if="'make_model' in metadata">
           <template v-if="'parent' in metadata">
@@ -104,6 +104,7 @@ export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
+  @Prop() show!: boolean;
   mapping!: Record<string, string>;
   selectValues!: Record<string, string>;
 
