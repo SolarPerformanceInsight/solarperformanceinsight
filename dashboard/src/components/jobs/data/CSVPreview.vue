@@ -35,8 +35,7 @@
               :key="j"
               v-bind:class="{
                 hovered: currentlySelected == col,
-                mapped: mapping[col],
-                'warning-text': !mapping[col]
+                mapped: mapping[col]
               }"
             >
               {{ mapping[col] ? displayName(mapping[col]) : `Not Mapped` }}
