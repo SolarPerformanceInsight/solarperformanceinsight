@@ -63,7 +63,7 @@
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import { variableDisplayNames } from "@/utils/displayNames";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 @Component
 export default class CSVPreview extends Vue {
@@ -80,8 +80,7 @@ export default class CSVPreview extends Vue {
     this.$forceUpdate();
   }
   displayName(variable: string) {
-    // @ts-expect-error
-    return variableDisplayNames[variable];
+    return getVariableDisplayName(variable);
   }
 }
 </script>

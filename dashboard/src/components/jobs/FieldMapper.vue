@@ -86,7 +86,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
-import { variableDisplayNames } from "@/utils/displayNames";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -152,8 +152,7 @@ export default class FieldMapper extends Vue {
     this.emitMapping();
   }
   getDisplayName(variable: string) {
-    // @ts-expect-error
-    return variableDisplayNames[variable];
+    return getVariableDisplayName(variable);
   }
   isValid() {
     return this.required.every((x: string) => x in this.mapping);

@@ -9,8 +9,8 @@
     <br />
     Variable:
     <select v-model="column">
-      <option v-for="(field, i) in availableFields" :key="i">
-        {{ field }}
+      <option v-for="(field, i) in availableFields" :value="field" :key="i">
+        {{ displayName(field) }}
       </option>
     </select>
     <div :id="id"></div>
@@ -21,6 +21,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { Table } from "apache-arrow";
 import Plotly from "plotly.js-basic-dist";
 import adjustPlotTime from "@/utils/adjustPlotTimes";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 @Component
 export default class TimeseriesPlot extends Vue {
@@ -66,8 +67,12 @@ export default class TimeseriesPlot extends Vue {
       .map(x => x.name)
       .filter(x => x !== "time");
   }
+  displayName(varName: string) {
+    return getVariableDisplayName(varName);
+  }
   get plotTitle() {
-    return `${this.title} ${this.column}`;
+    const variable = this.displayName(this.column);
+    return `${this.title} ${variable}`;
   }
   get layout() {
     return {

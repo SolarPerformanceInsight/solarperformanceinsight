@@ -1,5 +1,5 @@
 /* collection of objects mapping native variables to display names */
-export const variableDisplayNames = {
+export const variableDisplayNames: Record<string, string> = {
   time: "Timestamp",
   ghi: "Global Horizontal Irradiance",
   dhi: "Diffuse Horizontal Irradiance",
@@ -12,5 +12,21 @@ export const variableDisplayNames = {
   module_temperature: "Module Temperature",
   temp_air: "Air Temperature",
   wind_speed: "Wind Speed",
-  performance: "Performance (AC power)"
+  performance: "Performance (AC power)",
+  daytime_flag: "Daytime Flag",
+  total_energy: "Total Energy",
+  plane_of_array_insolation: "Plane of Array Insolation",
+  effective_insolation: "Effective Insolation",
+  average_daytime_cell_temperature: "Average Daytime Cell Temperature",
+  month: "Month"
 };
+
+export function getVariableDisplayName(variable: string) {
+  const variableName = variableDisplayNames[variable];
+  if (variableName) {
+    return variableName;
+  } else {
+    console.error(`Could not find ${variable} in variableDisplayNames`);
+    return variable;
+  }
+}

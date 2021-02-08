@@ -7,7 +7,7 @@
       <thead>
         <tr>
           <th v-for="(header, i) of headers" :key="i">
-            {{ header }}
+            {{ displayName(header) }}
           </th>
         </tr>
 
@@ -25,6 +25,7 @@
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 @Component
 export default class SummaryTable extends Vue {
@@ -33,6 +34,9 @@ export default class SummaryTable extends Vue {
   get headers() {
     // maybe determine grouping/leftmost column label dynamically?
     return this.tableData.schema.fields.map((x: any) => x.name);
+  }
+  displayName(varName: string) {
+    return getVariableDisplayName(varName);
   }
 }
 </script>
