@@ -429,3 +429,9 @@ def test_inverter_multiple_arrays(system_def):
         arrays=[track0],
         inverter_parameters=system_def.inverters[0].inverter_parameters,
     )
+
+
+def test_pvwatts_module_temp_scaling():
+    mod = models.PVWattsModuleParameters(pdc0=100, gamma_pdc=-0.2)
+    assert mod.dict() == {"pdc0": 100, "gamma_pdc": -0.2}
+    assert mod.pvlib_dict() == {"pdc0": 100, "gamma_pdc": -0.002}

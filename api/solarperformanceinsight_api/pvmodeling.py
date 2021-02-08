@@ -41,7 +41,7 @@ def construct_pvsystem(inverter: models.Inverter) -> Union[PVSystem, SingleAxisT
             dict(
                 albedo=array.albedo,
                 module=array.make_model,
-                module_parameters=array.module_parameters.dict(),
+                module_parameters=array.module_parameters.pvlib_dict(),
                 temperature_model_parameters=array.temperature_model_parameters.dict(),
                 modules_per_string=array.modules_per_string,
                 strings=array.strings,
