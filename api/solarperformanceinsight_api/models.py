@@ -339,7 +339,7 @@ class PVWattsInverterParameters(BaseModel):
     eta_inv_ref: float = Field(
         0.9637, description="Reference inverter efficiency, unitless"
     )
-    _modelchain_ac_model: str = PrivateAttr("pvwatts_multi")
+    _modelchain_ac_model: str = PrivateAttr("pvwatts")
 
 
 class SandiaInverterParameters(BaseModel):
@@ -402,7 +402,7 @@ class SandiaInverterParameters(BaseModel):
             " (i.e., night tare), W"
         ),
     )
-    _modelchain_ac_model: str = PrivateAttr("sandia_multi")
+    _modelchain_ac_model: str = PrivateAttr("sandia")
 
 
 class AOIModelEnum(str, Enum):
