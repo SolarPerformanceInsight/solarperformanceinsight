@@ -86,6 +86,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
+import { variableDisplayNames } from "@/utils/displayNames";
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -97,23 +98,6 @@ interface MetadataWithDataObject {
 }
 
 type SystemComponent = System | Inverter | PVArray;
-
-// Maps variables to human friendly names
-const displayNames = {
-  time: "Timestamp",
-  ghi: "Global Horizontal Irradiance",
-  dhi: "Diffuse Horizontal Irradiance",
-  dni: "Direct Normal Irradiance",
-  poa_global: "Plane of Array Global Irradiance",
-  poa_diffuse: "Plane of Array Diffuse Irradiance",
-  poa_direct: "Plane of Array Direct Irradiance",
-  effective_irradiance: "Effective Irradiance",
-  cell_temperature: "Cell Temperature",
-  module_temperature: "Module Temperature",
-  temp_air: "Air Temperature",
-  wind_speed: "Wind Speed",
-  performance: "Performance (AC power)"
-};
 
 @Component
 export default class FieldMapper extends Vue {
@@ -168,7 +152,7 @@ export default class FieldMapper extends Vue {
   }
   getDisplayName(variable: string) {
     // @ts-expect-error
-    return displayNames[variable];
+    return variableDisplayNames[variable];
   }
   isValid() {
     return this.required.every((x: string) => x in this.mapping);

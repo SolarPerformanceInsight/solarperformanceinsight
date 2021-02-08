@@ -8,7 +8,10 @@
       row.
     </p>
     <div class="table-container">
-      <table class="csv-mapping=preview" :style="`--numCol: ` + numCol">
+      <table
+        class="striped-table csv-mapping-preview"
+        :style="`--numCol: ` + numCol"
+      >
         <thead>
           <tr>
             <th><b>CSV Headers</b></th>
@@ -32,10 +35,11 @@
               :key="j"
               v-bind:class="{
                 hovered: currentlySelected == col,
-                mapped: mapping[col]
+                mapped: mapping[col],
+                'warning-text': !mapping[col]
               }"
             >
-              {{ mapping[col] }}
+              {{ mapping[col] ? displayName(mapping[col]) : `Not Mapped` }}
             </td>
           </tr>
           <tr v-for="(row, i) of csvData" :key="i">
@@ -60,6 +64,7 @@
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { variableDisplayNames } from "@/utils/displayNames";
 
 @Component
 export default class CSVPreview extends Vue {
@@ -75,29 +80,13 @@ export default class CSVPreview extends Vue {
   rerender() {
     this.$forceUpdate();
   }
+  displayName(variable: string) {
+    // @ts-expect-error
+    return variableDisplayNames[variable];
+  }
 }
 </script>
 <style scoped="true">
-table {
-  display: grid;
-  border-collapse: collapse;
-  grid-template-columns: repeat(var(--numCol), auto);
-}
-table th {
-  padding: 0.5em;
-  text-align: left;
-}
-thead,
-tbody,
-tr {
-  display: contents;
-}
-td {
-  padding: 0.5em;
-}
-tr:nth-child(odd) td {
-  background-color: #eee;
-}
 th.hovered,
 td.hovered {
   background: yellow;
@@ -111,7 +100,7 @@ td.mapped {
 th.mapped,
 td.mapped {
   border-left: 1px solid black;
-  border-right: 1px solid black;
+  border-right: 1px solid black !important;
 }
 .table-container {
   width: 100%;

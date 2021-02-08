@@ -95,3 +95,31 @@ button.data-object-expander:focus {
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
 }
+
+table.striped-table {
+  display: grid;
+  border-collapse: collapse;
+  grid-template-columns: repeat(var(--numCol), auto);
+}
+
+table.striped-table th {
+  padding: 0.5 em;
+  text-align: left;
+  border-right: 1px solid #eee;
+}
+
+table.striped-table thead,
+table.striped-table tbody,
+table.striped-table tr {
+  display: contents;
+}
+
+table.striped-table td {
+  padding: 0.5em;
+  border-right: 1px solid #eee;
+}
+
+table.striped-table tr:nth-child(odd) td {
+  background-color: #eee;
+  border-right: 1px solid #fff;
+}
