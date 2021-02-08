@@ -53,7 +53,8 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      comp
+      comp,
+      show: true
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -81,7 +82,8 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      comp: arrayComp
+      comp: arrayComp,
+      show: true
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -117,7 +119,8 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      comp: arrayComp
+      comp: arrayComp,
+      show: true
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -148,7 +151,8 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      comp: inverterComp
+      comp: inverterComp,
+      show: true
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -171,7 +175,8 @@ describe("Test field mapper", () => {
     const propsData = {
       headers,
       usedHeaders,
-      comp
+      comp,
+      show: true
     };
     const wrapper = mount(FieldMapper, {
       localVue,
