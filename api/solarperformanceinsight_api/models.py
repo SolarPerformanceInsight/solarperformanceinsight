@@ -92,7 +92,7 @@ def UserString(default: Any = Undefined, *, title: str = None, description: str 
 
 class PVLibBase(BaseModel):
     """Provide a `pvlib_dict` method to convert parameters if needed
-    for using in pvlib"""
+    for using in pvlib. Child classes may implement model-specific conversions as needed."""
 
     def pvlib_dict(self):
         return self.dict()
