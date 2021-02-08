@@ -57,7 +57,7 @@ Components using the mapper should react to events emitted from this component:
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
-          {{ getDisplayName(field) }} (required):
+          {{ getDisplayName(field) }}:
           <select
             @change="addMapping($event, field)"
             v-model="selectValues[field]"
