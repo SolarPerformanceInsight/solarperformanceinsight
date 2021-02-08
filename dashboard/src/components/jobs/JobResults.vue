@@ -47,6 +47,12 @@ Component for handling display/download of job results.
       <template v-else-if="jobStatus == 'running'">
         The calculation is running and will be ready soon.
       </template>
+      <template v-else-if="jobStatus == 'error'">
+        An error occured while processing the calculation.
+      </template>
+      <template v-else-if="jobStatus == 'complete'">
+        Calculation is complete. Results are loading.
+      </template>
       <template v-else>
         Calculation has not been submitted.
       </template>
@@ -88,20 +94,37 @@ export default class JobResults extends Vue {
         this.initializeResults();
       }
     } else {
-      this.awaitCompletion();
+      this.pollUntilComplete();
     }
   }
   deactivated() {
     clearTimeout(this.timeout);
   }
-  awaitCompletion() {
-    // emit an event to fetch the job and check the new status
-    this.$emit("reload-job");
-    if (this.jobStatus == "complete") {
+  async pollUntilComplete() {
+    const token = await this.$auth.getTokenSilently();
+    this.awaitCompletion(token);
+  }
+  async awaitCompletion(token: string) {
+    // fetch the job status until we find something meaningful to report.
+    const statusRequest = await Jobs.jobStatus(
+      token,
+      this.job.object_id
+    ).then(response => response.json());
+    const jobStatus = statusRequest.status;
+    if (jobStatus != this.jobStatus) {
+      // Emit an event to reload the job when the status has changed so that
+      // JobHandler can react accordingly.
+      this.$emit("reload-job");
+    }
+    if (jobStatus == "complete") {
+      // load results when complete
       this.initializeResults();
+    } else if (jobStatus == "error") {
+      // discontinue polling
+      return;
     } else {
-      // If the job was not complete, check for
-      this.timeout = setTimeout(this.awaitCompletion, 1000);
+      // Wait 1 second and poll for status update
+      this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
     }
   }
   initializeResults() {
@@ -116,7 +139,8 @@ export default class JobResults extends Vue {
       selected: "",
       timeseriesData: null,
       summaryData: {},
-      loadedSummaryData: []
+      loadedSummaryData: [],
+      errors: null
     };
   }
   get labelledSummaryResults() {
