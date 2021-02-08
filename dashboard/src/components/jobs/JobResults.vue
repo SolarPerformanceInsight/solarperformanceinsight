@@ -49,6 +49,9 @@ Component for handling display/download of job results.
       <template v-else-if="jobStatus == 'error'">
         An error occured while processing the calculation.
       </template>
+      <template v-else-if="jobStatus == 'complete'">
+        Calculation is complete. Results are loading.
+      </template>
       <template v-else>
         Calculation has not been submitted.
       </template>
@@ -102,9 +105,10 @@ export default class JobResults extends Vue {
   }
   async awaitCompletion(token: string) {
     // fetch the job status until we find something meaningful to report.
-    const statusRequest = await Jobs.jobStatus(token, this.job.object_id).then(
-      response => response.json()
-    );
+    const statusRequest = await Jobs.jobStatus(
+      token,
+      this.job.object_id
+    ).then(response => response.json());
     const jobStatus = statusRequest.status;
     if (jobStatus != this.jobStatus) {
       // Emit an event to reload the job when the status has changed so that
