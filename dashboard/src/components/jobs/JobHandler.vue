@@ -430,6 +430,8 @@ export default class JobHandler extends Vue {
     if (this.job) {
       if (this.jobStatus == "incomplete") {
         return "Data Upload Required";
+      } else if (this.jobStatus == "error") {
+        return "An error occurred";
       } else if (this.jobStatus == "prepared") {
         return "Ready For Calculation";
       } else {
@@ -447,6 +449,8 @@ export default class JobHandler extends Vue {
         return "Ready";
       } else if (this.jobStatus == "queued") {
         return "Queued";
+      } else if (this.jobStatus == "error") {
+        return "An error occurred";
       } else {
         return "Calculation Not Submitted";
       }
