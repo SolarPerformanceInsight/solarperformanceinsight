@@ -529,7 +529,7 @@ def test_compare_expected_and_actual(
     si = storage.StorageInterface(user=auth0_id)
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
 
-    expected = pd.DataFrame({"performance": [1.0]}, index=pd.Index([1.0]))
+    expected = pd.DataFrame({"performance": [1.2]}, index=pd.Index([1.0]))
     mocker.patch(
         "solarperformanceinsight_api.compute._calculate_performance",
         return_value=[expected, []],
@@ -548,6 +548,7 @@ def test_compare_expected_and_actual(
     ser = summary_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == 1.0
-    assert ser.loc["expected_energy"] == 1.0
+    assert (ser.loc["expected_energy"] - 1.2) < 1e-7
     assert ser.loc["actual_energy"] == 1.0
-    assert ser.loc["difference"] == 0.0
+    assert (ser.loc["difference"] - -0.2) < 1e-7
+    assert (ser.loc["ratio"] - 1.0 / 1.2) < 1e-7
