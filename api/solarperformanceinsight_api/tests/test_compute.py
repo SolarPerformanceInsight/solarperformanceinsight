@@ -5,10 +5,12 @@ from uuid import uuid1
 
 
 import pandas as pd
+from pvlib.location import Location
+from pvlib.modelchain import ModelChain
 import pytest
 
 
-from solarperformanceinsight_api import compute, storage, models
+from solarperformanceinsight_api import compute, storage, models, pvmodeling
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
@@ -348,64 +350,125 @@ def test_get_index():
     assert pd.isna(nans).all()
 
 
-def test_process_single_modelchain(mocker):
+# pytest param ids are helpful finding combos that fail
+@pytest.mark.parametrize(
+    "tempcols",
+    (
+        # pytest parm ids are
+        pytest.param(["temp_air", "wind_speed"], id="standard_temp"),
+        pytest.param(["temp_air"], id="air_temp_only"),
+        pytest.param(["module_temperature"], id="module_temp"),
+        pytest.param(["cell_temperature"], id="cell_temp"),
+        pytest.param(["module_temperature", "wind_speed"], id="module_temp+ws"),
+        pytest.param(["cell_temperature", "wind_speed"], id="cell_temp+ws"),
+    ),
+)
+@pytest.mark.parametrize(
+    "method,colmap",
+    (
+        pytest.param("run_model", {}, id="run_model"),
+        pytest.param(
+            "run_model_from_poa",
+            {"ghi": "poa_global", "dni": "poa_direct", "dhi": "poa_diffuse"},
+            id="run_model_poa",
+        ),
+        pytest.param(
+            "run_model_from_effective_irradiance",
+            {"ghi": "effective_irradiance", "dni": "noped", "dhi": "nah"},
+            id="run_model_eff",
+        ),
+    ),
+)
+def test_process_single_modelchain(
+    system_def, either_tracker, method, colmap, tempcols
+):
+    # full run through a modelchain with a fixed tilt single array,
+    # fixed tilt two array, and single axis tracker single array
     tshift = dt.timedelta(minutes=5)
-    df = pd.DataFrame({"poa_global": [1.0]}, index=[pd.Timestamp("2020-01-01T12:00")])
-    df.index.name = "time"
-    shifted = df.shift(freq=-tshift)
-
-    class Res:
-        ac = df["poa_global"]
-        total_irrad = (df, df)
-        effective_irradiance = (df, df)
-        cell_temperature = (df, df)
-        solar_position = pd.DataFrame({"zenith": 91.0}, index=df.index)
-
-    class Sys:
-        arrays = [0, 1]
-
-    class MC:
-        results = Res()
-        system = Sys()
-
-        def run_model(self, data):
-            pd.testing.assert_frame_equal(df, data[0])
-            return self
-
-    with pytest.raises(AttributeError):
-        compute.process_single_modelchain(MC(), [df], "run_from_poa", tshift, 0)
+    index = pd.DatetimeIndex([pd.Timestamp("2020-01-01T12:00:00-07:00")], name="time")
+    tempdf = pd.DataFrame(
+        {
+            "temp_air": [25.0],
+            "wind_speed": [10.0],
+            "module_temperature": [30.0],
+            "cell_temperature": [32.0],
+            "poa_global": [1100.0],
+        },
+        index=index,
+    )[tempcols]
+    irrad = pd.DataFrame(
+        {
+            "ghi": [1100.0],
+            "dni": [1000.0],
+            "dhi": [100.0],
+        },
+        index=index,
+    ).rename(columns=colmap)
+    df = pd.concat([irrad, tempdf], axis=1)
+    inv, _, multi = either_tracker
+    location = Location(latitude=32.1, longitude=-110.8, altitude=2000, name="test")
+    pvsys = pvmodeling.construct_pvsystem(inv)
+    mc = ModelChain(system=pvsys, location=location, **dict(inv._modelchain_models))
+    weather = [df]
+    if multi:
+        weather.append(df)
 
     # shifted (df - 5min) goes in, and shifted right (df) goes to be processed
-    dblist, summary = compute.process_single_modelchain(
-        MC(), [shifted], "run_model", tshift, 0
-    )
-    pd.testing.assert_frame_equal(
-        summary,
-        pd.DataFrame(
-            {
-                "performance": [1.0],
-                "poa_global": [1.0],
-                "effective_irradiance": [1.0],
-                "cell_temperature": [1.0],
-                "zenith": [91.0],
-            },
-            index=shifted.index,
-        ),
-    )
+    dblist, summary = compute.process_single_modelchain(mc, weather, method, tshift, 0)
+    assert summary.performance.iloc[0] == 250.0
+    assert set(summary.columns) == {
+        "performance",
+        "poa_global",
+        "effective_irradiance",
+        "cell_temperature",
+        "zenith",
+    }
+    pd.testing.assert_index_equal(summary.index, df.index)
 
     # performance for the inverter, and weather for each array
-    assert {d.schema_path for d in dblist} == {
-        "/inverters/0",
-        "/inverters/0/arrays/0",
-        "/inverters/0/arrays/1",
-    }
-    inv0arr0_weather = pd.read_feather(BytesIO(dblist[1].data))
-    exp_weather = shifted.copy()
-    exp_weather.loc[:, "effective_irradiance"] = 1.0
-    exp_weather.loc[:, "cell_temperature"] = 1.0
+    if multi:
+        assert {d.schema_path for d in dblist} == {
+            "/inverters/0",
+            "/inverters/0/arrays/0",
+            "/inverters/0/arrays/1",
+        }
+    else:
+        assert {d.schema_path for d in dblist} == {
+            "/inverters/0",
+            "/inverters/0/arrays/0",
+        }
+
+    inv_perf = list(
+        filter(
+            lambda x: x.type == "performance data" and x.schema_path == "/inverters/0",
+            dblist,
+        )
+    )[0]
     pd.testing.assert_frame_equal(
-        inv0arr0_weather, exp_weather.astype("float32").reset_index()
+        pd.read_feather(BytesIO(inv_perf.data)),
+        pd.DataFrame(
+            {"performance": [250.0]}, dtype="float32", index=df.index
+        ).reset_index(),
     )
+    arr0_weather_df = pd.read_feather(
+        BytesIO(
+            list(
+                filter(
+                    lambda x: x.type == "weather data"
+                    and x.schema_path == "/inverters/0/arrays/0",
+                    dblist,
+                )
+            )[0].data
+        )
+    )
+    assert set(arr0_weather_df.columns) == {
+        "poa_global",
+        "effective_irradiance",
+        "cell_temperature",
+        "time",
+    }
+    # pvlib>0.9.0a2
+    assert not pd.isna(arr0_weather_df.cell_temperature).any()
 
 
 def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker):
