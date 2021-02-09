@@ -17,7 +17,9 @@ Component that handles basic job/workflows.
           <template v-if="job">
             {{ jobType.calculate }}
           </template>
-          Performance
+          <template v-else>
+            Performance
+          </template>
         </template>
         <template v-if="jobClass == 'compare'">
           Compare
@@ -192,7 +194,11 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button :disabled="jobStatus != 'prepared'" @click="computeJob">
+            <button
+              id="compute-job"
+              :disabled="jobStatus != 'prepared'"
+              @click="computeJob"
+            >
               Compute
             </button>
             <span v-if="jobStatus != 'prepared'">
