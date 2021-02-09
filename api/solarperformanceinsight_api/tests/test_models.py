@@ -446,3 +446,8 @@ def test_instantiate_array_w_sapm_temperature_parameters(system_def):
     arrd["temperature_model_parameters"] = sapm_temp_example
     mod = models.PVArray(**arrd)
     assert mod.temperature_model_parameters.dict() == sapm_temp_example
+
+
+def test_pvsystem_extra_param(system_def):
+    with pytest.raises(ValidationError):
+        models.PVSystem(**system_def.dict(), extra_field="not_valid")
