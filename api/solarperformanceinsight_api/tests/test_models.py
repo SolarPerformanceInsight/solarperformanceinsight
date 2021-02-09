@@ -435,3 +435,14 @@ def test_pvwatts_module_temp_scaling():
     mod = models.PVWattsModuleParameters(pdc0=100, gamma_pdc=-0.2)
     assert mod.dict() == {"pdc0": 100, "gamma_pdc": -0.2}
     assert mod.pvlib_dict() == {"pdc0": 100, "gamma_pdc": -0.002}
+
+
+def test_instantiate_array_w_sapm_temperature_parameters(system_def):
+    """Regression test for gh #129 """
+    sapm_temp_example = {"a": -3.47, "b": -0.0594, "deltaT": 3}
+
+    arrd = deepcopy(system_def.inverters[0].arrays[0].dict())
+    arrd["name"] = "PVWatts temperature params"
+    arrd["temperature_model_parameters"] = sapm_temp_example
+    mod = models.PVArray(**arrd)
+    assert mod.temperature_model_parameters.dict() == sapm_temp_example
