@@ -90,7 +90,12 @@ def UserString(default: Any = Undefined, *, title: str = None, description: str 
     )
 
 
-class PVLibBase(BaseModel):
+class SPIBase(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class PVLibBase(SPIBase):
     """Provide a `pvlib_dict` method to convert parameters if needed
     for using in pvlib. Child classes may implement model-specific conversions
     as needed."""
@@ -99,7 +104,7 @@ class PVLibBase(BaseModel):
         return self.dict()
 
 
-class FixedTracking(BaseModel):
+class FixedTracking(SPIBase):
     """Parameters for a fixed tilt array"""
 
     tilt: float = Field(
@@ -113,7 +118,7 @@ class FixedTracking(BaseModel):
     )
 
 
-class SingleAxisTracking(BaseModel):
+class SingleAxisTracking(SPIBase):
     """Parameters for a single axis tracking array"""
 
     axis_tilt: float = Field(
@@ -222,7 +227,7 @@ class PVWattsModuleParameters(PVLibBase):
         return {k: v / 100 if k == "gamma_pdc" else v for k, v in self.dict().items()}
 
 
-class PVsystTemperatureParameters(BaseModel):
+class PVsystTemperatureParameters(SPIBase):
     """Parameters for the cell temperature model of the modules in a
     PVSyst-like model"""
 
@@ -240,7 +245,7 @@ class PVsystTemperatureParameters(BaseModel):
     _modelchain_temperature_model: str = PrivateAttr("pvsyst")
 
 
-class SAPMTemperatureParameters(BaseModel):
+class SAPMTemperatureParameters(SPIBase):
     """Parameters for the cell temperature model of the modules in the
     Sandia Array Performance Model"""
 
@@ -256,7 +261,7 @@ class SAPMTemperatureParameters(BaseModel):
     _modelchain_temperature_model: str = PrivateAttr("sapm")
 
 
-class PVArray(BaseModel):
+class PVArray(SPIBase):
     """Parameters of a PV array that feeds into one inverter"""
 
     name: str = UserString("", description="Name of this array")
@@ -307,7 +312,7 @@ class PVArray(BaseModel):
         )
 
 
-class PVWattsLosses(BaseModel):
+class PVWattsLosses(SPIBase):
     """Parameters describing the PVWatts system loss model"""
 
     soiling: float = Field(2.0, description="Soiling loss, %")
@@ -323,7 +328,7 @@ class PVWattsLosses(BaseModel):
     _modelchain_losses_model: str = PrivateAttr("pvwatts")
 
 
-class PVWattsInverterParameters(BaseModel):
+class PVWattsInverterParameters(SPIBase):
     """DC-AC power conversion parameters of an inverter for the PVWatts model"""
 
     pdc0: float = Field(
@@ -342,7 +347,7 @@ class PVWattsInverterParameters(BaseModel):
     _modelchain_ac_model: str = PrivateAttr("pvwatts")
 
 
-class SandiaInverterParameters(BaseModel):
+class SandiaInverterParameters(SPIBase):
     """DC-AC power conversion parameters of an inverter for Sandia's
     Grid-Connected PV Inverter model"""
 
@@ -453,7 +458,7 @@ class TranspositionModelEnum(str, Enum):
     perez = "perez"
 
 
-class Inverter(BaseModel):
+class Inverter(SPIBase):
     """Parameters for a single inverter feeding into a PV system"""
 
     name: str = UserString("", description="Name of this inverter")
@@ -512,7 +517,7 @@ class Inverter(BaseModel):
         return values
 
 
-class PVSystem(BaseModel):
+class PVSystem(SPIBase):
     """Parameters for an entire PV system at some location"""
 
     name: str = UserString(
@@ -536,11 +541,14 @@ class PVSystem(BaseModel):
         schema_extra = {"example": SYSTEM_EXAMPLE}
 
 
-class StoredObjectID(BaseModel):
+class StoredObjectID(SPIBase):
     object_id: UUID = Field(..., description="Unique identifier of the object")
     object_type: str = Field("system", description="Type of the object")
 
     class Config:
+        # allow extra fields to go into Stored objects as they are
+        # removed when serializing. Eases putting DB objects into models
+        extra = "ignore"
         schema_extra = {
             "example": {
                 "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
@@ -588,7 +596,7 @@ class UserInfo(StoredObject):
     auth0_id: str = Field(..., description="User ID from Auth 0")
 
 
-class JobTimeindex(BaseModel):
+class JobTimeindex(SPIBase):
     """Parameters for a time index that all data uploads must conform to.
     Data is assumed to time-averaged and closed and labeled at the left endpoint, i.e.
     a datapoint at 23:00 of data with a 1 hour time step is assumed be the
@@ -722,7 +730,7 @@ class CalculateEnum(str, Enum):
     expected_performance = "expected performance"
 
 
-class CalculatePerformanceJob(BaseModel):
+class CalculatePerformanceJob(SPIBase):
     """Calculate the given type of performance"""
 
     calculate: CalculateEnum
@@ -742,7 +750,7 @@ class CompareEnum(str, Enum):
     expected_actual = "expected and actual performance"
 
 
-class ComparePerformanceJob(BaseModel):
+class ComparePerformanceJob(SPIBase):
     """Compare one type of performance to another"""
 
     compare: CompareEnum
@@ -773,7 +781,7 @@ class WeatherPREnum(str, Enum):
     weather_adjusted_pr = "weather-adjusted performance ratio"
 
 
-class CalculateWeatherAdjustedPRJob(BaseModel):
+class CalculateWeatherAdjustedPRJob(SPIBase):
     """Calculate the weather-adjusted performance ratio"""
 
     calculate: WeatherPREnum
@@ -804,7 +812,7 @@ JOB_PARAMS_EXAMPLE = dict(
 )
 
 
-class JobParameters(BaseModel):
+class JobParameters(SPIBase):
     system_id: UUID
     job_type: Union[
         CalculatePerformanceJob, ComparePerformanceJob, CalculateWeatherAdjustedPRJob
@@ -830,7 +838,7 @@ JOB_DATA_META_EXAMPLE = dict(
 )
 
 
-class JobDataItem(BaseModel):
+class JobDataItem(SPIBase):
     schema_path: str = Field(
         ..., description="Relative to PV system definition, i.e. /inverters/0/arrays/0"
     )
@@ -895,7 +903,7 @@ def _construct_data_items(
     return out
 
 
-class Job(BaseModel):
+class Job(SPIBase):
     # duplicated here to track without worrying about changes
     system_definition: PVSystem
     parameters: JobParameters
@@ -940,7 +948,7 @@ class JobStatusEnum(str, Enum):
     error = "error"
 
 
-class JobStatus(BaseModel):
+class JobStatus(SPIBase):
     status: JobStatusEnum = Field(
         ...,
         description="""Status of the job:
@@ -1003,12 +1011,12 @@ class StoredJob(StoredObject):
         }
 
 
-class DataPeriods(BaseModel):
+class DataPeriods(SPIBase):
     expected: str = Field(..., description="Expected period of the data")
     uploaded: str = Field(..., description="Most common period of the uploaded data")
 
 
-class DataParsingStats(BaseModel):
+class DataParsingStats(SPIBase):
     number_of_expected_rows: int = Field(
         ..., description="Number of total rows expected in the data upload."
     )
@@ -1052,7 +1060,7 @@ class JobResultTypeEnum(str, Enum):
     # will need other types for performance ratio etc.
 
 
-class JobResultMetadata(BaseModel):
+class JobResultMetadata(SPIBase):
     type: JobResultTypeEnum = Field(
         ...,
         description="""Type of data in this result:

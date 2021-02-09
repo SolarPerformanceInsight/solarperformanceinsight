@@ -1,9 +1,12 @@
 import logging
 
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator  # type: ignore
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -49,6 +52,17 @@ async def startup_event():  # pragma: no cover
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(LogFilter)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_execption_handler(request: Request, exc: RequestValidationError):
+    """Adjust validation error output to conform to schema"""
+    detail = []
+    for err in exc.errors():
+        if "loc" in err:
+            err["loc"] = (str(v) for v in err["loc"])  # sometimes not string
+        detail.append(err)
+    return JSONResponse(status_code=422, content=jsonable_encoder({"detail": detail}))
 
 
 def custom_openapi():
