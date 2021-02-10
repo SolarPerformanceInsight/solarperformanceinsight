@@ -471,8 +471,8 @@ def test_process_single_modelchain(
     assert not pd.isna(arr0_weather_df.cell_temperature).any()
 
 
-def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker):
-    si = storage.StorageInterface(user=auth0_id)
+@pytest.fixture()
+def mockup_modelchain(mocker, stored_job):
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
     inv = stored_job.definition.system_definition.inverters[0]
     stored_job.definition.system_definition.inverters = [inv, inv]
@@ -494,6 +494,12 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
         "solarperformanceinsight_api.compute.process_single_modelchain",
         return_value=([], df),
     )
+    return stored_job, save, df
+
+
+def test_run_performance_job(auth0_id, nocommit_transaction, mockup_modelchain):
+    si = storage.StorageInterface(user=auth0_id)
+    stored_job, save, df = mockup_modelchain
 
     compute.run_performance_job(stored_job, si)
     assert save.call_count == 1
@@ -523,23 +529,16 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8
 
 
-def test_compare_expected_and_actual(
-    stored_job, auth0_id, nocommit_transaction, mocker
-):
+def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
     si = storage.StorageInterface(user=auth0_id)
-    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+    stored_job, save, df = mockup_modelchain
 
-    expected = pd.DataFrame({"performance": [1.2]}, index=pd.Index([1.0]))
-    mocker.patch(
-        "solarperformanceinsight_api.compute._calculate_performance",
-        return_value=[expected, []],
-    )
     compute.compare_expected_and_actual(stored_job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
-    assert len(reslist) == 1
+    assert len(reslist) == 4
 
-    summary = reslist[0]
+    summary = reslist[-1]
     assert summary.type == "actual vs expected energy"
     iob = BytesIO(summary.data)
     iob.seek(0)
@@ -548,7 +547,7 @@ def test_compare_expected_and_actual(
     ser = summary_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == 1.0
-    assert (ser.loc["expected_energy"] - 1.2) < 1e-7
+    assert (ser.loc["expected_energy"] - 2.0) < 1e-7
     assert ser.loc["actual_energy"] == 1.0
-    assert (ser.loc["difference"] - -0.2) < 1e-7
-    assert (ser.loc["ratio"] - 1.0 / 1.2) < 1e-7
+    assert (ser.loc["difference"] - -1.0) < 1e-7
+    assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7

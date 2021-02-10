@@ -298,7 +298,7 @@ def process_single_modelchain(
 
 def _calculate_performance(
     job: models.StoredJob, si: storage.StorageInterface
-) -> Tuple[pd.DataFrame, List[DBResult]]:
+) -> Tuple[pd.Series, List[DBResult]]:
     """Compute the performance, and other modeling variables, for the Job and
     store the inverter level performance, total system performance, array level weather,
     and a monthly summary to the database for retrieval
@@ -403,7 +403,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
 
 
 def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
-    monthly_energy, result_list = _calculate_performance(job, si)
+    expected, result_list = _calculate_performance(job, si)
     # performance granularity validation means there won't be system level
     # perfromance and inverter level that you wouldn't want to sum
     performance_data_ids = [
@@ -416,7 +416,6 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
         .month.unique()  # type: ignore
         .sort_values()
     )
-    expected = monthly_energy["performance"]  # type: ignore
     actual_performance = sum(
         _get_data(job.object_id, did, si) for did in performance_data_ids
     )[
