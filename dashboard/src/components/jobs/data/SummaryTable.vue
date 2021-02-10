@@ -1,10 +1,13 @@
 <template>
   <div class="summary-table">
-    <table class="result-summary" :style="`--numCol: ` + headers.length">
+    <table
+      class="striped-table result-summary"
+      :style="`--numCol: ` + headers.length"
+    >
       <thead>
         <tr>
           <th v-for="(header, i) of headers" :key="i">
-            {{ header }}
+            {{ displayName(header) }}
           </th>
         </tr>
 
@@ -22,6 +25,7 @@
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 @Component
 export default class SummaryTable extends Vue {
@@ -31,27 +35,8 @@ export default class SummaryTable extends Vue {
     // maybe determine grouping/leftmost column label dynamically?
     return this.tableData.schema.fields.map((x: any) => x.name);
   }
+  displayName(varName: string) {
+    return getVariableDisplayName(varName);
+  }
 }
 </script>
-<style scoped="true">
-table {
-  display: grid;
-  border-collapse: collapse;
-  grid-template-columns: repeat(var(--numCol), auto);
-}
-table th {
-  padding: 0.5em;
-  text-align: left;
-}
-thead,
-tbody,
-tr {
-  display: contents;
-}
-td {
-  padding: 0.5em;
-}
-tr:nth-child(even) td {
-  background-color: #eee;
-}
-</style>

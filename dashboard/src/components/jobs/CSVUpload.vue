@@ -16,12 +16,32 @@ Takes the following props that can be extracted from job metadata.
     - "system": System wide data in the file.
     - "inverter": Data for each inverter in the file.
     - "array": Data for each array in the file.
-  - system: StoredSystem: The system to map data onto.
+  - system: System: The system to map data onto.
   - data_objects: array - Array of data objects created by the api.
 -->
 <template>
   <div class="csv-upload">
     <slot>Upload your weather data</slot>
+    <br />
+    <label for="header-line">CSV headers are on line:</label>
+    <input
+      id="header-line"
+      type="number"
+      step="1"
+      min="1"
+      @change="enforceDataStartOrder"
+      v-model.number="headerLine"
+    />
+    <br />
+    <label for="data-start-line">Data begins on line:</label>
+    <input
+      id="data-start-line"
+      type="number"
+      step="1"
+      :min="headerLine + 1"
+      @change="adjustHeaderDataLine"
+      v-model.number="dataStartLine"
+    />
     <br />
     <label for="csv-upload">Select a file with {{ dataType }}:</label>
     <input
@@ -31,50 +51,91 @@ Takes the following props that can be extracted from job metadata.
       @change="processFile"
     />
     <template v-if="processingFile">
-      <div class="loading-container">
-        <div class="loading">Processing File...</div>
+      <div class="file-processing-container">
+        <div class="loading">
+          Processing File
+          <span class="loading-container"></span>
+        </div>
       </div>
     </template>
-    <template v-if="promptForMapping && !processingFile">
-      <div class="warning" v-if="headers.length < totalMappings">
-        Warning: It looks like you may not have enough data in this file. The
-        file contains {{ headers.length }} columns and
-        {{ totalMappings }} columns are expected ({{ required.join(", ") }} for
-        <template v-if="granularity == 'system'">the</template>
-        <template v-else>each</template>
-        {{ granularity }}).
+    <template v-if="parsingErrors">
+      <div class="warning">
+        Errors encountered processing your csv.
+        <ul>
+          <li v-for="(error, i) of parsingErrors" :key="i">
+            <b>{{ error.type }}</b>
+            : {{ error.message }}
+          </li>
+        </ul>
       </div>
-      <csv-mapper
-        @mapping-complete="processMapping"
-        @mapping-incomplete="mappingComplete = false"
-        :system="system"
-        :granularity="granularity"
-        :data_objects="data_objects"
-        :headers="headers"
-        :required="required"
-      >
-        <p>
-          Select which columns in your file contain data for the required
-          variables. Data can be uploaded using the button below once the
-          required variables are mapped to columns for
-          {{ granularity == "system" ? "the system" : `each ${granularity}` }}.
-        </p>
-      </csv-mapper>
-      <button :disabled="!mappingComplete" @click="uploadData">
-        Upload Data
-      </button>
-      <span v-if="!mappingComplete">
-        All required fields must be mapped before upload
-      </span>
     </template>
+    <transition name="fade">
+      <div v-if="!processingFile && csv">
+        <csv-preview
+          :headers="headers"
+          :csvData="csvPreview"
+          :mapping="headerMapping"
+          :currentlySelected="currentSelection"
+        />
+      </div>
+    </transition>
+    <transition name="fade">
+      <div v-if="promptForMapping && !processingFile">
+        <csv-mapper
+          @option-hovered="updateSelected"
+          @new-mapping="processMapping"
+          :system="system"
+          :granularity="granularity"
+          :data_objects="data_objects"
+          :headers="headers"
+          :required="required"
+        >
+          <p>
+            Select which columns in your file contain data for the required
+            variables. Data can be uploaded using the button below once the
+            required variables are mapped to columns for
+            {{
+              granularity == "system" ? "the system" : `each ${granularity}`
+            }}.
+          </p>
+        </csv-mapper>
+        <button :disabled="!mappingComplete" @click="uploadData">
+          Upload Data
+        </button>
+        <span v-if="!mappingComplete">
+          All required fields must be mapped before upload
+        </span>
+        <div v-if="uploadingData" class="upload-progress">
+          <b>Upload Progress</b>
+          <ul class="upload-statuses">
+            <li v-for="(o, i) in uploadStatuses" :key="i">
+              {{ o.component.name }}:
+              <span v-if="o.status == 'uploading'">
+                uploading
+                <span class="loading-container"></span>
+              </span>
+              <span v-else-if="['waiting', 'done'].includes(o.status)">
+                <b>{{ o.status }}</b>
+              </span>
+              <span v-else class="warning-text">{{ o.status }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { StoredSystem } from "@/types/System";
+import { System } from "@/types/System";
 import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
+import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 import { addData } from "@/api/jobs";
+
+import CSVPreview from "@/components/jobs/data/CSVPreview.vue";
+
+Vue.component("csv-preview", CSVPreview);
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -85,54 +146,133 @@ export default class CSVUpload extends Vue {
   @Prop() jobId!: string;
   @Prop() granularity!: string;
   @Prop() irradiance_type!: string;
-  @Prop() system!: StoredSystem;
+  @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, Record<string, string>>;
   promptForMapping!: boolean;
   headers!: Array<string>;
+  csv!: string;
   csvData!: Array<Record<string, Array<string | number>>>;
   required!: Array<string>;
   mappingComplete!: boolean;
+
   processingFile!: boolean;
+  parsingErrors!: Record<string, any> | null;
+  headerLine!: number;
+  dataStartLine!: number;
+
+  uploadingData!: boolean;
+  uploadStatuses!: Record<string, any>;
+
+  // passed to preview to highlight columns
+  currentSelection!: string | null;
 
   data() {
     return {
       mapping: {},
       processingFile: false,
+      parsingErrors: null,
       promptForMapping: false,
       headers: [],
       required: this.getRequired(),
       mappingComplete: false,
-      csvData: [{}]
+      csv: "",
+      csvData: [{}],
+      uploadingData: false,
+      uploadStatuses: {},
+      headerLine: 1,
+      dataStartLine: 2,
+      currentSelection: null
     };
   }
   get dataType() {
     return this.data_objects[0].definition.type;
   }
-  storeCSV(csv: string) {
+  removeMetadata(csv: string) {
+    if (!(this.headerLine == 1 && this.dataStartLine == 2)) {
+      // Determine the characters used for line separation
+      const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
+
+      // parse out header
+      let linesRead = 0;
+      let headerString = "";
+
+      // Read in a line as the header until we reach the header line defined
+      // by the user.
+      for (linesRead; linesRead < this.headerLine; linesRead++) {
+        headerString = csv.substring(0, csv.indexOf(lineSep));
+        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+      }
+
+      // skip lines until we reach the start of data in the csv
+      for (linesRead; linesRead < this.dataStartLine; linesRead++) {
+        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+      }
+      csv = headerString + lineSep + csv;
+    }
+    return csv;
+  }
+  storeCSV(csv: string | null) {
+    this.promptForMapping = false;
+    this.csvData = [{}];
+    this.mapping = {};
+    if (csv) {
+      this.csv = csv;
+    } else {
+      csv = this.csv;
+    }
+    this.parsingErrors = null;
     // Parse the csv into an object mapping csv-headers to arrays of column
     // data.
-    // TODO: parse first x lines for table to highlight mapping options
-    //   during selection
-    // TODO: allow for specification of header row and row where data starts
+    csv = this.removeMetadata(csv);
     const parsingResult = parseCSV(csv.trim());
     if (parsingResult.errors.length > 0) {
-      console.log("Bad csv");
+      const errors: Record<string, any> = {};
+      parsingResult.errors.forEach((error, index) => {
+        let message = error.message;
+        if ("row" in error) {
+          message += ` (row: ${error.row})`;
+        }
+        errors[index] = {
+          type: error.type,
+          message: message
+        };
+      });
+      this.parsingErrors = errors;
     } else {
-      this.csvData = parsingResult.data;
       const headers = parsingResult.meta.fields;
-      this.headers = headers ? headers : [];
-      this.processingFile = false;
-      this.promptForMapping = true;
+      if (headers && headers.length < this.totalMappings) {
+        // Handle case where CSV is parsable but does not contain enough data
+        this.parsingErrors = {
+          0: {
+            type: "Too Few Columns",
+            message: `You do not have enough data in this file. The file contains
+${headers ? headers.length : 0} columns and ${
+              this.totalMappings
+            } columns are expected (one
+time column, and ${this.required.filter(x => x != "time").join(", ")} for
+${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
+          }
+        };
+        this.csvData = [{}];
+      } else {
+        this.csvData = parsingResult.data;
+        this.headers = headers ? headers : [];
+        this.promptForMapping = true;
+      }
     }
+    this.processingFile = false;
   }
-  processMapping(newMapping: Record<string, Record<string, string>>) {
-    // Handle a new mapping from the CSVMapper component, this is a
-    // complete mapping, so set mappingComplete to true to enable upload
-    // button.
-    this.mapping = newMapping;
-    this.mappingComplete = true;
+  processMapping(mapObject: {
+    mapping: Record<string, Record<string, string>>;
+    complete: boolean;
+  }) {
+    // Handle a new mapping from the CSVMapper component
+    for (const loc in mapObject.mapping) {
+      this.$set(this.mapping, loc, mapObject.mapping[loc]);
+    }
+    this.mappingComplete = mapObject.complete;
   }
   processFile(e: HTMLInputEvent) {
     // Handle a CSV upload, hand of parsing to storeCSV
@@ -146,11 +286,27 @@ export default class CSVUpload extends Vue {
     }
   }
   async uploadData() {
+    // initialize variables for displaying upload progress to the user
+    for (const dataObject of this.data_objects) {
+      const initialStatus = {
+        status: "waiting",
+        errors: null,
+        component: indexSystemFromSchemaPath(
+          this.system,
+          dataObject.definition.schema_path
+        )
+      };
+      // Use set so updloadStatuses is reactive
+      this.$set(this.uploadStatuses, dataObject.object_id, initialStatus);
+    }
+
+    this.uploadingData = true;
     // function to call when all mapping has been completed. Should complete
     // the mapping process and post to the API
     let success = true;
     for (const dataObject of this.data_objects) {
       // TODO: handle this on a single loc basis instead of looping all at once
+      this.uploadStatuses[dataObject.object_id].status = "uploading";
       const loc = dataObject.definition.schema_path;
       const csv = mapToCSV(this.csvData, this.mapping[loc]);
       const token = await this.$auth.getTokenSilently();
@@ -162,6 +318,10 @@ export default class CSVUpload extends Vue {
       );
       if (!response.ok) {
         success = false;
+        const details = await response.json();
+        this.uploadStatuses[dataObject.object_id].status = details.detail;
+      } else {
+        this.uploadStatuses[dataObject.object_id].status = "done";
       }
     }
     if (success) {
@@ -174,7 +334,64 @@ export default class CSVUpload extends Vue {
     return this.data_objects[0].definition.data_columns;
   }
   get totalMappings() {
-    return this.required.length * this.data_objects.length;
+    const nonTimeRequired = this.required.filter(x => x != "time");
+    return 1 + nonTimeRequired.length * this.data_objects.length;
+  }
+  enforceDataStartOrder() {
+    if (this.headerLine >= this.dataStartLine) {
+      this.dataStartLine = this.headerLine + 1;
+    }
+    this.adjustHeaderDataLine();
+  }
+  get csvPreview() {
+    return this.csvData.slice(0, 5);
+  }
+  updateSelected(selected: string | null) {
+    this.currentSelection = selected;
+  }
+  get headerMapping() {
+    // Special mapping of headers to expected variables for the csv preview
+    const newMap: Record<string, any> = {};
+    for (const header of this.headers) {
+      newMap[header] = null;
+    }
+    // Invert mappings so they are accessible by header
+    for (const loc in this.mapping) {
+      const mapping = this.mapping[loc];
+      for (const variable in mapping) {
+        const header = mapping[variable];
+        if (variable == "time" && newMap.time) {
+          continue;
+        }
+        newMap[header] = variable;
+      }
+    }
+    return newMap;
+  }
+  adjustHeaderDataLine() {
+    if (this.promptForMapping) {
+      this.processingFile = true;
+      this.promptForMapping = false;
+      this.storeCSV(null);
+    }
   }
 }
 </script>
+<style scoped>
+span.loading-container {
+  border: 0.25em solid #f3f3f3;
+  border-top: 0.25em solid #3498db;
+  width: 1em;
+  height: 1em;
+}
+.file-processing-container {
+  padding: 1em;
+}
+ul.upload-statuses {
+  list-style: none;
+}
+#header-line,
+#data-start-line {
+  width: 3em;
+}
+</style>

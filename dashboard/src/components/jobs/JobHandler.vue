@@ -17,7 +17,9 @@ Component that handles basic job/workflows.
           <template v-if="job">
             {{ jobType.calculate }}
           </template>
-          Performance
+          <template v-else>
+            Performance
+          </template>
         </template>
         <template v-if="jobClass == 'compare'">
           Compare
@@ -62,7 +64,12 @@ Component that handles basic job/workflows.
             :key="dataStep"
             class="jobtab"
             :class="{ active: step == dataStep }"
-            :disabled="!job"
+            :disabled="
+              !job ||
+                ['calculate', 'queued', 'running', 'complete'].includes(
+                  jobStatus
+                )
+            "
             @click="step = dataStep"
           >
             Upload {{ dataStep }}
@@ -187,7 +194,11 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button :disabled="jobStatus != 'prepared'" @click="computeJob">
+            <button
+              id="compute-job"
+              :disabled="jobStatus != 'prepared'"
+              @click="computeJob"
+            >
               Compute
             </button>
             <span v-if="jobStatus != 'prepared'">

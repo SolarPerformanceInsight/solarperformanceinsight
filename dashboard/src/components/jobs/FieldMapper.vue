@@ -17,7 +17,7 @@ Components using the mapper should react to events emitted from this component:
 -->
 <template>
   <div class="field-mapper">
-    <div>
+    <div v-if="show">
       <div class="metadata" v-if="metadata">
         <template v-if="'make_model' in metadata">
           <template v-if="'parent' in metadata">
@@ -57,12 +57,15 @@ Components using the mapper should react to events emitted from this component:
       <!-- Required fields -->
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
-          {{ getDisplayName(field) }} (required):
-          <select @change="addMapping($event, field)">
+          {{ getDisplayName(field) }}:
+          <select
+            @change="addMapping($event, field)"
+            v-model="selectValues[field]"
+          >
             <option>Not included</option>
             <option
               v-for="(u, i) in headers"
-              :key="u"
+              :key="i"
               :name="u"
               :value="u"
               :disabled="usedHeaders.includes(u)"
@@ -79,10 +82,11 @@ Components using the mapper should react to events emitted from this component:
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
@@ -95,33 +99,22 @@ interface MetadataWithDataObject {
 
 type SystemComponent = System | Inverter | PVArray;
 
-// Maps variables to human friendly names
-const displayNames = {
-  time: "Timestamp",
-  ghi: "Global Horizontal Irradiance",
-  dhi: "Diffuse Horizontal Irradiance",
-  dni: "Direct Normal Irradiance",
-  poa_global: "Plane of Array Global Irradiance",
-  poa_diffuse: "Plane of Array Diffuse Irradiance",
-  poa_direct: "Plane of Array Direct Irradiance",
-  effective_irradiance: "Effective Irradiance",
-  cell_temperature: "Cell Temperature",
-  module_temperature: "Module Temperature",
-  temp_air: "Air Temperature",
-  wind_speed: "Wind Speed",
-  performance: "Performance (AC power)"
-};
-
 @Component
 export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
+  @Prop() show!: boolean;
   mapping!: Record<string, string>;
+  selectValues!: Record<string, string>;
 
+  created() {
+    this.initSelectValues();
+  }
   data() {
     return {
-      mapping: {}
+      mapping: {},
+      selectValues: {}
     };
   }
   get metadata() {
@@ -133,6 +126,12 @@ export default class FieldMapper extends Vue {
     return this.comp.data_object.definition.data_columns.filter(
       (x: string) => x != "time"
     );
+  }
+  emitMapping() {
+    this.$emit("mapping-updated", {
+      ...this.mapping,
+      loc: this.comp.data_object.definition.schema_path
+    });
   }
   addMapping(event: any, variable: string) {
     const fileHeader = event.target.value;
@@ -150,20 +149,23 @@ export default class FieldMapper extends Vue {
       this.mapping[variable] = fileHeader;
       this.$emit("used-header", fileHeader);
     }
-    this.$emit("mapping-updated", {
-      ...this.mapping,
-      loc: this.comp.data_object.definition.schema_path
-    });
-    if (this.isValid()) {
-      this.$emit("mapping-complete");
-    }
+    this.emitMapping();
   }
   getDisplayName(variable: string) {
-    // @ts-expect-error
-    return displayNames[variable];
+    return getVariableDisplayName(variable);
   }
   isValid() {
     return this.required.every((x: string) => x in this.mapping);
+  }
+  @Watch("headers")
+  reset() {
+    this.mapping = {};
+    this.initSelectValues();
+  }
+  initSelectValues() {
+    this.required.forEach((field: string) => {
+      this.selectValues[field] = "Not included";
+    });
   }
 }
 </script>

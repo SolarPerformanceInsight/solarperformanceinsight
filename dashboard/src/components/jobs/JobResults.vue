@@ -41,6 +41,7 @@ Component for handling display/download of job results.
       </template>
     </div>
     <div v-else>
+      {{ jobStatus }}
       <template v-if="jobStatus == 'queued'">
         The calculation is queued and waiting for processing.
       </template>

@@ -20,12 +20,13 @@ Takes the following props:
         <!-- Time mapping for the whole file -->
         <b>Timestamp column:</b>
         <select @change="mapTime">
-          <option value="" disabled selected>
+          <option @mouseover="fireSelect(null)" value="" disabled selected>
             Unmapped
           </option>
           <option
+            @mouseover="fireSelect(u)"
             v-for="(u, i) in headers"
-            :key="u"
+            :key="i"
             :name="u"
             :value="u"
             :disabled="usedHeaders.includes(u)"
@@ -54,7 +55,7 @@ Takes the following props:
                 Missing Fields
               </span>
               <span v-else>
-                Field Mapping Complete
+                Ready for Upload
               </span>
               <!-- Text to alert user that the component requires data
                    Uncomment when multi-file capability is added.
@@ -75,7 +76,7 @@ Takes the following props:
               v-bind:class="{ opened: dataObjectDisplay[refName(i)] }"
             ></button>
           </div>
-          <div v-if="dataObjectDisplay[refName(i)]">
+          <div>
             <!-- ref argument here is used to determine if the mapping is complete
                (all objects have all required fields mapped).
           -->
@@ -87,6 +88,7 @@ Takes the following props:
               :headers="headers"
               :usedHeaders="usedHeaders"
               :comp="component"
+              :show="dataObjectDisplay[refName(i)]"
             >
               <p>
                 What fields contain data for {{ granularity }}
@@ -101,7 +103,7 @@ Takes the following props:
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
 interface HTMLInputEvent extends Event {
@@ -189,10 +191,20 @@ export default class CSVMapper extends Vue {
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
+    this.emitMapping();
+  }
+  emitMapping() {
+    const mapObject = {
+      mapping: this.mapping,
+      complete: false
+    };
+    if (this.isValid) {
+      mapObject.complete = true;
+    }
+    this.$emit("new-mapping", mapObject);
   }
   checkValidity() {
     // Check that all child components are completely mapped.
-    // emits a "mapping-complete" event with the full mapping if valid.
     const componentValidity: Record<string, boolean> = {};
 
     for (const ref in this.$refs) {
@@ -203,11 +215,6 @@ export default class CSVMapper extends Vue {
     this.isValid =
       Object.values(componentValidity).every(x => x === true) &&
       this.timeMapped;
-    if (this.isValid) {
-      this.$emit("mapping-complete", this.mapping);
-    } else {
-      this.$emit("mapping-incomplete");
-    }
   }
   refName(index: number) {
     // Create a unique ref name for a nested component. Used to store
@@ -230,11 +237,27 @@ export default class CSVMapper extends Vue {
     const timeHeader = event.target.value;
     this.timeField = timeHeader;
     this.useHeader(this.timeField);
-    for (const loc in this.mapping) {
-      // @ts-expect-error
-      this.mapping[loc]["time"] = this.timeField;
+    for (const dataObject of this.data_objects) {
+      const loc = dataObject.definition.schema_path;
+      // update the time field or create a mapping
+      if (loc in this.mapping) {
+        // @ts-expect-error
+        this.mapping[loc]["time"] = this.timeField;
+      } else {
+        // @ts-expect-error
+        this.mapping[loc] = { time: this.timeField };
+      }
     }
     this.checkValidity();
+    this.emitMapping();
+  }
+  fireSelect(selected: string | null) {
+    this.$emit("option-hovered", selected);
+  }
+  @Watch("headers", { deep: true })
+  resetMapping() {
+    this.timeField = "";
+    this.usedHeaders = [];
   }
 }
 </script>

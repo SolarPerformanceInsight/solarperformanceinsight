@@ -4,6 +4,7 @@ import flushPromises from "flush-promises";
 import { createLocalVue, mount } from "@vue/test-utils";
 
 import JobHandler from "@/components/jobs/JobHandler.vue";
+import JobResults from "@/components/jobs/JobResults.vue";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
@@ -24,6 +25,10 @@ const testJob = {
   object_type: "job",
   created_at: "2020-12-11T19:52:00+00:00",
   modified_at: "2020-12-11T19:52:00+00:00",
+  status: {
+    status: "incomplete",
+    last_change: "2020-12-11T20:00:00+00:00"
+  },
   definition: {
     system_definition: {
       name: "Test PV System",
@@ -99,10 +104,6 @@ const testJob = {
       irradiance_type: "poa",
       temperature_type: "module"
     }
-  },
-  status: {
-    status: "incomplete",
-    last_change: "2020-12-11T20:00:00+00:00"
   },
   data_objects: [
     {
@@ -183,6 +184,7 @@ Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("time-parameters", TimeParameters);
+Vue.component("job-results", JobResults);
 
 describe("Test JobHandler", () => {
   it("load calculate job", async () => {
@@ -609,5 +611,34 @@ describe("Test JobHandler", () => {
     // @ts-expect-error
     handler.vm.setStep();
     expect(handler.vm.$data.step).toBe("results");
+  });
+  it("test compute flow", async () => {
+    const fetchJob = { ...testJob };
+    fetchJob.status = { status: "prepared", last_change: "2020-01-01T00:00Z" };
+    fetchJob.definition.parameters.job_type = {
+      calculate: "predicted performance"
+    };
+    mockJobResponse.json = jest.fn().mockResolvedValue(fetchJob);
+
+    const propsData = {
+      jobId: testJob.object_id
+    };
+    const handler = mount(JobHandler, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await flushPromises();
+    const computeButton = handler.find("button#compute-job");
+    expect(computeButton.exists()).toBe(true);
+
+    const completeJob = { ...fetchJob };
+    completeJob.status.status = "complete";
+
+    computeButton.trigger("click");
+
+    await flushPromises();
+
+    expect(handler.findComponent(JobResults).exists()).toBe(true);
   });
 });
