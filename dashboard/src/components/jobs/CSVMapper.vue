@@ -19,7 +19,7 @@ Takes the following props:
       <div>
         <!-- Time mapping for the whole file -->
         <b>Timestamp column:</b>
-        <select @change="mapTime" v-model="timeField">
+        <select @change="mapTime">
           <option @mouseover="fireSelect(null)" value="" disabled selected>
             Unmapped
           </option>
