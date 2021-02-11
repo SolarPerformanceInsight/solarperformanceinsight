@@ -18,6 +18,7 @@ pytestmark = pytest.mark.usefixtures("add_example_db_data")
 
 def test_run_job(job_id, auth0_id, mocker, nocommit_transaction):
     new = mocker.MagicMock()
+
     mocker.patch.object(compute, "lookup_job_compute_function", return_value=new)
     compute.run_job(job_id, auth0_id)
     assert new.call_count == 1
