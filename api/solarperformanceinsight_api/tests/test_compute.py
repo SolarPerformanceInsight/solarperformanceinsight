@@ -18,6 +18,7 @@ pytestmark = pytest.mark.usefixtures("add_example_db_data")
 
 def test_run_job(job_id, auth0_id, mocker, nocommit_transaction):
     new = mocker.MagicMock()
+
     mocker.patch.object(compute, "lookup_job_compute_function", return_value=new)
     compute.run_job(job_id, auth0_id)
     assert new.call_count == 1
@@ -75,7 +76,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 compare="expected and actual performance",
                 performance_granularity="system",
             ),
-            compute.dummy_func,
+            compute.compare_expected_and_actual,
         ),
     ],
 )
@@ -471,8 +472,8 @@ def test_process_single_modelchain(
     assert not pd.isna(arr0_weather_df.cell_temperature).any()
 
 
-def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker):
-    si = storage.StorageInterface(user=auth0_id)
+@pytest.fixture()
+def mockup_modelchain(mocker, stored_job):
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
     inv = stored_job.definition.system_definition.inverters[0]
     stored_job.definition.system_definition.inverters = [inv, inv]
@@ -494,6 +495,12 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
         "solarperformanceinsight_api.compute.process_single_modelchain",
         return_value=([], df),
     )
+    return stored_job, save, df
+
+
+def test_run_performance_job(auth0_id, nocommit_transaction, mockup_modelchain):
+    si = storage.StorageInterface(user=auth0_id)
+    stored_job, save, df = mockup_modelchain
 
     compute.run_performance_job(stored_job, si)
     assert save.call_count == 1
@@ -521,3 +528,27 @@ def test_run_performance_job(stored_job, auth0_id, nocommit_transaction, mocker)
     assert ser.loc["month"] == "January"
     assert abs(ser.loc["total_energy"] - 2.0) < 1e-8
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8
+
+
+def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
+    si = storage.StorageInterface(user=auth0_id)
+    stored_job, save, df = mockup_modelchain
+
+    compute.compare_expected_and_actual(stored_job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 4
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs expected energy"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == 1.0
+    assert (ser.loc["expected_energy"] - 2.0) < 1e-7
+    assert ser.loc["actual_energy"] == 1.0
+    assert (ser.loc["difference"] - -1.0) < 1e-7
+    assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7

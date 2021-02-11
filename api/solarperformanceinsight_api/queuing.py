@@ -72,7 +72,7 @@ class QueueManager:
                 self.job_func,
                 args=(job_id, user),
                 id=str(job_id),
-                result_ttl=10,
+                result_ttl=0,
                 timeout="10m",
                 failure_ttl=3600 * 24 * 14,
                 connection=self.redis_conn,

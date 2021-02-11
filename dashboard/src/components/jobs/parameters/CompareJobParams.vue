@@ -13,8 +13,9 @@
             value="predicted and actual performance"
             type="radio"
             v-model="compare"
+            disabled="true"
           />
-          <label for="predicted-and-actual-performance">
+          <label class="greyed" for="predicted-and-actual-performance">
             predicted performance to actual performance.
           </label>
           <br />
@@ -35,8 +36,9 @@
             value="predicted and expected performance"
             type="radio"
             v-model="compare"
+            disabled="true"
           />
-          <label for="predicted-and-expected-performance">
+          <label class="greyed" for="predicted-and-expected-performance">
             predicted performance to expected performance.
           </label>
           <br />
@@ -82,7 +84,7 @@ export default class CompareJobParams extends Vue {
 
   data() {
     return {
-      compare: "predicted and actual performance",
+      compare: "expected and actual performance",
       performance_granularity: "system"
     };
   }
@@ -97,3 +99,9 @@ export default class CompareJobParams extends Vue {
   }
 }
 </script>
+
+<style scoped>
+.greyed {
+  color: #9b9b9b;
+}
+</style>
