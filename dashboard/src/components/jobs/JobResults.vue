@@ -39,6 +39,11 @@ Component for handling display/download of job results.
           :tz="jobTimezone"
         ></timeseries-plot>
       </template>
+      <div v-if="results">
+      <custom-plot
+        :resultObjects="results"
+        :job="job"/>
+      </div>
     </div>
     <div v-else>
       {{ jobStatus }}
@@ -64,6 +69,7 @@ Component for handling display/download of job results.
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Table } from "apache-arrow";
 
+import CustomResultPlot from "@/components/jobs/CustomResultPlots.vue";
 import SummaryTable from "@/components/jobs/data/SummaryTable.vue";
 import TimeseriesPlot from "@/components/jobs/data/Timeseries.vue";
 
@@ -75,6 +81,7 @@ import downloadFile from "@/utils/downloadFile";
 
 Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
+Vue.component("custom-plot", CustomResultPlot);
 @Component
 export default class JobResults extends Vue {
   @Prop() job!: Record<string, any>;
