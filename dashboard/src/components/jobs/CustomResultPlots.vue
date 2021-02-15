@@ -1,37 +1,61 @@
 <template>
   <div class="custom-plot-definer" v-if="dataObjects && resultObjects">
-    <p> Do the thing</p>
     <!-- Select whether to choose results or data -->
-    <select v-model="dataSource">
-      <option value="results">Results </option>
+    <select v-model="dataSource" @change="selectedObject = dataOptions[0]">
+      <option value="results">Results</option>
       <option value="upload">Uploaded Data</option>
     </select>
     <!-- Select the data or result to add to the plot -->
     <select v-model="selectedObject">
-      <option v-for="dataOption of dataOptions" :value="dataOption" :key="dataOption.object_id">
-       {{ dataOption.definition.type }} {{ dataOption.definition.schema_path }}
+      <option
+        v-for="dataOption of dataOptions"
+        :value="dataOption"
+        :key="dataOption.object_id"
+      >
+        {{ dataOption.definition.type }} {{ dataOption.definition.schema_path }}
       </option>
     </select>
     <!-- Select the variable to add -->
-    <select v-model="selectedVariable">
-      <option v-for="variable in variables" :key="variable"> {{ variable }}</option>
+    <select v-model="selectedVariable" v-if="selectedObject">
+      <option value="">Select A Variable</option>
+      <option v-for="variable in variables" :key="variable" :value="variable">
+        {{ variableName(variable) }}
+      </option>
     </select>
-    <button @click="addToPlot">Add to plot</button><br/>
+    <button :disabled="!selectedVariable" @click="addToPlot">
+      Add to plot
+    </button>
+    <br />
     <!-- List the data added to the plot -->
     <b>Data to plot:</b>
     <ul>
-      <li v-for="(value, dataId) in toPlot" :key="dataId"> {{ dataId }}</li>
+      <li v-if="Object.keys(toPlot).length == 0" class="warning-text">
+        No data selected
+      </li>
+      <li v-for="(value, dataId) in toPlot" :key="dataId">{{ value.name }}</li>
     </ul>
-    <button @click="createPlot">PLOT THIS!</button>
-    <multi-plot v-for="(pd, i) in plotData" :key="i" :timeseriesData="pd" :tz="job.tz">{{i}}</multi-plot>
+    <button :disabled="Object.keys(toPlot).length == 0" @click="createPlot">
+      Create Plot
+    </button>
+    <multi-plot
+      v-for="(pd, id) in plotData"
+      :key="id"
+      :timeseriesData="pd"
+      :tz="timezone"
+      :index="id"
+      @remove-plot="removePlot"
+    />
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import MultiTimeseriesPlots from "@/components/jobs/data/MultiTimeSeries.vue";
 
-import * as Jobs from "@/api/jobs"
+import * as Jobs from "@/api/jobs";
 import { Table } from "apache-arrow";
+import { getIndex } from "@/utils/fieldIndex";
+import { getVariableDisplayName } from "@/utils/displayNames";
+import { getVariableUnits } from "@/utils/units";
 
 Vue.component("multi-plot", MultiTimeseriesPlots);
 
@@ -50,7 +74,7 @@ export default class CustomPlots extends Vue {
   loadingData!: boolean;
   selectedVariable!: string;
 
-  plotData!: Array<Record<string, any>>;
+  plotData!: Record<number, any>;
 
   created() {
     this.selectedObject = this.dataOptions[0];
@@ -64,39 +88,39 @@ export default class CustomPlots extends Vue {
       currentData: null,
       loadingData: false,
       toPlot: {},
-      plotData: []
-    }
+      plotData: {}
+    };
   }
-
   addToPlot() {
-    console.log("Adding to plot!");
     const dataId = this.selectedObject.object_id + this.selectedVariable;
-    this.$set(
-      this.toPlot,
-      dataId,
-      {
-        data: this.currentData.getColumn(this.selectedVariable),
-        index: this.currentData.getColumn("time"),
-        name: dataId
-      }
-    )
+    this.$set(this.toPlot, dataId, {
+      data: this.currentData.getColumn(this.selectedVariable),
+      index: this.currentData.getColumn("time"),
+      units: getVariableUnits(this.selectedVariable),
+      name: this.currentName()
+    });
   }
   removeFromPlot(dataId: string) {
-    delete this.toPlot[dataId];
+    this.$delete(this.toPlot, dataId);
   }
   createPlot() {
-    const dataToPlotData: Array<any> = [];
+    const dataToPlot: Array<any> = [];
     for (const key in this.toPlot) {
-      dataToPlotData.push(this.toPlot[key]);
+      dataToPlot.push(this.toPlot[key]);
     }
-    this.plotData.push(dataToPlotData);
+    const index = getIndex();
+    this.$set(this.plotData, index, dataToPlot);
     this.toPlot = {};
   }
+  removePlot(index: number) {
+    this.$delete(this.plotData, index);
+  }
   filteredObjects(toFilter: Array<Record<string, any>>) {
+    // Filter out summary data
     return toFilter.filter(x => {
       return !(
         x.definition.type.includes(" vs ") ||
-        x.definition.type.includes("summarry")
+        x.definition.type.includes("summary")
       );
     });
   }
@@ -127,18 +151,37 @@ export default class CustomPlots extends Vue {
     if (this.currentData) {
       return this.currentData.schema.fields
         .map((x: any) => x.name)
-        .filter((y: string) => (y != "time" && y != "month"));
+        .filter((y: string) => y != "time" && y != "month");
     } else {
       return [];
     }
   }
+  get timezone() {
+    return this.job.definition.parameters.time_parameters.timezone;
+  }
+  currentName() {
+    let source = "Uploaded";
+    if (this.dataSource == "results") {
+      source = "Calculated";
+    }
+    const dataType = this.selectedObject.definition.type;
+    const varName = getVariableDisplayName(this.selectedVariable);
+    const units = getVariableUnits(this.selectedVariable);
+    return `${source} ${dataType} ${varName} [${units}]`;
+  }
   @Watch("selectedObject")
   updateData() {
-    this.loadingData = true;
-    this.loadData().then((data) => {
-      this.currentData = data;
-      this.loadingData = false;
-    })
+    this.selectedVariable = "";
+    if (this.selectedObject) {
+      this.loadingData = true;
+      this.loadData().then(data => {
+        this.currentData = data;
+        this.loadingData = false;
+      });
+    }
+  }
+  variableName(varName: string) {
+    return getVariableDisplayName(varName);
   }
 }
 </script>

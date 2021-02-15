@@ -40,9 +40,16 @@ Component for handling display/download of job results.
         ></timeseries-plot>
       </template>
       <div v-if="results">
-      <custom-plot
-        :resultObjects="results"
-        :job="job"/>
+        <h2 class="timeseries-header">Custom Timeseries Plots</h2>
+        <p>
+          Select timeseries data and click
+          <i>Add to plot</i>
+          to create a list of data to plot. Then click
+          <i>Create Plot</i>
+          to create a plot of the selected data.
+        </p>
+
+        <custom-plot :resultObjects="results" :job="job" />
       </div>
     </div>
     <div v-else>

@@ -48,7 +48,7 @@ export default class TimeseriesPlot extends Vue {
     // with apache-arrow 3.0.0
     let indexColumn = "time";
     let index = this.timeseriesData.getColumn(indexColumn);
-    if (!index){
+    if (!index) {
       indexColumn = "month";
       index = this.timeseriesData.getColumn(indexColumn);
     }
@@ -60,7 +60,7 @@ export default class TimeseriesPlot extends Vue {
       return dateTimes;
     } else {
       const months: Array<number> = [];
-      for (let i = 0; i < index.length; i ++ ) {
+      for (let i = 0; i < index.length; i++) {
         months.push(index.get(i)[0]);
       }
       return months;
@@ -78,7 +78,7 @@ export default class TimeseriesPlot extends Vue {
   get availableFields() {
     return this.timeseriesData.schema.fields
       .map(x => x.name)
-      .filter(x => (x !== "time" && x !== "month"));
+      .filter(x => x !== "time" && x !== "month");
   }
   displayName(varName: string) {
     return getVariableDisplayName(varName);
