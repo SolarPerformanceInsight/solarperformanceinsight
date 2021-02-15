@@ -2,14 +2,14 @@
   <div class="timeseries-plot">
     <button @click="removePlot">Delete</button>
     <slot></slot>
-    Download:
+    Download
     <button @click="downloadData">CSV</button>
     <br />
     <div :id="plotDivId"></div>
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import Plotly from "plotly.js-basic-dist";
 import adjustPlotTime from "@/utils/adjustPlotTimes";
@@ -19,7 +19,7 @@ import downloadFile from "@/utils/downloadFile";
 
 @Component
 export default class TimeseriesPlot extends Vue {
-  @Prop() timeseriesData!: Array<Record<string, any>>;
+  @Prop() timeseriesData!: Record<string, any>;
   @Prop() index!: number;
   @Prop() tz!: string;
   config = { responsive: true };
@@ -39,14 +39,16 @@ export default class TimeseriesPlot extends Vue {
   }
   get plotData(): any {
     //Array<Partial<Plotly.PlotData>[]> {
-    const allData = this.timeseriesData.map((data: Record<string, any>) => {
-      return {
-        x: this.convertIndex(data.index),
-        y: data.data.toArray(),
-        name: data.name,
-        type: "scatter"
-      };
-    });
+    const allData = Object.values(this.timeseriesData).map(
+      (data: Record<string, any>) => {
+        return {
+          x: this.convertIndex(data.index),
+          y: data.data.toArray(),
+          name: data.name,
+          type: "scatter"
+        };
+      }
+    );
     this.subplots = [];
     const dataTypes = new Set(allData.map(x => typeof x.y[0]));
     const subplotData: Array<Array<Partial<Plotly.PlotData>>> = [];
@@ -111,6 +113,11 @@ export default class TimeseriesPlot extends Vue {
   }
   removePlot() {
     this.$emit("remove-plot", this.index);
+  }
+  @Watch("timeseriesData", { deep: true })
+  redraw() {
+    console.log("redrawing");
+    Plotly.react(this.plotDivId, this.plotData, this.layout, this.config);
   }
 }
 </script>

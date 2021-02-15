@@ -42,7 +42,7 @@ Component for handling display/download of job results.
       </template>
       -->
       <div v-if="results">
-        <!-- <h2 class="timeseries-header">Custom Timeseries Plots</h2>-->
+        <!-- <h2 class="timeseries-header">Custom Timeseries Plots</h2>
         <p>
           Select timeseries data and click
           <i>Add to plot</i>
@@ -50,7 +50,7 @@ Component for handling display/download of job results.
           <i>Create Plot</i>
           to create a plot of the selected data.
         </p>
-
+        -->
         <custom-plot :resultObjects="results" :job="job" />
       </div>
     </div>
@@ -184,7 +184,7 @@ export default class JobResults extends Vue {
           summaries[result.object_id] = label;
         }
       });
-      return {...comparisons, ...summaries};
+      return { ...comparisons, ...summaries };
     } else {
       return null;
     }

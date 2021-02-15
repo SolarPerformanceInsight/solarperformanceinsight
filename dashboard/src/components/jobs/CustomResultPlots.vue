@@ -1,50 +1,53 @@
 <template>
   <div class="custom-plot-definer" v-if="dataObjects && resultObjects">
-    <!-- Select whether to choose results or data -->
-    <select v-model="dataSource" @change="selectedObject = dataOptions[0]">
-      <option value="results">Results</option>
-      <option value="upload">Uploaded Data</option>
-    </select>
-    <!-- Select the data or result to add to the plot -->
-    <select v-model="selectedObject">
-      <option
-        v-for="dataOption of dataOptions"
-        :value="dataOption"
-        :key="dataOption.object_id"
-      >
-        {{ dataOption.definition.type }} {{ dataOption.definition.schema_path }}
-      </option>
-    </select>
-    <!-- Select the variable to add -->
-    <select v-model="selectedVariable" v-if="selectedObject">
-      <option value="">Select A Variable</option>
-      <option v-for="variable in variables" :key="variable" :value="variable">
-        {{ variableName(variable) }}
-      </option>
-    </select>
-    <button :disabled="!selectedVariable" @click="addToPlot">
-      Add to plot
-    </button>
-    <br />
-    <!-- List the data added to the plot -->
-    <b>Data to plot:</b>
-    <ul>
-      <li v-if="Object.keys(toPlot).length == 0" class="warning-text">
-        No data selected
-      </li>
-      <li v-for="(value, dataId) in toPlot" :key="dataId">{{ value.name }}</li>
-    </ul>
-    <button :disabled="Object.keys(toPlot).length == 0" @click="createPlot">
+    <button @click="createPlot">
       Create Plot
     </button>
-    <multi-plot
-      v-for="(pd, id) in plotData"
-      :key="id"
-      :timeseriesData="pd"
-      :tz="timezone"
-      :index="id"
-      @remove-plot="removePlot"
-    />
+    <div v-for="(pd, id) in plotData" :key="id">
+      <!-- Select whether to choose results or data -->
+      <select v-model="dataSource" @change="selectedObject = dataOptions[0]">
+        <option value="results">Results</option>
+        <option value="upload">Uploaded Data</option>
+      </select>
+      <!-- Select the data or result to add to the plot -->
+      <select v-model="selectedObject">
+        <option
+          v-for="dataOption of dataOptions"
+          :value="dataOption"
+          :key="dataOption.object_id"
+        >
+          {{ dataOption.definition.type }}
+          {{ dataOption.definition.schema_path }}
+        </option>
+      </select>
+      <!-- Select the variable to add -->
+      <select v-model="selectedVariable" v-if="selectedObject">
+        <option value="">Select A Variable</option>
+        <option v-for="variable in variables" :key="variable" :value="variable">
+          {{ variableName(variable) }}
+        </option>
+      </select>
+      <button :disabled="!selectedVariable" @click="addToPlot(id)">
+        Add to plot
+      </button>
+      <br />
+      <!-- List the data added to the plot -->
+      <b>Plot Data:</b>
+      <ul>
+        <li v-if="Object.keys(plotData[id]).length == 0" class="warning-text">
+          No data selected
+        </li>
+        <li v-for="(value, dataId) in plotData[id]" :key="dataId">
+          {{ value.name }}
+        </li>
+      </ul>
+      <multi-plot
+        :timeseriesData="pd"
+        :tz="timezone"
+        :index="id"
+        @remove-plot="removePlot"
+      />
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -91,26 +94,21 @@ export default class CustomPlots extends Vue {
       plotData: {}
     };
   }
-  addToPlot() {
+  addToPlot(key: number) {
     const dataId = this.selectedObject.object_id + this.selectedVariable;
-    this.$set(this.toPlot, dataId, {
+    this.$set(this.plotData[key], dataId, {
       data: this.currentData.getColumn(this.selectedVariable),
       index: this.currentData.getColumn("time"),
       units: getVariableUnits(this.selectedVariable),
       name: this.currentName()
     });
   }
-  removeFromPlot(dataId: string) {
-    this.$delete(this.toPlot, dataId);
+  removeFromPlot(key: number, dataId: string) {
+    this.$delete(this.plotData[key], dataId);
   }
   createPlot() {
-    const dataToPlot: Array<any> = [];
-    for (const key in this.toPlot) {
-      dataToPlot.push(this.toPlot[key]);
-    }
     const index = getIndex();
-    this.$set(this.plotData, index, dataToPlot);
-    this.toPlot = {};
+    this.$set(this.plotData, index, {});
   }
   removePlot(index: number) {
     this.$delete(this.plotData, index);
