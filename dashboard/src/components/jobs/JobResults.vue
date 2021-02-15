@@ -20,6 +20,7 @@ Component for handling display/download of job results.
         ></summary-table>
       </div>
       <h2 class="timeseries-header">Timeseries Results</h2>
+      <!--
       <p>Select a timeseries result below to view a plot of the data</p>
       <select v-model="selected" @change="loadTimeseriesData">
         <option value="">Select a timeseries result</option>
@@ -39,8 +40,9 @@ Component for handling display/download of job results.
           :tz="jobTimezone"
         ></timeseries-plot>
       </template>
+      -->
       <div v-if="results">
-        <h2 class="timeseries-header">Custom Timeseries Plots</h2>
+        <!-- <h2 class="timeseries-header">Custom Timeseries Plots</h2>-->
         <p>
           Select timeseries data and click
           <i>Add to plot</i>
@@ -159,10 +161,14 @@ export default class JobResults extends Vue {
     };
   }
   get labelledSummaryResults() {
-    const labelled = {};
+    const comparisons = {};
+    const summaries = {};
     if (this.results.length) {
       this.results.forEach((result: Record<string, any>) => {
-        if (!result.definition.type.includes("summary")) {
+        if (
+          !result.definition.type.includes("summary") &&
+          !result.definition.type.includes("vs")
+        ) {
           return;
         }
         const systemComponent = indexSystemFromSchemaPath(
@@ -170,10 +176,15 @@ export default class JobResults extends Vue {
           result.definition.schema_path
         );
         const label = `${systemComponent.name} ${result.definition.type}`;
-        // @ts-expect-error
-        labelled[result.object_id] = label;
+        if (label.includes(" vs ")) {
+          // @ts-expect-error
+          comparisons[result.object_id] = label;
+        } else {
+          // @ts-expect-error
+          summaries[result.object_id] = label;
+        }
       });
-      return labelled;
+      return {...comparisons, ...summaries};
     } else {
       return null;
     }
