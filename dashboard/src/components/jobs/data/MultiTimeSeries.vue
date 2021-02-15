@@ -45,7 +45,8 @@ export default class TimeseriesPlot extends Vue {
           x: this.convertIndex(data.index),
           y: data.data.toArray(),
           name: data.name,
-          type: "scatter"
+          type: "scatter",
+          showlegend: true
         };
       }
     );

@@ -39,6 +39,7 @@
         </li>
         <li v-for="(value, dataId) in plotData[id]" :key="dataId">
           {{ value.name }}
+          <a @click="removeFromPlot(id, dataId)">remove</a>
         </li>
       </ul>
       <multi-plot
