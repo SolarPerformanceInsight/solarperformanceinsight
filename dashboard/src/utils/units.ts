@@ -14,11 +14,13 @@ export const variableUnits: Record<string, string> = {
   wind_speed: "m/s",
   performance: "W",
   daytime_flag: "Flag", // fix below
-  total_energy: "Total Energy",
-  plane_of_array_insolation: "Plane of Array Insolation",
-  effective_insolation: "Effective Insolation",
-  average_daytime_cell_temperature: "Average Daytime Cell Temperature",
-  month: "Month"
+  total_energy: "Wh",
+  plane_of_array_insolation: "Wh/m^2",
+  effective_insolation: "Wh/m^2",
+  average_daytime_cell_temperature: "C",
+  actual_energy: "Wh",
+  expected_energy: "Wh",
+  difference: "Wh",
 };
 
 export function getVariableUnits(variable: string) {
@@ -27,6 +29,6 @@ export function getVariableUnits(variable: string) {
     return variableName;
   } else {
     console.error(`Could not find units for ${variable}.`);
-    return variable;
+    return "";
   }
 }
