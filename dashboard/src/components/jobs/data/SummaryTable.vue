@@ -26,7 +26,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { getVariableDisplayName } from "@/utils/displayNames";
-
+import { getVariableUnits } from "@/utils/units";
 @Component
 export default class SummaryTable extends Vue {
   @Prop() tableData!: any;
@@ -36,7 +36,13 @@ export default class SummaryTable extends Vue {
     return this.tableData.schema.fields.map((x: any) => x.name);
   }
   displayName(varName: string) {
-    return getVariableDisplayName(varName);
+    const units = getVariableUnits(varName);
+    const name = getVariableDisplayName(varName);
+    if (units) {
+      return `${name} [${units}]`;
+    } else {
+      return name;
+    }
   }
 }
 </script>

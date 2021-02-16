@@ -1,11 +1,23 @@
 <template>
   <div class="timeseries-plot">
-    <button @click="removePlot">Delete</button>
+    <button @click="removePlot">Delete Plot</button>
     <slot></slot>
-    Download
-    <button @click="downloadData">CSV</button>
+    <button @click="downloadData">Download CSV</button>
+    <button @click="editTitle = true">Edit plot title</button>
+    <div v-if="editTitle">
+      <label for="plot-title">Plot Title</label>
+      <input v-model="title" />
+      <button
+        @click="
+          editTitle = false;
+          redraw();
+        "
+      >
+        Update Title
+      </button>
+    </div>
     <br />
-    <div :id="plotDivId"></div>
+    <div :id="plotDivId" class="timeseries-plot-wrapper"></div>
   </div>
 </template>
 <script lang="ts">
@@ -24,10 +36,14 @@ export default class TimeseriesPlot extends Vue {
   @Prop() tz!: string;
   config = { responsive: true };
   subplots!: Array<string>;
+  editTitle!: boolean;
+  title!: string;
 
   data() {
     return {
-      subplots: []
+      subplots: [],
+      editTitle: false,
+      title: ""
     };
   }
   convertIndex(index: any) {
@@ -67,7 +83,7 @@ export default class TimeseriesPlot extends Vue {
     return getVariableDisplayName(varName);
   }
   get plotTitle() {
-    return `Custom Plot ${this.index}`;
+    return this.title ? this.title : `Custom Plot ${this.index}`;
   }
   get layout() {
     return {
@@ -123,8 +139,7 @@ export default class TimeseriesPlot extends Vue {
 }
 </script>
 <style scoped>
-.timeseries-plot {
-  box-shadow: 1px 1px 6px #555;
-  margin: 0.5em 0;
+.timeseries-plot-wrapper {
+  min-height: 450px;
 }
 </style>
