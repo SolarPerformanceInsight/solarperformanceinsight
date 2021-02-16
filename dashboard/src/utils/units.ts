@@ -20,7 +20,7 @@ export const variableUnits: Record<string, string> = {
   average_daytime_cell_temperature: "C",
   actual_energy: "Wh",
   expected_energy: "Wh",
-  difference: "Wh",
+  difference: "Wh"
 };
 
 export function getVariableUnits(variable: string) {
