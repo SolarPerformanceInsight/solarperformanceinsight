@@ -5,7 +5,7 @@
     <button @click="downloadData">Download CSV</button>
     <button @click="editTitle = true">Edit plot title</button>
     <div v-if="editTitle">
-      <label for="plot-title">Plot Title</label>
+      <label for="plot-title">New Plot Title:&nbsp;</label>
       <input v-model="title" />
       <button
         @click="
