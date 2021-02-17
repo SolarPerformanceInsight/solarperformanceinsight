@@ -547,7 +547,7 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     assert len(summary_df.index) == 12
     ser = summary_df.iloc[0]
     assert len(ser) == 5
-    assert ser.loc["month"] == 1.0
+    assert ser.loc["month"] == "January"
     assert (ser.loc["expected_energy"] - 2.0) < 1e-7
     assert ser.loc["actual_energy"] == 1.0
     assert (ser.loc["difference"] - -1.0) < 1e-7

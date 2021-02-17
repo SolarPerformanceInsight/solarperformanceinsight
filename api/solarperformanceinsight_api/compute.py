@@ -435,7 +435,8 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
             "ratio": ratio,
         }
     )
-    comparison_summary.index.name = "month"  # type: ignore
+    month_name_index = pd.Index([calendar.month_name[i] for i in months], name="month")
+    comparison_summary.index = month_name_index
     result_list.append(
         DBResult(
             schema_path="/", type="actual vs expected energy", data=comparison_summary
