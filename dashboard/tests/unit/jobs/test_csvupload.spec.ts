@@ -67,7 +67,7 @@ const testJob = {
             }
           ],
           airmass_model: "kastenyoung1989",
-          aoi_model: "no_loss",
+          aoi_model: "physical",
           clearsky_model: "ineichen",
           spectral_model: "no_loss",
           transposition_model: "haydavies"

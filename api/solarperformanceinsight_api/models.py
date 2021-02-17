@@ -61,7 +61,7 @@ SYSTEM_EXAMPLE = dict(
                 )
             ],
             airmass_model="kastenyoung1989",
-            aoi_model="no_loss",
+            aoi_model="physical",
             clearsky_model="ineichen",
             spectral_model="no_loss",
             transposition_model="haydavies",
@@ -483,7 +483,7 @@ class Inverter(SPIBase):
         description="Power conversion parameters for the inverter",
     )
     airmass_model: AirmassModelEnum = AirmassModelEnum.kastenyoung1989
-    aoi_model: AOIModelEnum = AOIModelEnum.no_loss
+    aoi_model: AOIModelEnum = AOIModelEnum.physical
     clearsky_model: ClearskyModelEnum = ClearskyModelEnum.ineichen
     spectral_model: SpectralModelEnum = SpectralModelEnum.no_loss
     transposition_model: TranspositionModelEnum = TranspositionModelEnum.haydavies
