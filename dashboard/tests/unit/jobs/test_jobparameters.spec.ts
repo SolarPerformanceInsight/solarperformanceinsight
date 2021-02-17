@@ -111,7 +111,7 @@ describe("Test Job Parameters", () => {
       time_parameters: defaultTimeParams,
       weather_granularity: "system",
       irradiance_type: "effective",
-      temperature_type: "cell"
+      temperature_type: "air"
     });
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
     wrapper.find("button").trigger("click");
