@@ -339,7 +339,8 @@ class PVArray(SPIBase):
         title="Module Make & Model",
         description="Make and model of the PV modules in this array",
     )
-    module_parameters: Union[PVsystModuleParameters, PVWattsModuleParameters] = Field(
+    module_parameters: Union[PVsystModuleParameters, PVWattsModuleParameters,
+                             CECModuleParameters] = Field(
         ...,
         title="Module Parameters",
         description="Parameters describing PV modules in this array",
