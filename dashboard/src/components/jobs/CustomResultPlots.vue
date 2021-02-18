@@ -1,5 +1,9 @@
 <template>
   <div class="custom-plot-definer" v-if="dataObjects && resultObjects">
+    <timeseries-table
+      :system="job.system"
+      :dataObjects="dataObjects"
+      :resultObjects="resultObjects"/>
     Click
     <i>New Plot</i>
     to create a new configurable timeseries plot from the the modeled and
@@ -73,6 +77,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import MultiTimeseriesPlots from "@/components/jobs/data/MultiTimeSeries.vue";
+import TimeseriesTable from "@/components/jobs/data/TimeseriesResultsTable.vue";
 
 import * as Jobs from "@/api/jobs";
 import { Table } from "apache-arrow";
@@ -81,6 +86,7 @@ import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
 
 Vue.component("multi-plot", MultiTimeseriesPlots);
+Vue.component("timeseries-table", TimeseriesTable);
 
 @Component
 export default class CustomPlots extends Vue {
