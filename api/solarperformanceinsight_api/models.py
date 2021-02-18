@@ -695,7 +695,7 @@ class WeatherGranularityEnum(str, Enum):
 
 
 class PerformanceGranularityEnum(str, Enum):
-    """Level of granularity of uplaoded performance data"""
+    """Level of granularity of uploaded performance data"""
 
     system = "system"
     inverter = "inverter"
@@ -721,8 +721,25 @@ class JobDataTypeEnum(str, Enum):
     original_weather = "original weather data"
     actual_weather = "actual weather data"
     predicted_performance = "predicted performance data"
+    predicted_performance_dc = "predicted DC performance data"
     expected_performance = "expected performance data"
     actual_performance = "actual performance data"
+    monthly_actual_weather = "actual monthly weather data"
+    monthly_original_weather = "original monthly weather data"
+    monthly_actual_performrance = "actual monthly performance data"
+    monthly_original_performance = "predicted monthly performance data"
+
+
+class JobParametersBase(SPIBase):
+    system_id: UUID
+    time_parameters: JobTimeindex
+    weather_granularity: WeatherGranularityEnum
+    # in principle, these both could be on a per model chain/inverter basis,
+    # but easier to just keep everything the same for the system
+    irradiance_type: IrradianceTypeEnum
+    temperature_type: TemperatureTypeEnum
+    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
+    _performance_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
 
 
 class CalculateEnum(str, Enum):
@@ -730,11 +747,10 @@ class CalculateEnum(str, Enum):
     expected_performance = "expected performance"
 
 
-class CalculatePerformanceJob(SPIBase):
+class CalculatePerformanceJobParameters(JobParametersBase):
     """Calculate the given type of performance"""
 
     calculate: CalculateEnum
-    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -744,47 +760,112 @@ class CalculatePerformanceJob(SPIBase):
             self._weather_types = (JobDataTypeEnum.actual_weather,)
 
 
-class CompareEnum(str, Enum):
-    predicted_actual = "predicted and actual performance"
-    predicted_expected = "predicted and expected performance"
+class ExpectedActualEnum(str, Enum):
     expected_actual = "expected and actual performance"
 
 
-class ComparePerformanceJob(SPIBase):
+class CompareExpectedActualJobParameters(JobParametersBase):
+    compare: ExpectedActualEnum
+    performance_granularity: PerformanceGranularityEnum
+    _weather_types = PrivateAttr((JobDataTypeEnum.actual_weather,))
+    _performance_types = PrivateAttr((JobDataTypeEnum.actual_performance,))
+
+
+class PredictedExpectedEnum(str, Enum):
+    predicted_expected = "predicted and expected performance"
+
+
+class PredictedActualEnum(str, Enum):
+    predicted_actual = "predicted and actual performance"
+
+
+class PredictedDataEnum(str, Enum):
+    weather_and_ac = "weather and AC performance"
+    weather_and_ac_and_dc = "weather, AC, and DC performance"
+    weather_only = "weather only"
+
+
+class ActualDataParams(SPIBase):
+    """Parameters for the "actual" data series"""
+
+    weather_granularity: WeatherGranularityEnum
+    irradiance_type: IrradianceTypeEnum
+    temperature_type: TemperatureTypeEnum
+    performance_granularity: PerformanceGranularityEnum
+
+
+class PredictedDataParams(ActualDataParams):
+    """Parameters for the "reference" data series"""
+
+    data_available: PredictedDataEnum
+    performance_granularity: Optional[PerformanceGranularityEnum]
+
+
+class ComparePredictedActualJobParameters(SPIBase):
     """Compare one type of performance to another"""
 
-    compare: CompareEnum
-    performance_granularity: PerformanceGranularityEnum
-    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
+    system_id: UUID
+    compare: PredictedActualEnum
+    monthly: bool = Field(
+        False,
+        description=(
+            "If true, expect uploaded data to be monthly insolation, energy, "
+            "and average daylight temperature"
+        ),
+    )
+    time_parameters: Optional[JobTimeindex]
+    predicted_data_parameters: PredictedDataParams
+    actual_data_parameters: ActualDataParams
+    _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
+        (
+            JobDataTypeEnum.original_weather,
+            JobDataTypeEnum.actual_weather,
+        )
+    )
     _performance_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr()
 
+    # validate monthly/time_params + predicted data available
     def __init__(self, **data):
         super().__init__(**data)
-        if self.compare == CompareEnum.predicted_actual:
+        if self.monthly:
             self._weather_types = (
-                JobDataTypeEnum.original_weather,
-                JobDataTypeEnum.actual_weather,
+                JobDataTypeEnum.monthly_original_weather,
+                JobDataTypeEnum.monthly_actual_weather,
             )
-            self._performance_types = (JobDataTypeEnum.actual_performance,)
-        elif self.compare == CompareEnum.predicted_expected:
-            self._weather_types = (
-                JobDataTypeEnum.original_weather,
-                JobDataTypeEnum.actual_weather,
+            self._performance_types = (
+                JobDataTypeEnum.monthly_original_performance,
+                JobDataTypeEnum.monthly_actual_performrance,
             )
-            self._performance_types = (JobDataTypeEnum.predicted_performance,)
-        elif self.compare == CompareEnum.expected_actual:
-            self._weather_types = (JobDataTypeEnum.actual_weather,)
-            self._performance_types = (JobDataTypeEnum.actual_performance,)
+        else:
+            if (
+                self.predicted_data_parameters.data_available
+                == PredictedDataEnum.weather_and_ac
+            ):
+                self._performance_types = (
+                    JobDataTypeEnum.actual_performance,
+                    JobDataTypeEnum.predicted_performance,
+                )
+            elif (
+                self.predicted_data_parameters.data_available
+                == PredictedDataEnum.weather_and_ac_and_dc
+            ):
+                self._performance_types = (
+                    JobDataTypeEnum.actual_performance,
+                    JobDataTypeEnum.predicted_performance,
+                    JobDataTypeEnum.predicted_performance_dc,
+                )
+            else:
+                self._performance_types = (JobDataTypeEnum.actual_performance,)
 
 
 class WeatherPREnum(str, Enum):
     weather_adjusted_pr = "weather-adjusted performance ratio"
 
 
-class CalculateWeatherAdjustedPRJob(SPIBase):
+class CalculateWeatherAdjustedPRJobParameters(JobParametersBase):
     """Calculate the weather-adjusted performance ratio"""
 
-    calculate: WeatherPREnum
+    calculate: WeatherPREnum = WeatherPREnum.weather_adjusted_pr
     performance_granularity: PerformanceGranularityEnum
     _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
         (JobDataTypeEnum.actual_weather,)
@@ -794,6 +875,12 @@ class CalculateWeatherAdjustedPRJob(SPIBase):
     )
 
 
+JobParametersType = Union[
+    ComparePredictedActualJobParameters,
+    CompareExpectedActualJobParameters,
+    CalculateWeatherAdjustedPRJobParameters,
+    CalculatePerformanceJobParameters,
+]
 JOB_PARAMS_EXAMPLE = dict(
     system_id=SYSTEM_ID,
     job_type=dict(
@@ -810,22 +897,6 @@ JOB_PARAMS_EXAMPLE = dict(
     irradiance_type="poa",
     temperature_type="module",
 )
-
-
-class JobParameters(SPIBase):
-    system_id: UUID
-    job_type: Union[
-        CalculatePerformanceJob, ComparePerformanceJob, CalculateWeatherAdjustedPRJob
-    ] = Field(..., description="Calculation or comparison to be performed")
-    time_parameters: JobTimeindex
-    weather_granularity: WeatherGranularityEnum
-    # in principle, these both could be on a per model chain/inverter basis,
-    # but easier to just keep everything the same for the system
-    irradiance_type: IrradianceTypeEnum
-    temperature_type: TemperatureTypeEnum
-
-    class Config:
-        schema_extra = {"example": JOB_PARAMS_EXAMPLE}
 
 
 JOB_DATA_META_EXAMPLE = dict(
@@ -862,7 +933,7 @@ JOB_EXAMPLE = dict(system_definition=SYSTEM_EXAMPLE, parameters=JOB_PARAMS_EXAMP
 
 
 def _construct_data_items(
-    system: PVSystem, parameters: JobParameters
+    system: PVSystem, parameters: JobParametersType
 ) -> List[JobDataItem]:
     out = []
     if parameters.weather_granularity == WeatherGranularityEnum.system:
@@ -882,9 +953,7 @@ def _construct_data_items(
         for wp in weather_paths
     ]
 
-    if isinstance(
-        parameters.job_type, (ComparePerformanceJob, CalculateWeatherAdjustedPRJob)
-    ):
+    if isinstance(parameters, None):
         if (
             parameters.job_type.performance_granularity
             == PerformanceGranularityEnum.system
@@ -906,7 +975,7 @@ def _construct_data_items(
 class Job(SPIBase):
     # duplicated here to track without worrying about changes
     system_definition: PVSystem
-    parameters: JobParameters
+    parameters: JobParametersType
     _data_items: List[JobDataItem] = PrivateAttr()
     _weather_columns: List[str] = PrivateAttr()
     _performance_columns: List[str] = PrivateAttr(["time", "performance"])

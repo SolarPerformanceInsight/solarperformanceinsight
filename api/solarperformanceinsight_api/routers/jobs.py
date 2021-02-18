@@ -65,7 +65,7 @@ job_links = {
     status_code=201,
 )
 async def create_job(
-    job_parameters: models.JobParameters,
+    job_parameters: models.JobParametersType,
     response: Response,
     request: Request,
     storage: StorageInterface = Depends(StorageInterface),
@@ -80,7 +80,7 @@ async def create_job(
 
 
 @router.post("/check", responses={201: {}, 401: {}, 403: {}, 422: {}}, status_code=201)
-async def check_job(job: models.JobParameters):  # pragma: no cover
+async def check_job(job: models.JobParametersType):  # pragma: no cover
     pass
 
 
