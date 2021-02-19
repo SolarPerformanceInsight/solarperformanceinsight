@@ -49,12 +49,10 @@ def run_job(job_id: UUID, user: str):
 def lookup_job_compute_function(
     job: models.StoredJob,
 ) -> Callable[[models.StoredJob, storage.StorageInterface], None]:
-    if isinstance(job.definition.parameters.job_type, models.CalculatePerformanceJob):
+    if isinstance(job.definition.parameters, models.CalculatePerformanceJobParameters):
         return run_performance_job
-    elif (
-        isinstance(job.definition.parameters.job_type, models.ComparePerformanceJob)
-        and job.definition.parameters.job_type.compare
-        == models.CompareEnum.expected_actual
+    elif isinstance(
+        job.definition.parameters, models.CompareExpectedActualJobParameters
     ):
         return compare_expected_and_actual
     return dummy_func
@@ -92,7 +90,7 @@ def generate_job_weather_data(
     }
     job_id = job.object_id
     num_inverters = len(job.definition.system_definition.inverters)
-    weather_granularity = job.definition.parameters.weather_granularity
+    weather_granularity = getattr(job.definition.parameters, "weather_granularity")
 
     if weather_granularity == models.WeatherGranularityEnum.system:
         data_id = data_id_by_schema_path["/"]
@@ -303,7 +301,10 @@ def _calculate_performance(
     store the inverter level performance, total system performance, array level weather,
     and a monthly summary to the database for retrieval
     """
-    job_time_range = job.definition.parameters.time_parameters._time_range
+    time_params: models.JobTimeindex = (
+        job.definition.parameters.time_parameters  # type: ignore
+    )
+    job_time_range = time_params._time_range
     summary = pd.DataFrame(
         {
             "performance": 0,  # type: ignore
@@ -318,7 +319,7 @@ def _calculate_performance(
     run_model_method = job.definition._model_chain_method
     # compute solar position at the middle of the interval
     # positive value assumes left (beginning) label convention
-    tshift = job.definition.parameters.time_parameters.step / 2
+    tshift = time_params.step / 2
     chains = construct_modelchains(job.definition.system_definition)
 
     weather_count = 0
@@ -412,7 +413,7 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
         if do.definition.type == models.JobDataTypeEnum.actual_performance
     ]
     months = (
-        (job.definition.parameters.time_parameters._time_range)
+        (job.definition.parameters.time_parameters._time_range)  # type: ignore
         .month.unique()  # type: ignore
         .sort_values()
     )
