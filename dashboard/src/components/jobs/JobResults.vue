@@ -19,38 +19,14 @@ Component for handling display/download of job results.
           :tableData="summaryData[id]"
         ></summary-table>
       </div>
+      <h2 class="data-summary">Available Data</h2>
+      <timeseries-table
+        :job="job"
+        :resultObjects="results"
+        :dataObjects="job.data_objects"
+      />
       <h2 class="timeseries-header">Timeseries Results</h2>
-      <!--
-      <p>Select a timeseries result below to view a plot of the data</p>
-      <select v-model="selected" @change="loadTimeseriesData">
-        <option value="">Select a timeseries result</option>
-        <option
-          v-for="(label, id) in labelledTimeseriesResults"
-          :key="id"
-          :value="id"
-        >
-          {{ label }}
-        </option>
-      </select>
-      <template v-if="timeseriesData && selected">
-        <timeseries-plot
-          @download-timeseries="downloadTimeseries"
-          :timeseriesData="timeseriesData"
-          :title="labelledTimeseriesResults[selected]"
-          :tz="jobTimezone"
-        ></timeseries-plot>
-      </template>
-      -->
       <div v-if="results">
-        <!-- <h2 class="timeseries-header">Custom Timeseries Plots</h2>
-        <p>
-          Select timeseries data and click
-          <i>Add to plot</i>
-          to create a list of data to plot. Then click
-          <i>Create Plot</i>
-          to create a plot of the selected data.
-        </p>
-        -->
         <custom-plot :resultObjects="results" :job="job" />
       </div>
     </div>
@@ -80,6 +56,7 @@ import { Table } from "apache-arrow";
 import CustomResultPlot from "@/components/jobs/CustomResultPlots.vue";
 import SummaryTable from "@/components/jobs/data/SummaryTable.vue";
 import TimeseriesPlot from "@/components/jobs/data/Timeseries.vue";
+import TimeseriesTable from "@/components/jobs/data/TimeseriesResultsTable.vue";
 
 import { System } from "@/types/System";
 
@@ -90,6 +67,7 @@ import downloadFile from "@/utils/downloadFile";
 Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
 Vue.component("custom-plot", CustomResultPlot);
+Vue.component("timeseries-table", TimeseriesTable);
 
 @Component
 export default class JobResults extends Vue {
