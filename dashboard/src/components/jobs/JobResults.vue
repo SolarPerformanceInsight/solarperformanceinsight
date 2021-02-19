@@ -20,6 +20,9 @@ Component for handling display/download of job results.
         ></summary-table>
       </div>
       <h2 class="data-summary">Available Data</h2>
+      <p>
+        Below is a table of files used during this calculation. It includes user
+        uploaded data and results produced by the calculation.
       <timeseries-table
         :job="job"
         :resultObjects="results"
