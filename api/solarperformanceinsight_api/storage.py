@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Callable, Dict, Any, Tuple, Union
+from typing import List, Callable, Dict, Any, Tuple, Optional
 from uuid import UUID
 
 
@@ -289,7 +289,7 @@ class StorageInterface:
 
     @ensure_user_exists
     def create_job(self, job: models.Job) -> models.StoredObjectID:
-        data_items = json.dumps([di.dict() for di in job._data_items])
+        data_items = json.dumps([di.dict() for di in job._data_items.values()])
         created = self._call_procedure_for_single(
             "create_job", job.parameters.system_id, job.json(), data_items
         )
@@ -306,8 +306,9 @@ class StorageInterface:
     def _parse_job_data_meta(
         self,
         data_meta: Dict[str, Any],
-        weather_cols: Union[List[str], None] = None,
-        performance_cols: Union[List[str], None] = None,
+        data_items: Optional[
+            Dict[Tuple[str, models.JobDataTypeEnum], models.JobDataItem]
+        ] = None,
     ) -> models.StoredJobDataMetadata:
         data_meta["object_id"] = data_meta.pop("id")
         data_meta["object_type"] = "job_data"
@@ -320,10 +321,10 @@ class StorageInterface:
             for k in models.JobDataMetadata.schema()["properties"].keys()
             if k != "data_columns" and data_meta[k] is not None
         }
-        if weather_cols is not None and "weather" in data_meta["type"]:
-            data_meta["definition"]["data_columns"] = weather_cols
-        if performance_cols is not None and "performance" in data_meta["type"]:
-            data_meta["definition"]["data_columns"] = performance_cols
+        if data_items is not None:
+            data_meta["definition"]["data_columns"] = data_items[
+                (data_meta["schema_path"], data_meta["type"])
+            ]._data_cols
         return models.StoredJobDataMetadata(**data_meta)
 
     def _parse_job(self, job: Dict[str, Any]) -> models.StoredJob:
@@ -336,11 +337,7 @@ class StorageInterface:
         job["definition"] = jobmod
         jdo = []
         for do in job["data_objects"]:
-            jdo.append(
-                self._parse_job_data_meta(
-                    do, jobmod._weather_columns, jobmod._performance_columns
-                )
-            )
+            jdo.append(self._parse_job_data_meta(do, jobmod._data_items))
         job["data_objects"] = jdo
         return models.StoredJob(**job)
 
