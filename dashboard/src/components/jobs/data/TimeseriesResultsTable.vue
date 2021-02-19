@@ -7,7 +7,7 @@
       <thead>
         <tr>
           <th>
-            Result or Uploaded
+            Data Source
           </th>
           <th>
             System Component
@@ -16,7 +16,7 @@
             Data Type
           </th>
           <th>
-            Available Variables
+            Variables
           </th>
           <th></th>
         </tr>
@@ -39,10 +39,12 @@
           </td>
           <td>
             <span v-if="row.present">
-            <button>Download CSV</button>
-            <button>Download Arrow</button>
+            <button @click="downloadData('text/csv', row.source, row.metadata)">Download CSV</button>
+            <button @click="downloadData('application/vnd.apache.arrow.file', row.source, row.metadata)">
+              Download Arrow
+            </button>
             </span>
-            <span v-else>
+            <span class="warning-text" v-else>
                Not Uploaded
             </span>
           </td>
@@ -68,6 +70,7 @@ export default class TimeseriesTable extends Vue {
       for (const dataObject of this.dataObjects) {
         allData.push({
           source: "Uploaded",
+          metadata: dataObject,
           path: dataObject.definition.schema_path,
           type: dataObject.definition.type,
           variables: dataObject.definition.data_columns.map(this.displayName),
@@ -79,10 +82,11 @@ export default class TimeseriesTable extends Vue {
       for (const resultObject of this.resultObjects) {
         allData.push({
           source: "Results",
+          metadata: resultObject.object_id,
           path: resultObject.definition.schema_path,
           type: resultObject.definition.type,
           variables: ["some", "variables!"],
-          present: false
+          present: true
         });
       }
     }
@@ -96,6 +100,14 @@ export default class TimeseriesTable extends Vue {
     } else {
       return name;
     }
+  }
+
+  downloadData(contentType: string, source: string, object_id: string) {
+    this.emit("download-data", {
+      contentType,
+      source,
+      object_id
+    });
   }
 }
 </script>

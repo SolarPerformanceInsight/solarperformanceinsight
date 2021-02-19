@@ -55,7 +55,6 @@ Component for handling display/download of job results.
       </div>
     </div>
     <div v-else>
-      {{ jobStatus }}
       <template v-if="jobStatus == 'queued'">
         The calculation is queued and waiting for processing.
       </template>
@@ -92,7 +91,6 @@ import downloadFile from "@/utils/downloadFile";
 Vue.component("summary-table", SummaryTable);
 Vue.component("timeseries-plot", TimeseriesPlot);
 Vue.component("custom-plot", CustomResultPlot);
-Vue.component("timeseries-table", TimeseriesTable);
 
 @Component
 export default class JobResults extends Vue {
@@ -192,25 +190,11 @@ export default class JobResults extends Vue {
       return null;
     }
   }
-  get labelledTimeseriesResults() {
-    const labelled = {};
-    if (this.results.length) {
-      this.results.forEach((result: Record<string, any>) => {
-        if (result.definition.type.includes("summary")) {
-          return;
-        }
-        const systemComponent = indexSystemFromSchemaPath(
-          this.system,
-          result.definition.schema_path
-        );
-        const label = `${systemComponent.name} ${result.definition.type} (${result.definition.schema_path})`;
-        // @ts-expect-error
-        labelled[result.object_id] = label;
-      });
-      return labelled;
-    } else {
-      return null;
-    }
+  get timeseriesResults() {
+    return this.results.filter((result: Record<string, any>) => {
+      return !(result.definition.type.includes("summary") ||
+               result.definition.type.includes("vs"))
+    });
   }
   async loadResults() {
     const token = await this.$auth.getTokenSilently();

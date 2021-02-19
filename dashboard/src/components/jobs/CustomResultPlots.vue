@@ -3,7 +3,7 @@
     <timeseries-table
       :system="job.system"
       :dataObjects="dataObjects"
-      :resultObjects="resultObjects"/>
+      :resultObjects="filteredObjects(resultObjects)"/>
     Click
     <i>New Plot</i>
     to create a new configurable timeseries plot from the the modeled and
