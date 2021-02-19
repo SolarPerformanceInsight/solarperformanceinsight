@@ -4,19 +4,9 @@ Component for handling display/download of job results.
 <template>
   <div v-if="job">
     <div v-if="results" class="job-results">
-      <div v-for="(label, id) in labelledSummaryResults" :key="id">
-        <h2 class="summary-header">{{ label }}</h2>
-        Download:
-        <button @click="downloadData('text/csv', label, id)">CSV</button>
-        <button
-          @click="downloadData('application/vnd.apache.arrow.file', label, id)"
-        >
-          Apache Arrow
-        </button>
-
+      <div v-if="summaryData">
         <summary-table
-          v-if="loadedSummaryData.includes(id)"
-          :tableData="summaryData[id]"
+          :tableData="summaryData"
         ></summary-table>
       </div>
       <h2 class="data-summary">Available Data</h2>
@@ -83,7 +73,6 @@ export default class JobResults extends Vue {
   results!: Array<Record<string, any>>;
   timeseriesData!: any;
   summaryData!: Record<string, any>;
-  loadedSummaryData!: Array<string>;
 
   // for tracking the setTimeout callback used for reloading the job
   timeout!: any;
@@ -139,13 +128,11 @@ export default class JobResults extends Vue {
       selected: "",
       timeseriesData: null,
       summaryData: {},
-      loadedSummaryData: [],
       errors: null
     };
   }
   get labelledSummaryResults() {
-    const comparisons = {};
-    const summaries = {};
+    const summaryData = {};
     if (this.results.length) {
       this.results.forEach((result: Record<string, any>) => {
         if (
@@ -154,20 +141,10 @@ export default class JobResults extends Vue {
         ) {
           return;
         }
-        const systemComponent = indexSystemFromSchemaPath(
-          this.system,
-          result.definition.schema_path
-        );
-        const label = `${systemComponent.name} ${result.definition.type}`;
-        if (label.includes(" vs ")) {
-          // @ts-expect-error
-          comparisons[result.object_id] = label;
-        } else {
-          // @ts-expect-error
-          summaries[result.object_id] = label;
-        }
+        // @ts-expect-error
+        summaryData[result.definition.type] = result.object_id;
       });
-      return { ...comparisons, ...summaries };
+      return summaryData;
     } else {
       return null;
     }
@@ -225,10 +202,11 @@ export default class JobResults extends Vue {
   }
   loadSummaryResults() {
     // Load summary data all at once to display all tables
-    for (const object_id in this.labelledSummaryResults) {
+    for (const summaryType in this.labelledSummaryResults) {
+      // @ts-expect-error
+      const object_id = this.labelledSummaryResults[summaryType];
       this.loadResultData(object_id).then(data => {
-        this.summaryData[object_id] = data;
-        this.loadedSummaryData.push(object_id);
+        this.$set(this.summaryData, summaryType, data);
       });
     }
   }

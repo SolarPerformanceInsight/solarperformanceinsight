@@ -27,13 +27,44 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
+
+import { Table } from "apache-arrow";
+
+const headerMap = {
+  "actual_energy": "actual vs expected energy",
+  "expected_energy": "actual vs expected energy",
+  "difference": "actual vs expected energy",
+  "ratio": "actual vs expected energy",
+  "plane_of_array_insolation": "monthly summary",
+  "effective_insolation": "monthly summary",
+  "total_energy": "monthly summary",
+  "average_daytime_cell_temperature": "monthly summary",
+}
+
 @Component
 export default class SummaryTable extends Vue {
-  @Prop() tableData!: any;
+  @Prop() tableData!: Record<string, Table>;
 
   get headers() {
-    // maybe determine grouping/leftmost column label dynamically?
-    return this.tableData.schema.fields.map((x: any) => x.name);
+    if ("actual vs expected energy" in this.tableData){
+      return [
+        "month",
+        "actual_energy",
+        "expected_energy",
+        "difference",
+        "ratio",
+        "plane_of_array_insolation",
+        "average_daytime_cell_temperature",
+      ];
+    } else {
+      return [
+        "month",
+        "total_energy",
+        "plane_of_array_insolation",
+        "effective_insolation",
+        "average_daytime_cell_temperature"
+      ];
+    }
   }
   displayName(varName: string) {
     const units = getVariableUnits(varName);

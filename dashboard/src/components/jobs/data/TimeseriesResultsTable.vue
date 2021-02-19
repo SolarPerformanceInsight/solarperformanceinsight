@@ -78,7 +78,7 @@ const resultVariables: Record<string, Array<string>> = {
   "weather data": ["effective_irradiance", "poa_global", "cell_temperature"],
   "monthly summary": [
     "total_energy",
-    "plany_of_array_insolation",
+    "plane_of_array_insolation",
     "effective_insolation",
     "average_daytime_cell_temperature"
   ],
