@@ -199,13 +199,12 @@ Component that handles basic job/workflows.
               <p>
                 Below is a table of the submitted data. Data may be downloaded
                 using the buttons on the right. If this data looks correct,
-                click <i>Compute</i> below to start the calculation or analysis.
+                click
+                <i>Compute</i>
+                below to start the calculation or analysis.
               </p>
-              <timeseries-table
-                :system="job.system"
-                :dataObjects="dataObjects"
-                />
-              <br/>
+              <timeseries-table :job="job" :dataObjects="dataObjects" />
+              <br />
               <button
                 id="compute-job"
                 :disabled="jobStatus != 'prepared'"

@@ -80,7 +80,6 @@ import { Table } from "apache-arrow";
 import CustomResultPlot from "@/components/jobs/CustomResultPlots.vue";
 import SummaryTable from "@/components/jobs/data/SummaryTable.vue";
 import TimeseriesPlot from "@/components/jobs/data/Timeseries.vue";
-import TimeseriesTable from "@/components/jobs/data/TimeseriesResultsTable.vue";
 
 import { System } from "@/types/System";
 
@@ -192,8 +191,10 @@ export default class JobResults extends Vue {
   }
   get timeseriesResults() {
     return this.results.filter((result: Record<string, any>) => {
-      return !(result.definition.type.includes("summary") ||
-               result.definition.type.includes("vs"))
+      return !(
+        result.definition.type.includes("summary") ||
+        result.definition.type.includes("vs")
+      );
     });
   }
   async loadResults() {

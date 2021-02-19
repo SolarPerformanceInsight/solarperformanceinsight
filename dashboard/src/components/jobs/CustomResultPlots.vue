@@ -1,9 +1,10 @@
 <template>
   <div class="custom-plot-definer" v-if="dataObjects && resultObjects">
     <timeseries-table
-      :system="job.system"
+      :job="job"
       :dataObjects="dataObjects"
-      :resultObjects="filteredObjects(resultObjects)"/>
+      :resultObjects="resultObjects"
+    />
     Click
     <i>New Plot</i>
     to create a new configurable timeseries plot from the the modeled and

@@ -13,7 +13,7 @@ export const variableUnits: Record<string, string> = {
   temp_air: "C",
   wind_speed: "m/s",
   performance: "W",
-  daytime_flag: "Flag", // fix below
+  daytime_flag: "True/False",
   total_energy: "Wh",
   plane_of_array_insolation: "Wh/m^2",
   effective_insolation: "Wh/m^2",
