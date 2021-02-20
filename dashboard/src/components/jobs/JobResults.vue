@@ -4,6 +4,7 @@ Component for handling display/download of job results.
 <template>
   <div v-if="job">
     <div v-if="results" class="job-results">
+      <h2 class="monthly-summary">Monthly Summary</h2>
       <div v-if="summaryData">
         <summary-table :tableData="summaryData"></summary-table>
       </div>
