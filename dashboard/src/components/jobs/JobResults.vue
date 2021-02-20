@@ -5,9 +5,7 @@ Component for handling display/download of job results.
   <div v-if="job">
     <div v-if="results" class="job-results">
       <div v-if="summaryData">
-        <summary-table
-          :tableData="summaryData"
-        ></summary-table>
+        <summary-table :tableData="summaryData"></summary-table>
       </div>
       <h2 class="data-summary">Available Data</h2>
       <p>
@@ -56,7 +54,6 @@ import TimeseriesTable from "@/components/jobs/data/TimeseriesResultsTable.vue";
 import { System } from "@/types/System";
 
 import * as Jobs from "@/api/jobs";
-import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 import downloadFile from "@/utils/downloadFile";
 
 Vue.component("summary-table", SummaryTable);
