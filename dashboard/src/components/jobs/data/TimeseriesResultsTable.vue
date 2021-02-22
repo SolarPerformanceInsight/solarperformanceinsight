@@ -99,24 +99,6 @@ export default class TimeseriesTable extends Vue {
 
   get tableData() {
     const allData = [];
-    if (this.dataObjects) {
-      for (const dataObject of this.dataObjects) {
-        const path = dataObject.definition.schema_path;
-        const systemComponent = indexSystemFromSchemaPath(
-          this.job.definition.system_definition,
-          path
-        );
-        const componentName = `${systemComponent.name} (${path})`;
-        allData.push({
-          source: "Uploaded",
-          metadata: dataObject,
-          path: componentName,
-          type: dataObject.definition.type,
-          variables: dataObject.definition.data_columns.map(this.displayName),
-          present: dataObject.definition.present
-        });
-      }
-    }
     if (this.resultObjects) {
       for (const resultObject of this.resultObjects) {
         const resultType = resultObject.definition.type;
@@ -133,6 +115,24 @@ export default class TimeseriesTable extends Vue {
           type: resultType,
           variables: resultVariables[resultType].map(this.displayName),
           present: true
+        });
+      }
+    }
+    if (this.dataObjects) {
+      for (const dataObject of this.dataObjects) {
+        const path = dataObject.definition.schema_path;
+        const systemComponent = indexSystemFromSchemaPath(
+          this.job.definition.system_definition,
+          path
+        );
+        const componentName = `${systemComponent.name} (${path})`;
+        allData.push({
+          source: "Uploaded",
+          metadata: dataObject,
+          path: componentName,
+          type: dataObject.definition.type,
+          variables: dataObject.definition.data_columns.map(this.displayName),
+          present: dataObject.definition.present
         });
       }
     }
