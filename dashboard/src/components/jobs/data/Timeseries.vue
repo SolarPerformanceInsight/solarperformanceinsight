@@ -46,12 +46,25 @@ export default class TimeseriesPlot extends Vue {
     // Have to build times manually because calling .toArray() on the time
     // column results in a double length array with alternative 0 values
     // with apache-arrow 3.0.0
-    const index = this.timeseriesData.getColumn("time");
-    const dateTimes: Array<Date> = [];
-    for (let i = 0; i < index.length; i++) {
-      dateTimes.push(adjustPlotTime(index.get(i), this.tz));
+    let indexColumn = "time";
+    let index = this.timeseriesData.getColumn(indexColumn);
+    if (!index) {
+      indexColumn = "month";
+      index = this.timeseriesData.getColumn(indexColumn);
     }
-    return dateTimes;
+    if (indexColumn == "time") {
+      const dateTimes: Array<Date> = [];
+      for (let i = 0; i < index.length; i++) {
+        dateTimes.push(adjustPlotTime(index.get(i), this.tz));
+      }
+      return dateTimes;
+    } else {
+      const months: Array<number> = [];
+      for (let i = 0; i < index.length; i++) {
+        months.push(index.get(i)[0]);
+      }
+      return months;
+    }
   }
   get plotData(): Partial<Plotly.PlotData>[] {
     return [
@@ -65,7 +78,7 @@ export default class TimeseriesPlot extends Vue {
   get availableFields() {
     return this.timeseriesData.schema.fields
       .map(x => x.name)
-      .filter(x => x !== "time");
+      .filter(x => x !== "time" && x !== "month");
   }
   displayName(varName: string) {
     return getVariableDisplayName(varName);
