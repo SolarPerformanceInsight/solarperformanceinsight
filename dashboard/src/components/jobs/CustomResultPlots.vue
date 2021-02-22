@@ -119,7 +119,8 @@ export default class CustomPlots extends Vue {
       this.selectedVariables[key]
     );
     let columnData: Array<any>;
-    if (column.get(0).length > 1) {
+    const firstValue = column.get(0);
+    if (firstValue && firstValue.length && firstValue.length > 1) {
       // Handles values like int64 which are encoded as length 2 int32 array
       columnData = [];
       for (let i = 0; i < column.length; i++) {
