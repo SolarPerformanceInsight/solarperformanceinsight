@@ -133,7 +133,6 @@ export default class TimeseriesPlot extends Vue {
   }
   @Watch("timeseriesData", { deep: true })
   redraw() {
-    console.log("redrawing");
     Plotly.react(this.plotDivId, this.plotData, this.layout, this.config);
   }
 }

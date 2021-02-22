@@ -220,7 +220,6 @@ export default class CustomPlots extends Vue {
     return getVariableDisplayName(varName);
   }
   setDataOption(key: number) {
-    console.log(`Setting data option ${key}`);
     this.selectedObjects[key] = this.dataOptions(key)[0];
     this.updateData(key);
   }
