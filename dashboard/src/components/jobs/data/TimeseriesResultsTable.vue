@@ -30,10 +30,11 @@
             {{ row.type }}
           </td>
           <td>
-            <span v-for="(v, j) of row.variables" :key="j">
-              {{ v }}
-              <br />
-            </span>
+            <ul class="pl-0">
+              <li v-for="(v, j) of row.variables" :key="j">
+                {{ v }}
+              </li>
+            </ul>
           </td>
           <td>
             <span v-if="row.present">
@@ -182,3 +183,8 @@ export default class TimeseriesTable extends Vue {
   }
 }
 </script>
+<style scoped="true">
+ul {
+  padding-left: 1em;
+}
+</style>
