@@ -115,10 +115,21 @@ export default class CustomPlots extends Vue {
   addToPlot(key: number) {
     const data_object_id = this.selectedObjects[key].object_id;
     const dataId = data_object_id + this.selectedVariables[key];
+    const column = this.loadedTimeseries[data_object_id].getColumn(
+      this.selectedVariables[key]
+    );
+    let columnData: Array<any>;
+    if (column.get(0).length > 1) {
+      // Handles values like int64 which are encoded as length 2 int32 array
+      columnData = [];
+      for (let i = 0; i < column.length; i++) {
+        columnData.push(parseFloat(column.get(i)));
+      }
+    } else {
+      columnData = column.toArray();
+    }
     this.$set(this.plotData[key], dataId, {
-      data: this.loadedTimeseries[data_object_id].getColumn(
-        this.selectedVariables[key]
-      ),
+      data: columnData,
       index: this.loadedTimeseries[data_object_id].getColumn("time"),
       units: getVariableUnits(this.selectedVariables[key]),
       name: this.currentName(key)
