@@ -47,41 +47,66 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
 
 
 @pytest.mark.parametrize(
-    "job_type,exp",
+    "njp,exp",
     [
         (
-            models.CalculatePerformanceJob(calculate="predicted performance"),
+            dict(
+                calculate="predicted performance",
+                weather_granularity="system",
+                irradiance_type="standard",
+                temperature_type="air",
+            ),
             compute.run_performance_job,
         ),
         (
-            models.CalculatePerformanceJob(calculate="expected performance"),
+            dict(
+                calculate="expected performance",
+                weather_granularity="system",
+                irradiance_type="standard",
+                temperature_type="air",
+            ),
             compute.run_performance_job,
         ),
         (
-            models.ComparePerformanceJob(
+            dict(
                 compare="predicted and actual performance",
-                performance_granularity="system",
+                predicted_data_parameters=dict(
+                    data_available="weather only",
+                    weather_granularity="system",
+                    irradiance_type="standard",
+                    temperature_type="air",
+                ),
+                actual_data_parameters=dict(
+                    weather_granularity="system",
+                    irradiance_type="standard",
+                    temperature_type="air",
+                    performance_granularity="system",
+                ),
             ),
             compute.dummy_func,
         ),
         (
-            models.ComparePerformanceJob(
-                compare="predicted and expected performance",
-                performance_granularity="system",
-            ),
-            compute.dummy_func,
-        ),
-        (
-            models.ComparePerformanceJob(
+            dict(
                 compare="expected and actual performance",
                 performance_granularity="system",
+                weather_granularity="system",
+                irradiance_type="standard",
+                temperature_type="air",
             ),
             compute.compare_expected_and_actual,
         ),
     ],
 )
-def test_lookup_compute_function(stored_job, job_type, exp):
-    stored_job.definition.parameters.job_type = job_type
+def test_lookup_compute_function(njp, system_def, exp, system_id, stored_job):
+    njp["system_id"] = system_id
+    njp["time_parameters"] = dict(
+        start="2020-01-01T00:00:00+00:00",
+        end="2020-12-31T23:59:59+00:00",
+        step="15:00",
+        timezone="UTC",
+    )
+    job = models.Job(parameters=njp, system_definition=system_def)
+    stored_job.definition = job
     assert compute.lookup_job_compute_function(stored_job) == exp
 
 

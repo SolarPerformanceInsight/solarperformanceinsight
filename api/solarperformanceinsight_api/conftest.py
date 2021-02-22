@@ -143,7 +143,7 @@ def job_data_ids():
 
 @pytest.fixture()
 def job_params():
-    return models.JobParameters(**models.JOB_PARAMS_EXAMPLE)
+    return models.CompareExpectedActualJobParameters(**models.JOB_PARAMS_EXAMPLE)
 
 
 @pytest.fixture()

@@ -254,7 +254,8 @@ async def post_job_data(
     df = read_fnc(file.file)
     await file.close()
     utils.validate_dataframe(df, expected_columns)
-
+    # TODO: support monthly data for 2A
+    # TODO: support reference/predicted data with different year from time params
     try:
         uploaded_period = str(
             pd.tseries.frequencies.to_offset(  # type: ignore
