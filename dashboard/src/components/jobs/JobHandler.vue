@@ -15,7 +15,7 @@ Component that handles basic job/workflows.
         <template v-if="jobClass == 'calculate'">
           Calculate
           <template v-if="job">
-            {{ jobType.calculate }}
+            {{ jobParameters.calculate }}
           </template>
           <template v-else>
             Performance
@@ -24,7 +24,7 @@ Component that handles basic job/workflows.
         <template v-if="jobClass == 'compare'">
           Compare
           <template v-if="job">
-            {{ jobType.compare }}
+            {{ jobParameters.compare }}
           </template>
           <template v-else>
             Performance
@@ -152,7 +152,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.job_type.performance_granularity"
+              :granularity="jobParameters.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -167,7 +167,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.job_type.performance_granularity"
+              :granularity="jobParameters.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -182,7 +182,7 @@ Component that handles basic job/workflows.
               :jobId="jobId"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.job_type.performance_granularity"
+              :granularity="jobParameters.performance_granularity"
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
@@ -336,8 +336,8 @@ export default class JobHandler extends Vue {
     // Returns a generic job type of 'calculate', 'compare' or 'calculatepr'
     if (this.job) {
       // If we're past the creation step, infer job type from the job
-      if ("performance_granularity" in this.jobType) {
-        if ("compare" in this.jobType) {
+      if ("performance_granularity" in this.jobParameters) {
+        if ("compare" in this.jobParameters) {
           return "compare";
         } else {
           return "calculatepr";
@@ -349,13 +349,6 @@ export default class JobHandler extends Vue {
       // Expect that the job type was passed as a prop
       return this.typeOfJob;
     }
-  }
-
-  get jobType() {
-    if (this.job) {
-      return this.jobParameters.job_type;
-    }
-    return null;
   }
 
   get dataObjects() {

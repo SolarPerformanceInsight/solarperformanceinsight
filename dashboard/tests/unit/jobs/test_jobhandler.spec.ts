@@ -91,9 +91,7 @@ const testJob = {
     },
     parameters: {
       system_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-      job_type: {
-        calculate: "predicted performance"
-      },
+      calculate: "predicted performance",
       time_parameters: {
         start: "2020-01-01T00:00:00+00:00",
         end: "2020-12-31T23:59:59+00:00",
@@ -199,9 +197,7 @@ describe("Test JobHandler", () => {
     await flushPromises();
     expect(mockedJobRead).toHaveBeenLastCalledWith("Token", testJob.object_id);
     // @ts-expect-error
-    expect(handler.vm.jobType).toEqual({
-      calculate: "predicted performance"
-    });
+    expect(handler.vm.jobParameters.calculate).toEqual("predicted performance");
     expect(
       // @ts-expect-error
       handler.vm.filteredDataObjects("original weather data")
@@ -249,8 +245,6 @@ describe("Test JobHandler", () => {
         .text()
         .replace(/\s/g, "")
     ).toBe(`CalculatePerformanceFor:NewSystem`);
-    // @ts-expect-error
-    expect(handler.vm.jobType).toBe(null);
   });
   it("load compare setup", async () => {
     const propsData = {
@@ -521,7 +515,7 @@ describe("Test JobHandler", () => {
     // @ts-expect-error
     expect(handler.vm.filteredDataObjects()).toStrictEqual(data_objects);
   });
-  it("test job class inference", async () => {
+  it("test job class inference calculate", async () => {
     const propsData = {
       jobId: testJob.object_id
     };
@@ -534,16 +528,44 @@ describe("Test JobHandler", () => {
     await flushPromises();
     // @ts-expect-error
     expect(handler.vm.jobClass).toBe("calculate");
-    handler.vm.$data.job.definition.parameters.job_type = {
-      compare: "predicted and expected performance",
-      performance_granularity: "inverter"
+  });
+  it("test job class inference calculatepr", async () => {
+    const propsData = {
+      jobId: testJob.object_id
+    };
+    testJob.definition.parameters.calculate =
+      "weather-adjusted performance ratio";
+    // @ts-expect-error
+    testJob.definition.parameters.performance_granularity = "inverter";
+
+    const handler = mount(JobHandler, {
+      localVue,
+      propsData,
+      mocks,
+      router
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(handler.vm.jobClass).toBe("calculatepr");
+  });
+  it("test job class inference compare", async () => {
+    const propsData = {
+      jobId: testJob.object_id
     };
     // @ts-expect-error
+    testJob.definition.parameters.compare =
+      "predicted and expected performance";
+    // @ts-expect-error
+    testJob.definition.parameters.performance_granularity = "inverter";
+    const handler = mount(JobHandler, {
+      localVue,
+      propsData,
+      mocks,
+      router
+    });
+    await flushPromises();
+    // @ts-expect-error
     expect(handler.vm.jobClass).toBe("compare");
-    handler.vm.$data.job.definition.parameters.job_type = {
-      calculate: "weather-adjusted performance ratio",
-      performance_granularity: "inverter"
-    };
   });
   it("test set step", async () => {
     const data_objects = [
@@ -615,9 +637,7 @@ describe("Test JobHandler", () => {
   it("test compute flow", async () => {
     const fetchJob = { ...testJob };
     fetchJob.status = { status: "prepared", last_change: "2020-01-01T00:00Z" };
-    fetchJob.definition.parameters.job_type = {
-      calculate: "predicted performance"
-    };
+    fetchJob.definition.parameters.calculate = "predicted performance";
     mockJobResponse.json = jest.fn().mockResolvedValue(fetchJob);
 
     const propsData = {

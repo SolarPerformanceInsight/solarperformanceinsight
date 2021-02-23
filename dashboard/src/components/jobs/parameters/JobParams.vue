@@ -1,4 +1,7 @@
-<!-- View for workflows presented in usecases 1A and 1B
+<!--
+  View For handling common job parameters. Specific job parameters are
+  inserted using the `jobParamComponent` fed to the <component> below.
+
 -->
 <template>
   <div class="calculate-performance">
@@ -150,7 +153,7 @@ export default class JobParameters extends Vue {
   @Prop() systemId!: string;
   @Prop() system!: System;
   @Prop() jobClass!: string;
-  job_type!: Record<string, string>;
+  jobTypeParams!: Record<string, string>;
   weather_granularity!: string;
   irradiance_type!: string;
   temperature_type!: string;
@@ -165,7 +168,7 @@ export default class JobParameters extends Vue {
 
   data() {
     return {
-      job_type: {},
+      jobTypeParams: {},
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
@@ -181,11 +184,11 @@ export default class JobParameters extends Vue {
   get jobSpec() {
     return {
       system_id: this.systemId,
-      job_type: this.job_type,
       time_parameters: this.timeParams,
       weather_granularity: this.weather_granularity,
       irradiance_type: this.irradiance_type,
-      temperature_type: this.temperature_type
+      temperature_type: this.temperature_type,
+      ...this.jobTypeParams
     };
   }
   async submitJob() {
@@ -212,7 +215,7 @@ export default class JobParameters extends Vue {
     return `${this.jobClass}-job-params`;
   }
   setJobTypeParams(newParams: Record<string, string>) {
-    this.job_type = newParams;
+    this.jobTypeParams = newParams;
   }
 }
 </script>
