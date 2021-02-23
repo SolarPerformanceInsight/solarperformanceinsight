@@ -76,9 +76,7 @@ const testJob = {
     },
     parameters: {
       system_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-      job_type: {
-        calculate: "predicted performance"
-      },
+      calculate: "predicted performance",
       time_parameters: {
         start: "2020-01-01T00:00:00+00:00",
         end: "2020-12-31T23:59:59+00:00",
