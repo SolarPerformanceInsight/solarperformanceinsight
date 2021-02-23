@@ -6,6 +6,32 @@
       :definitions="definitions"
       field-name="name"
     />
+    <b>Tracking:</b>
+    <input
+      v-model="tracking"
+      class="fixed_tracking"
+      type="radio"
+      v-on:change="changeTracking"
+      value="fixed"
+    />
+    Fixed
+    <input
+      :disabled="numArrays > 1"
+      v-model="tracking"
+      class="single_axis_tracking"
+      type="radio"
+      v-on:change="changeTracking"
+      value="singleAxis"
+    />
+    Single Axis
+    <span v-if="numArrays > 1" class="warning-text">
+      Only supported for single array inverter.
+    </span>
+    <tracking-parameters
+      :tracking="tracking"
+      :parameters="parameters.tracking"
+    />
+    <br />
     <model-field
       :parameters="parameters"
       :errors="errors"
@@ -41,32 +67,6 @@
       :definitions="definitions"
       field-name="albedo"
     />
-    <b>Tracking:</b>
-    <input
-      v-model="tracking"
-      class="fixed_tracking"
-      type="radio"
-      v-on:change="changeTracking"
-      value="fixed"
-    />
-    Fixed
-    <input
-      :disabled="numArrays > 1"
-      v-model="tracking"
-      class="single_axis_tracking"
-      type="radio"
-      v-on:change="changeTracking"
-      value="singleAxis"
-    />
-    Single Axis
-    <span v-if="numArrays > 1" class="warning-text">
-      Only supported for single array inverter.
-    </span>
-    <tracking-parameters
-      :tracking="tracking"
-      :parameters="parameters.tracking"
-    />
-    <br />
     <model-field
       :parameters="parameters"
       :errors="errors"

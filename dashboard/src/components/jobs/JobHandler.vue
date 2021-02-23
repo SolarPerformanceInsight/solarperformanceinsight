@@ -194,17 +194,29 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Calculation submission step -->
           <template v-if="step == 'calculate'">
-            <button
-              id="compute-job"
-              :disabled="jobStatus != 'prepared'"
-              @click="computeJob"
-            >
-              Compute
-            </button>
-            <span v-if="jobStatus != 'prepared'">
-              Data must be uploaded before computation.
+            <div>
+              <h2>Submitted Timeseries</h2>
+              <p>
+                Below is a table of the submitted data. Data may be downloaded
+                using the buttons on the right. If this data looks correct,
+                click
+                <i>Compute</i>
+                below to start the calculation or analysis.
+              </p>
+              <timeseries-table :job="job" :dataObjects="dataObjects" />
               <br />
-            </span>
+              <button
+                id="compute-job"
+                :disabled="jobStatus != 'prepared'"
+                @click="computeJob"
+              >
+                Compute
+              </button>
+              <span v-if="jobStatus != 'prepared'">
+                Data must be uploaded before computation.
+                <br />
+              </span>
+            </div>
           </template>
           <template v-else-if="step == 'results'">
             <job-results
@@ -226,11 +238,13 @@ Component that handles basic job/workflows.
 import { Component, Vue, Prop } from "vue-property-decorator";
 import JobParams from "@/components/jobs/parameters/JobParams.vue";
 import JobResults from "@/components/jobs/JobResults.vue";
+import TimeseriesTable from "@/components/jobs/data/TimeseriesResultsTable.vue";
 import { StoredSystem, System } from "@/types/System";
 import * as Jobs from "@/api/jobs";
 
 Vue.component("job-params", JobParams);
 Vue.component("job-results", JobResults);
+Vue.component("timeseries-table", TimeseriesTable);
 
 @Component
 export default class JobHandler extends Vue {

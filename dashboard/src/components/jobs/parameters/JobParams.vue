@@ -55,13 +55,14 @@
             <br />
             <div class="ml-1 mt-1">
               <input
-                id="cell"
-                value="cell"
+                id="air"
+                value="air"
                 type="radio"
                 v-model="temperature_type"
               />
-              <label for="cell">
-                Cell temperature is included in my data.
+              <label for="air">
+                Calculate cell temperature from irradiance, air temperature, and
+                windspeed in my data.
               </label>
               <br />
               <input
@@ -76,14 +77,13 @@
               </label>
               <br />
               <input
-                id="air"
-                value="air"
+                id="cell"
+                value="cell"
                 type="radio"
                 v-model="temperature_type"
               />
-              <label for="air">
-                Calculate cell temperature from irradiance, air temperature, and
-                windspeed in my data.
+              <label for="cell">
+                Cell temperature is included in my data.
               </label>
               <br />
             </div>
@@ -171,7 +171,7 @@ export default class JobParameters extends Vue {
       irradiance_type: "standard",
       apiErrors: {},
       errorState: false,
-      temperature_type: "cell",
+      temperature_type: "air",
       jobId: null
     };
   }
