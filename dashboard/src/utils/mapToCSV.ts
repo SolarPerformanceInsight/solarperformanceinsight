@@ -1,14 +1,26 @@
 import papa from "papaparse";
+import powerConversion from "@/utils/powerConversion";
 
 export default function(
   data: Array<Record<string, any>>,
-  Mapping: Record<string, string>
+  Mapping: Record<string, Record<string, string>>
 ) {
   const originalHeaders: Array<string> = [];
   const mappedHeaders: Array<string> = [];
   for (const mapped in Mapping) {
-    originalHeaders.push(Mapping[mapped]);
+    const originalHeader = Mapping[mapped].csvHeader;
+    originalHeaders.push(originalHeader);
     mappedHeaders.push(mapped);
+    if ("units" in Mapping[mapped]) {
+      const originalUnits = Mapping[mapped].units;
+      data.forEach((row: Record<string, number>) => {
+        row[originalHeader] = powerConversion(
+          originalUnits,
+          "W",
+          row[originalHeader]
+        );
+      });
+    }
   }
   const newHeaders = papa.unparse(
     { fields: mappedHeaders, data: [] },
