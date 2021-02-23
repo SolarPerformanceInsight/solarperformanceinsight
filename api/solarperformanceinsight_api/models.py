@@ -924,7 +924,6 @@ class PredictedDataParams(CompareMixin):
     data_available: PredictedDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
     _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
-    # TODO: validate data_available + performance_granularity
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -944,7 +943,7 @@ class PredictedDataParams(CompareMixin):
         pg = values.get("performance_granularity")
         if da == PredictedDataEnum.weather_only and pg is not None:
             raise ValueError(
-                "Performance granulairty is invalid when not providing predicted "
+                "Performance granularity is invalid when not providing predicted "
                 "performance"
             )
         return values

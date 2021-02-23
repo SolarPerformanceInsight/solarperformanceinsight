@@ -174,11 +174,332 @@ def test_verify_content_type(inp, exp):
             ["time", "b"],
             set(),
         ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month", "other"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month"],
+            {"other"},
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            ["month"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "jan.",
+                        "feb.",
+                        "mar.",
+                        "apr.",
+                        "may",
+                        "jun.",
+                        "jul.",
+                        "aug.",
+                        "sep.",
+                        "oct.",
+                        "nov.",
+                        "dec.",
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month"],
+            {"other"},
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "January",
+                        "february",
+                        "march",
+                        "april",
+                        "may",
+                        "june",
+                        "july",
+                        "August",
+                        "september",
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            ["month"],
+            set(),
+        ),
+        httpfail(
+            pd.DataFrame(
+                {
+                    "month": [
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            ["month"],
+            set(),
+        ),
+        httpfail(
+            pd.DataFrame({"month": range(0, 13)}),
+            ["month"],
+            set(),
+        ),
+        httpfail(
+            pd.DataFrame(
+                {
+                    "month": [
+                        "January",
+                        "february",
+                        "march",
+                        "april",
+                        "may",
+                        "june",
+                        "julio",  # bad
+                        "August",
+                        "september",
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            ["month"],
+            set(),
+        ),
     ),
 )
 def test_validate_dataframe(inp, cols, exp):
     out = utils.validate_dataframe(inp, cols)
     assert out == exp
+
+
+@pytest.mark.parametrize(
+    "inp,slc",
+    (
+        (
+            pd.DataFrame(
+                {
+                    "month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    "other": list(range(12)),
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "jan.",
+                        "feb.",
+                        "mar.",
+                        "apr.",
+                        "may",
+                        "jun.",
+                        "jul.",
+                        "aug.",
+                        "sep.",
+                        "oct.",
+                        "nov.",
+                        "dec.",
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "January",
+                        "february",
+                        "march",
+                        "april",
+                        "may",
+                        "june",
+                        "july",
+                        "August",
+                        "september",
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        "October",
+                        "November",
+                        "December",
+                    ],
+                },
+                index=[9, 10, 11],
+            ),
+            slice(9, None),
+        ),
+    ),
+)
+def test_standardize_months(inp, slc):
+    exp = pd.Series(
+        [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ],
+        name="month",
+    )
+    out = utils.standardize_months(inp)["month"]
+    pd.testing.assert_series_equal(out, exp[slc])
+
+
+def test_standardize_months_fail():
+    out0 = utils.standardize_months(pd.DataFrame({"month": range(0, 13)}))["month"]
+    assert not pd.isna(out0[1:]).any()
+    assert pd.isna(out0[:1]).all()
+    out1 = utils.standardize_months(
+        pd.DataFrame(
+            {
+                "month": [
+                    "January",
+                    "february",
+                    "march",
+                    "april",
+                    "may",
+                    "june",
+                    "julio",  # bad
+                    "August",
+                    "september",
+                    "October",
+                    "November",
+                    "December",
+                ],
+            }
+        )
+    )
+    pd.testing.assert_series_equal(
+        out1["month"],
+        pd.Series(
+            [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                None,
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+            ],
+            name="month",
+        ),
+    )
 
 
 @pytest.mark.parametrize(
