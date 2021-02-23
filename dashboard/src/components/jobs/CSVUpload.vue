@@ -131,7 +131,6 @@ import { System } from "@/types/System";
 
 import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
-import powerConversion from "@/utils/powerConversion";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 
 import { addData } from "@/api/jobs";
@@ -362,8 +361,6 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        console.log(variable);
-        console.log(mapping[variable]);
         const header = mapping[variable].csvHeader;
         if (variable == "time" && newMap.time) {
           continue;

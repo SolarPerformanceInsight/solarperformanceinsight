@@ -58,30 +58,6 @@ Components using the mapper should react to events emitted from this component:
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
           {{ getDisplayName(field) }}:
-          <!--
-          <select
-            @change="addMapping($event, field)"
-            v-model="selectValues[field]"
-          >
-            <option>Not included</option>
-            <option
-              v-for="(u, i) in headers"
-              :key="i"
-              :name="u"
-              :value="u"
-              :disabled="usedHeaders.includes(u)"
-            >
-              <template v-if="u == ''">column {{ i + 1 }}</template>
-              <template v-else>
-                {{ u }}
-              </template>
-            </option>
-          </select>
-          <power-units
-            v-if="isPowerVar(field)"
-            @new-power-units="updatePowerMapping"
-            :variable="field"/>
-          -->
           <single-mapping
             :variable="field"
             :headers="headers"
