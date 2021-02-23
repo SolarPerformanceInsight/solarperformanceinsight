@@ -396,6 +396,7 @@ begin
   CALL _add_example_data_2;
   CALL _add_example_data_3;
   CALL _add_example_data_4;
+  CALL _add_example_data_5;
 end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -1409,6 +1410,44 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `_add_example_data_5`()
+    MODIFIES SQL DATA
+begin
+  -- from _add_example_data_1
+  set @extime = timestamp('2020-12-11 19:52');
+  set @jobid = uuid_to_bin('e1772e64-43ac-11eb-92c2-f4939feddd82', 1);
+  set @otherjobid = uuid_to_bin('7f13ab34-43ad-11eb-80a2-f4939feddd82', 1);
+  update jobs set definition = json_set(
+    json_remove(definition, '$.parameters.job_type'),
+    '$.parameters.compare', 'expected and actual performance',
+    '$.parameters.performance_granularity', 'inverter'
+  ), modified_at = @extime
+   where id in (@jobid, @otherjobid);
+
+  set @jobdataid0 = uuid_to_bin('ecaa5a40-43ac-11eb-a75d-f4939feddd82', 1);
+  update job_data set type = 'actual weather data', modified_at = @extime
+   where id = @jobdataid0;
+
+  -- completed job in _add_example_data_3
+  update jobs set definition = json_set(
+    json_remove(definition, '$.parameters.job_type'),
+    '$.parameters.calculate', 'expected performance')
+   where id = uuid_to_bin('4910c750-55f1-11eb-a03d-f4939feddd82', 1);
+end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`root`@`%` PROCEDURE `_remove_example_data_0`()
     MODIFIES SQL DATA
     COMMENT 'Remove example data from the database'
@@ -1478,5 +1517,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20210107162707'),
   ('20210112205531'),
   ('20210112213845'),
-  ('20210122173304');
+  ('20210122173304'),
+  ('20210223174423');
 UNLOCK TABLES;

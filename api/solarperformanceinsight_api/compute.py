@@ -316,7 +316,7 @@ def _calculate_performance(
         index=job_time_range,
     )
     summary.index.name = "time"  # type: ignore
-    run_model_method = job.definition._model_chain_method
+    run_model_method: str = job.definition._model_chain_method  # type: ignore
     # compute solar position at the middle of the interval
     # positive value assumes left (beginning) label convention
     tshift = time_params.step / 2
