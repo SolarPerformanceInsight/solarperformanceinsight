@@ -691,6 +691,29 @@ def test_post_job_data_monthly_bad(
     assert response.status_code == 400
 
 
+def test_post_job_data_monthly_missing_col(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = StringIO()
+    monthly_weather_df.drop(columns=["total_poa_insolation"]).to_csv(iob, index=False)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.csv",
+                iob,
+                "text/csv",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
 def test_upload_compute(
     client, job_id, job_data_ids, nocommit_transaction, weather_df, async_queue
 ):
