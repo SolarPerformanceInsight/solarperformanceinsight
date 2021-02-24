@@ -51,7 +51,7 @@ describe("Test power conversion", () => {
       [1, 1000],
       [1.5, 1500],
       [2, 2000],
-      [.025, 25],
+      [0.025, 25]
     ];
     for (const results of expected) {
       expect(convertPower("GW", "MW", results[0])).toBeCloseTo(results[1]);
