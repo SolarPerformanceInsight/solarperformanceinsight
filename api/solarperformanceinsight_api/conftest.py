@@ -149,6 +149,11 @@ def monthlypa_job_id():
 
 
 @pytest.fixture(scope="module")
+def monthly_weather_actuals_id():
+    return "f6c3c628-76c5-11eb-8fae-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
 def job_data_ids():
     return (
         "ecaa5a40-43ac-11eb-a75d-f4939feddd82",

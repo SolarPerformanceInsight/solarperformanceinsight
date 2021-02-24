@@ -254,8 +254,44 @@ async def post_job_data(
     df = read_fnc(file.file)
     await file.close()
     utils.validate_dataframe(df, expected_columns)
-    # TODO: support monthly data for 2A
     # TODO: support reference/predicted data with different year from time params
+    if isinstance(
+        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+    ):
+        adjusted_df, data_stats = _adjust_monthly_series(df)
+    else:
+        adjusted_df, data_stats = _adjust_standard_timeseries(job, df, expected_columns)
+    arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(adjusted_df))
+    with storage.start_transaction() as st:
+        st.add_job_data(
+            job_id,
+            data_id,
+            file.filename,
+            "application/vnd.apache.arrow.file",
+            arrow_bytes,
+        )
+    return data_stats
+
+
+def _adjust_monthly_series(
+    df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, models.DataParsingStats]:
+    df = utils.standardize_months(df)
+    stats = models.DataParsingStats(
+        number_of_expected_rows=12,
+        number_of_extra_rows=0,
+        number_of_missing_rows=0,
+        data_periods=dict(expected="monthly", uploaded="monthly"),
+        extra_times=[],
+        missing_times=[],
+        number_of_missing_values=[],
+    )
+    return df, stats
+
+
+def _adjust_standard_timeseries(
+    job: models.StoredJob, df: pd.DataFrame, expected_columns: List[str]
+) -> Tuple[pd.DataFrame, models.DataParsingStats]:
     try:
         uploaded_period = str(
             pd.tseries.frequencies.to_offset(  # type: ignore
@@ -264,15 +300,16 @@ async def post_job_data(
         )
     except Exception:  # pragma: no cover
         uploaded_period = "Unknown"
+    time_params: models.JobTimeindex = (
+        job.definition.parameters.time_parameters  # type: ignore
+    )
     periods = models.DataPeriods(
-        expected=str(job.definition.parameters.time_parameters._time_range.freq),
+        expected=str(time_params._time_range.freq),  # type: ignore
         uploaded=uploaded_period,
     )
 
     # will fail w/o time column
-    df, extra_times, missing_times = utils.reindex_timeseries(
-        df, job.definition.parameters.time_parameters
-    )
+    df, extra_times, missing_times = utils.reindex_timeseries(df, time_params)
     percent_missing = len(missing_times) / len(df.index) * 100
     if percent_missing > 10:
         raise HTTPException(
@@ -282,28 +319,24 @@ async def post_job_data(
                 "data upload to conform to the job's stated time index."
             ),
         )
-
-    arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(df))
-    with storage.start_transaction() as st:
-        st.add_job_data(
-            job_id,
-            data_id,
-            file.filename,
-            "application/vnd.apache.arrow.file",
-            arrow_bytes,
-        )
     dft = df[expected_columns].set_index("time")
     missing_vals = (
-        dft.loc[dft.index.difference(missing_times)].isna().sum(axis=0).to_dict()
+        dft.loc[dft.index.difference(missing_times)]  # type: ignore
+        .isna()
+        .sum(axis=0)
+        .to_dict()
     )
-    return models.DataParsingStats(
-        number_of_expected_rows=len(df.index),
-        number_of_extra_rows=len(extra_times),
-        number_of_missing_rows=len(missing_times),
-        data_periods=periods,
-        extra_times=extra_times,
-        missing_times=missing_times,
-        number_of_missing_values=missing_vals,
+    return (
+        df,
+        models.DataParsingStats(
+            number_of_expected_rows=len(df.index),
+            number_of_extra_rows=len(extra_times),
+            number_of_missing_rows=len(missing_times),
+            data_periods=periods,
+            extra_times=extra_times,
+            missing_times=missing_times,
+            number_of_missing_values=missing_vals,
+        ),
     )
 
 
