@@ -188,6 +188,59 @@ def test_verify_content_type(inp, exp):
             pd.DataFrame(
                 {
                     "month": [
+                        1.0,
+                        2.0,
+                        3.0,
+                        4.0,
+                        5.0,
+                        6.0,
+                        7.0,
+                        8.0,
+                        9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month", "other"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [f"{i}." for i in range(1, 13)],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month", "other"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [str(i) for i in range(1, 13)],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month", "other"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [f"{i}.0" for i in range(1, 13)],
+                    "other": list(range(12)),
+                }
+            ),
+            ["month", "other"],
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
                         "Jan",
                         "Feb",
                         "Mar",
@@ -328,6 +381,37 @@ def test_validate_dataframe(inp, cols, exp):
             pd.DataFrame(
                 {
                     "month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    "other": list(range(12)),
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [
+                        1.0,
+                        2.0,
+                        3.0,
+                        4.0,
+                        5.0,
+                        6.0,
+                        7.0,
+                        8.0,
+                        9.0,
+                        10.0,
+                        11.0,
+                        12.0,
+                    ],
+                    "other": list(range(12)),
+                }
+            ),
+            slice(None),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "month": [str(i) for i in range(1, 13)],
                     "other": list(range(12)),
                 }
             ),

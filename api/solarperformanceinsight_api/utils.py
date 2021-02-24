@@ -94,15 +94,18 @@ def verify_content_type(content_type: str) -> Callable[[IO], pd.DataFrame]:
 
 MONTH_MAPPING = dict(
     zip(
-        [str(i) for i in range(1, 13)]
-        + list(range(1, 13))  # type: ignore
-        + list(calendar.month_abbr[1:])
+        list(calendar.month_abbr[1:])
         + [m + "." for m in calendar.month_abbr[1:]]
         + list(calendar.month_name[1:])
         + [m.lower() for m in calendar.month_abbr[1:]]
         + [m.lower() + "." for m in calendar.month_abbr[1:]]
-        + [m.lower() for m in calendar.month_name[1:]],
-        list(calendar.month_name[1:]) * 8,
+        + [m.lower() for m in calendar.month_name[1:]]
+        + list(range(1, 13))  # type: ignore
+        + [float(i) for i in range(1, 13)]  # type: ignore
+        + [str(i) for i in range(1, 13)]
+        + [f"{i}." for i in range(1, 13)]
+        + [f"{i}.0" for i in range(1, 13)],
+        list(calendar.month_name[1:]) * 11,
     )
 )
 
@@ -145,7 +148,7 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    '"month" column has {invalid_months} rows that could not be parsed'
+                    f'"month" column has {invalid_months} rows that could not be parsed'
                 ),
             )
 
