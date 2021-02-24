@@ -105,9 +105,7 @@ describe("Test Job Parameters", () => {
     // @ts-expect-error
     expect(wrapper.vm.jobSpec).toEqual({
       system_id: testSystem.object_id,
-      job_type: {
-        calculate: "predicted performance"
-      },
+      calculate: "predicted performance",
       time_parameters: defaultTimeParams,
       weather_granularity: "system",
       irradiance_type: "effective",

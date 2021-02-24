@@ -191,9 +191,9 @@ def test_convert_job_data_bad_type():
 
 @pytest.fixture()
 def new_job(system_id):
-    return models.JobParameters(
+    return models.CalculatePerformanceJobParameters(
         system_id=system_id,
-        job_type=models.CalculatePerformanceJob(calculate="expected performance"),
+        calculate="expected performance",
         time_parameters=models.JobTimeindex(
             start="2020-01-01T00:00:00+00:00",
             end="2020-12-31T23:59:59+00:00",

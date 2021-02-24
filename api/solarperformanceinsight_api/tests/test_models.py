@@ -122,165 +122,315 @@ def test_singleaxis_tracking_outside(atg, backtracking):
         )
 
 
-def test_calculatejob_types():
-    # 1A
-    assert models.CalculatePerformanceJob(
-        calculate="predicted performance"
-    )._weather_types == (models.JobDataTypeEnum.original_weather,)
-    # 1B
-    assert models.CalculatePerformanceJob(
-        calculate="expected performance"
-    )._weather_types == (models.JobDataTypeEnum.actual_weather,)
+@pytest.fixture()
+def timeindex():
+    outd = dict(
+        start="2020-01-01T00:00:00+00:00",
+        end="2020-12-31T23:59:59+00:00",
+        step="15:00",
+        timezone="UTC",
+    )
+    return outd, models.JobTimeindex(**outd)
 
 
-def test_comparejob_types():
-    # 2A
-    cj2A = models.ComparePerformanceJob(
-        compare="predicted and actual performance", performance_granularity="inverter"
+def test_calculate_predicted_job(timeindex, system_def, system_id):
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            calculate="predicted performance",
+            irradiance_type="poa",
+            temperature_type="module",
+            weather_granularity="array",
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
     )
-    assert cj2A._weather_types == (
-        models.JobDataTypeEnum.original_weather,
-        models.JobDataTypeEnum.actual_weather,
-    )
-    assert cj2A._performance_types == (models.JobDataTypeEnum.actual_performance,)
-    # 2B
-    cj2B = models.ComparePerformanceJob(
-        compare="predicted and expected performance", performance_granularity="inverter"
-    )
-    assert cj2B._weather_types == (
-        models.JobDataTypeEnum.original_weather,
-        models.JobDataTypeEnum.actual_weather,
-    )
-    assert cj2B._performance_types == (models.JobDataTypeEnum.predicted_performance,)
-    # 2C
-    cj2C = models.ComparePerformanceJob(
-        compare="expected and actual performance", performance_granularity="inverter"
-    )
-    assert cj2C._weather_types == (models.JobDataTypeEnum.actual_weather,)
-    assert cj2C._performance_types == (models.JobDataTypeEnum.actual_performance,)
-    # 2D
-    cj2D = models.CalculateWeatherAdjustedPRJob(
-        calculate="weather-adjusted performance ratio", performance_granularity="system"
-    )
-    assert cj2D._weather_types == (models.JobDataTypeEnum.actual_weather,)
-    assert cj2D._performance_types == (models.JobDataTypeEnum.actual_performance,)
-
-
-@pytest.mark.parametrize(
-    "job_type,weather_granularity,expected",
-    [
-        (
-            dict(calculate="predicted performance"),
-            "system",
-            [{"schema_path": "/", "type": "original weather data"}],
-        ),
-        (
-            dict(calculate="predicted performance"),
-            "inverter",
-            [
-                {"schema_path": "/inverters/0", "type": "original weather data"},
-                {"schema_path": "/inverters/1", "type": "original weather data"},
-            ],
-        ),
-        (
-            dict(calculate="predicted performance"),
-            "array",
-            [
-                {
-                    "schema_path": "/inverters/0/arrays/0",
-                    "type": "original weather data",
-                },
-                {
-                    "schema_path": "/inverters/0/arrays/1",
-                    "type": "original weather data",
-                },
-                {
-                    "schema_path": "/inverters/1/arrays/0",
-                    "type": "original weather data",
-                },
-            ],
-        ),
-        (
-            dict(calculate="expected performance"),
-            "inverter",
-            [
-                {"schema_path": "/inverters/0", "type": "actual weather data"},
-                {"schema_path": "/inverters/1", "type": "actual weather data"},
-            ],
-        ),
-        (
-            dict(
-                compare="predicted and actual performance",
-                performance_granularity="system",
-            ),
-            "inverter",
-            [
-                {"schema_path": "/inverters/0", "type": "original weather data"},
-                {"schema_path": "/inverters/1", "type": "original weather data"},
-                {"schema_path": "/inverters/0", "type": "actual weather data"},
-                {"schema_path": "/inverters/1", "type": "actual weather data"},
-                {"schema_path": "/", "type": "actual performance data"},
-            ],
-        ),
-        (
-            dict(
-                compare="predicted and expected performance",
-                performance_granularity="inverter",
-            ),
-            "inverter",
-            [
-                {"schema_path": "/inverters/0", "type": "original weather data"},
-                {"schema_path": "/inverters/1", "type": "original weather data"},
-                {"schema_path": "/inverters/0", "type": "actual weather data"},
-                {"schema_path": "/inverters/1", "type": "actual weather data"},
-                {"schema_path": "/inverters/0", "type": "predicted performance data"},
-                {"schema_path": "/inverters/1", "type": "predicted performance data"},
-            ],
-        ),
-        (
-            dict(
-                compare="expected and actual performance",
-                performance_granularity="system",
-            ),
-            "array",
-            [
-                {"schema_path": "/inverters/0/arrays/0", "type": "actual weather data"},
-                {"schema_path": "/inverters/0/arrays/1", "type": "actual weather data"},
-                {"schema_path": "/inverters/1/arrays/0", "type": "actual weather data"},
-                {"schema_path": "/", "type": "actual performance data"},
-            ],
-        ),
-        (
-            dict(
-                calculate="weather-adjusted performance ratio",
-                performance_granularity="inverter",
-            ),
-            "inverter",
-            [
-                {"schema_path": "/inverters/0", "type": "actual weather data"},
-                {"schema_path": "/inverters/1", "type": "actual weather data"},
-                {"schema_path": "/inverters/0", "type": "actual performance data"},
-                {"schema_path": "/inverters/1", "type": "actual performance data"},
-            ],
-        ),
-    ],
-)
-def test_construct_data_items(job_type, weather_granularity, expected):
-    param_dict = deepcopy(models.JOB_PARAMS_EXAMPLE)
-    param_dict["job_type"] = job_type
-    param_dict["weather_granularity"] = weather_granularity
-    params = models.JobParameters(**param_dict)
-    system_dict = deepcopy(models.SYSTEM_EXAMPLE)
-    system_dict["inverters"] = [
-        system_dict["inverters"][0],
-        system_dict["inverters"][0],
+    assert set(job._data_items.keys()) == {
+        ("/inverters/0/arrays/0", models.JobDataTypeEnum.original_weather),
+    }
+    assert job._model_chain_method == "run_model_from_poa"
+    assert job._data_items[
+        ("/inverters/0/arrays/0", "original weather data")
+    ]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
     ]
-    system = models.PVSystem(**system_dict)
-    arr0 = system.inverters[0].arrays[0]
-    system.inverters[0].arrays = [arr0, arr0]
 
-    out = models._construct_data_items(system, params)
-    assert out == expected
+
+def test_calculate_expected_job(timeindex, system_def, system_id):
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            calculate="expected performance",
+            irradiance_type="standard",
+            temperature_type="module",
+            weather_granularity="inverter",
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert set(job._data_items.keys()) == {
+        ("/inverters/0", models.JobDataTypeEnum.actual_weather),
+    }
+    assert job._model_chain_method == "run_model"
+    assert job._data_items[("/inverters/0", "actual weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "module_temperature",
+    ]
+
+
+def test_compare_expected_actual_job(timeindex, system_def, system_id):
+    # UC 2C
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="expected and actual performance",
+            irradiance_type="effective",
+            temperature_type="cell",
+            weather_granularity="system",
+            performance_granularity="inverter",
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 2
+    assert job._model_chain_method == "run_model_from_effective_irradiance"
+    assert job._data_items[("/", "actual weather data")]._data_cols == [
+        "time",
+        "effective_irradiance",
+        "cell_temperature",
+    ]
+    assert job._data_items[("/inverters/0", "actual performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_calculate_weather_adjusted_pr_job(timeindex, system_def, system_id):
+    # UC 2D
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            calculate="weather-adjusted performance ratio",
+            irradiance_type="standard",
+            temperature_type="air",
+            weather_granularity="inverter",
+            performance_granularity="system",
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 2
+    assert job._model_chain_method == "run_model"
+    assert job._data_items[("/inverters/0", "actual weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/", "actual performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_compare_predicted_actual_job_2A1(timeindex, system_def, system_id):
+    # UC 2A-1
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="predicted and actual performance",
+            actual_data_parameters=dict(
+                irradiance_type="standard",
+                temperature_type="air",
+                weather_granularity="system",
+                performance_granularity="system",
+            ),
+            predicted_data_parameters=dict(
+                data_available="weather, AC, and DC performance",
+                irradiance_type="poa",
+                temperature_type="module",
+                weather_granularity="system",
+                performance_granularity="system",
+            ),
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 5
+    assert job._model_chain_method is None
+    assert job._data_items[("/", "actual weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/", "original weather data")]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/", "actual performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+    assert job._data_items[("/", "predicted performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+    assert job._data_items[("/", "predicted DC performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_compare_predicted_actual_job_2A2(timeindex, system_def, system_id):
+    # UC 2A-2
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="predicted and actual performance",
+            actual_data_parameters=dict(
+                irradiance_type="poa",
+                temperature_type="module",
+                weather_granularity="array",
+                performance_granularity="inverter",
+            ),
+            predicted_data_parameters=dict(
+                data_available="weather and AC performance",
+                irradiance_type="standard",
+                temperature_type="air",
+                weather_granularity="system",
+                performance_granularity="system",
+            ),
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 4
+    assert job._model_chain_method is None
+    assert job._data_items[
+        ("/inverters/0/arrays/0", "actual weather data")
+    ]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/", "original weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/inverters/0", "actual performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+    assert job._data_items[("/", "predicted performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_compare_predicted_actual_job_2A3(system_def, system_id):
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="monthly predicted and actual performance",
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 4
+    assert job._model_chain_method is None
+    assert job._data_items[("/", "actual monthly weather data")]._data_cols == [
+        "month",
+        "total_poa_insolation",
+        "average_daylight_cell_temperature",
+    ]
+    assert job._data_items[("/", "original monthly weather data")]._data_cols == [
+        "month",
+        "total_poa_insolation",
+        "average_daylight_cell_temperature",
+    ]
+    assert job._data_items[("/", "actual monthly performance data")]._data_cols == [
+        "month",
+        "total_energy",
+    ]
+    assert job._data_items[("/", "predicted monthly performance data")]._data_cols == [
+        "month",
+        "total_energy",
+    ]
+
+
+def test_compare_predicted_actual_job_2A4(timeindex, system_def, system_id):
+    # UC 2A-4
+    timedict, timeind = timeindex
+    param_dict = dict(
+        compare="predicted and actual performance",
+        actual_data_parameters=dict(
+            irradiance_type="poa",
+            temperature_type="module",
+            weather_granularity="system",
+            performance_granularity="inverter",
+        ),
+        predicted_data_parameters=dict(
+            data_available="weather only",
+            irradiance_type="standard",
+            temperature_type="air",
+            weather_granularity="inverter",
+        ),
+        time_parameters=timedict,
+        system_id=system_id,
+    )
+    job = models.Job(system_definition=system_def, parameters=param_dict)
+    assert len(job._data_items) == 3
+    assert job._model_chain_method is None
+    assert job._data_items[("/", "actual weather data")]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/inverters/0", "original weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/inverters/0", "actual performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+    bad_params = param_dict.copy()
+    bad_params["predicted_data_parameters"]["performance_granularity"] = "system"
+    with pytest.raises(ValidationError):
+        models.Job(system_definition=system_def, parameters=bad_params)
 
 
 @pytest.mark.parametrize(
@@ -349,6 +499,7 @@ def test_jobtimeindex_validation(start, end, step, tz):
         models.JobTimeindex(start=start, end=end, step=step, timezone=tz)
 
 
+@pytest.mark.parametrize("type_", ("original weather data", "actual weather data"))
 @pytest.mark.parametrize(
     "irr,temp,expected",
     (
@@ -386,13 +537,32 @@ def test_jobtimeindex_validation(start, end, step, tz):
         ("effective", "cell", ["time", "effective_irradiance", "cell_temperature"]),
     ),
 )
-def test_job_parameters_columns(irr, temp, expected, system_def):
-    params = deepcopy(models.JOB_PARAMS_EXAMPLE)
-    params["irradiance_type"] = irr
-    params["temperature_type"] = temp
-    mod = models.Job(parameters=params, system_definition=system_def)
-    assert mod._weather_columns == expected
-    assert mod._performance_columns == ["time", "performance"]
+def test_jobdataitem_columns(irr, temp, expected, type_):
+    jdi = models.JobDataItem.from_types(
+        "/", type_, irradiance_type=irr, temperature_type=temp
+    )
+    assert jdi._data_cols == expected
+
+
+def test_jobdataitem_columns_others():
+    for type_ in (
+        "predicted performance data",
+        "predicted DC performance data",
+        "expected performance data",
+        "actual performance data",
+    ):
+        models.JobDataItem.from_types("/", type_)._data_cols == ["time", "performance"]
+    for type_ in ("actual monthly weather data", "original monthly weather data"):
+        models.JobDataItem.from_types("/", type_)._data_cols == [
+            "time",
+            "total_poa_insolation",
+            "average_daylight_cell_temperature",
+        ]
+    for type_ in (
+        "actual monthly performance data",
+        "predicted monthly performance data",
+    ):
+        models.JobDataItem.from_types("/", type_)._data_cols == ["time", "total_energy"]
 
 
 def test_inverter_multiple_arrays(system_def):

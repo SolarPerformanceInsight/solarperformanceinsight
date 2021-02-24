@@ -143,7 +143,7 @@ def job_data_ids():
 
 @pytest.fixture()
 def job_params():
-    return models.JobParameters(**models.JOB_PARAMS_EXAMPLE)
+    return models.CompareExpectedActualJobParameters(**models.JOB_PARAMS_EXAMPLE)
 
 
 @pytest.fixture()
@@ -180,7 +180,7 @@ def stored_job(job_id, job_def, job_status, job_data_ids, job_data_meta):
         modified_at=ctime,
         definition=models.JobDataMetadata(
             schema_path="/inverters/0/arrays/0",
-            type="original weather data",
+            type="actual weather data",
             filename="",
             data_columns=[
                 "time",
