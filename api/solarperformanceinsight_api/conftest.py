@@ -134,6 +134,21 @@ def other_job_id():
 
 
 @pytest.fixture(scope="module")
+def weatherpr_job_id():
+    return "3c392360-76c1-11eb-afc5-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
+def predvsactual_job_id():
+    return "1ece4f7a-76c2-11eb-afc5-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
+def monthlypa_job_id():
+    return "717eb644-76c5-11eb-8fae-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
 def job_data_ids():
     return (
         "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
