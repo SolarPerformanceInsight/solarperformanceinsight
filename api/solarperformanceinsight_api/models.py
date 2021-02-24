@@ -778,7 +778,7 @@ class JobDataItem(SPIBase):
             cols = [
                 "month",
                 "total_poa_insolation",
-                "average_daylight_cell_temperature",
+                "average_daytime_cell_temperature",
             ]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_performance,
@@ -975,7 +975,7 @@ class MonthlyPredictedActualEnum(str, Enum):
 class CompareMonthlyPredictedActualJobParameters(SPIBase):
     """Compare predicted to actual performance on a monthly time
     scale. Data is expected to be at the system level and include
-    monthly insolation, energy, and average daylight temperature.
+    monthly insolation, energy, and average daytime temperature.
     """
 
     system_id: UUID
