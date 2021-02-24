@@ -9,7 +9,7 @@ Takes the following properties
 Components using the mapper should react to events emitted from this component:
   - new-mapping: {
       variable: The variable being mapped,
-      csvHeader: The header from the csv mapped to the variable,
+      csv_header: The header from the csv mapped to the variable,
       units(if power variable): Units of the power measurement.
     } - Should remove the variable property and include in the mapping.
 -->
@@ -64,7 +64,7 @@ export default class SingleMapping extends Vue {
   emitMapping() {
     const mapping = {
       variable: this.variable,
-      csvHeader: this.selected
+      csv_header: this.selected
     };
     if (this.isPower) {
       // @ts-expect-error

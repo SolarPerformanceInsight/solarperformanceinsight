@@ -361,7 +361,7 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        const header = mapping[variable].csvHeader;
+        const header = mapping[variable].csv_header;
         if (variable == "time" && newMap.time) {
           continue;
         }

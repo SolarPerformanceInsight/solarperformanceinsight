@@ -8,7 +8,7 @@ export default function(
   const originalHeaders: Array<string> = [];
   const mappedHeaders: Array<string> = [];
   for (const mapped in Mapping) {
-    const originalHeader = Mapping[mapped].csvHeader;
+    const originalHeader = Mapping[mapped].csv_header;
     originalHeaders.push(originalHeader);
     mappedHeaders.push(mapped);
     if ("units" in Mapping[mapped]) {

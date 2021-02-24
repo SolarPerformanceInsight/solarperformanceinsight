@@ -187,7 +187,7 @@ export default class CSVMapper extends Vue {
     // pop the index from the mapping
     const loc = newMap.loc;
     newMap = { ...newMap };
-    newMap["time"] = { csvHeader: this.timeField };
+    newMap["time"] = { csv_header: this.timeField };
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
@@ -239,7 +239,7 @@ export default class CSVMapper extends Vue {
     this.useHeader(this.timeField);
     for (const dataObject of this.data_objects) {
       const loc = dataObject.definition.schema_path;
-      const timeMapping = { csvHeader: this.timeField };
+      const timeMapping = { csv_header: this.timeField };
       // update the time field or create a mapping
       if (loc in this.mapping) {
         // @ts-expect-error

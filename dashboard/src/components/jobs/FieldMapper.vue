@@ -127,15 +127,15 @@ export default class FieldMapper extends Vue {
     // If the variable is already in the mapping, free the header it is
     // currently mapped to.
     if (variable in this.mapping) {
-      this.$emit("free-header", this.mapping[variable].csvHeader);
+      this.$emit("free-header", this.mapping[variable].csv_header);
     }
-    if (mapping.csvHeader == "Not included") {
+    if (mapping.csv_header == "Not included") {
       // unmap the variable if not included
       delete this.mapping[variable];
     } else {
       // Update mapping and emit an event using the header.
       this.mapping[variable] = mapping;
-      this.$emit("used-header", mapping.csvHeader);
+      this.$emit("used-header", mapping.csv_header);
     }
     this.emitMapping();
   }
