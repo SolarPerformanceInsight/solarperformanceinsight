@@ -1,6 +1,6 @@
 <template>
   <div class="time-parameters">
-    <h3>Time Index</h3>
+    <h3>Time Parameters</h3>
     <p>Tell us about the time index of your data files.</p>
     <div class="timefield">
       <label for="timezoneSelect"><b>Timezone:</b></label>
@@ -55,6 +55,10 @@
 import { Component, Vue } from "vue-property-decorator";
 import Timezones from "@/constants/timezones.json";
 import { DateTime, LocalZone } from "luxon";
+import { Datetime } from "vue-datetime";
+import "vue-datetime/dist/vue-datetime.css";
+
+Vue.component("datetime", Datetime);
 
 @Component
 export default class JobTimeParameters extends Vue {
@@ -66,6 +70,7 @@ export default class JobTimeParameters extends Vue {
 
   data() {
     const zone = new LocalZone().name;
+    // @ts-expect-error
     const now = DateTime.now().setZone(zone);
     return {
       start: now.toISO(),

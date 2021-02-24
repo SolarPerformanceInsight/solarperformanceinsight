@@ -14,6 +14,13 @@ import { PVArray } from "@/types/PVArray";
 
 import * as Jobs from "@/api/jobs";
 import { $auth } from "../mockauth";
+import { DateTime } from "luxon";
+
+const now = DateTime.fromISO("2020-01-01T00:00+00:00");
+
+// @ts-expect-error
+const dt = jest.spyOn(DateTime, "now");
+dt.mockImplementation(() => now);
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
@@ -36,8 +43,8 @@ const testSystem = new StoredSystem({
 });
 
 const defaultTimeParams = {
-  start: "2020-01-01T00:00+00:00",
-  end: "2020-02-01T00:00+00:00",
+  start: "2020-01-01T00:00:00.000Z",
+  end: "2020-01-01T00:00:00.000Z",
   step: 3600,
   timezone: "America/Denver"
 };

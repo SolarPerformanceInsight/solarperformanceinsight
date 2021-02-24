@@ -7,7 +7,6 @@ import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
 import { APIValidator } from "./types/validation/Validator";
 import { spiStore } from "./store/store";
-import { Datetime } from "vue-datetime";
 
 // Auth0 configuration
 import { domain, clientId, audience } from "../auth_config.json";
@@ -35,7 +34,6 @@ import CSVUpload from "@/components/jobs/CSVUpload.vue";
 import CSVMapper from "@/components/jobs/CSVMapper.vue";
 
 import "./assets/css/styles.css";
-import "vue-datetime/dist/vue-datetime.css";
 
 Vue.use(VueRouter);
 
@@ -103,9 +101,6 @@ Vue.component("time-parameters", JobTimeParameters);
 Vue.component("system-view", SystemView);
 Vue.component("csv-upload", CSVUpload);
 Vue.component("csv-mapper", CSVMapper);
-
-// vue-datetime component
-Vue.component("datetime", Datetime);
 
 new Vue({
   router,
