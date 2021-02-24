@@ -269,17 +269,20 @@ describe("Test CSV Mapper", () => {
     // @ts-expect-error
     weatherHandler.vm.updateMapping({
       loc: "/inverters/0/arrays/0",
-      ghi: "global"
+      ghi: { csvHeader: "global" }
     });
     expect(weatherHandler.vm.$data.mapping).toEqual({
-      "/inverters/0/arrays/0": { ghi: "global", time: "" }
+      "/inverters/0/arrays/0": {
+        ghi: { csvHeader: "global" },
+        time: { csvHeader: "" }
+      }
     });
     // @ts-expect-error
     weatherHandler.vm.mapTime({ target: { value: "timestamp" } });
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/inverters/0/arrays/0": {
-        ghi: "global",
-        time: "timestamp"
+        ghi: { csvHeader: "global" },
+        time: { csvHeader: "timestamp" }
       }
     });
   });

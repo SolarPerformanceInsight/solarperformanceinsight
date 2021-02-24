@@ -120,11 +120,11 @@ const testCSV = "a,b,c,d,e\n1,2,3,4,5";
 
 const testMapping = {
   "/inverters/0/arrays/0": {
-    time: "a",
-    poa_global: "b",
-    poa_direct: "c",
-    poa_diffuse: "d",
-    module_temperature: "e"
+    time: { csvHeader: "a" },
+    poa_global: { csvHeader: "b" },
+    poa_direct: { csvHeader: "c" },
+    poa_diffuse: { csvHeader: "d" },
+    module_temperature: { csvHeader: "e" }
   }
 };
 
