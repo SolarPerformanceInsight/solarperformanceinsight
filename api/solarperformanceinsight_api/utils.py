@@ -1,3 +1,4 @@
+import calendar
 import datetime as dt
 import logging
 from typing import Set, IO, Callable, List, Tuple
@@ -91,10 +92,29 @@ def verify_content_type(content_type: str) -> Callable[[IO], pd.DataFrame]:
         return read_arrow
 
 
+MONTH_MAPPING = dict(
+    zip(
+        list(calendar.month_abbr[1:])
+        + [m + "." for m in calendar.month_abbr[1:]]
+        + list(calendar.month_name[1:])
+        + [m.lower() for m in calendar.month_abbr[1:]]
+        + [m.lower() + "." for m in calendar.month_abbr[1:]]
+        + [m.lower() for m in calendar.month_name[1:]]
+        + list(range(1, 13))  # type: ignore
+        + [float(i) for i in range(1, 13)]  # type: ignore
+        + [str(i) for i in range(1, 13)]
+        + [f"{i}." for i in range(1, 13)]
+        + [f"{i}.0" for i in range(1, 13)],
+        list(calendar.month_name[1:]) * 11,
+    )
+)
+
+
 def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
     """Validates that the input dataframe has all given columns, that the
-    'time' column has a datetime type and no microseconds, and that all
-    other columns are floats"""
+    'time' column has a datetime type, a 'month' column parsed as 1-12 or Jan-Dec,
+    and that all other columns are floats.
+    """
     expected = set(columns)
     actual = set(df.columns)
     diff = expected - actual
@@ -115,8 +135,25 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
                 status_code=400,
                 detail=f'"time" column has {extra_times} duplicate entries',
             )
+    if "month" in expected:
+        if len(df["month"]) != 12:
+            raise HTTPException(
+                status_code=400,
+                detail='"month" column is expected to have 12 rows, one for each month',
+            )
+        allowed = set(MONTH_MAPPING.keys())
+        month_set = set(df["month"])
+        invalid_months = len(month_set - allowed)
+        if invalid_months:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f'"month" column has {invalid_months} rows that could not be parsed'
+                ),
+            )
+
     bad_types = []
-    for col in expected - {"time"}:
+    for col in expected - {"time", "month"}:
         if not pdtypes.is_numeric_dtype(df[col]):
             bad_types.append(col)
     if bad_types:
@@ -125,6 +162,13 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             detail="The following column(s) are not numeric: " + ", ".join(bad_types),
         )
     return actual - expected
+
+
+def standardize_months(df: pd.DataFrame) -> pd.DataFrame:
+    newdf: pd.DataFrame
+    newdf = df.copy()
+    newdf.loc[:, "month"] = newdf["month"].map(MONTH_MAPPING)
+    return newdf
 
 
 def reindex_timeseries(

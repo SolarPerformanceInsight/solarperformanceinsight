@@ -19,7 +19,7 @@ CREATE TABLE `job_data` (
   `id` binary(16) NOT NULL DEFAULT (uuid_to_bin(uuid(),1)),
   `job_id` binary(16) NOT NULL,
   `schema_path` varchar(128) NOT NULL,
-  `type` varchar(32) NOT NULL,
+  `type` varchar(64) NOT NULL,
   `present` tinyint(1) NOT NULL DEFAULT '0',
   `format` varchar(64) DEFAULT NULL,
   `filename` varchar(128) DEFAULT NULL,
@@ -397,6 +397,7 @@ begin
   CALL _add_example_data_3;
   CALL _add_example_data_4;
   CALL _add_example_data_5;
+  CALL _add_example_data_6;
 end ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -525,7 +526,7 @@ begin
       insert into job_data (job_id, schema_path, type)
       select binid, jv.schema_path, jv.type from json_table(data_items, '$[*]' columns (
         schema_path varchar(128) path '$.schema_path' error on empty error on error,
-        type varchar(32) path '$.type' error on empty error on error)) as jv;
+        type varchar(64) path '$.type' error on empty error on error)) as jv;
       select jobid as job_id;
     else
       signal sqlstate '42000' set message_text = 'Job creation denied',
@@ -1448,6 +1449,113 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `_add_example_data_6`()
+    MODIFIES SQL DATA
+begin
+  set @jobid0 = uuid_to_bin('3c392360-76c1-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid0_0 = uuid_to_bin('3291fb8c-76c3-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid0_1 = uuid_to_bin('3be689f0-76c3-11eb-afc5-f4939feddd82', 1);
+  set @jobid1 = uuid_to_bin('1ece4f7a-76c2-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid1_0 = uuid_to_bin('46451466-76c3-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid1_1 = uuid_to_bin('4eb8697c-76c3-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid1_2 = uuid_to_bin('fcafef8c-76c3-11eb-afc5-f4939feddd82', 1);
+  set @jobdataid1_3 = uuid_to_bin('0d04f5bc-76c4-11eb-afc5-f4939feddd82', 1);
+  set @jobid2 = uuid_to_bin('717eb644-76c5-11eb-8fae-f4939feddd82', 1);
+  set @jobdataid2_0 = uuid_to_bin('71431620-76c5-11eb-8fae-f4939feddd82', 1);
+  set @jobdataid2_1 = uuid_to_bin('7101c33c-76c5-11eb-8fae-f4939feddd82', 1);
+  set @jobdataid2_2 = uuid_to_bin('f6c3c628-76c5-11eb-8fae-f4939feddd82', 1);
+  set @jobdataid2_3 = uuid_to_bin('f68b4cf8-76c5-11eb-8fae-f4939feddd82', 1);
+  set @userid = uuid_to_bin('17fbf1c6-34bd-11eb-af43-f4939feddd82', 1);
+  set @sysid = uuid_to_bin('6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9', 1);
+  set @extime = timestamp('2021-02-24 23:58:20');
+
+  set @sysjson = (select cast(definition as json) from systems where id = @sysid);
+  set @jobparams0 = '{"parameters": {
+      "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      "time_parameters": {
+        "start": "2021-01-01T00:00:00+00:00",
+        "end": "2021-12-31T23:59:59+00:00",
+        "step": "30:00",
+        "timezone": "America/Denver"
+      },
+      "weather_granularity": "system",
+      "calculate": "weather-adjusted performance ratio",
+      "performance_granularity": "inverter",
+      "irradiance_type": "poa",
+      "temperature_type": "module"}}';
+  set @jobjson0 = json_set(@jobparams0, '$.system_definition', json_value(@sysjson, '$' returning json));
+  set @jobparams1 = '{"parameters": {
+                    "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                    "time_parameters": {
+                    "start": "2021-01-01T00:00:00+00:00",
+                    "end": "2021-12-31T23:59:59+00:00",
+                    "step": "60:00",
+                    "timezone": "America/Denver"
+                    },
+                    "compare": "predicted and actual performance",
+                    "predicted_data_parameters": {
+                    "irradiance_type": "standard",
+                    "temperature_type": "air",
+                    "weather_granularity": "system",
+                    "data_available": "weather and AC performance",
+                    "performance_granularity": "system"
+                    },
+                    "actual_data_parameters": {
+                    "irradiance_type": "poa",
+                    "temperature_type": "module",
+                    "weather_granularity": "inverter",
+                    "performance_granularity": "inverter"
+                    }}}';
+  set @jobjson1 = json_set(@jobparams1, '$.system_definition', json_value(@sysjson, '$' returning json));
+  set @jobparams2 = '{"parameters": {
+                    "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                    "compare": "monthly predicted and actual performance"}}';
+  set @jobjson2 = json_set(@jobparams2, '$.system_definition', json_value(@sysjson, '$' returning json));
+
+  insert into jobs (id, user_id, system_id, definition, status, created_at, modified_at) values (
+    @jobid0, @userid, @sysid, @jobjson0, 'created', @extime, @extime
+  ), (
+    @jobid1, @userid, @sysid, @jobjson1, 'created', @extime, @extime
+  ), (
+    @jobid2, @userid, @sysid, @jobjson2, 'created', @extime, @extime
+  );
+
+  insert into job_data (id, job_id, schema_path, type, created_at, modified_at) values (
+    @jobdataid0_0, @jobid0, '/', 'actual weather data', @extime, @extime
+  ), (
+    @jobdataid0_1, @jobid0, '/inverters/0', 'actual performance data', @extime, @extime
+  ), (
+    @jobdataid1_0, @jobid1, '/', 'original weather data', @extime, @extime
+  ), (
+    @jobdataid1_1, @jobid1, '/', 'predicted performance data', @extime, @extime
+  ), (
+    @jobdataid1_2, @jobid1, '/inverters/0', 'actual weather data', @extime, @extime
+  ), (
+    @jobdataid1_3, @jobid1, '/inverters/0', 'actual performance data', @extime, @extime
+  ), (
+    @jobdataid2_0, @jobid2, '/', 'original monthly weather data', @extime, @extime
+  ), (
+    @jobdataid2_1, @jobid2, '/', 'predicted monthly performance data', @extime, @extime
+  ), (
+    @jobdataid2_2, @jobid2, '/', 'actual monthly weather data', @extime, @extime
+  ), (
+    @jobdataid2_3, @jobid2, '/', 'actual monthly performance data', @extime, @extime
+  );
+end ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
 CREATE DEFINER=`root`@`%` PROCEDURE `_remove_example_data_0`()
     MODIFIES SQL DATA
     COMMENT 'Remove example data from the database'
@@ -1518,5 +1626,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20210112205531'),
   ('20210112213845'),
   ('20210122173304'),
-  ('20210223174423');
+  ('20210223174423'),
+  ('20210223230007');
 UNLOCK TABLES;

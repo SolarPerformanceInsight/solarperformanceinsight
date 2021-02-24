@@ -314,7 +314,7 @@ def test_list_job(storage_interface, add_example_db_data, stored_job, complete_j
     with storage_interface.start_transaction() as st:
         out = st.list_jobs()
     assert out[0] == stored_job
-    assert len(out) == 2
+    assert len(out) == 5
     assert str(out[1].object_id) == complete_job_id
 
 
@@ -341,11 +341,11 @@ def test_get_job_wrong_owner(storage_interface, add_example_db_data, other_job_i
 def test_delete_job(storage_interface, add_example_db_data, job_id):
     with storage_interface.start_transaction() as st:
         before = st.list_jobs()
-        assert len(before) == 2
+        assert len(before) == 5
         assert str(before[0].object_id) == job_id
         st.delete_job(job_id)
         after = st.list_jobs()
-        assert len(after) == 1
+        assert len(after) == 4
         assert str(after[0].object_id) != job_id
 
 
@@ -652,13 +652,23 @@ def job_managment_interface(auth0_id, mocker):
 
 
 def test_list_status_of_jobs(
-    job_managment_interface, add_example_db_data, job_id, complete_job_id, other_job_id
+    job_managment_interface,
+    add_example_db_data,
+    job_id,
+    complete_job_id,
+    other_job_id,
+    weatherpr_job_id,
+    predvsactual_job_id,
+    monthlypa_job_id,
 ):
     out = job_managment_interface.list_status_of_jobs()
     assert out == {
         job_id: "created",
         other_job_id: "created",
         complete_job_id: "complete",
+        weatherpr_job_id: "created",
+        predvsactual_job_id: "created",
+        monthlypa_job_id: "created",
     }
 
 

@@ -367,12 +367,12 @@ def test_compare_predicted_actual_job_2A3(system_def, system_id):
     assert job._data_items[("/", "actual monthly weather data")]._data_cols == [
         "month",
         "total_poa_insolation",
-        "average_daylight_cell_temperature",
+        "average_daytime_cell_temperature",
     ]
     assert job._data_items[("/", "original monthly weather data")]._data_cols == [
         "month",
         "total_poa_insolation",
-        "average_daylight_cell_temperature",
+        "average_daytime_cell_temperature",
     ]
     assert job._data_items[("/", "actual monthly performance data")]._data_cols == [
         "month",
@@ -556,7 +556,7 @@ def test_jobdataitem_columns_others():
         models.JobDataItem.from_types("/", type_)._data_cols == [
             "time",
             "total_poa_insolation",
-            "average_daylight_cell_temperature",
+            "average_daytime_cell_temperature",
         ]
     for type_ in (
         "actual monthly performance data",

@@ -778,7 +778,7 @@ class JobDataItem(SPIBase):
             cols = [
                 "month",
                 "total_poa_insolation",
-                "average_daylight_cell_temperature",
+                "average_daytime_cell_temperature",
             ]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_performance,
@@ -924,7 +924,6 @@ class PredictedDataParams(CompareMixin):
     data_available: PredictedDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
     _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
-    # TODO: validate data_available + performance_granularity
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -944,7 +943,7 @@ class PredictedDataParams(CompareMixin):
         pg = values.get("performance_granularity")
         if da == PredictedDataEnum.weather_only and pg is not None:
             raise ValueError(
-                "Performance granulairty is invalid when not providing predicted "
+                "Performance granularity is invalid when not providing predicted "
                 "performance"
             )
         return values
@@ -976,7 +975,7 @@ class MonthlyPredictedActualEnum(str, Enum):
 class CompareMonthlyPredictedActualJobParameters(SPIBase):
     """Compare predicted to actual performance on a monthly time
     scale. Data is expected to be at the system level and include
-    monthly insolation, energy, and average daylight temperature.
+    monthly insolation, energy, and average daytime temperature.
     """
 
     system_id: UUID

@@ -1,3 +1,4 @@
+import calendar
 import datetime as dt
 from io import BytesIO, StringIO
 import uuid
@@ -21,7 +22,7 @@ def test_list_jobs(client, stored_job):
     response = client.get("/jobs")
     jobs = [models.StoredJob(**j) for j in response.json()]
     assert response.status_code == 200
-    assert len(jobs) == 2
+    assert len(jobs) == 5
     assert jobs[0] == stored_job
 
 
@@ -257,6 +258,35 @@ def weather_df(job_params):
             },
         }
     )
+
+
+@pytest.fixture(params=["int", "float", "abbr", "full", "floatstr", "shortfloatstr"])
+def monthly_weather_df(request):
+    out = pd.DataFrame(
+        {
+            "month": list(range(1, 13)),
+            **{
+                col: np.random.randn(12)
+                for col in ("total_poa_insolation", "average_daytime_cell_temperature")
+            },
+        }
+    )
+    if request.param == "int":
+        return out
+    elif request.param == "float":
+        return out.astype({"month": float})
+    elif request.param == "abbr":
+        out.loc[:, "month"] = calendar.month_abbr[1:]
+        return out
+    elif request.param == "full":
+        out.loc[:, "month"] = calendar.month_name[1:]
+        return out
+    elif request.param == "floatstr":
+        out.loc[:, "month"] = [f"{i}.0" for i in range(1, 13)]
+        return out
+    elif request.param == "shortfloatstr":
+        out.loc[:, "month"] = [f"{i}." for i in range(1, 13)]
+        return out
 
 
 @pytest.fixture(params=[0, 1])
@@ -534,6 +564,154 @@ def test_post_job_data_not_full_index(
         "expected": "<15 * Minutes>",
         "uploaded": "<15 * Minutes>",
     }
+
+
+def test_post_job_data_monthly_arrow(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = BytesIO()
+    monthly_weather_df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == 0
+    assert rjson["missing_times"] == []
+    assert rjson["number_of_extra_rows"] == 0
+    assert rjson["extra_times"] == []
+    assert rjson["number_of_expected_rows"] == 12
+    assert rjson["number_of_missing_values"] == {}
+    job_resp = client.get(f"/jobs/{monthlypa_job_id}")
+    data_obj = list(
+        filter(
+            lambda x: x["object_id"] == monthly_weather_actuals_id,
+            job_resp.json()["data_objects"],
+        )
+    )[0]
+    assert data_obj["definition"]["filename"] == "job_data.arrow"
+    assert data_obj["definition"]["data_format"] == "application/vnd.apache.arrow.file"
+
+
+def test_post_job_data_monthly_csv(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = StringIO()
+    monthly_weather_df.to_csv(iob, index=False)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.csv",
+                iob,
+                "text/csv",
+            )
+        },
+    )
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == 0
+    assert rjson["missing_times"] == []
+    assert rjson["number_of_extra_rows"] == 0
+    assert rjson["extra_times"] == []
+    assert rjson["number_of_expected_rows"] == 12
+    assert rjson["number_of_missing_values"] == {}
+    job_resp = client.get(f"/jobs/{monthlypa_job_id}")
+    data_obj = list(
+        filter(
+            lambda x: x["object_id"] == monthly_weather_actuals_id,
+            job_resp.json()["data_objects"],
+        )
+    )[0]
+    assert data_obj["definition"]["filename"] == "job_data.csv"
+    assert data_obj["definition"]["data_format"] == "application/vnd.apache.arrow.file"
+
+
+def test_post_job_data_monthly_short(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = StringIO()
+    monthly_weather_df.iloc[1:].to_csv(iob, index=False)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.csv",
+                iob,
+                "text/csv",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_post_job_data_monthly_bad(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = StringIO()
+    monthly_weather_df.loc[0, "month"] = "invalid"
+    monthly_weather_df.to_csv(iob, index=False)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.csv",
+                iob,
+                "text/csv",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_post_job_data_monthly_missing_col(
+    client,
+    nocommit_transaction,
+    monthlypa_job_id,
+    monthly_weather_actuals_id,
+    monthly_weather_df,
+):
+    iob = StringIO()
+    monthly_weather_df.drop(columns=["total_poa_insolation"]).to_csv(iob, index=False)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{monthlypa_job_id}/data/{monthly_weather_actuals_id}",
+        files={
+            "file": (
+                "job_data.csv",
+                iob,
+                "text/csv",
+            )
+        },
+    )
+    assert response.status_code == 400
 
 
 def test_upload_compute(
