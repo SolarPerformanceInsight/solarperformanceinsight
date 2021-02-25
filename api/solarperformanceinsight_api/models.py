@@ -243,7 +243,8 @@ class CECModuleParameters(PVLibBase):
             "Product of number of cells in series, diode ideality factor, "
             "and thermal voltage at reference conditions"
         ),
-        ge=0)
+        ge=0,
+    )
     I_L_ref: float = Field(
         ...,
         description=(
@@ -266,16 +267,14 @@ class CECModuleParameters(PVLibBase):
         ..., description="Series resistance at reference conditions, in ohms"
     )
     cells_in_series: int = Field(
-        ...,
-        description="Number of cells connected in series in a module",
-        ge=0
+        ..., description="Number of cells connected in series in a module", ge=0
     )
     Adjust: float = Field(
-        0.,
+        0.0,
         description=(
             "Factor used to adjust temperature coefficients for voltage "
             "and current to match temperature coefficient for power, percent"
-        )
+        ),
     )
     EgRef: float = Field(
         1.121,
@@ -339,8 +338,9 @@ class PVArray(SPIBase):
         title="Module Make & Model",
         description="Make and model of the PV modules in this array",
     )
-    module_parameters: Union[PVsystModuleParameters, PVWattsModuleParameters,
-                             CECModuleParameters] = Field(
+    module_parameters: Union[
+        PVsystModuleParameters, PVWattsModuleParameters, CECModuleParameters
+    ] = Field(
         ...,
         title="Module Parameters",
         description="Parameters describing PV modules in this array",

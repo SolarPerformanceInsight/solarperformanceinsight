@@ -17,6 +17,11 @@ sandia_inverter_params = (
     .astype(float)
 )
 
+# Database does not provide the fields 'cells_in_series', 'EgRef', 'dEgdT'
+# which have defaults in the model.
+cec_keys = ["alpha_sc", "a_ref", "I_L_ref", "I_o_ref", "R_sh_ref", "R_s", "Adjust"]
+cec_module_params = retrieve_sam("CECMod").loc[cec_keys].astype(float)
+
 
 @router.get(
     "/sandiainverterparameters",
@@ -49,4 +54,38 @@ def get_sandia_inverter(
         )
     return models.SandiaInverterParameters(
         **sandia_inverter_params[inverter_name].to_dict()
+    )
+
+
+@router.get(
+    "/cecmoduleparameters",
+    response_model=List[str],
+    responses={200: {"description": "Names of available CEC(SAM) modules"}},
+)
+def list_cec_modules() -> List[str]:
+    """List the names of all Sandia inverters we have parameters for"""
+    return cec_module_params.columns.to_list()
+
+
+@router.get(
+    "/cecmoduleparameters/{module_name}",
+    response_model=models.CECModuleParameters,
+    responses={200: {}, 404: {}, 422: {}},
+    summary="Get a set of CECModuleParameters",
+)
+def get_cec_module(
+    module_name: str = Path(
+        ...,
+        description="Name of the module to fetch parameters for",
+        example="A10Green Technology A10J-S72-175",
+    )
+) -> models.CECModuleParameters:
+    """Get the parameters for the named Sandia inverter"""
+    if module_name not in cec_module_params.columns:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Module parameters for {module_name} not found",
+        )
+    return models.CECModuleParameters(
+        **cec_module_params[module_name].to_dict(), cells_in_series=0
     )
