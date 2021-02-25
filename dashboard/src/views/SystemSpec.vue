@@ -150,7 +150,6 @@ export default class SystemSpec extends Vue {
   inferModel() {
     if (this.system.inverters.length > 0) {
       const firstInverter = this.system.inverters[0];
-
       if (
         SandiaInverterParameters.isInstance(firstInverter.inverter_parameters)
       ) {
@@ -162,7 +161,9 @@ export default class SystemSpec extends Vue {
             this.model = "pvsyst";
           }
         }
-      } else if (PVWattsInverterParameters.isInstance(firstInverter)) {
+      } else if (
+        PVWattsInverterParameters.isInstance(firstInverter.inverter_parameters)
+      ) {
         this.model = "pvwatts";
       }
     }
