@@ -128,7 +128,7 @@
             </div>
           </div>
           <time-parameters @new-timeparams="storeTimeParams" />
-          <button class="mt-1" :disabled="isValid" @click="submitJob">
+          <button class="mt-1" :disabled="!isValid" @click="submitJob">
             Get Started
           </button>
           <span v-if="!isValid" class="warning-text">
