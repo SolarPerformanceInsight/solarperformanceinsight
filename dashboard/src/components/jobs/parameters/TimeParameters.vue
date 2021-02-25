@@ -71,7 +71,12 @@ export default class JobTimeParameters extends Vue {
   data() {
     const zone = new LocalZone().name;
     // @ts-expect-error
-    const now = DateTime.now().setZone(zone);
+    const now = DateTime.now()
+      .setZone(zone)
+      .set({
+        second: 0,
+        milliseconds: 0
+      });
     return {
       start: now.toISO(),
       end: now.toISO(),
