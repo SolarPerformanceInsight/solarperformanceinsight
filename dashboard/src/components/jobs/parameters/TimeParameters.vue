@@ -18,7 +18,7 @@
       <input
         @change="emitParams"
         style="width: 50px"
-        v-model="step"
+        v-model.number="step"
         type="number"
         min="1"
         max="60"
@@ -56,7 +56,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Timezones from "@/constants/timezones.json";
-import { DateTime, LocalZone } from "luxon";
+import { LocalZone } from "luxon";
 import { Datetime as DatePicker } from "vue-datetime";
 import "vue-datetime/dist/vue-datetime.css";
 
@@ -72,13 +72,6 @@ export default class JobTimeParameters extends Vue {
 
   data() {
     const zone = new LocalZone().name;
-    // @ts-expect-error
-    const now = DateTime.now()
-      .setZone(zone)
-      .set({
-        second: 0,
-        milliseconds: 0
-      });
     return {
       start: null,
       end: null,
