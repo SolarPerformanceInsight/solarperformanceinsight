@@ -29,6 +29,7 @@
       <b>Start:</b>
       <datetime
         @close="emitParams"
+        placeholder="Click here to set start date"
         type="datetime"
         v-model="start"
         format="y-LL-dd HH:mmZZ"
@@ -42,6 +43,7 @@
       <datetime
         @close="emitParams"
         type="datetime"
+        placeholder="Click here to set start date"
         v-model="end"
         :zone="timezone"
         :picker-zone="timezone"
@@ -55,10 +57,10 @@
 import { Component, Vue } from "vue-property-decorator";
 import Timezones from "@/constants/timezones.json";
 import { DateTime, LocalZone } from "luxon";
-import { Datetime } from "vue-datetime";
+import { Datetime as DatePicker } from "vue-datetime";
 import "vue-datetime/dist/vue-datetime.css";
 
-Vue.component("datetime", Datetime);
+Vue.component("datetime", DatePicker);
 
 @Component
 export default class JobTimeParameters extends Vue {
@@ -78,8 +80,8 @@ export default class JobTimeParameters extends Vue {
         milliseconds: 0
       });
     return {
-      start: now.toISO(),
-      end: now.toISO(),
+      start: null,
+      end: null,
       step: 60,
       timezone: zone
     };
