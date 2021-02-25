@@ -58,24 +58,12 @@ Components using the mapper should react to events emitted from this component:
       <ul class="mapping-list">
         <li v-for="field of required" :key="field">
           {{ getDisplayName(field) }}:
-          <select
-            @change="addMapping($event, field)"
-            v-model="selectValues[field]"
-          >
-            <option>Not included</option>
-            <option
-              v-for="(u, i) in headers"
-              :key="i"
-              :name="u"
-              :value="u"
-              :disabled="usedHeaders.includes(u)"
-            >
-              <template v-if="u == ''">column {{ i + 1 }}</template>
-              <template v-else>
-                {{ u }}
-              </template>
-            </option>
-          </select>
+          <single-mapping
+            :variable="field"
+            :headers="headers"
+            :usedHeaders="usedHeaders"
+            @new-mapping="addMapping"
+          />
         </li>
       </ul>
     </div>
@@ -88,6 +76,8 @@ import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import { getVariableDisplayName } from "@/utils/displayNames";
 
+import SingleMapping from "@/components/jobs/SingleMapping.vue";
+
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
@@ -99,22 +89,19 @@ interface MetadataWithDataObject {
 
 type SystemComponent = System | Inverter | PVArray;
 
+Vue.component("single-mapping", SingleMapping);
+
 @Component
 export default class FieldMapper extends Vue {
   @Prop() headers!: Array<string>;
   @Prop() usedHeaders!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
   @Prop() show!: boolean;
-  mapping!: Record<string, string>;
-  selectValues!: Record<string, string>;
+  mapping!: Record<string, Record<string, string>>;
 
-  created() {
-    this.initSelectValues();
-  }
   data() {
     return {
-      mapping: {},
-      selectValues: {}
+      mapping: {}
     };
   }
   get metadata() {
@@ -133,21 +120,22 @@ export default class FieldMapper extends Vue {
       loc: this.comp.data_object.definition.schema_path
     });
   }
-  addMapping(event: any, variable: string) {
-    const fileHeader = event.target.value;
+  addMapping(mapping: Record<string, string>) {
+    const variable = mapping.variable;
+    delete mapping.variable;
 
     // If the variable is already in the mapping, free the header it is
     // currently mapped to.
     if (variable in this.mapping) {
-      this.$emit("free-header", this.mapping[variable]);
+      this.$emit("free-header", this.mapping[variable].csv_header);
     }
-    if (fileHeader == "Not included") {
+    if (mapping.csv_header == "Not included") {
       // unmap the variable if not included
       delete this.mapping[variable];
     } else {
       // Update mapping and emit an event using the header.
-      this.mapping[variable] = fileHeader;
-      this.$emit("used-header", fileHeader);
+      this.mapping[variable] = mapping;
+      this.$emit("used-header", mapping.csv_header);
     }
     this.emitMapping();
   }
@@ -160,12 +148,6 @@ export default class FieldMapper extends Vue {
   @Watch("headers")
   reset() {
     this.mapping = {};
-    this.initSelectValues();
-  }
-  initSelectValues() {
-    this.required.forEach((field: string) => {
-      this.selectValues[field] = "Not included";
-    });
   }
 }
 </script>

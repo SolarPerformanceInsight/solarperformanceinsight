@@ -128,9 +128,11 @@ Takes the following props that can be extracted from job metadata.
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
+
 import parseCSV from "@/utils/parseCSV";
 import mapToCSV from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
+
 import { addData } from "@/api/jobs";
 
 import CSVPreview from "@/components/jobs/data/CSVPreview.vue";
@@ -149,7 +151,7 @@ export default class CSVUpload extends Vue {
   @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
-  mapping!: Record<string, Record<string, string>>;
+  mapping!: Record<string, Record<string, Record<string, string>>>;
   promptForMapping!: boolean;
   headers!: Array<string>;
   csv!: string;
@@ -359,7 +361,7 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        const header = mapping[variable];
+        const header = mapping[variable].csv_header;
         if (variable == "time" && newMap.time) {
           continue;
         }

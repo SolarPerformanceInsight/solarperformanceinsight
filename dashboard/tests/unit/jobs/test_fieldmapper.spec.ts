@@ -186,20 +186,30 @@ describe("Test field mapper", () => {
     expect(wrapper.vm.metadata).toEqual(comp.metadata);
 
     // @ts-expect-error
-    wrapper.vm.addMapping({ target: { value: "someheader" } }, "ghi");
+    wrapper.vm.addMapping({
+      variable: "ghi",
+      csv_header: "someheader"
+    });
     await flushPromises();
 
-    expect(wrapper.vm.$data.mapping["ghi"]).toBe("someheader");
+    expect(wrapper.vm.$data.mapping["ghi"]).toEqual({
+      csv_header: "someheader"
+    });
     // @ts-expect-error
     expect(wrapper.emitted("mapping-updated")[0]).toBeTruthy();
     // @ts-expect-error
     expect(wrapper.emitted("used-header")[0]).toEqual(["someheader"]);
 
     // @ts-expect-error
-    wrapper.vm.addMapping({ target: { value: "otherheader" } }, "ghi");
+    wrapper.vm.addMapping({
+      variable: "ghi",
+      csv_header: "otherheader"
+    });
     await flushPromises();
 
-    expect(wrapper.vm.$data.mapping["ghi"]).toBe("otherheader");
+    expect(wrapper.vm.$data.mapping["ghi"]).toEqual({
+      csv_header: "otherheader"
+    });
     // @ts-expect-error
     expect(wrapper.emitted("mapping-updated")[1]).toBeTruthy();
     // @ts-expect-error
@@ -208,7 +218,7 @@ describe("Test field mapper", () => {
     expect(wrapper.emitted("used-header")[1]).toEqual(["otherheader"]);
 
     // @ts-expect-error
-    wrapper.vm.addMapping({ target: { value: "Not included" } }, "ghi");
+    wrapper.vm.addMapping({ csv_header: "Not included", variable: "ghi" });
     await flushPromises();
 
     expect("ghi" in wrapper.vm.$data.mapping).toBe(false);
@@ -221,7 +231,7 @@ describe("Test field mapper", () => {
     expect(wrapper.vm.isValid()).toBe(false);
     required.forEach(r => {
       // @ts-expect-error
-      wrapper.vm.addMapping({ target: { value: r } }, r);
+      wrapper.vm.addMapping({ csv_header: r, variable: r });
     });
     await flushPromises();
 
