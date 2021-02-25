@@ -76,6 +76,7 @@
     <b>Module Parameters:</b>
     <br />
     <module-parameters
+      @parameters-selected="loadModuleParameters"
       :parameters="parameters.module_parameters"
       :model="model"
     />
@@ -218,6 +219,16 @@ export default class ArrayView extends ModelBase {
     this.$validator
       .validate(this.apiComponentName, arr)
       .then(this.setValidationResult);
+  }
+  loadModuleParameters({
+    parameters,
+    name
+  }: {
+    parameters: Record<string, any>;
+    name: string;
+  }) {
+    this.parameters.make_model = name;
+    this.parameters.module_parameters = new CECModuleParameters(parameters);
   }
 }
 </script>

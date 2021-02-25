@@ -83,6 +83,16 @@
       />
     </div>
     <div v-if="model == 'sam'">
+      <button class="show-browser" @click="showBrowser = true">
+        Browse Module Database
+      </button>
+      <db-browser
+        v-on="$listeners"
+        @parameters-selected="showBrowser = false"
+        @cancel-selected="showBrowser = false"
+        v-if="showBrowser"
+        :componentName="apiComponentName"
+      />
       <model-field
         :parameters="parameters"
         :errors="errors"
@@ -160,21 +170,13 @@ import {
 @Component
 export default class ModuleParametersView extends ModelBase {
   @Prop() parameters!: PVSystModuleParameters | PVWattsModuleParameters;
-
   @Prop({ default: "pvsyst" }) model!: string;
+  showBrowser!: boolean;
 
-  loadModule(event: Event) {
-    console.log(event.target);
-  }
-
-  get parameterOptions() {
-    // Return a list of parameter options based on currently selected model
-    if (this.model == "sam") {
-      // TODO: load CEC
-      return ["PVSystModule_0", "PVSystModule_1"];
-    } else {
-      return ["PVWattsModule_0", "PVWattsModule_1"];
-    }
+  data() {
+    return {
+      showBrowser: false
+    };
   }
 
   get apiComponentName() {
