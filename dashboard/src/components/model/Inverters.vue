@@ -46,7 +46,7 @@ export default class InvertersView extends Vue {
     } else {
       let paramClass: any = PVWattsInverterParameters;
       let lossClass: any = PVWattsLosses;
-      if (this.model == "pvsyst") {
+      if (this.model == "pvsyst" || this.model == "sam") {
         paramClass = SandiaInverterParameters;
         lossClass = null;
       }

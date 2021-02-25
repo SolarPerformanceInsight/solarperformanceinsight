@@ -35,7 +35,8 @@ import { PVArray } from "@/types/PVArray";
 import { FixedTrackingParameters } from "@/types/Tracking";
 import {
   PVWattsModuleParameters,
-  PVSystModuleParameters
+  PVSystModuleParameters,
+  CECModuleParameters
 } from "@/types/ModuleParameters";
 import {
   SAPMTemperatureParameters,
@@ -59,6 +60,9 @@ export default class ArraysView extends Vue {
       let tempParamClass: any = SAPMTemperatureParameters;
       if (this.model == "pvsyst") {
         modParamClass = PVSystModuleParameters;
+        tempParamClass = PVSystTemperatureParameters;
+      } else if (this.model == "sam") {
+        modParamClass = CECModuleParameters;
         tempParamClass = PVSystTemperatureParameters;
       }
 

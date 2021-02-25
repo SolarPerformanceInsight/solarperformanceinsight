@@ -8,13 +8,17 @@ import {
 } from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
-  PVWattsModuleParameters
+  PVWattsModuleParameters,
+  CECModuleParameters
 } from "./ModuleParameters";
 
 export class PVArray {
   name: string;
   make_model: string;
-  module_parameters: PVSystModuleParameters | PVWattsModuleParameters;
+  module_parameters:
+    | PVSystModuleParameters
+    | PVWattsModuleParameters
+    | CECModuleParameters;
   temperature_model_parameters:
     | Array<number>
     | PVSystTemperatureParameters
@@ -43,6 +47,8 @@ export class PVArray {
 
     if (PVWattsModuleParameters.isInstance(module_parameters)) {
       this.module_parameters = new PVWattsModuleParameters(module_parameters);
+    } else if (CECModuleParameters.isInstance(module_parameters)) {
+      this.module_parameters = new CECModuleParameters(module_parameters);
     } else {
       this.module_parameters = new PVSystModuleParameters(module_parameters);
     }

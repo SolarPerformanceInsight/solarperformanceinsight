@@ -54,9 +54,15 @@ export default class InverterView extends ModelBase {
   @Prop() model!: string;
 
   @Watch("model")
-  changeModel(newModel: string) {
-    if (newModel == "pvsyst") {
-      this.parameters.inverter_parameters = new SandiaInverterParameters({});
+  changeModel(newModel: string, oldModel: string) {
+    if (newModel == "pvsyst" || newModel == "sam") {
+      let current_params = {};
+      if (oldModel == "pvsyst" || oldModel == "sam") {
+        current_params = this.parameters.inverter_parameters;
+      }
+      this.parameters.inverter_parameters = new SandiaInverterParameters(
+        current_params
+      );
       this.parameters.losses = null;
     } else if (newModel == "pvwatts") {
       this.parameters.inverter_parameters = new PVWattsInverterParameters({});
