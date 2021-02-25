@@ -14,6 +14,13 @@ import { PVArray } from "@/types/PVArray";
 
 import * as Jobs from "@/api/jobs";
 import { $auth } from "../mockauth";
+import { DateTime } from "luxon";
+
+const now = DateTime.fromISO("2020-01-01T00:00+00:00");
+
+// @ts-expect-error
+const dt = jest.spyOn(DateTime, "now");
+dt.mockImplementation(() => now);
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
@@ -35,12 +42,6 @@ const testSystem = new StoredSystem({
   })
 });
 
-const defaultTimeParams = {
-  start: "2020-01-01T00:00+00:00",
-  end: "2020-02-01T00:00+00:00",
-  step: 3600,
-  timezone: "America/Denver"
-};
 // vue test setup
 const localVue = createLocalVue();
 
@@ -106,11 +107,18 @@ describe("Test Job Parameters", () => {
     expect(wrapper.vm.jobSpec).toEqual({
       system_id: testSystem.object_id,
       calculate: "predicted performance",
-      time_parameters: defaultTimeParams,
+      time_parameters: {
+        start: "",
+        end: "",
+        step: 3600,
+        timezone: "America/Denver"
+      },
       weather_granularity: "system",
       irradiance_type: "effective",
       temperature_type: "air"
     });
+    // @ts-expect-error
+    expect(wrapper.vm.isValid).toBe(false);
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
     wrapper.find("button").trigger("click");
     await flushPromises();

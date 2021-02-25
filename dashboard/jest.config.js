@@ -3,5 +3,8 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ["<rootDir>/src/**/*.ts", "<rootDir>/src/**/*.vue"],
   coverageReporters: ["lcovonly"],
-  moduleFileExtensions: ["ts", "vue", "js"]
+  moduleFileExtensions: ["ts", "vue", "js"],
+  moduleNameMapper: {
+    "\\.(css|less)$": "<rootDir>/tests/cssstub.js"
+  }
 };

@@ -128,7 +128,12 @@
             </div>
           </div>
           <time-parameters @new-timeparams="storeTimeParams" />
-          <button class="mt-1" @click="submitJob">Get Started</button>
+          <button class="mt-1" :disabled="isValid" @click="submitJob">
+            Get Started
+          </button>
+          <span v-if="!isValid" class="warning-text">
+            Start and End required.
+          </span>
         </div>
       </template>
     </template>
@@ -175,7 +180,8 @@ export default class JobParameters extends Vue {
       apiErrors: {},
       errorState: false,
       temperature_type: "air",
-      jobId: null
+      jobId: null,
+      timeParams: {}
     };
   }
   storeTimeParams(timeParams: Record<string, any>) {
@@ -190,6 +196,12 @@ export default class JobParameters extends Vue {
       temperature_type: this.temperature_type,
       ...this.jobTypeParams
     };
+  }
+  get isValid() {
+    // check that the start/end have been set, as they default to null
+    return Boolean(
+      this.jobSpec.time_parameters.start && this.jobSpec.time_parameters.end
+    );
   }
   async submitJob() {
     const token = await this.$auth.getTokenSilently();
