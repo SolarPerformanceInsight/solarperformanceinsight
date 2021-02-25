@@ -177,7 +177,7 @@ describe("Test SystemSpec view", () => {
     expect(router.push).not.toHaveBeenCalled();
   });
   it("Test infer pvwatts", async () => {
-    fetchMock.json = jest.fn().mockResolvedValue({
+    const jsonResponse = {
       definition: new System({
         inverters: [
           new Inverter({
@@ -185,7 +185,8 @@ describe("Test SystemSpec view", () => {
           })
         ]
       })
-    });
+    };
+    fetchMock.json = jest.fn().mockResolvedValue(jsonResponse);
     const wrapper = shallowMount(SystemSpec, {
       localVue,
       propsData: {
