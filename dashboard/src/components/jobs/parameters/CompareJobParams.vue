@@ -13,10 +13,20 @@
             value="predicted and actual performance"
             type="radio"
             v-model="compare"
-            disabled="true"
           />
-          <label class="greyed" for="predicted-and-actual-performance">
+          <label for="predicted-and-actual-performance">
             predicted performance to actual performance.
+          </label>
+          <br />
+          <input
+            @change="emitParams"
+            id="monthly-predicted-and-actual-performance"
+            value="monthly predicted and actual performance"
+            type="radio"
+            v-model="compare"
+          />
+          <label for="predicted-and-actual-performance">
+            monthly predicted performance to monthly actual performance.
           </label>
           <br />
           <input

@@ -15,7 +15,6 @@
             v-bind:is="jobParamComponent"
             @new-job-type-params="setJobTypeParams"
           />
-          <div v-if="isMonthly">MONTHLY!</div>
           <div class="my-1">
             My weather data file includes:
             <br />
@@ -129,7 +128,7 @@
             </div>
           </div>
           <time-parameters @new-timeparams="storeTimeParams" />
-          <button class="mt-1" :disabled="!isValid" @click="submitJob">
+          <button class="mt-1" :disabled="isValid" @click="submitJob">
             Get Started
           </button>
           <span v-if="!isValid" class="warning-text">
@@ -223,9 +222,6 @@ export default class JobParameters extends Vue {
         };
       }
     }
-  }
-  get isComparison() {
-    return "compare" in this.jobTypeParams
   }
   get jobParamComponent() {
     return `${this.jobClass}-job-params`;
