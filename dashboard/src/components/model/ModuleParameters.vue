@@ -89,7 +89,7 @@
       <db-browser
         v-on="$listeners"
         @parameters-selected="showBrowser = false"
-        @cancel-selected="showBrowser = false"
+        @cancel-selection="showBrowser = false"
         v-if="showBrowser"
         :componentName="apiComponentName"
       />
