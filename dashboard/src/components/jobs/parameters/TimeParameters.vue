@@ -54,7 +54,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import Timezones from "@/constants/timezones.json";
 import { LocalZone } from "luxon";
 import { Datetime as DatePicker } from "vue-datetime";
@@ -64,8 +64,9 @@ Vue.component("datetime", DatePicker);
 
 @Component
 export default class JobTimeParameters extends Vue {
-  start!: string;
-  end!: string;
+  @Prop() timeparams!: Record<string, any>;
+  start!: string|null;
+  end!: string|null;
   timezone!: string;
   step!: number;
   timezoneList: Array<string> = Timezones;
@@ -79,7 +80,16 @@ export default class JobTimeParameters extends Vue {
       timezone: zone
     };
   }
+  setDataFields({start = null, end = null, step = 60, timezone = new LocalZone().name}) {
+    this.start = start;
+    this.end = end;
+    this.step = step / 60;
+    this.timezone = timezone;
+  }
   mounted() {
+    if (this.timeparams) {
+      this.setDataFields(this.timeparams);
+    }
     this.emitParams();
   }
   emitParams() {

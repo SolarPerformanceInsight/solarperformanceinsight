@@ -20,17 +20,6 @@
           <br />
           <input
             @change="emitParams"
-            id="monthly-predicted-and-actual-performance"
-            value="monthly predicted and actual performance"
-            type="radio"
-            v-model="compare"
-          />
-          <label for="predicted-and-actual-performance">
-            monthly predicted performance to monthly actual performance.
-          </label>
-          <br />
-          <input
-            @change="emitParams"
             id="expected-and-actual-performance"
             value="expected and actual performance"
             type="radio"
@@ -53,7 +42,14 @@
           </label>
           <br />
         </div>
-        <div class="my-1">
+        <div v-if="containsPredicted">
+          <p>What is the time resolution of your data?</p>
+          <select v-model="timeResolution" @change="emitParams">
+            <option value="leHourly">My data is hourly or better</option>
+            <option value="monthly">My data is monthly</option>
+          </select>
+        </div>
+        <div v-if="validForGranularity" class="my-1">
           I will provide performance data as:
           <br />
           <div class="ml-1 mt-1">
@@ -91,21 +87,36 @@ import { Component, Vue } from "vue-property-decorator";
 export default class CompareJobParams extends Vue {
   compare!: string;
   performance_granularity!: string;
+  timeResolution!: string;
 
   data() {
     return {
       compare: "expected and actual performance",
-      performance_granularity: "system"
+      performance_granularity: "system",
+      timeResolution: "leHourly"
     };
   }
   mounted() {
     this.emitParams();
   }
   emitParams() {
-    this.$emit("new-job-type-params", {
+    let params = {
       compare: this.compare,
       performance_granularity: this.performance_granularity
-    });
+    }
+    if (this.containsPredicted && this.timeResolution == "monthly") {
+      // @ts-expect-error
+      params = {
+        compare: `monthly ${this.compare}`
+      };
+    }
+    this.$emit("new-job-type-params", params);
+  }
+  get containsPredicted() {
+    return this.compare.includes("predicted");
+  }
+  get validForGranularity() {
+    return !this.containsPredicted || this.timeResolution == "leHourly";
   }
 }
 </script>

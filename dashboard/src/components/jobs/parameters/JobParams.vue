@@ -15,120 +15,128 @@
             v-bind:is="jobParamComponent"
             @new-job-type-params="setJobTypeParams"
           />
-          <div v-if="isMonthly">MONTHLY!</div>
-          <div class="my-1">
-            My weather data file includes:
-            <br />
-            <div class="ml-1 mt-1">
-              <input
-                id="standard"
-                value="standard"
-                type="radio"
-                v-model="irradiance_type"
-              />
-              <label for="standard">
-                global horizontal (GHI), direct normal (DNI), and diffuse
-                horizontal (DHI) irradiance.
-              </label>
-              <br />
-              <input
-                id="poa"
-                value="poa"
-                type="radio"
-                v-model="irradiance_type"
-              />
-              <label for="poa">
-                global plane of array (POA global), direct plane of array (POA
-                direct), and diffuse plane of array (POA diffuse) irradiance.
-              </label>
-              <br />
-              <input
-                id="effective"
-                value="effective"
-                type="radio"
-                v-model="irradiance_type"
-              />
-              <label for="effective">
-                effective irradiance.
-              </label>
-              <br />
-            </div>
+          <div v-if="isMonthly">
+            <p>
+              Monthly data is expected to contain monthly averages of
+              predicted weather and actual performance for the entire system.
+              Weather data is expected to include: some things that smell nice.
+            </p>
           </div>
-          <div class="my-1">
-            How should we determine cell temperature?
-            <br />
-            <div class="ml-1 mt-1">
-              <input
-                id="air"
-                value="air"
-                type="radio"
-                v-model="temperature_type"
-              />
-              <label for="air">
-                Calculate cell temperature from irradiance, air temperature, and
-                windspeed in my data.
-              </label>
+          <div v-if="!isMonthly" class="my-1">
+            <div>
+              My weather data file includes:
               <br />
-              <input
-                id="module"
-                value="module"
-                type="radio"
-                v-model="temperature_type"
-              />
-              <label for="module">
-                Calculate cell temperature from module temperature and
-                irradiance in my data.
-              </label>
-              <br />
-              <input
-                id="cell"
-                value="cell"
-                type="radio"
-                v-model="temperature_type"
-              />
-              <label for="cell">
-                Cell temperature is included in my data.
-              </label>
-              <br />
+              <div class="ml-1 mt-1">
+                <input
+                  id="standard"
+                  value="standard"
+                  type="radio"
+                  v-model="irradiance_type"
+                />
+                <label for="standard">
+                  global horizontal (GHI), direct normal (DNI), and diffuse
+                  horizontal (DHI) irradiance.
+                </label>
+                <br />
+                <input
+                  id="poa"
+                  value="poa"
+                  type="radio"
+                  v-model="irradiance_type"
+                />
+                <label for="poa">
+                  global plane of array (POA global), direct plane of array (POA
+                  direct), and diffuse plane of array (POA diffuse) irradiance.
+                </label>
+                <br />
+                <input
+                  id="effective"
+                  value="effective"
+                  type="radio"
+                  v-model="irradiance_type"
+                />
+                <label for="effective">
+                  effective irradiance.
+                </label>
+                <br />
+              </div>
             </div>
-          </div>
-          <div class="my-1">
-            I will provide weather data as:
-            <br />
-            <div class="ml-1 mt-1">
-              <input
-                id="system"
-                value="system"
-                type="radio"
-                v-model="weather_granularity"
-              />
-              <label for="system">
-                one set for the entire system.
-              </label>
+            <div class="my-1">
+              How should we determine cell temperature?
               <br />
-              <input
-                id="inverter"
-                value="inverter"
-                type="radio"
-                v-model="weather_granularity"
-              />
-              <label for="inverter">
-                one set for each inverter and its associated arrays.
-              </label>
-              <br />
-              <input
-                id="array"
-                value="array"
-                type="radio"
-                v-model="weather_granularity"
-              />
-              <label for="array">
-                one set for each array.
-              </label>
-              <br />
+              <div class="ml-1 mt-1">
+                <input
+                  id="air"
+                  value="air"
+                  type="radio"
+                  v-model="temperature_type"
+                />
+                <label for="air">
+                  Calculate cell temperature from irradiance, air temperature, and
+                  windspeed in my data.
+                </label>
+                <br />
+                <input
+                  id="module"
+                  value="module"
+                  type="radio"
+                  v-model="temperature_type"
+                />
+                <label for="module">
+                  Calculate cell temperature from module temperature and
+                  irradiance in my data.
+                </label>
+                <br />
+                <input
+                  id="cell"
+                  value="cell"
+                  type="radio"
+                  v-model="temperature_type"
+                />
+                <label for="cell">
+                  Cell temperature is included in my data.
+                </label>
+                <br />
+              </div>
             </div>
+            <div class="my-1">
+              I will provide weather data as:
+              <br />
+              <div class="ml-1 mt-1">
+                <input
+                  id="system"
+                  value="system"
+                  type="radio"
+                  v-model="weather_granularity"
+                />
+                <label for="system">
+                  one set for the entire system.
+                </label>
+                <br />
+                <input
+                  id="inverter"
+                  value="inverter"
+                  type="radio"
+                  v-model="weather_granularity"
+                />
+                <label for="inverter">
+                  one set for each inverter and its associated arrays.
+                </label>
+                <br />
+                <input
+                  id="array"
+                  value="array"
+                  type="radio"
+                  v-model="weather_granularity"
+                />
+                <label for="array">
+                  one set for each array.
+                </label>
+                <br />
+              </div>
+            </div>
+            <time-parameters :timeparams="timeParams" @new-timeparams="storeTimeParams" />
           </div>
-          <time-parameters @new-timeparams="storeTimeParams" />
           <button class="mt-1" :disabled="!isValid" @click="submitJob">
             Get Started
           </button>
@@ -182,26 +190,35 @@ export default class JobParameters extends Vue {
       errorState: false,
       temperature_type: "air",
       jobId: null,
-      timeParams: {}
+      timeParams: {},
     };
   }
   storeTimeParams(timeParams: Record<string, any>) {
     this.timeParams = timeParams;
   }
   get jobSpec() {
-    return {
-      system_id: this.systemId,
-      time_parameters: this.timeParams,
-      weather_granularity: this.weather_granularity,
-      irradiance_type: this.irradiance_type,
-      temperature_type: this.temperature_type,
-      ...this.jobTypeParams
+    if (this.isMonthly){
+      return {
+        system_id: this.systemId,
+        ...this.jobTypeParams
+      };
+    } else {
+      return {
+        system_id: this.systemId,
+        time_parameters: this.timeParams,
+        weather_granularity: this.weather_granularity,
+        irradiance_type: this.irradiance_type,
+        temperature_type: this.temperature_type,
+        ...this.jobTypeParams
+      };
     };
   }
   get isValid() {
     // check that the start/end have been set, as they default to null
     return Boolean(
-      this.jobSpec.time_parameters.start && this.jobSpec.time_parameters.end
+      this.isMonthly ||
+      // @ts-expect-error
+      (this.jobSpec.time_parameters.start && this.jobSpec.time_parameters.end)
     );
   }
   async submitJob() {
@@ -224,14 +241,17 @@ export default class JobParameters extends Vue {
       }
     }
   }
-  get isComparison() {
-    return "compare" in this.jobTypeParams
-  }
   get jobParamComponent() {
     return `${this.jobClass}-job-params`;
   }
   setJobTypeParams(newParams: Record<string, string>) {
     this.jobTypeParams = newParams;
+  }
+  get isMonthly() {
+    return (
+      "compare" in this.jobTypeParams &&
+      this.jobTypeParams["compare"].includes("monthly")
+    );
   }
 }
 </script>

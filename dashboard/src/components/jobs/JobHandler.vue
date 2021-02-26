@@ -506,7 +506,7 @@ export default class JobHandler extends Vue {
 <style scoped>
 .job-handler {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 350px 1fr;
   grid-template-areas: "sidebar main";
   gap: 0;
 }
