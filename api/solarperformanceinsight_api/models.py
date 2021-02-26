@@ -292,7 +292,7 @@ class CECModuleParameters(PVLibBase):
             "the CEC database."
         ),
     )
-    _modelchain_dc_model: str = PrivateAttr("pvsyst")
+    _modelchain_dc_model: str = PrivateAttr("cec")
 
 
 class PVsystTemperatureParameters(SPIBase):
