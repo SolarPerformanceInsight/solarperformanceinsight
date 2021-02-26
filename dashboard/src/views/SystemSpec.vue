@@ -119,7 +119,7 @@ export default class SystemSpec extends Vue {
         pvwatts: "pvwatts",
         sam: "SAM"
       },
-      model: "SAM",
+      model: "sam",
       displaySummary: false,
       displayAdvanced: false,
       loading: false,
