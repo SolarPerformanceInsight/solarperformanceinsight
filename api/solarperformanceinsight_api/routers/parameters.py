@@ -77,7 +77,7 @@ def get_cec_module(
     module_name: str = Path(
         ...,
         description="Name of the module to fetch parameters for",
-        example="A10Green Technology A10J-S72-175",
+        example="Canadian_Solar_Inc__CS5P_220M",
     )
 ) -> models.CECModuleParameters:
     """Get the parameters for the named Sandia inverter"""
