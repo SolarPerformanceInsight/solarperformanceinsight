@@ -351,7 +351,8 @@ describe("Test tracking parameters", () => {
  */
 import {
   PVSystModuleParameters,
-  PVWattsModuleParameters
+  PVWattsModuleParameters,
+  CECModuleParameters
 } from "@/types/ModuleParameters";
 describe("Test module parameters", () => {
   it("pvwatts", () => {
@@ -629,13 +630,16 @@ describe("Test array", () => {
     await expectAllErrors(wrapper, Object.keys(new PVArray({})));
   });
   it("test change model", async () => {
+    const origTParams = new PVSystTemperatureParameters({
+      u_c: 99.1
+    });
     const propsData = {
       parameters: new PVArray({
-        module_parameters: new PVWattsModuleParameters({}),
-        temperature_model_parameters: new SAPMTemperatureParameters({}),
+        module_parameters: new PVSystModuleParameters({}),
+        temperature_model_parameters: origTParams,
         tracking: new FixedTrackingParameters({})
       }),
-      model: "pvwatts",
+      model: "pvsyst",
       index: 0
     };
 
@@ -646,21 +650,28 @@ describe("Test array", () => {
       parentComponent,
       mocks
     });
+    // @ts-expect-error
+    wrapper.vm.changeModel("sam", "pvsyst");
+
+    expect(
+      CECModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(propsData.parameters.temperature_model_parameters).toEqual(
+      origTParams
+    );
 
     // @ts-expect-error
-    wrapper.vm.changeModel("pvsyst");
+    wrapper.vm.changeModel("pvsyst", "sam");
 
     expect(
       PVSystModuleParameters.isInstance(propsData.parameters.module_parameters)
     ).toBe(true);
-    expect(
-      PVSystTemperatureParameters.isInstance(
-        propsData.parameters.temperature_model_parameters
-      )
-    ).toBe(true);
-
+    expect(propsData.parameters.temperature_model_parameters).toEqual(
+      origTParams
+    );
     // @ts-expect-error
-    wrapper.vm.changeModel("pvwatts");
+    wrapper.vm.changeModel("pvwatts", "pvsyst");
+
     expect(
       PVWattsModuleParameters.isInstance(propsData.parameters.module_parameters)
     ).toBe(true);
@@ -669,6 +680,68 @@ describe("Test array", () => {
         propsData.parameters.temperature_model_parameters
       )
     ).toBe(true);
+  });
+  it("test change model to sam different from", async () => {
+    const origTParams = new PVSystTemperatureParameters({
+      u_c: 99.1
+    });
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVSystModuleParameters({}),
+        temperature_model_parameters: origTParams,
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvsyst",
+      index: 0
+    };
+
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    // @ts-expect-error
+    wrapper.vm.changeModel("sam", "pvwatts");
+
+    expect(
+      CECModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(propsData.parameters.temperature_model_parameters).not.toEqual(
+      origTParams
+    );
+  });
+  it("test change model to pvsyst different from", async () => {
+    const origTParams = new PVSystTemperatureParameters({
+      u_c: 99.1
+    });
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new PVSystModuleParameters({}),
+        temperature_model_parameters: origTParams,
+        tracking: new FixedTrackingParameters({})
+      }),
+      model: "pvsyst",
+      index: 0
+    };
+
+    // @ts-expect-error
+    const wrapper = shallowMount(ArrayView, {
+      localVue,
+      propsData,
+      parentComponent,
+      mocks
+    });
+    // @ts-expect-error
+    wrapper.vm.changeModel("pvsyst", "pvwatts");
+
+    expect(
+      PVSystModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(propsData.parameters.temperature_model_parameters).not.toEqual(
+      origTParams
+    );
   });
   it("tests choosing surface type", async () => {
     const propsData = {
@@ -695,6 +768,56 @@ describe("Test array", () => {
     opt.trigger("change");
     await Vue.nextTick();
     expect(wrapper.props("parameters").albedo).toBeGreaterThan(0);
+  });
+  it("test module browser display sam", async () => {
+    const propsData = {
+      parameters: new PVArray({
+        module_parameters: new CECModuleParameters({
+          alpha_sc: 55,
+          a_ref: 61
+        })
+      }),
+      model: "sam"
+    };
+    fetchMock = {
+      json: jest.fn().mockResolvedValue(["Module1"])
+    };
+    const wrapper = mount(ArrayView, {
+      localVue,
+      propsData,
+      mocks
+    });
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
+    wrapper.find("button.show-browser").trigger("click");
+
+    await flushPromises();
+
+    const browse = wrapper.find("div.db-browser");
+    expect(browse.exists()).toBe(true);
+    fetchMock.json.mockResolvedValue(new CECModuleParameters({}));
+    browse.find("option").setSelected();
+
+    await flushPromises();
+
+    browse.find("button.commit").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
+    expect(wrapper.props("parameters").module_parameters).toEqual(
+      new CECModuleParameters({})
+    );
+    wrapper.find("button.show-browser").trigger("click");
+
+    await flushPromises();
+
+    const browserAgain = wrapper.find("div.db-browser");
+    expect(browserAgain.exists()).toBe(true);
+    browserAgain.find("button.cancel").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.find("div.db-browser").exists()).toBe(false);
   });
 });
 

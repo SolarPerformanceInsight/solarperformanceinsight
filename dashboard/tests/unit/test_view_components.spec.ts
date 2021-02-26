@@ -18,9 +18,8 @@ import {
 import { PVArray } from "@/types/PVArray";
 import {
   PVSystModuleParameters,
-  PVWattsModuleParameters,
   CECModuleParameters
-} from "@/types/ModuleParameters"
+} from "@/types/ModuleParameters";
 
 import { modelSpecs } from "@/types/ModelSpecification";
 
@@ -213,9 +212,11 @@ describe("Test SystemSpec view", () => {
         inverters: [
           new Inverter({
             inverter_parameters: new SandiaInverterParameters({}),
-            arrays: [new PVArray({
-              module_parameters: new PVSystModuleParameters({})
-            })]
+            arrays: [
+              new PVArray({
+                module_parameters: new PVSystModuleParameters({})
+              })
+            ]
           })
         ]
       })
@@ -258,9 +259,11 @@ describe("Test SystemSpec view", () => {
         inverters: [
           new Inverter({
             inverter_parameters: new SandiaInverterParameters({}),
-            arrays: [new PVArray({
-              module_parameters: new CECModuleParameters({})
-            })]
+            arrays: [
+              new PVArray({
+                module_parameters: new CECModuleParameters({})
+              })
+            ]
           })
         ]
       })

@@ -86,7 +86,7 @@ export default class DBBrowser extends Vue {
     return opts;
   }
   resetSearch() {
-    this.search = "",
+    this.search = "";
     this.filterOptions();
   }
   filterOptions() {
