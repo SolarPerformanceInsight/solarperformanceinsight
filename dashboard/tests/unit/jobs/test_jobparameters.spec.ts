@@ -102,14 +102,20 @@ describe("Test Job Parameters", () => {
     effective.element.selected = true;
     effective.trigger("change");
 
+    const timeparams = wrapper.findComponent(TimeParameters);
+    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
+    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
+    // @ts-expect-error
+    timeparams.vm.emitParams();
+
     await flushPromises();
     // @ts-expect-error
     expect(wrapper.vm.jobSpec).toEqual({
       system_id: testSystem.object_id,
       calculate: "predicted performance",
       time_parameters: {
-        start: "",
-        end: "",
+        start: "2020-01-01T00:00:00.000Z",
+        end: "2020-02-01T00:00:00.000Z",
         step: 3600,
         timezone: "America/Denver"
       },
@@ -118,7 +124,7 @@ describe("Test Job Parameters", () => {
       temperature_type: "air"
     });
     // @ts-expect-error
-    expect(wrapper.vm.isValid).toBe(false);
+    expect(wrapper.vm.isValid).toBe(true);
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
     wrapper.find("button").trigger("click");
     await flushPromises();
@@ -138,6 +144,15 @@ describe("Test Job Parameters", () => {
       propsData,
       mocks
     });
+
+    const timeparams = wrapper.findComponent(TimeParameters);
+    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
+    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
+    // @ts-expect-error
+    timeparams.vm.emitParams();
+
+    await flushPromises();
+
     mockJobResponse.ok = false;
     mockJobResponse.status = 422;
     (mockJobResponse.json = jest.fn().mockResolvedValue({ detail: "broken" })),
@@ -157,6 +172,15 @@ describe("Test Job Parameters", () => {
       propsData,
       mocks
     });
+
+    const timeparams = wrapper.findComponent(TimeParameters);
+    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
+    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
+    // @ts-expect-error
+    timeparams.vm.emitParams();
+
+    await flushPromises();
+
     mockJobResponse.ok = false;
     wrapper.find("button").trigger("click");
     await flushPromises();
