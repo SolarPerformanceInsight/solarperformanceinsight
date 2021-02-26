@@ -1,6 +1,8 @@
 <template>
   <div class="db-browser">
-    <input v-model="search" class="search-box" v-on:keyup="filterOptions" />
+    <input v-model="search" v-on:keyup.enter="filterOptions" />
+    <button class="search" @click="filterOptions">Search</button>
+    <button class="search-reset" @click="resetSearch">Reset Search</button>
     <button class="cancel" @click="cancel">Cancel</button>
     <div v-if="optionsLoading">
       Loading database...
@@ -62,7 +64,6 @@ export default class DBBrowser extends Vue {
     };
   }
   async setFilteredOptions() {
-    this.optionsLoading = true;
     let opts: Array<string>;
     if (this.search && this.search != "") {
       // split the search term on spaces and make lowercase
@@ -82,14 +83,18 @@ export default class DBBrowser extends Vue {
     } else {
       opts = this.options;
     }
-    this.selectOptions = opts;
-    this.optionsLoading = false;
+    return opts;
+  }
+  resetSearch() {
+    this.search = "",
+    this.filterOptions();
   }
   filterOptions() {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-    }
-    this.timeoutId = window.setTimeout(() => this.setFilteredOptions(), 300);
+    this.optionsLoading = true;
+    this.setFilteredOptions().then(opts => {
+      this.selectOptions = opts;
+      this.optionsLoading = false;
+    });
   }
   async loadOptions() {
     const response = await fetch(
@@ -136,8 +141,5 @@ div.db-browser {
 }
 .search-box {
   width: 350px;
-}
-button.cancel {
-  float: right;
 }
 </style>
