@@ -19,8 +19,22 @@ sandia_inverter_params = (
 
 # Database does not provide the fields 'cells_in_series', 'EgRef', 'dEgdT'
 # which have defaults in the model.
-cec_keys = ["alpha_sc", "a_ref", "I_L_ref", "I_o_ref", "R_sh_ref", "R_s", "Adjust", "N_s"]
-cec_module_params = retrieve_sam("CECMod").loc[cec_keys].astype(float).rename(index={"N_s": "cells_in_series"})
+cec_keys = [
+    "alpha_sc",
+    "a_ref",
+    "I_L_ref",
+    "I_o_ref",
+    "R_sh_ref",
+    "R_s",
+    "Adjust",
+    "N_s",
+]
+cec_module_params = (
+    retrieve_sam("CECMod")
+    .loc[cec_keys]
+    .astype(float)
+    .rename(index={"N_s": "cells_in_series"})
+)
 
 
 @router.get(
@@ -86,6 +100,4 @@ def get_cec_module(
             status_code=404,
             detail=f"Module parameters for {module_name} not found",
         )
-    return models.CECModuleParameters(
-        **cec_module_params[module_name].to_dict()
-    )
+    return models.CECModuleParameters(**cec_module_params[module_name].to_dict())
