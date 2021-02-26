@@ -62,8 +62,7 @@ describe("Test Browser Component", () => {
     );
     fetchMock.json.mockResolvedValue(mockParams);
     wrapper.find("input").setValue("inva");
-    // @ts-expect-error
-    wrapper.vm.setFilteredOptions();
+    wrapper.find(".search").trigger("click");
 
     await flushPromises();
 
@@ -75,9 +74,7 @@ describe("Test Browser Component", () => {
 
     await flushPromises();
 
-    wrapper.find("input").setValue("");
-    // @ts-expect-error
-    wrapper.vm.setFilteredOptions();
+    wrapper.find(".search-reset").trigger("click");
 
     await flushPromises();
 
