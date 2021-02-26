@@ -707,8 +707,12 @@ class JobTimeindex(SPIBase):
         tr = pd.date_range(start=self.start, end=self.end, freq=self.step)
         if tr[-1] == self.end:
             tr = tr[:-1]
+        # TODO: adjust + test this
         if tr.tzinfo is None:
-            self._time_range = tr.tz_localize(self.timezone)
+            self._time_range = tr.tz_localize(
+                self.timezone, ambiguous=True, nonexistent="shift_forward"
+            )
+            self._time_range = self._time_range[~self._time_range.duplicated()]
         else:
             if self.timezone is not None:
                 self._time_range = tr.tz_convert(self.timezone)

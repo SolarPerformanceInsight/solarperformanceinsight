@@ -1099,6 +1099,156 @@ def test_reindex_timeseries(inp, jti, exp_df, exp_extra, exp_missing):
             },
             True,
         ),
+        (
+            # in this case 2/29/2020 in ref -> 2/28/2022
+            [
+                pd.Timestamp("2020-02-29T23:50-07:00"),
+                pd.Timestamp("2020-03-01T00:00-07:00"),
+                pd.Timestamp("2020-03-01T00:10-07:00"),
+            ],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2022-02-28T23:50", tz="Etc/GMT+7"),
+                        pd.Timestamp("2022-03-01T00:00", tz="Etc/GMT+7"),
+                        pd.Timestamp("2022-03-01T00:10", tz="Etc/GMT+7"),
+                    ],
+                    "other": [0, 1, 2],
+                }
+            ),
+            {
+                "start": "2022-02-28T23:50",
+                "end": "2022-03-01T00:15",
+                "step": "10:00",
+                "timezone": "Etc/GMT+7",
+            },
+            True,
+        ),
+        (
+            # in this case 2/29/2020 in ref -> 2/29/2024
+            [
+                pd.Timestamp("2020-02-29T23:50-07:00"),
+                pd.Timestamp("2020-03-01T00:00-07:00"),
+                pd.Timestamp("2020-03-01T00:10-07:00"),
+            ],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2024-02-29T23:50", tz="Etc/GMT+7"),
+                        pd.Timestamp("2024-03-01T00:00", tz="Etc/GMT+7"),
+                        pd.Timestamp("2024-03-01T00:10", tz="Etc/GMT+7"),
+                    ],
+                    "other": [0, 1, 2],
+                }
+            ),
+            {
+                "start": "2024-02-29T23:50",
+                "end": "2024-03-01T00:15",
+                "step": "10:00",
+                "timezone": "Etc/GMT+7",
+            },
+            True,
+        ),
+        (
+            # in this case 2/29/2020 empty
+            [
+                pd.Timestamp("2021-02-28T23:50-07:00"),
+                pd.Timestamp("2021-03-01T00:00-07:00"),
+                pd.Timestamp("2021-03-01T00:10-07:00"),
+            ],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-02-29T23:50", tz="Etc/GMT+7"),
+                        pd.Timestamp("2020-03-01T00:00", tz="Etc/GMT+7"),
+                        pd.Timestamp("2020-03-01T00:10", tz="Etc/GMT+7"),
+                    ],
+                    "other": [float("nan"), 1, 2],
+                }
+            ),
+            {
+                "start": "2020-02-29T23:50",
+                "end": "2020-03-01T00:15",
+                "step": "10:00",
+                "timezone": "Etc/GMT+7",
+            },
+            True,
+        ),
+        (
+            # in this case 2/29/2020 data is dropped
+            pd.date_range(
+                "2020-02-28T12:00:00Z", end="2020-03-01T12:00:00Z", freq="1h"
+            ),
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        "2021-02-28T12:00:00Z", end="2021-03-01T11:59:00Z", freq="1h"
+                    ),
+                    "other": list(range(12)) + list(range(36, 48)),
+                }
+            ),
+            {
+                "start": "2021-02-28T12:00",
+                "end": "2021-03-01T12:00",
+                "step": "60:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            # in this case 2/29/2020 data is dropped, test sorting too
+            pd.date_range(
+                "2020-02-28T12:00:00Z", end="2020-03-01T12:00:00Z", freq="1h"
+            ).tolist()[::-1],
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        "2021-02-28T12:00:00Z", end="2021-03-01T11:59:00Z", freq="1h"
+                    ),
+                    "other": list(range(48, 36, -1)) + list(range(12, 0, -1)),
+                }
+            ),
+            {
+                "start": "2021-02-28T12:00",
+                "end": "2021-03-01T12:00",
+                "step": "60:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            # cross DST
+            pd.date_range(
+                "2020-02-28T12:00:00",
+                end="2020-03-20T12:00:00",
+                freq="1h",
+                tz="America/Denver",
+            ),
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        "2021-02-28T12:00:00",
+                        end="2021-03-20T11:59:00",
+                        freq="1h",
+                        tz="America/Denver",
+                    ),
+                    "other": list(range(12))
+                    # feb 29, 2020 data is dropped
+                    + list(range(36, 206))
+                    # 2021-03-08 02:00, 3/8/2020 02:00 was dst transition
+                    + [float("nan")] + list(range(206, 350))
+                    # 2021-03-14 was dst transition
+                    + list(range(351, 503)),
+                }
+            ),
+            {
+                "start": "2021-02-28T12:00",
+                "end": "2021-03-20T12:00",
+                "step": "60:00",
+                "timezone": "America/Denver",
+            },
+            True,
+        ),
     ],
 )
 def test_reindex_shifting(inp, exp, jti, ats):
