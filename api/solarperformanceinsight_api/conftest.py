@@ -144,6 +144,16 @@ def predvsactual_job_id():
 
 
 @pytest.fixture(scope="module")
+def predicted_perf_job_data_id():
+    return "4eb8697c-76c3-11eb-afc5-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
+def actual_perf_job_data_id():
+    return "0d04f5bc-76c4-11eb-afc5-f4939feddd82"
+
+
+@pytest.fixture(scope="module")
 def monthlypa_job_id():
     return "717eb644-76c5-11eb-8fae-f4939feddd82"
 

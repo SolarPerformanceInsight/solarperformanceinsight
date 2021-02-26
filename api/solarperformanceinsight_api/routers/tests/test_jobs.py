@@ -714,6 +714,132 @@ def test_post_job_data_monthly_missing_col(
     assert response.status_code == 400
 
 
+@pytest.mark.parametrize(
+    "index,missing,extra",
+    [
+        (
+            pd.date_range(
+                "2018-12-31T17:00:00-07:00", end="2019-12-31T16:00:00-07:00", freq="H"
+            ),
+            0,
+            0,
+        ),
+        (
+            pd.date_range(
+                "2019-12-31T17:00:00-07:00", end="2020-12-31T16:00:00-07:00", freq="H"
+            ),
+            0,
+            24,
+        ),
+        (
+            pd.date_range(
+                "2017-12-31T17:00:00-07:00",
+                end="2018-12-31T16:30:00-07:00",
+                freq="30min",
+            ),
+            0,
+            8760,
+        ),
+        (
+            pd.date_range(
+                "2022-12-31T17:00:00-07:00", end="2023-12-31T13:00:00-07:00", freq="H"
+            ),
+            3,
+            0,
+        ),
+    ],
+)
+def test_post_job_shifted_predicted_data(
+    client,
+    nocommit_transaction,
+    predvsactual_job_id,
+    predicted_perf_job_data_id,
+    index,
+    missing,
+    extra,
+):
+    iob = BytesIO()
+    df = pd.DataFrame({"time": index, "performance": np.random.randn(len(index))})
+    df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{predvsactual_job_id}/data/{predicted_perf_job_data_id}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 200
+    rjson = response.json()
+    assert rjson["number_of_missing_rows"] == missing
+    assert rjson["number_of_extra_rows"] == extra
+    assert rjson["number_of_expected_rows"] == 8760
+    assert rjson["number_of_missing_values"] == {
+        c: 0 for c in df.columns if c != "time"
+    }
+    job_resp = client.get(f"/jobs/{predvsactual_job_id}")
+    data_obj = list(
+        filter(
+            lambda x: x["object_id"] == predicted_perf_job_data_id,
+            job_resp.json()["data_objects"],
+        )
+    )[0]
+    assert data_obj["definition"]["filename"] == "job_data.arrow"
+    assert data_obj["definition"]["data_format"] == "application/vnd.apache.arrow.file"
+
+
+def test_post_job_cant_shift_actual_data(
+    client,
+    nocommit_transaction,
+    predvsactual_job_id,
+    actual_perf_job_data_id,
+):
+    iob = BytesIO()
+    index = pd.date_range(
+        "2018-12-31T17:00:00-07:00", end="2019-12-31T16:00:00-07:00", freq="H"
+    )
+    df = pd.DataFrame({"time": index, "performance": np.random.randn(len(index))})
+    df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{predvsactual_job_id}/data/{actual_perf_job_data_id}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_post_job_shift_no_good(
+    client, nocommit_transaction, predvsactual_job_id, predicted_perf_job_data_id
+):
+    iob = BytesIO()
+    index = pd.date_range(
+        "2018-06-30T17:00:00-07:00", end="2019-06-30T16:00:00-07:00", freq="H"
+    )
+    df = pd.DataFrame({"time": index, "performance": np.random.randn(len(index))})
+    df.to_feather(iob)
+    iob.seek(0)
+    response = client.post(
+        f"/jobs/{predvsactual_job_id}/data/{predicted_perf_job_data_id}",
+        files={
+            "file": (
+                "job_data.arrow",
+                iob,
+                "application/vnd.apache.arrow.file",
+            )
+        },
+    )
+    assert response.status_code == 400
+
+
 def test_upload_compute(
     client, job_id, job_data_ids, nocommit_transaction, weather_df, async_queue
 ):

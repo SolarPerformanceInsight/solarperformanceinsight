@@ -909,3 +909,199 @@ def test_reindex_timeseries(inp, jti, exp_df, exp_extra, exp_missing):
     pd.testing.assert_frame_equal(new, exp_df)
     assert extra == exp_extra
     assert missing == exp_missing
+
+
+@pytest.mark.parametrize(
+    "inp,exp,jti,ats",
+    [
+        (
+            [pd.Timestamp("2020-01-01T00:00Z"), pd.Timestamp("2020-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00Z"),
+                        pd.Timestamp("2020-01-01T00:15Z"),
+                    ],
+                    "other": [0, 1],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00",
+                "end": "2020-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [pd.Timestamp("2020-01-01T00:00Z"), pd.Timestamp("2020-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00Z"),
+                        pd.Timestamp("2020-01-01T00:15Z"),
+                    ],
+                    "other": [0, 1],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00",
+                "end": "2020-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            False,
+        ),
+        (
+            [pd.Timestamp("2019-01-01T00:00Z"), pd.Timestamp("2019-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00Z"),
+                        pd.Timestamp("2020-01-01T00:15Z"),
+                    ],
+                    "other": [None, None],
+                }
+            ).astype(dict(other="float64")),
+            {
+                "start": "2020-01-01T00:00",
+                "end": "2020-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            False,
+        ),
+        (
+            [pd.Timestamp("2019-01-01T00:00Z"), pd.Timestamp("2019-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2020-01-01T00:00Z"),
+                        pd.Timestamp("2020-01-01T00:15Z"),
+                    ],
+                    "other": [0, 1],
+                }
+            ),
+            {
+                "start": "2020-01-01T00:00",
+                "end": "2020-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [pd.Timestamp("2020-01-01T00:00Z"), pd.Timestamp("2020-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2023-01-01T00:00Z"),
+                        pd.Timestamp("2023-01-01T00:15Z"),
+                    ],
+                    "other": [0, 1],
+                }
+            ),
+            {
+                "start": "2023-01-01T00:00",
+                "end": "2023-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [pd.Timestamp("2020-01-01T00:00Z"), pd.Timestamp("2020-01-01T00:15Z")],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2002-01-01T00:00Z"),
+                        pd.Timestamp("2002-01-01T00:15Z"),
+                    ],
+                    "other": [0, 1],
+                }
+            ),
+            {
+                "start": "2002-01-01T00:00",
+                "end": "2002-01-01T00:30",
+                "step": "15:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [
+                pd.Timestamp("2020-12-31T23:50Z"),
+                pd.Timestamp("2020-12-31T23:55Z"),
+                pd.Timestamp("2021-01-01T00:00Z"),
+            ],
+            # since 2020 is a leap year and could cause issues
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2021-12-31T23:50Z"),
+                        pd.Timestamp("2021-12-31T23:55Z"),
+                        pd.Timestamp("2022-01-01T00:00Z"),
+                    ],
+                    "other": [0, 1, 2],
+                }
+            ),
+            {
+                "start": "2021-12-31T23:50",
+                "end": "2022-01-01T00:05",
+                "step": "05:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [
+                pd.Timestamp("2020-12-31T23:50Z"),
+                pd.Timestamp("2021-01-01T00:00Z"),
+                pd.Timestamp("2021-01-01T00:10Z"),
+            ],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2022-01-01T00:00Z"),
+                        pd.Timestamp("2022-01-01T00:10Z"),
+                    ],
+                    "other": [float("nan"), float("nan")],
+                }
+            ),
+            {
+                "start": "2022-01-01T00:00",
+                "end": "2022-01-01T00:15",
+                "step": "10:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+        (
+            [
+                pd.Timestamp("2020-03-31T23:50Z"),
+                pd.Timestamp("2020-04-01T00:00Z"),
+                pd.Timestamp("2020-04-01T00:10Z"),
+            ],
+            pd.DataFrame(
+                {
+                    "time": [
+                        pd.Timestamp("2022-01-01T00:00Z"),
+                        pd.Timestamp("2022-01-01T00:10Z"),
+                    ],
+                    "other": [float("nan"), float("nan")],
+                }
+            ),
+            {
+                "start": "2022-01-01T00:00",
+                "end": "2022-01-01T00:15",
+                "step": "10:00",
+                "timezone": "UTC",
+            },
+            True,
+        ),
+    ],
+)
+def test_reindex_shifting(inp, exp, jti, ats):
+    inpdf = pd.DataFrame({"time": inp, "other": list(range(len(inp)))})
+    out = utils.reindex_timeseries(inpdf, models.JobTimeindex(**jti), ats)[0]
+    pd.testing.assert_frame_equal(out, exp)

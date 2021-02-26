@@ -172,7 +172,7 @@ def standardize_months(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def reindex_timeseries(
-    df: pd.DataFrame, jobtimeindex: models.JobTimeindex
+    df: pd.DataFrame, jobtimeindex: models.JobTimeindex, allow_time_shift: bool = False
 ) -> Tuple[pd.DataFrame, List[dt.datetime], List[dt.datetime]]:
     """Conforms a dataframe to the expected time index for a job"""
     # some annoying type behaviour
@@ -184,6 +184,14 @@ def reindex_timeseries(
         newdf = newdf.tz_localize(jobtimeindex.timezone)  # type: ignore
     else:
         newdf = newdf.tz_convert(jobtimeindex.timezone)  # type: ignore
+    if allow_time_shift:
+        shift = (
+            newdf.index[0].replace(  # type: ignore
+                year=jobtimeindex._time_range[0].year
+            )
+            - newdf.index[0]
+        )
+        newdf = newdf.shift(freq=shift)  # type: ignore
     if not newdf.index.equals(jobtimeindex._time_range):  # type: ignore
         extra = list(
             newdf.index.difference(
