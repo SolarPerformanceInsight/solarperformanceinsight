@@ -76,6 +76,7 @@
     <b>Module Parameters:</b>
     <br />
     <module-parameters
+      @parameters-selected="loadModuleParameters"
       :parameters="parameters.module_parameters"
       :model="model"
     />
@@ -103,7 +104,8 @@ import SurfaceTypes from "@/constants/surface_albedo.json";
 import { PVArray } from "@/types/PVArray";
 import {
   PVSystModuleParameters,
-  PVWattsModuleParameters
+  PVWattsModuleParameters,
+  CECModuleParameters
 } from "@/types/ModuleParameters";
 
 import {
@@ -149,11 +151,28 @@ export default class ArrayView extends ModelBase {
     }
   }
   @Watch("model")
-  changeModel(newModel: string) {
+  changeModel(newModel: string, oldModel: string) {
     if (newModel == "pvsyst") {
       this.parameters.module_parameters = new PVSystModuleParameters({});
+
+      let current_t_params = {};
+      if (oldModel == "sam") {
+        // retain any temperature selections the user has made
+        current_t_params = this.parameters.temperature_model_parameters;
+      }
       this.parameters.temperature_model_parameters = new PVSystTemperatureParameters(
-        {}
+        current_t_params
+      );
+    } else if (newModel == "sam") {
+      this.parameters.module_parameters = new CECModuleParameters({});
+
+      let current_t_params = {};
+      if (oldModel == "pvsyst") {
+        // retain any temperature selections the user has made
+        current_t_params = this.parameters.temperature_model_parameters;
+      }
+      this.parameters.temperature_model_parameters = new PVSystTemperatureParameters(
+        current_t_params
       );
     } else if (newModel == "pvwatts") {
       this.parameters.module_parameters = new PVWattsModuleParameters({});
@@ -200,6 +219,16 @@ export default class ArrayView extends ModelBase {
     this.$validator
       .validate(this.apiComponentName, arr)
       .then(this.setValidationResult);
+  }
+  loadModuleParameters({
+    parameters,
+    name
+  }: {
+    parameters: Record<string, any>;
+    name: string;
+  }) {
+    this.parameters.make_model = name;
+    this.parameters.module_parameters = new CECModuleParameters(parameters);
   }
 }
 </script>

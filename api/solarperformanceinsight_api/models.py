@@ -227,6 +227,74 @@ class PVWattsModuleParameters(PVLibBase):
         return {k: v / 100 if k == "gamma_pdc" else v for k, v in self.dict().items()}
 
 
+class CECModuleParameters(PVLibBase):
+    """Parameters for the modules that make up an array in a SAM-like model"""
+
+    alpha_sc: float = Field(
+        ...,
+        description=(
+            "Short-circuit current temperature coefficient of the module "
+            "in units of A/C"
+        ),
+    )
+    a_ref: float = Field(
+        ...,
+        description=(
+            "Product of number of cells in series, diode ideality factor, "
+            "and thermal voltage at reference conditions"
+        ),
+        ge=0,
+    )
+    I_L_ref: float = Field(
+        ...,
+        description=(
+            "Light-generated current (or photocurrent) at reference "
+            "conditions, in amperes"
+        ),
+    )
+    I_o_ref: float = Field(
+        ...,
+        description=(
+            "Dark or diode reverse saturation current at reference conditions,"
+            "in amperes"
+        ),
+    )
+    R_sh_ref: float = Field(
+        ...,
+        description="Shunt resistance at reference conditions, in ohms",
+    )
+    R_s: float = Field(
+        ..., description="Series resistance at reference conditions, in ohms"
+    )
+    cells_in_series: int = Field(
+        ..., description="Number of cells connected in series in a module", ge=0
+    )
+    Adjust: float = Field(
+        0.0,
+        description=(
+            "Factor used to adjust temperature coefficients for voltage "
+            "and current to match temperature coefficient for power, percent"
+        ),
+    )
+    EgRef: float = Field(
+        1.121,
+        description=(
+            "Energy bandgap at reference temperature in units of eV. "
+            "1.121 eV for all modules in the CEC database."
+        ),
+        gt=0,
+    )
+    dEgdT: float = Field(
+        -0.0002677,
+        description=(
+            "The temperature dependence of the energy bandgap at reference "
+            "conditions in units of 1/K. -0.0002677 1/K for all modules in "
+            "the CEC database."
+        ),
+    )
+    _modelchain_dc_model: str = PrivateAttr("cec")
+
+
 class PVsystTemperatureParameters(SPIBase):
     """Parameters for the cell temperature model of the modules in a
     PVSyst-like model"""
@@ -270,7 +338,9 @@ class PVArray(SPIBase):
         title="Module Make & Model",
         description="Make and model of the PV modules in this array",
     )
-    module_parameters: Union[PVsystModuleParameters, PVWattsModuleParameters] = Field(
+    module_parameters: Union[
+        PVsystModuleParameters, PVWattsModuleParameters, CECModuleParameters
+    ] = Field(
         ...,
         title="Module Parameters",
         description="Parameters describing PV modules in this array",

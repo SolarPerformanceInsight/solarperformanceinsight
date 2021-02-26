@@ -2,12 +2,12 @@
   <div class="temperature-parameters">
     <label for="mountDefaults"><b>Defaults:</b></label>
     <select @change="mounting" name="mountDefaults">
-      <option value="" disable selected></option>
+      <option value="" selected>Manually Set Parameters</option>
       <option v-for="k in mountOptions" :key="k" :name="k" :value="k">
         {{ k }}
       </option>
     </select>
-    <div v-if="model == 'pvsyst'">
+    <div v-if="model == 'pvsyst' || model == 'sam'">
       <model-field
         :parameters="parameters"
         :errors="errors"
@@ -84,7 +84,7 @@ export default class TemperatureParametersView extends ModelBase {
 
   get apiComponentName() {
     let componentName: string;
-    if (this.model == "pvsyst") {
+    if (this.model == "pvsyst" || this.model == "sam") {
       componentName = "PVsystTemperatureParameters";
     } else {
       componentName = "SAPMTemperatureParameters";
@@ -101,7 +101,7 @@ export default class TemperatureParametersView extends ModelBase {
 
   get mountOptions() {
     let params: Array<string>;
-    if (this.model == "pvsyst") {
+    if (this.model == "pvsyst" || this.model == "sam") {
       params = Object.keys(this.defaultMap.pvsyst);
     } else {
       params = Object.keys(this.defaultMap.sapm);
@@ -111,12 +111,15 @@ export default class TemperatureParametersView extends ModelBase {
   mounting(event: any) {
     const mountOpt = event.target.value;
     let newvals;
-    if (this.model == "pvsyst") {
-      newvals = this.defaultMap.pvsyst[mountOpt];
-    } else {
-      newvals = this.defaultMap.sapm[mountOpt];
+    // Empty string indicates custom input
+    if (mountOpt) {
+      if (this.model == "pvsyst" || this.model == "sam") {
+        newvals = this.defaultMap.pvsyst[mountOpt];
+      } else {
+        newvals = this.defaultMap.sapm[mountOpt];
+      }
+      this.parameters = Object.assign(this.parameters, newvals);
     }
-    this.parameters = Object.assign(this.parameters, newvals);
   }
 }
 </script>

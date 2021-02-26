@@ -82,6 +82,78 @@
         field-name="gamma_pdc"
       />
     </div>
+    <div v-if="model == 'sam'">
+      <button class="show-browser" @click="showBrowser = true">
+        Browse Module Database
+      </button>
+      <db-browser
+        v-on="$listeners"
+        @parameters-selected="showBrowser = false"
+        @cancel-selection="showBrowser = false"
+        v-if="showBrowser"
+        :componentName="apiComponentName"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="alpha_sc"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="a_ref"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="I_L_ref"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="I_o_ref"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="R_sh_ref"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="R_s"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="cells_in_series"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="Adjust"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="EgRef"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="dEgdT"
+      />
+    </div>
   </div>
 </template>
 
@@ -98,28 +170,20 @@ import {
 @Component
 export default class ModuleParametersView extends ModelBase {
   @Prop() parameters!: PVSystModuleParameters | PVWattsModuleParameters;
-
   @Prop({ default: "pvsyst" }) model!: string;
+  showBrowser!: boolean;
 
-  loadModule(event: Event) {
-    // TODO: load inverter from correct source based on selected model.
-    console.log(event.target);
-  }
-
-  get parameterOptions() {
-    // Return a list of parameter options based on currently selected model
-    if (this.model == "pvsyst") {
-      // TODO: load pvsyst compatible parameters
-      return ["PVSystModule_0", "PVSystModule_1"];
-    } else {
-      // TODO: load pvwatts compatible parameters
-      return ["PVWattsModule_0", "PVWattsModule_1"];
-    }
+  data() {
+    return {
+      showBrowser: false
+    };
   }
 
   get apiComponentName() {
     if (this.model == "pvsyst") {
       return "PVsystModuleParameters";
+    } else if (this.model == "sam") {
+      return "CECModuleParameters";
     } else {
       return "PVWattsModuleParameters";
     }

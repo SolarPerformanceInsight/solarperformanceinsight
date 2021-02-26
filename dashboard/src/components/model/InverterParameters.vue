@@ -1,6 +1,6 @@
 <template>
   <div class="inverter-parameters">
-    <template v-if="model == 'pvsyst'">
+    <template v-if="model == 'pvsyst' || model == 'sam'">
       <!-- Render an inverter browser for pvsyst model -->
       <button class="show-browser" @click="showBrowser = true">
         Browse Inverter Database
@@ -18,7 +18,7 @@
          list of inverters from the db. This should probably be it's own
          component with some search functionality built in
      -->
-    <div v-if="model == 'pvsyst'">
+    <div v-if="model == 'pvsyst' || model == 'sam'">
       <model-field
         :parameters="parameters"
         :errors="errors"
@@ -123,7 +123,7 @@ export default class InverterParametersView extends ModelBase {
 
   get apiComponentName() {
     let componentName: string;
-    if (this.model == "pvsyst") {
+    if (this.model == "pvsyst" || this.model == "sam") {
       componentName = "SandiaInverterParameters";
     } else {
       componentName = "PVWattsInverterParameters";
@@ -134,7 +134,7 @@ export default class InverterParametersView extends ModelBase {
   @Watch("parameters", { deep: true })
   validate(newParams: Record<string, any>) {
     let params: Record<string, any>;
-    if (this.model == "pvsyst") {
+    if (this.model == "pvsyst" || this.model == "sam") {
       params = newParams as SandiaInverterParameters;
     } else {
       params = newParams as PVWattsInverterParameters;

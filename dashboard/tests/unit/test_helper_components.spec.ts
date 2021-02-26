@@ -62,7 +62,7 @@ describe("Test Browser Component", () => {
     );
     fetchMock.json.mockResolvedValue(mockParams);
     wrapper.find("input").setValue("inva");
-    wrapper.find("button.search").trigger("click");
+    wrapper.find(".search").trigger("click");
 
     await flushPromises();
 
@@ -74,7 +74,7 @@ describe("Test Browser Component", () => {
 
     await flushPromises();
 
-    wrapper.find("button.search-reset").trigger("click");
+    wrapper.find(".search-reset").trigger("click");
 
     await flushPromises();
 

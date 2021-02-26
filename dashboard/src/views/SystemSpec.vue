@@ -30,7 +30,9 @@
 
         <b class="mt-1">Model:</b>
         <select v-model="model">
-          <option v-for="m in modelPresetOptions" :key="m">{{ m }}</option>
+          <option v-for="(v, k) in modelPresetOptions" :key="k" :value="k">
+            {{ v }}
+          </option>
         </select>
         <br />
         <a
@@ -82,6 +84,7 @@ import {
   SandiaInverterParameters,
   PVWattsInverterParameters
 } from "@/types/InverterParameters";
+import { CECModuleParameters } from "@/types/ModuleParameters";
 
 import SystemView from "@/components/model/System.vue";
 import FileUpload from "@/components/FileUpload.vue";
@@ -111,8 +114,12 @@ export default class SystemSpec extends Vue {
   data() {
     return {
       system: this.system,
-      modelPresetOptions: ["pvsyst", "pvwatts"],
-      model: "pvsyst",
+      modelPresetOptions: {
+        pvsyst: "pvsyst-like",
+        pvwatts: "pvwatts",
+        sam: "SAM"
+      },
+      model: "sam",
       displaySummary: false,
       displayAdvanced: false,
       loading: false,
@@ -142,11 +149,21 @@ export default class SystemSpec extends Vue {
 
   inferModel() {
     if (this.system.inverters.length > 0) {
-      const firstParams = this.system.inverters[0].inverter_parameters;
-
-      if (SandiaInverterParameters.isInstance(firstParams)) {
-        this.model = "pvsyst";
-      } else if (PVWattsInverterParameters.isInstance(firstParams)) {
+      const firstInverter = this.system.inverters[0];
+      if (
+        SandiaInverterParameters.isInstance(firstInverter.inverter_parameters)
+      ) {
+        if (firstInverter.arrays.length > 0) {
+          const firstArray = firstInverter.arrays[0];
+          if (CECModuleParameters.isInstance(firstArray.module_parameters)) {
+            this.model = "sam";
+          } else {
+            this.model = "pvsyst";
+          }
+        }
+      } else if (
+        PVWattsInverterParameters.isInstance(firstInverter.inverter_parameters)
+      ) {
         this.model = "pvwatts";
       }
     }

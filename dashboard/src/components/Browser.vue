@@ -47,6 +47,7 @@ export default class DBBrowser extends Vue {
   selection!: string;
   search!: string;
   spec: Record<string, any> = {};
+  timeoutId!: number | null;
 
   mounted() {
     this.loadOptions();
@@ -58,24 +59,41 @@ export default class DBBrowser extends Vue {
       selectOptions: this.options,
       selection: this.selection,
       spec: this.spec,
-      search: this.search
+      search: this.search,
+      timeoutId: null
     };
   }
   async setFilteredOptions() {
     let opts: Array<string>;
     if (this.search && this.search != "") {
-      const lowerSearch = this.search.toLowerCase();
-      opts = this.options.filter(x => x.toLowerCase().includes(lowerSearch));
+      // split the search term on spaces and make lowercase
+      const searchTerms = this.search
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .split(" ")
+        .filter(x => x != "");
+
+      // filter for options that contain all of the separated search terms
+      opts = this.options.filter(x => {
+        const lowerName = x.toLowerCase().replace(/_/g, " ");
+        return searchTerms.reduce<boolean>((acc: boolean, y: string) => {
+          return acc && lowerName.includes(y);
+        }, true);
+      });
     } else {
       opts = this.options;
     }
     return opts;
   }
+  resetSearch() {
+    this.search = "";
+    this.filterOptions();
+  }
   filterOptions() {
     this.optionsLoading = true;
     this.setFilteredOptions().then(opts => {
-      this.optionsLoading = false;
       this.selectOptions = opts;
+      this.optionsLoading = false;
     });
   }
   async loadOptions() {
@@ -86,10 +104,6 @@ export default class DBBrowser extends Vue {
     this.options = optionList;
     this.selectOptions = optionList;
     this.optionsLoading = false;
-  }
-  resetSearch() {
-    this.search = "";
-    this.filterOptions();
   }
   async fetchSpec() {
     const response = await fetch(
@@ -124,5 +138,8 @@ div.db-browser {
   background-color: white;
   border: solid 1px #333;
   padding: 1em;
+}
+.search-box {
+  width: 350px;
 }
 </style>

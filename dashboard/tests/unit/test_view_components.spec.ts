@@ -15,6 +15,12 @@ import {
   PVWattsInverterParameters,
   SandiaInverterParameters
 } from "@/types/InverterParameters.ts";
+import { PVArray } from "@/types/PVArray";
+import {
+  PVSystModuleParameters,
+  CECModuleParameters
+} from "@/types/ModuleParameters";
+
 import { modelSpecs } from "@/types/ModelSpecification";
 
 import { $validator } from "./mockvalidator";
@@ -177,7 +183,7 @@ describe("Test SystemSpec view", () => {
     expect(router.push).not.toHaveBeenCalled();
   });
   it("Test infer pvwatts", async () => {
-    fetchMock.json = jest.fn().mockResolvedValue({
+    const jsonResponse = {
       definition: new System({
         inverters: [
           new Inverter({
@@ -185,7 +191,8 @@ describe("Test SystemSpec view", () => {
           })
         ]
       })
-    });
+    };
+    fetchMock.json = jest.fn().mockResolvedValue(jsonResponse);
     const wrapper = shallowMount(SystemSpec, {
       localVue,
       propsData: {
@@ -199,12 +206,17 @@ describe("Test SystemSpec view", () => {
     // @ts-expect-error
     expect(wrapper.vm.modelSpec).toEqual(modelSpecs["pvwatts"]);
   });
-  it("Test infer pvwatts", async () => {
+  it("Test infer pvsyst", async () => {
     fetchMock.json = jest.fn().mockResolvedValue({
       definition: new System({
         inverters: [
           new Inverter({
-            inverter_parameters: new SandiaInverterParameters({})
+            inverter_parameters: new SandiaInverterParameters({}),
+            arrays: [
+              new PVArray({
+                module_parameters: new PVSystModuleParameters({})
+              })
+            ]
           })
         ]
       })
@@ -214,7 +226,6 @@ describe("Test SystemSpec view", () => {
       propsData: {
         systemId: "someid"
       },
-
       mocks,
       router
     });
@@ -222,6 +233,53 @@ describe("Test SystemSpec view", () => {
     expect(wrapper.vm.$data.model).toBe("pvsyst");
     // @ts-expect-error
     expect(wrapper.vm.modelSpec).toEqual(modelSpecs["pvsyst"]);
+  });
+  it("Test upload handling", async () => {
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      mocks,
+      router
+    });
+    await flushPromises();
+    const theSystem = new System({
+      inverters: [
+        new Inverter({
+          inverter_parameters: new SandiaInverterParameters({})
+        })
+      ]
+    });
+    const theString = JSON.stringify(theSystem);
+    // @ts-expect-error
+    wrapper.vm.uploadSuccess(theString);
+    expect(wrapper.vm.$data.system).toEqual(theSystem);
+  });
+  it("Test infer sam", async () => {
+    fetchMock.json = jest.fn().mockResolvedValue({
+      definition: new System({
+        inverters: [
+          new Inverter({
+            inverter_parameters: new SandiaInverterParameters({}),
+            arrays: [
+              new PVArray({
+                module_parameters: new CECModuleParameters({})
+              })
+            ]
+          })
+        ]
+      })
+    });
+    const wrapper = shallowMount(SystemSpec, {
+      localVue,
+      propsData: {
+        systemId: "someid"
+      },
+      mocks,
+      router
+    });
+    await flushPromises();
+    expect(wrapper.vm.$data.model).toBe("sam");
+    // @ts-expect-error
+    expect(wrapper.vm.modelSpec).toEqual(modelSpecs["sam"]);
   });
   it("Test upload handling", async () => {
     const wrapper = shallowMount(SystemSpec, {
