@@ -103,7 +103,7 @@ export default class CompareJobParams extends Vue {
     let params = {
       compare: this.compare,
       performance_granularity: this.performance_granularity
-    }
+    };
     if (this.containsPredicted && this.timeResolution == "monthly") {
       // @ts-expect-error
       params = {

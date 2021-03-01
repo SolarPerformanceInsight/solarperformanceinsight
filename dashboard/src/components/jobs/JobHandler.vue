@@ -116,7 +116,21 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Weather upload step -->
           <template v-if="step == 'original weather data'">
-            <!-- Usecase 1A & 1B -->
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Original Weather Data</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'original monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :jobId="jobId"
@@ -146,6 +160,21 @@ Component that handles basic job/workflows.
           </template>
         </keep-alive>
         <keep-alive>
+          <template v-if="step == 'actual monthly weather data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Weather Data</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
           <template v-if="step == 'predicted performance data'">
             <csv-upload
               @data-uploaded="handleData"
@@ -156,7 +185,22 @@ Component that handles basic job/workflows.
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Predicted Performance</b>
+              <b>upload predicted performance</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'predicted monthly performance data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>upload predicted performance</b>
             </csv-upload>
           </template>
         </keep-alive>
@@ -177,6 +221,21 @@ Component that handles basic job/workflows.
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'actual performance data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Performance</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'actual monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :jobId="jobId"

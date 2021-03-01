@@ -17,9 +17,9 @@
           />
           <div v-if="isMonthly">
             <p>
-              Monthly data is expected to contain monthly averages of
-              predicted weather and actual performance for the entire system.
-              Weather data is expected to include: some things that smell nice.
+              Monthly data is expected to contain monthly averages of predicted
+              weather and actual performance for the entire system. Weather data
+              is expected to include: some things that smell nice.
             </p>
           </div>
           <div v-if="!isMonthly" class="my-1">
@@ -72,8 +72,8 @@
                   v-model="temperature_type"
                 />
                 <label for="air">
-                  Calculate cell temperature from irradiance, air temperature, and
-                  windspeed in my data.
+                  Calculate cell temperature from irradiance, air temperature,
+                  and windspeed in my data.
                 </label>
                 <br />
                 <input
@@ -135,7 +135,10 @@
                 <br />
               </div>
             </div>
-            <time-parameters :timeparams="timeParams" @new-timeparams="storeTimeParams" />
+            <time-parameters
+              :timeparams="timeParams"
+              @new-timeparams="storeTimeParams"
+            />
           </div>
           <button class="mt-1" :disabled="!isValid" @click="submitJob">
             Get Started
@@ -190,14 +193,14 @@ export default class JobParameters extends Vue {
       errorState: false,
       temperature_type: "air",
       jobId: null,
-      timeParams: {},
+      timeParams: {}
     };
   }
   storeTimeParams(timeParams: Record<string, any>) {
     this.timeParams = timeParams;
   }
   get jobSpec() {
-    if (this.isMonthly){
+    if (this.isMonthly) {
       return {
         system_id: this.systemId,
         ...this.jobTypeParams
@@ -211,14 +214,14 @@ export default class JobParameters extends Vue {
         temperature_type: this.temperature_type,
         ...this.jobTypeParams
       };
-    };
+    }
   }
   get isValid() {
     // check that the start/end have been set, as they default to null
     return Boolean(
       this.isMonthly ||
-      // @ts-expect-error
-      (this.jobSpec.time_parameters.start && this.jobSpec.time_parameters.end)
+        // @ts-expect-error
+        (this.jobSpec.time_parameters.start && this.jobSpec.time_parameters.end)
     );
   }
   async submitJob() {

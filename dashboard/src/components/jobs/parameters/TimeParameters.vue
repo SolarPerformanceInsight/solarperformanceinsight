@@ -65,8 +65,8 @@ Vue.component("datetime", DatePicker);
 @Component
 export default class JobTimeParameters extends Vue {
   @Prop() timeparams!: Record<string, any>;
-  start!: string|null;
-  end!: string|null;
+  start!: string | null;
+  end!: string | null;
   timezone!: string;
   step!: number;
   timezoneList: Array<string> = Timezones;
@@ -80,7 +80,12 @@ export default class JobTimeParameters extends Vue {
       timezone: zone
     };
   }
-  setDataFields({start = null, end = null, step = 60, timezone = new LocalZone().name}) {
+  setDataFields({
+    start = null,
+    end = null,
+    step = 60,
+    timezone = new LocalZone().name
+  }) {
     this.start = start;
     this.end = end;
     this.step = step / 60;

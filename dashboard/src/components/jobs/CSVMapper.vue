@@ -18,8 +18,16 @@ Takes the following props:
       <slot></slot>
       <div>
         <!-- Time mapping for the whole file -->
-        <b>Timestamp column:</b>
-        <select @change="mapTime">
+        <b>
+          <template v-if="indexField == 'time'">
+            Timestamp
+          </template>
+          <template v-else>
+            Month
+          </template>
+          column:
+        </b>
+        <select @change="mapIndex">
           <option @mouseover="fireSelect(null)" value="" disabled selected>
             Unmapped
           </option>
@@ -35,7 +43,7 @@ Takes the following props:
             <template v-else>{{ u }}</template>
           </option>
         </select>
-        <template v-if="!timeMapped">
+        <template v-if="!indexMapped">
           <span class="warning-text">Required</span>
         </template>
       </div>
@@ -87,6 +95,7 @@ Takes the following props:
               @mapping-updated="updateMapping"
               :headers="headers"
               :usedHeaders="usedHeaders"
+              :indexField="indexField"
               :comp="component"
               :show="dataObjectDisplay[refName(i)]"
             >
@@ -117,11 +126,12 @@ export default class CSVMapper extends Vue {
   @Prop() granularity!: string;
   @Prop() system!: System;
   @Prop() data_objects!: Array<Record<string, any>>;
+  @Prop() indexField!: string;
   mapping!: Record<string, string>;
   componentValidity!: Record<string, boolean>;
   usedHeaders!: Array<string>;
   isValid!: boolean;
-  timeField!: string;
+  indexHeader!: string;
 
   data() {
     return {
@@ -129,7 +139,7 @@ export default class CSVMapper extends Vue {
       componentValidity: {},
       usedHeaders: [],
       isValid: false,
-      timeField: "",
+      indexHeader: "",
       dataObjectDisplay: this.initDataObjectDisplay()
     };
   }
@@ -177,6 +187,9 @@ export default class CSVMapper extends Vue {
       });
     }
   }
+  get required() {
+    return this.data_objects[0].definition.data_columns;
+  }
   useHeader(header: string) {
     this.usedHeaders.push(header);
   }
@@ -187,7 +200,7 @@ export default class CSVMapper extends Vue {
     // pop the index from the mapping
     const loc = newMap.loc;
     newMap = { ...newMap };
-    newMap["time"] = { csv_header: this.timeField };
+    newMap[this.indexField] = { csv_header: this.indexHeader };
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
@@ -214,7 +227,7 @@ export default class CSVMapper extends Vue {
     this.componentValidity = componentValidity;
     this.isValid =
       Object.values(componentValidity).every(x => x === true) &&
-      this.timeMapped;
+      this.indexMapped;
   }
   refName(index: number) {
     // Create a unique ref name for a nested component. Used to store
@@ -229,24 +242,26 @@ export default class CSVMapper extends Vue {
     });
     return visibleMap;
   }
-  get timeMapped() {
-    return this.timeField != "";
+  get indexMapped() {
+    return this.indexHeader != "";
   }
-  mapTime(event: any) {
-    this.freeHeader(this.timeField);
-    const timeHeader = event.target.value;
-    this.timeField = timeHeader;
-    this.useHeader(this.timeField);
+  mapIndex(event: any) {
+    this.freeHeader(this.indexField);
+    const indexHeader = event.target.value;
+    this.indexHeader = indexHeader;
+    this.useHeader(this.indexHeader);
     for (const dataObject of this.data_objects) {
       const loc = dataObject.definition.schema_path;
-      const timeMapping = { csv_header: this.timeField };
-      // update the time field or create a mapping
+      const indexMapping = { csv_header: this.indexHeader };
+      // update the index field or create a mapping
       if (loc in this.mapping) {
         // @ts-expect-error
-        this.mapping[loc]["time"] = timeMapping;
+        this.mapping[loc][this.indexField] = indexMapping;
       } else {
+        const fieldMapping: Record<string, Record<string, string>> = {};
+        fieldMapping[this.indexField] = indexMapping;
         // @ts-expect-error
-        this.mapping[loc] = { time: timeMapping };
+        this.mapping[loc] = fieldMapping;
       }
     }
     this.checkValidity();
@@ -257,7 +272,7 @@ export default class CSVMapper extends Vue {
   }
   @Watch("headers", { deep: true })
   resetMapping() {
-    this.timeField = "";
+    this.indexHeader = "";
     this.usedHeaders = [];
   }
 }
