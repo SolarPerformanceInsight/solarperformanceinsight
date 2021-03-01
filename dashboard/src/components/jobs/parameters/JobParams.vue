@@ -17,9 +17,10 @@
           />
           <div v-if="isMonthly">
             <p>
-              Monthly data is expected to contain monthly averages of predicted
-              weather and actual performance for the entire system. Weather data
-              is expected to include: some things that smell nice.
+              Monthly data is expected to contain monthly averages actual
+              performance and weather for the entire system. Weather data
+              is expected to include total plane of array insolation and
+              average daytime cell temperature.
             </p>
           </div>
           <div v-if="!isMonthly" class="my-1">
