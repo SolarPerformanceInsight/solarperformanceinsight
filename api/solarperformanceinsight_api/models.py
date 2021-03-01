@@ -707,7 +707,6 @@ class JobTimeindex(SPIBase):
         tr = pd.date_range(start=self.start, end=self.end, freq=self.step)
         if tr[-1] == self.end:
             tr = tr[:-1]
-        # TODO: adjust + test this
         if tr.tzinfo is None:
             self._time_range = tr.tz_localize(
                 self.timezone, ambiguous=True, nonexistent="shift_forward"
@@ -729,7 +728,7 @@ class JobTimeindex(SPIBase):
                 raise ValueError("Step much too large")
         return values
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_start_end_tz(cls, values):
         start = values.get("start")
         end = values.get("end")

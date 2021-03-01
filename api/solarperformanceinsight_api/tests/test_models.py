@@ -434,33 +434,89 @@ def test_compare_predicted_actual_job_2A4(timeindex, system_def, system_id):
 
 
 @pytest.mark.parametrize(
-    "start,end,tz",
+    "start,end,tz,exp",
     (
-        ("2020-01-01T07:00:00+07:00", "2021-01-01T06:59:59+07:00", "UTC"),
-        ("2020-01-01T00:00:00", "2020-12-31T23:59:59", "UTC"),
-        ("2020-01-01T00:00:00", "2021-01-01T00:00:00", "UTC"),
+        (
+            "2020-01-01T07:00:00+07:00",
+            "2021-01-01T06:59:59+07:00",
+            "UTC",
+            pd.date_range(
+                start="2020-01-01T00:00:00",
+                end="2020-12-31T23:59:59",
+                freq="15min",
+                tz="UTC",
+            ),
+        ),
+        (
+            "2020-01-01T00:00:00",
+            "2020-12-31T23:59:59",
+            "UTC",
+            pd.date_range(
+                start="2020-01-01T00:00:00",
+                end="2020-12-31T23:59:59",
+                freq="15min",
+                tz="UTC",
+            ),
+        ),
+        (
+            "2020-01-01T00:00:00",
+            "2021-01-01T00:00:00",
+            "UTC",
+            pd.date_range(
+                start="2020-01-01T00:00:00",
+                end="2020-12-31T23:59:59",
+                freq="15min",
+                tz="UTC",
+            ),
+        ),
         pytest.param(
             "2020-01-01T00:00:00",
             "2020-12-31T23:59:59",
             None,
+            None,
             marks=pytest.mark.xfail(strict=True),
         ),
-        ("2020-01-01T00:00:00+00:00", "2020-12-31T23:59:59+00:00", None),
+        (
+            "2020-01-01T00:00:00+00:00",
+            "2020-12-31T23:59:59+00:00",
+            None,
+            pd.date_range(
+                start="2020-01-01T00:00:00",
+                end="2020-12-31T23:59:59",
+                freq="15min",
+                tz="UTC",
+            ),
+        ),
+        (
+            "2020-01-01T00:00:00",
+            "2020-12-31T23:59:59",
+            "America/Denver",
+            pd.DatetimeIndex(
+                list(
+                    pd.date_range(
+                        start="2020-01-01T00:00:00",
+                        end="2020-11-01T01:59:59",
+                        ambiguous=True,
+                        freq="15min",
+                        tz="America/Denver",
+                    ).union(  # dst transition times from march dropped
+                        # dst transition back 11/1 01:00 is in -06:00 tz
+                        pd.date_range(
+                            start="2020-11-01T02:00:00-07:00",
+                            end="2020-12-31T23:59:59-07:00",
+                            freq="15min",
+                        ).tz_convert("America/Denver")
+                    )
+                )
+            ),
+        ),
     ),
 )
-def test_jobtimeindex(start, end, tz):
+def test_jobtimeindex(start, end, tz, exp):
     out = models.JobTimeindex(start=start, end=end, step="15:00", timezone=tz)
     assert out.step == dt.timedelta(minutes=15)
-    assert out.timezone == "UTC"
-    pd.testing.assert_index_equal(
-        out._time_range,
-        pd.date_range(
-            start="2020-01-01T00:00:00",
-            end="2020-12-31T23:59:59",
-            freq="15min",
-            tz="UTC",
-        ),
-    )
+    assert out.timezone == tz or "UTC"
+    pd.testing.assert_index_equal(out._time_range, exp)
 
 
 @pytest.mark.parametrize(
@@ -492,6 +548,8 @@ def test_jobtimeindex(start, end, tz):
             "01:10",
             "UTC",
         ),
+        (None, "2020-01-09T23:33Z", "05:00", None),
+        ("2020-01-09T23:33Z", None, "05:00", None),
     ],
 )
 def test_jobtimeindex_validation(start, end, step, tz):
