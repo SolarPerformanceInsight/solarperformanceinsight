@@ -44,10 +44,23 @@
         </div>
         <div v-if="containsPredicted">
           <p>What is the time resolution of your data?</p>
-          <select v-model="timeResolution" @change="emitParams">
-            <option value="leHourly">My data is hourly or better</option>
-            <option value="monthly">My data is monthly</option>
-          </select>
+          <div class="ml-1 mt-1">
+            <input
+              type="radio"
+              id="hourly-resolution"
+              v-model="timeResolution"
+              value="leHourly"
+            />
+            <label for="hourly-resolution">My data is hourly or better.</label>
+            <br />
+            <input
+              type="radio"
+              id="monthly-resolution"
+              v-model="timeResolution"
+              value="monthly"
+            />
+            <label for="monthly-resolution">My data is monthly.</label>
+          </div>
         </div>
         <div v-if="validForGranularity" class="my-1">
           I will provide performance data as:
@@ -81,7 +94,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class CompareJobParams extends Vue {
@@ -117,6 +130,10 @@ export default class CompareJobParams extends Vue {
   }
   get validForGranularity() {
     return !this.containsPredicted || this.timeResolution == "leHourly";
+  }
+  @Watch("timeResolution")
+  resolutionChange() {
+    this.emitParams();
   }
 }
 </script>
