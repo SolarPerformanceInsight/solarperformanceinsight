@@ -717,19 +717,36 @@ def test_post_job_data_monthly_missing_col(
 @pytest.mark.parametrize(
     "index,missing,extra",
     [
-        (
+        (  # already ok
             pd.date_range(
-                "2018-12-31T17:00:00-07:00", end="2019-12-31T16:00:00-07:00", freq="H"
+                "2020-12-31T17:00:00-07:00", end="2021-12-31T16:00:00-07:00", freq="H"
             ),
             0,
             0,
         ),
         (
             pd.date_range(
+                "2018-12-31T17:00:00-07:00", end="2019-12-31T16:00:00-07:00", freq="H"
+            ),
+            2,  # DST transitions
+            0,
+        ),
+        (
+            pd.date_range(
+                "2018-12-31T17:00:00",
+                end="2019-12-31T16:00:00",
+                freq="H",
+                tz="America/Denver",
+            ),
+            2,  # DST transitions
+            0,
+        ),
+        (
+            pd.date_range(
                 "2019-12-31T17:00:00-07:00", end="2020-12-31T16:00:00-07:00", freq="H"
             ),
-            0,
-            24,
+            2,
+            0,  # feb 29 is discarded instead of "extra"
         ),
         (
             pd.date_range(
@@ -737,14 +754,14 @@ def test_post_job_data_monthly_missing_col(
                 end="2018-12-31T16:30:00-07:00",
                 freq="30min",
             ),
-            0,
-            8760,
+            2,
+            8758,
         ),
         (
             pd.date_range(
                 "2022-12-31T17:00:00-07:00", end="2023-12-31T13:00:00-07:00", freq="H"
             ),
-            3,
+            5,
             0,
         ),
     ],
@@ -758,6 +775,7 @@ def test_post_job_shifted_predicted_data(
     missing,
     extra,
 ):
+    # actual time range: 2021-01-01 00:00Z to 2021-12-31T23:59Z, 1hr, Denver tz
     iob = BytesIO()
     df = pd.DataFrame({"time": index, "performance": np.random.randn(len(index))})
     df.to_feather(iob)
