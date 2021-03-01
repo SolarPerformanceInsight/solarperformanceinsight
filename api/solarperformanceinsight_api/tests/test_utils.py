@@ -902,6 +902,49 @@ def test_dump_arrow_bytes(df):
                 pd.Timestamp("2020-01-01T00:45Z"),
             ],
         ),
+        (  # gh156
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="1990-01-01T00:00:00",
+                        end="1990-12-31T20:00:00",
+                        freq="1h",
+                    ),
+                    "other": np.arange(8757),
+                }
+            ),
+            {
+                "start": "1990-01-01T05:00Z",
+                "end": "1991-01-01T04:00Z",
+                "step": "60:00",
+                "timezone": "America/New_York",
+            },
+            pd.DataFrame(
+                {
+                    "time": pd.date_range(
+                        start="1990-01-01T00:00:00",
+                        end="1990-12-31T22:59:00",
+                        freq="1h",
+                        tz="America/New_York",
+                    ),
+                    "other": np.concatenate(
+                        (
+                            np.arange(2163),  # 2163 overwritten by dst shift
+                            np.arange(2164, 7202),
+                            [float("nan")],  # extra from dst shift back
+                            np.arange(7202, 8757),
+                            [float("NaN"), float("NaN")],
+                        )
+                    ),
+                }
+            ),
+            [],
+            [
+                pd.Timestamp("1990-10-28T01:00-05:00", tz="America/New_York"),
+                pd.Timestamp("1990-12-31T21:00", tz="America/New_York"),
+                pd.Timestamp("1990-12-31T22:00", tz="America/New_York"),
+            ],
+        ),
     ],
 )
 def test_reindex_timeseries(inp, jti, exp_df, exp_extra, exp_missing):
