@@ -83,7 +83,7 @@ export default class JobTimeParameters extends Vue {
   setDataFields({
     start = null,
     end = null,
-    step = 60,
+    step = 3600,
     timezone = new LocalZone().name
   }) {
     this.start = start;

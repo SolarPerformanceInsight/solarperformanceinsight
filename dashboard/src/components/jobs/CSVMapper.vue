@@ -28,11 +28,10 @@ Takes the following props:
           column:
         </b>
         <select @change="mapIndex">
-          <option @mouseover="fireSelect(null)" value="" disabled selected>
+          <option value="" disabled selected>
             Unmapped
           </option>
           <option
-            @mouseover="fireSelect(u)"
             v-for="(u, i) in headers"
             :key="i"
             :name="u"
@@ -142,11 +141,6 @@ export default class CSVMapper extends Vue {
       indexHeader: "",
       dataObjectDisplay: this.initDataObjectDisplay()
     };
-  }
-  get unMapped() {
-    // Returns an array of headers that have yet to be mapped.
-    const unmapped = this.headers.filter(x => !(x in this.mapping));
-    return unmapped;
   }
   get toMap() {
     /* Create an array containing objects with a data object and metadata
@@ -267,13 +261,11 @@ export default class CSVMapper extends Vue {
     this.checkValidity();
     this.emitMapping();
   }
-  fireSelect(selected: string | null) {
-    this.$emit("option-hovered", selected);
-  }
   @Watch("headers", { deep: true })
   resetMapping() {
     this.indexHeader = "";
     this.usedHeaders = [];
+    this.mapping = {};
   }
 }
 </script>

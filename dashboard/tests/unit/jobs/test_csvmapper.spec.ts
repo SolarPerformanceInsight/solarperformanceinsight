@@ -125,14 +125,13 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      data_objects: testJob.data_objects
+      data_objects: testJob.data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
-    // @ts-expect-error
-    expect(weatherHandler.vm.unMapped).toEqual(headers);
 
     const inverter = testJob.definition.system_definition.inverters[0];
     const array = inverter.arrays[0];
@@ -182,7 +181,8 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       granularity: "inverter",
       system: testJob.definition.system_definition,
-      data_objects: data_objects
+      data_objects: data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
@@ -221,7 +221,8 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       granularity: "system",
       system: testJob.definition.system_definition,
-      data_objects: data_objects
+      data_objects: data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
@@ -240,25 +241,27 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      data_objects: testJob.data_objects
+      data_objects: testJob.data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
       propsData
     });
     // @ts-expect-error
-    expect(weatherHandler.vm.timeMapped).toBe(false);
+    expect(weatherHandler.vm.indexMapped).toBe(false);
     // @ts-expect-error
-    weatherHandler.vm.mapTime({ target: { value: "timestamp" } });
+    weatherHandler.vm.mapIndex({ target: { value: "timestamp" } });
     // @ts-expect-error
-    expect(weatherHandler.vm.timeMapped).toBe(true);
+    expect(weatherHandler.vm.indexMapped).toBe(true);
   });
   it("test update mapping", async () => {
     const propsData = {
       headers: headers,
       granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      data_objects: testJob.data_objects
+      data_objects: testJob.data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
@@ -276,7 +279,7 @@ describe("Test CSV Mapper", () => {
       }
     });
     // @ts-expect-error
-    weatherHandler.vm.mapTime({ target: { value: "timestamp" } });
+    weatherHandler.vm.mapIndex({ target: { value: "timestamp" } });
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/inverters/0/arrays/0": {
         ghi: { csv_header: "global" },
@@ -289,7 +292,8 @@ describe("Test CSV Mapper", () => {
       headers: headers,
       granularity: testJob.definition.parameters.weather_granularity,
       system: testJob.definition.system_definition,
-      data_objects: testJob.data_objects
+      data_objects: testJob.data_objects,
+      indexField: "time"
     };
     const weatherHandler = mount(CSVMapper, {
       localVue,
@@ -309,5 +313,34 @@ describe("Test CSV Mapper", () => {
     // @ts-expect-error
     weatherHandler.vm.freeHeader("direct");
     expect(weatherHandler.vm.$data.usedHeaders).toEqual(["global", "diffuse"]);
+  });
+  it("test resetmapping", async () => {
+    const propsData = {
+      headers: headers,
+      granularity: testJob.definition.parameters.weather_granularity,
+      system: testJob.definition.system_definition,
+      data_objects: testJob.data_objects,
+      indexField: "time"
+    };
+    const weatherHandler = mount(CSVMapper, {
+      localVue,
+      propsData
+    });
+    // @ts-expect-error
+    weatherHandler.vm.updateMapping({
+      loc: "/inverters/0/arrays/0",
+      ghi: { csv_header: "global" }
+    });
+    expect(weatherHandler.vm.$data.mapping).toEqual({
+      "/inverters/0/arrays/0": {
+        ghi: { csv_header: "global" },
+        time: { csv_header: "" }
+      }
+    });
+    // @ts-expect-error
+    weatherHandler.vm.resetMapping();
+    expect(weatherHandler.vm.$data.mapping).toEqual({});
+    expect(weatherHandler.vm.$data.usedHeaders).toEqual([]);
+    expect(weatherHandler.vm.$data.indexHeader).toEqual("");
   });
 });

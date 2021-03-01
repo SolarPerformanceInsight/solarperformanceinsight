@@ -394,15 +394,16 @@ export default class JobHandler extends Vue {
   get jobClass() {
     // Returns a generic job type of 'calculate', 'compare' or 'calculatepr'
     if (this.job) {
-      // If we're past the creation step, infer job type from the job
-      if ("performance_granularity" in this.jobParameters) {
-        if ("compare" in this.jobParameters) {
-          return "compare";
-        } else {
-          return "calculatepr";
-        }
+      if ("compare" in this.jobParameters) {
+        return "compare";
       } else {
-        return "calculate";
+        if (
+          this.jobParameters.calculate == "weather-adjusted performance ratio"
+        ) {
+          return "calculatepr";
+        } else {
+          return "calculate";
+        }
       }
     } else {
       // Expect that the job type was passed as a prop

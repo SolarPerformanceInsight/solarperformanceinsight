@@ -1,6 +1,5 @@
 // TODO: Fix
 export const variableUnits: Record<string, string> = {
-  time: "Timestamp",
   ghi: "W/m^2",
   dhi: "W/m^2",
   dni: "W/m^2",

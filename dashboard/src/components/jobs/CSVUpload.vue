@@ -82,7 +82,6 @@ Takes the following props that can be extracted from job metadata.
     <transition name="fade">
       <div v-if="promptForMapping && !processingFile">
         <csv-mapper
-          @option-hovered="updateSelected"
           @new-mapping="processMapping"
           :indexField="indexField"
           :system="system"
