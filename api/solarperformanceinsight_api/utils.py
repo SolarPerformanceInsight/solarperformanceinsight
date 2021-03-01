@@ -172,32 +172,47 @@ def standardize_months(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def reindex_timeseries(
-    df: pd.DataFrame, jobtimeindex: models.JobTimeindex
+    df: pd.DataFrame, jobtimeindex: models.JobTimeindex, allow_time_shift: bool = False
 ) -> Tuple[pd.DataFrame, List[dt.datetime], List[dt.datetime]]:
     """Conforms a dataframe to the expected time index for a job"""
     # some annoying type behaviour
     newdf: pd.DataFrame
-    newdf = df.copy()
-    newdf.loc[:, "time"] = newdf["time"].dt.round("1s")  # type: ignore
-    newdf = newdf.set_index("time").sort_index()  # type: ignore
-    if newdf.index.tzinfo is None:  # type: ignore
-        newdf = newdf.tz_localize(jobtimeindex.timezone)  # type: ignore
+    newdf = df.copy().sort_values("time")
+    time_kwargs = dict(ambiguous=True, nonexistent="NaT")
+    index = pd.DatetimeIndex(newdf.pop("time")).round(  # type: ignore
+        "1s", **time_kwargs.copy()
+    )
+    if index.tzinfo is None:
+        index = index.tz_localize(jobtimeindex.timezone, **time_kwargs.copy())
     else:
-        newdf = newdf.tz_convert(jobtimeindex.timezone)  # type: ignore
-    if not newdf.index.equals(jobtimeindex._time_range):  # type: ignore
+        index = index.tz_convert(jobtimeindex.timezone)
+    if allow_time_shift:
+        # shift start year of index to match year of job start
+        ref_yr = index[0].year
+        job_yr = jobtimeindex._time_range[0].year
+        if ref_yr != job_yr:
+            shift = pd.DateOffset(years=job_yr - ref_yr)  # type: ignore
+            # pandas#28610 means we can't just use newdf.shift
+            index = (shift + index.tz_localize(None)).tz_localize(
+                index.tz, **time_kwargs.copy()
+            )
+
+    if not index.equals(jobtimeindex._time_range):
         extra = list(
-            newdf.index.difference(
-                jobtimeindex._time_range  # type: ignore
-            ).to_pydatetime()
+            index.dropna().difference(jobtimeindex._time_range).to_pydatetime()
         )
         missing = list(
             jobtimeindex._time_range.difference(  # type: ignore
-                newdf.index
+                index.dropna()
             ).to_pydatetime()
         )
     else:
         extra = []
         missing = []
+    newdf.index = index
+    # drop possible duplicate feb 28 when going from leap year to non
+    # and possible duplicate times from DST transitions
+    newdf = newdf.loc[~(newdf.index.duplicated() | newdf.index.isna())]
     newdf = newdf.reindex(jobtimeindex._time_range, copy=False)  # type: ignore
     newdf.index.name = "time"  # type: ignore
     newdf.reset_index(inplace=True)  # type: ignore

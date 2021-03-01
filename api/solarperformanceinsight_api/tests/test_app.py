@@ -23,6 +23,7 @@ def with_auth(request):
 def before_generate_path_parameters(context, strategy):
     return strategy.filter(
         lambda x: not unquote(x.get("system_id", "a")).startswith("\n")
+        and not unquote(x.get("job_id", "a")).startswith("\n")
     )
 
 

@@ -243,6 +243,10 @@ async def post_job_data(
     ),
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.DataParsingStats:
+    """Upload specified data for the job. If the upload is of
+    predicted/original weather or performance, an attempt will be made to
+    shift the data by whole years to match the time range specified for
+    the job. Use this functionality with caution."""
     read_fnc = utils.verify_content_type(file.content_type)
     with storage.start_transaction() as st:
         job = st.get_job(job_id)
@@ -254,13 +258,19 @@ async def post_job_data(
     df = read_fnc(file.file)
     await file.close()
     utils.validate_dataframe(df, expected_columns)
-    # TODO: support reference/predicted data with different year from time params
     if isinstance(
         job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
     ):
         adjusted_df, data_stats = _adjust_monthly_series(df)
     else:
-        adjusted_df, data_stats = _adjust_standard_timeseries(job, df, expected_columns)
+        allow_time_shift = data_obj.definition.type in (
+            models.JobDataTypeEnum.original_weather,
+            models.JobDataTypeEnum.predicted_performance,
+            models.JobDataTypeEnum.predicted_performance_dc,
+        )
+        adjusted_df, data_stats = _adjust_standard_timeseries(
+            job, df, expected_columns, allow_time_shift
+        )
     arrow_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(adjusted_df))
     with storage.start_transaction() as st:
         st.add_job_data(
@@ -290,7 +300,10 @@ def _adjust_monthly_series(
 
 
 def _adjust_standard_timeseries(
-    job: models.StoredJob, df: pd.DataFrame, expected_columns: List[str]
+    job: models.StoredJob,
+    df: pd.DataFrame,
+    expected_columns: List[str],
+    allow_time_shift: bool,
 ) -> Tuple[pd.DataFrame, models.DataParsingStats]:
     try:
         uploaded_period = str(
@@ -309,7 +322,9 @@ def _adjust_standard_timeseries(
     )
 
     # will fail w/o time column
-    df, extra_times, missing_times = utils.reindex_timeseries(df, time_params)
+    df, extra_times, missing_times = utils.reindex_timeseries(
+        df, time_params, allow_time_shift
+    )
     percent_missing = len(missing_times) / len(df.index) * 100
     if percent_missing > 10:
         raise HTTPException(

@@ -708,7 +708,12 @@ class JobTimeindex(SPIBase):
         if tr[-1] == self.end:
             tr = tr[:-1]
         if tr.tzinfo is None:
-            self._time_range = tr.tz_localize(self.timezone)
+            self._time_range = tr.tz_localize(
+                self.timezone, ambiguous=True, nonexistent="NaT"
+            )
+            self._time_range = self._time_range[
+                ~(self._time_range.duplicated() | self._time_range.isna())
+            ]
         else:
             if self.timezone is not None:
                 self._time_range = tr.tz_convert(self.timezone)
@@ -725,7 +730,7 @@ class JobTimeindex(SPIBase):
                 raise ValueError("Step much too large")
         return values
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_start_end_tz(cls, values):
         start = values.get("start")
         end = values.get("end")
