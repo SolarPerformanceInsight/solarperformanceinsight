@@ -415,7 +415,17 @@ export default class JobHandler extends Vue {
   }
 
   get jobParameters() {
-    return this.job.definition.parameters;
+    const params = this.job.definition.parameters;
+
+    // For monthly data, granularity is assumed to be system, but properties
+    // are not provid.
+    if (!("weather_granularity" in params)) {
+      params["weather_granularity"] = "system";
+    }
+    if (!("performance_granularity" in params)) {
+      params["performance_granularity"] = "system";
+    }
+    return params;
   }
 
   get jobStatus() {
