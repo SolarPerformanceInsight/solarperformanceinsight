@@ -16,6 +16,7 @@ export const variableUnits: Record<string, string> = {
   daytime_flag: "True/False",
   total_energy: "Wh",
   plane_of_array_insolation: "Wh/m^2",
+  total_poa_insolation: "Wh/m^2",
   effective_insolation: "Wh/m^2",
   average_daytime_cell_temperature: "C",
   actual_energy: "Wh",
