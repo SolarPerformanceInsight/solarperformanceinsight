@@ -709,9 +709,11 @@ class JobTimeindex(SPIBase):
             tr = tr[:-1]
         if tr.tzinfo is None:
             self._time_range = tr.tz_localize(
-                self.timezone, ambiguous=True, nonexistent="shift_forward"
+                self.timezone, ambiguous=True, nonexistent="NaT"
             )
-            self._time_range = self._time_range[~self._time_range.duplicated()]
+            self._time_range = self._time_range[
+                ~(self._time_range.duplicated() | self._time_range.isna())
+            ]
         else:
             if self.timezone is not None:
                 self._time_range = tr.tz_convert(self.timezone)

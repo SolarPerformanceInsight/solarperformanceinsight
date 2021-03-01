@@ -178,7 +178,7 @@ def reindex_timeseries(
     # some annoying type behaviour
     newdf: pd.DataFrame
     newdf = df.copy().sort_values("time")
-    time_kwargs = dict(ambiguous=True, nonexistent="shift_forward")
+    time_kwargs = dict(ambiguous=True, nonexistent="NaT")
     index = pd.DatetimeIndex(newdf.pop("time")).round(  # type: ignore
         "1s", **time_kwargs.copy()
     )
@@ -198,9 +198,13 @@ def reindex_timeseries(
             )
 
     if not index.equals(jobtimeindex._time_range):
-        extra = list(index.difference(jobtimeindex._time_range).to_pydatetime())
+        extra = list(
+            index.dropna().difference(jobtimeindex._time_range).to_pydatetime()
+        )
         missing = list(
-            jobtimeindex._time_range.difference(index).to_pydatetime()  # type: ignore
+            jobtimeindex._time_range.difference(  # type: ignore
+                index.dropna()
+            ).to_pydatetime()
         )
     else:
         extra = []
@@ -208,7 +212,7 @@ def reindex_timeseries(
     newdf.index = index
     # drop possible duplicate feb 28 when going from leap year to non
     # and possible duplicate times from DST transitions
-    newdf = newdf.loc[~newdf.index.duplicated()]
+    newdf = newdf.loc[~(newdf.index.duplicated() | newdf.index.isna())]
     newdf = newdf.reindex(jobtimeindex._time_range, copy=False)  # type: ignore
     newdf.index.name = "time"  # type: ignore
     newdf.reset_index(inplace=True)  # type: ignore

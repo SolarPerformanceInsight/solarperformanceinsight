@@ -929,8 +929,8 @@ def test_dump_arrow_bytes(df):
                     ),
                     "other": np.concatenate(
                         (
-                            np.arange(2163),  # 2163 overwritten by dst shift
-                            np.arange(2164, 7202),
+                            np.arange(2162),  # 2162 dropped
+                            np.arange(2163, 7202),
                             [float("nan")],  # extra from dst shift back
                             np.arange(7202, 8757),
                             [float("NaN"), float("NaN")],
@@ -1279,9 +1279,9 @@ def test_reindex_timeseries(inp, jti, exp_df, exp_extra, exp_missing):
                     # feb 29, 2020 data is dropped
                     + list(range(36, 206))
                     # 2021-03-08 02:00, 3/8/2020 02:00 was dst transition
-                    + [float("nan")] + list(range(206, 350))
+                    + [float("nan")] + list(range(206, 349))
                     # 2021-03-14 was dst transition
-                    + list(range(351, 503)),
+                    + list(range(350, 503)),
                 }
             ),
             {
