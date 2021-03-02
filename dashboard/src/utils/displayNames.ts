@@ -18,6 +18,7 @@ export const variableDisplayNames: Record<string, string> = {
   plane_of_array_insolation: "Plane of Array Insolation",
   effective_insolation: "Effective Insolation",
   average_daytime_cell_temperature: "Average Daytime Cell Temperature",
+  total_poa_insolation: "Total Plane of Array Insolation",
   month: "Month",
   actual_energy: "Actual Energy",
   expected_energy: "Expected Energy",

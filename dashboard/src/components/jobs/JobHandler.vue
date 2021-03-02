@@ -116,7 +116,21 @@ Component that handles basic job/workflows.
         <keep-alive>
           <!-- Weather upload step -->
           <template v-if="step == 'original weather data'">
-            <!-- Usecase 1A & 1B -->
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Original Weather Data</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'original monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :jobId="jobId"
@@ -146,7 +160,37 @@ Component that handles basic job/workflows.
           </template>
         </keep-alive>
         <keep-alive>
+          <template v-if="step == 'actual monthly weather data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.weather_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Weather Data</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
           <template v-if="step == 'predicted performance data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Predicted Performance</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'predicted monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :jobId="jobId"
@@ -177,6 +221,21 @@ Component that handles basic job/workflows.
         </keep-alive>
         <keep-alive>
           <template v-if="step == 'actual performance data'">
+            <csv-upload
+              @data-uploaded="handleData"
+              :jobId="jobId"
+              :temperature_type="jobParameters.temperature_type"
+              :system="job.definition.system_definition"
+              :granularity="jobParameters.performance_granularity"
+              :irradiance_type="jobParameters.irradiance_type"
+              :data_objects="filteredDataObjects(step)"
+            >
+              <b>Upload Actual Performance</b>
+            </csv-upload>
+          </template>
+        </keep-alive>
+        <keep-alive>
+          <template v-if="step == 'actual monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :jobId="jobId"
@@ -335,15 +394,16 @@ export default class JobHandler extends Vue {
   get jobClass() {
     // Returns a generic job type of 'calculate', 'compare' or 'calculatepr'
     if (this.job) {
-      // If we're past the creation step, infer job type from the job
-      if ("performance_granularity" in this.jobParameters) {
-        if ("compare" in this.jobParameters) {
-          return "compare";
-        } else {
-          return "calculatepr";
-        }
+      if ("compare" in this.jobParameters) {
+        return "compare";
       } else {
-        return "calculate";
+        if (
+          this.jobParameters.calculate == "weather-adjusted performance ratio"
+        ) {
+          return "calculatepr";
+        } else {
+          return "calculate";
+        }
       }
     } else {
       // Expect that the job type was passed as a prop
@@ -356,7 +416,17 @@ export default class JobHandler extends Vue {
   }
 
   get jobParameters() {
-    return this.job.definition.parameters;
+    const params = this.job.definition.parameters;
+
+    // For monthly data, granularity is assumed to be system, but properties
+    // are not provid.
+    if (!("weather_granularity" in params)) {
+      params["weather_granularity"] = "system";
+    }
+    if (!("performance_granularity" in params)) {
+      params["performance_granularity"] = "system";
+    }
+    return params;
   }
 
   get jobStatus() {
@@ -506,7 +576,7 @@ export default class JobHandler extends Vue {
 <style scoped>
 .job-handler {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 350px 1fr;
   grid-template-areas: "sidebar main";
   gap: 0;
 }

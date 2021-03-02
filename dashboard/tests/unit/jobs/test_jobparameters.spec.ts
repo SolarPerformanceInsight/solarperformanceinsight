@@ -226,6 +226,32 @@ describe("Test Job Parameters", () => {
     });
     expect(wrapper.findComponent(CalculatePRJobParams).exists()).toBe(true);
   });
+  it("test monthly comparejob", async () => {
+    const propsData = {
+      systemId: testSystem.object_id,
+      system: testSystem.definition,
+      jobClass: "compare"
+    };
+    const wrapper = mount(JobParams, {
+      localVue,
+      propsData,
+      mocks
+    });
+    const compareParams = {
+      compare: "monthly predicted and actual performance"
+    };
+
+    wrapper.vm.$data.jobTypeParams = compareParams;
+    // @ts-expect-error
+    expect(wrapper.vm.isMonthly).toBe(true);
+    // @ts-expect-error
+    expect(wrapper.vm.isValid).toBe(true);
+    // @ts-expect-error
+    expect(wrapper.vm.jobSpec).toEqual({
+      system_id: testSystem.object_id,
+      ...compareParams
+    });
+  });
 });
 describe("Test Calculate Parameters", () => {
   it("test expected inputs exist", async () => {
@@ -261,6 +287,36 @@ describe("Test Calculate Parameters", () => {
     expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
       {
         calculate: "expected performance"
+      }
+    ]);
+  });
+});
+describe("Test Compare Parameters", () => {
+  it("test emit correct fields", async () => {
+    const wrapper = mount(CompareJobParams, {
+      localVue
+    });
+
+    await flushPromises();
+
+    wrapper.vm.$data.timeResolution = "monthly";
+    wrapper.vm.$data.compare = "predicted and actual performance";
+
+    await flushPromises();
+
+    // @ts-expect-error
+    expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
+      {
+        compare: "expected and actual performance",
+        performance_granularity: "system"
+      }
+    ]);
+    // @ts-expect-error
+    expect(wrapper.emitted("new-job-type-params").length).toBe(2);
+    // @ts-expect-error
+    expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
+      {
+        compare: "monthly predicted and actual performance"
       }
     ]);
   });

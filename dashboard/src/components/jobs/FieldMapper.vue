@@ -75,6 +75,7 @@ import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import { getVariableDisplayName } from "@/utils/displayNames";
+import { getVariableUnits } from "@/utils/units";
 
 import SingleMapping from "@/components/jobs/SingleMapping.vue";
 
@@ -97,6 +98,7 @@ export default class FieldMapper extends Vue {
   @Prop() usedHeaders!: Array<string>;
   @Prop() comp!: MetadataWithDataObject;
   @Prop() show!: boolean;
+  @Prop() indexField!: string;
   mapping!: Record<string, Record<string, string>>;
 
   data() {
@@ -108,10 +110,8 @@ export default class FieldMapper extends Vue {
     return this.comp.metadata;
   }
   get required() {
-    // return all required fields besides time, which is mapped at the
-    // file level
     return this.comp.data_object.definition.data_columns.filter(
-      (x: string) => x != "time"
+      (x: string) => x != this.indexField
     );
   }
   emitMapping() {
@@ -140,7 +140,13 @@ export default class FieldMapper extends Vue {
     this.emitMapping();
   }
   getDisplayName(variable: string) {
-    return getVariableDisplayName(variable);
+    const variableName = getVariableDisplayName(variable);
+    const units = getVariableUnits(variable);
+    let displayName = variableName;
+    if (units) {
+      displayName += ` [${units}]`;
+    }
+    return displayName;
   }
   isValid() {
     return this.required.every((x: string) => x in this.mapping);

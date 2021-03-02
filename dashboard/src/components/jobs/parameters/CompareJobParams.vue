@@ -13,9 +13,8 @@
             value="predicted and actual performance"
             type="radio"
             v-model="compare"
-            disabled="true"
           />
-          <label class="greyed" for="predicted-and-actual-performance">
+          <label for="predicted-and-actual-performance">
             predicted performance to actual performance.
           </label>
           <br />
@@ -43,7 +42,32 @@
           </label>
           <br />
         </div>
-        <div class="my-1">
+        <div v-if="containsPredicted">
+          <p>What is the time resolution of your data?</p>
+          <div class="ml-1 mt-1">
+            <input
+              disabled="true"
+              type="radio"
+              id="hourly-resolution"
+              v-model="timeResolution"
+              value="leHourly"
+            />
+            <label class="greyed" for="hourly-resolution">
+              My data is hourly or better.
+            </label>
+            <br />
+            <input
+              type="radio"
+              id="monthly-resolution"
+              v-model="timeResolution"
+              value="monthly"
+            />
+            <label for="monthly-resolution">
+              My data is monthly.
+            </label>
+          </div>
+        </div>
+        <div v-if="validForGranularity" class="my-1">
           I will provide performance data as:
           <br />
           <div class="ml-1 mt-1">
@@ -75,27 +99,56 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component
 export default class CompareJobParams extends Vue {
   compare!: string;
   performance_granularity!: string;
+  timeResolution!: string;
 
   data() {
     return {
       compare: "expected and actual performance",
-      performance_granularity: "system"
+      performance_granularity: "system",
+      timeResolution: "leHourly"
     };
   }
   mounted() {
     this.emitParams();
   }
   emitParams() {
-    this.$emit("new-job-type-params", {
+    let params = {
       compare: this.compare,
       performance_granularity: this.performance_granularity
-    });
+    };
+    if (this.containsPredicted && this.timeResolution == "monthly") {
+      // @ts-expect-error
+      params = {
+        compare: `monthly ${this.compare}`
+      };
+    }
+    this.$emit("new-job-type-params", params);
+  }
+  get containsPredicted() {
+    return this.compare.includes("predicted");
+  }
+  get validForGranularity() {
+    return !this.containsPredicted || this.timeResolution == "leHourly";
+  }
+  @Watch("compare")
+  setMonthly() {
+    // Temporary function to force monthly time resolution when predicted
+    // data is provided
+    if (this.containsPredicted) {
+      this.timeResolution = "monthly";
+    } else {
+      this.timeResolution = "leHourly";
+    }
+  }
+  @Watch("timeResolution")
+  resolutionChange() {
+    this.emitParams();
   }
 }
 </script>

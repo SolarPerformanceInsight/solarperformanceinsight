@@ -39,6 +39,26 @@ const comp = {
   metadata: testSystem.definition
 };
 
+const monthlyComp = {
+  data_object: {
+    object_id: "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
+    object_type: "job_data",
+    created_at: "2020-12-11T19:52:00+00:00",
+    modified_at: "2020-12-11T19:52:00+00:00",
+    definition: {
+      schema_path: "/",
+      type: "original monthly weather data",
+      present: false,
+      data_columns: [
+        "month",
+        "total_poa_insolation",
+        "average_daytime_cell_temperature"
+      ]
+    }
+  },
+  metadata: testSystem.definition
+};
+
 const headers = ["timestamp", "global", "direct", "diffuse"];
 
 const usedHeaders: Array<string> = [];
@@ -54,7 +74,8 @@ describe("Test field mapper", () => {
       headers,
       usedHeaders,
       comp,
-      show: true
+      show: true,
+      indexField: "time"
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -62,6 +83,29 @@ describe("Test field mapper", () => {
     });
     const fields = wrapper.findAll("li");
     expect(fields).toHaveLength(required.length - 1);
+    fields.wrappers.forEach(f => {
+      const headerOptions = f.findAll("option");
+      expect(headerOptions).toHaveLength(headers.length + 1);
+      expect(headerOptions.wrappers[0].text()).toBe("Not included");
+      headerOptions.wrappers.slice(1).forEach(o => {
+        expect(headers.includes(o.text())).toBe(true);
+      });
+    });
+  });
+  it("test monthly", () => {
+    const propsData = {
+      headers,
+      usedHeaders,
+      comp: monthlyComp,
+      show: true,
+      indexField: "month"
+    };
+    const wrapper = mount(FieldMapper, {
+      localVue,
+      propsData
+    });
+    const fields = wrapper.findAll("li");
+    expect(fields).toHaveLength(2);
     fields.wrappers.forEach(f => {
       const headerOptions = f.findAll("option");
       expect(headerOptions).toHaveLength(headers.length + 1);
@@ -83,7 +127,8 @@ describe("Test field mapper", () => {
       headers,
       usedHeaders,
       comp: arrayComp,
-      show: true
+      show: true,
+      indexField: "time"
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -120,7 +165,8 @@ describe("Test field mapper", () => {
       headers,
       usedHeaders,
       comp: arrayComp,
-      show: true
+      show: true,
+      indexField: "time"
     };
     const wrapper = mount(FieldMapper, {
       localVue,
@@ -152,7 +198,8 @@ describe("Test field mapper", () => {
       headers,
       usedHeaders,
       comp: inverterComp,
-      show: true
+      show: true,
+      indexField: "time"
     };
     const wrapper = mount(FieldMapper, {
       localVue,

@@ -82,8 +82,8 @@ Takes the following props that can be extracted from job metadata.
     <transition name="fade">
       <div v-if="promptForMapping && !processingFile">
         <csv-mapper
-          @option-hovered="updateSelected"
           @new-mapping="processMapping"
+          :indexField="indexField"
           :system="system"
           :granularity="granularity"
           :data_objects="data_objects"
@@ -191,6 +191,40 @@ export default class CSVUpload extends Vue {
   get dataType() {
     return this.data_objects[0].definition.type;
   }
+  get totalMappings() {
+    const nonIndexRequired = this.required.filter(x => x != this.indexField);
+    return 1 + nonIndexRequired.length * this.data_objects.length;
+  }
+  get csvPreview() {
+    return this.csvData.slice(0, 5);
+  }
+  get headerMapping() {
+    // Special mapping of headers to expected variables for the csv preview
+    const newMap: Record<string, any> = {};
+    for (const header of this.headers) {
+      newMap[header] = null;
+    }
+    // Invert mappings so they are accessible by header
+    for (const loc in this.mapping) {
+      const mapping = this.mapping[loc];
+      for (const variable in mapping) {
+        const header = mapping[variable].csv_header;
+        if (variable == this.indexField && newMap[this.indexField]) {
+          continue;
+        }
+        newMap[header] = variable;
+      }
+    }
+    return newMap;
+  }
+  get indexField() {
+    // Return the name of the expected time/index column.
+    if (this.required.includes("time")) {
+      return "time";
+    } else {
+      return "month";
+    }
+  }
   removeMetadata(csv: string) {
     if (!(this.headerLine == 1 && this.dataStartLine == 2)) {
       // Determine the characters used for line separation
@@ -253,7 +287,9 @@ export default class CSVUpload extends Vue {
 ${headers ? headers.length : 0} columns and ${
               this.totalMappings
             } columns are expected (one
-time column, and ${this.required.filter(x => x != "time").join(", ")} for
+${this.indexField} column, and ${this.required
+              .filter(x => x != this.indexField)
+              .join(", ")} for
 ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
           }
         };
@@ -335,40 +371,14 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
     // data objects
     return this.data_objects[0].definition.data_columns;
   }
-  get totalMappings() {
-    const nonTimeRequired = this.required.filter(x => x != "time");
-    return 1 + nonTimeRequired.length * this.data_objects.length;
-  }
   enforceDataStartOrder() {
     if (this.headerLine >= this.dataStartLine) {
       this.dataStartLine = this.headerLine + 1;
     }
     this.adjustHeaderDataLine();
   }
-  get csvPreview() {
-    return this.csvData.slice(0, 5);
-  }
   updateSelected(selected: string | null) {
     this.currentSelection = selected;
-  }
-  get headerMapping() {
-    // Special mapping of headers to expected variables for the csv preview
-    const newMap: Record<string, any> = {};
-    for (const header of this.headers) {
-      newMap[header] = null;
-    }
-    // Invert mappings so they are accessible by header
-    for (const loc in this.mapping) {
-      const mapping = this.mapping[loc];
-      for (const variable in mapping) {
-        const header = mapping[variable].csv_header;
-        if (variable == "time" && newMap.time) {
-          continue;
-        }
-        newMap[header] = variable;
-      }
-    }
-    return newMap;
   }
   adjustHeaderDataLine() {
     if (this.promptForMapping) {
