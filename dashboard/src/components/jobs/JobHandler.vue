@@ -185,7 +185,7 @@ Component that handles basic job/workflows.
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>upload predicted performance</b>
+              <b>Upload Predicted Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
@@ -200,7 +200,7 @@ Component that handles basic job/workflows.
               :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>upload predicted performance</b>
+              <b>Upload Predicted Performance</b>
             </csv-upload>
           </template>
         </keep-alive>

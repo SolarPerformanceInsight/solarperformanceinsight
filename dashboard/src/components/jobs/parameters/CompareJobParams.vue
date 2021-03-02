@@ -54,12 +54,15 @@
             <label for="hourly-resolution">My data is hourly or better.</label>
             <br />
             <input
+              disabled="true"
               type="radio"
               id="monthly-resolution"
               v-model="timeResolution"
               value="monthly"
             />
-            <label for="monthly-resolution">My data is monthly.</label>
+            <label class="greyed" for="monthly-resolution">
+              My data is monthly.
+            </label>
           </div>
         </div>
         <div v-if="validForGranularity" class="my-1">
