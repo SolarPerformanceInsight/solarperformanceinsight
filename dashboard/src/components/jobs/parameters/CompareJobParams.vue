@@ -46,21 +46,23 @@
           <p>What is the time resolution of your data?</p>
           <div class="ml-1 mt-1">
             <input
+              disabled="true"
               type="radio"
               id="hourly-resolution"
               v-model="timeResolution"
               value="leHourly"
             />
-            <label for="hourly-resolution">My data is hourly or better.</label>
+            <label class="greyed" for="hourly-resolution">
+              My data is hourly or better.
+            </label>
             <br />
             <input
-              disabled="true"
               type="radio"
               id="monthly-resolution"
               v-model="timeResolution"
               value="monthly"
             />
-            <label class="greyed" for="monthly-resolution">
+            <label for="monthly-resolution">
               My data is monthly.
             </label>
           </div>
@@ -133,6 +135,16 @@ export default class CompareJobParams extends Vue {
   }
   get validForGranularity() {
     return !this.containsPredicted || this.timeResolution == "leHourly";
+  }
+  @Watch("compare")
+  setMonthly() {
+    // Temporary function to force monthly time resolution when predicted
+    // data is provided
+    if (this.containsPredicted) {
+      this.timeResolution = "monthly";
+    } else {
+      this.timeResolution = "leHourly";
+    }
   }
   @Watch("timeResolution")
   resolutionChange() {
