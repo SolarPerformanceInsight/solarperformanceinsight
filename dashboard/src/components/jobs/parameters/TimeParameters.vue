@@ -50,17 +50,20 @@
         :min-datetime="start"
         format="y-LL-dd HH:mmZZ"
       ></datetime>
+      <datetimefield/>
     </div>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
 import Timezones from "@/constants/timezones.json";
 import { LocalZone } from "luxon";
 import { Datetime as DatePicker } from "vue-datetime";
 import "vue-datetime/dist/vue-datetime.css";
 
 Vue.component("datetime", DatePicker);
+Vue.component("datetimefield", DatetimeField);
 
 @Component
 export default class JobTimeParameters extends Vue {
