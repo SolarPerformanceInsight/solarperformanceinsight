@@ -380,8 +380,6 @@ export default class JobHandler extends Vue {
           }
         }
         this.step = theStep;
-      } else if (this.jobStatus == "error") {
-        this.step = "error";
       } else if (this.jobStatus == "prepared") {
         this.step = "calculate";
       } else {
