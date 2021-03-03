@@ -112,7 +112,6 @@ export default class TimeseriesTable extends Vue {
           path
         );
         const componentName = `${systemComponent.name} (${path})`;
-        console.log(resultType);
         allData.push({
           source: "Results",
           metadata: resultObject,
