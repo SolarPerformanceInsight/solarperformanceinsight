@@ -245,11 +245,13 @@ export default class JobParameters extends Vue {
         const responseBody = await response.json();
         this.apiErrors = responseBody.detail;
       } else {
-        this.apiErrors = {
-          loc: ["error"],
-          msg: `Failed to start job with error code ${response.status}`,
-          type: "error"
-        };
+        this.apiErrors = [
+          {
+            loc: ["error"],
+            msg: `Failed to start job with error code ${response.status}`,
+            type: "error"
+          }
+        ];
       }
       this.errorState = true;
     }

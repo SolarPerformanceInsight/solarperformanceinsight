@@ -7,6 +7,8 @@ import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
 import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
+import APIErrors from "@/components/ErrorRenderer.vue";
+import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
@@ -69,12 +71,17 @@ beforeEach(() => {
 });
 describe("Test Job Parameters", () => {
   it("test expected inputs exist", async () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
+
     const propsData = {
       systemId: testSystem.object_id,
       system: testSystem.definition,
       jobClass: "calculate"
     };
     const wrapper = mount(JobParams, {
+      attachTo: "#root",
       localVue,
       propsData,
       mocks
@@ -102,9 +109,32 @@ describe("Test Job Parameters", () => {
     effective.element.selected = true;
     effective.trigger("change");
 
+    const startend = wrapper.findAllComponents(DatetimeField);
+    const start = startend.wrappers[0];
+    start.vm.$data.year = 2020;
+    start.vm.$data.month = 1;
+    start.vm.$data.day = 1;
+    start.vm.$data.hour = 0;
+    start.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    start.vm.emitTimeParams();
+    await flushPromises();
+
+    const end = startend.wrappers[1];
+
+    end.vm.$data.year = 2020;
+    end.vm.$data.month = 2;
+    end.vm.$data.day = 1;
+    end.vm.$data.hour = 0;
+    end.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    end.vm.emitTimeParams();
+    await flushPromises();
+
     const timeparams = wrapper.findComponent(TimeParameters);
-    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
-    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
+
     // @ts-expect-error
     timeparams.vm.emitParams();
 
@@ -114,8 +144,8 @@ describe("Test Job Parameters", () => {
       system_id: testSystem.object_id,
       calculate: "predicted performance",
       time_parameters: {
-        start: "2020-01-01T00:00:00.000Z",
-        end: "2020-02-01T00:00:00.000Z",
+        start: "2020-01-01T00:00:00.000-07:00",
+        end: "2020-02-01T00:00:00.000-07:00",
         step: 3600,
         timezone: "America/Denver"
       },
@@ -126,28 +156,59 @@ describe("Test Job Parameters", () => {
     // @ts-expect-error
     expect(wrapper.vm.isValid).toBe(true);
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
-    wrapper.find("button").trigger("click");
+
+    const button = wrapper.find("button");
+    console.log(button.attributes());
+    button.trigger("click");
+    console.log(button);
     await flushPromises();
 
     expect(mockJobCreate).toHaveBeenCalled();
     // @ts-expect-error
     expect(wrapper.emitted("job-created")[0]).toEqual(["jobid"]);
+    wrapper.destroy();
   });
   it("test post failure with api errors", async () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
     const propsData = {
       systemId: testSystem.object_id,
       system: testSystem.definition,
       jobClass: "calculate"
     };
     const wrapper = mount(JobParams, {
+      attachTo: "#root",
       localVue,
       propsData,
       mocks
     });
 
+    const startend = wrapper.findAllComponents(DatetimeField);
+    const start = startend.wrappers[0];
+    start.vm.$data.year = 2020;
+    start.vm.$data.month = 1;
+    start.vm.$data.day = 1;
+    start.vm.$data.hour = 0;
+    start.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    start.vm.emitTimeParams();
+    await flushPromises();
+
+    const end = startend.wrappers[1];
+
+    end.vm.$data.year = 2020;
+    end.vm.$data.month = 2;
+    end.vm.$data.day = 1;
+    end.vm.$data.hour = 0;
+    end.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    end.vm.emitTimeParams();
+    await flushPromises();
+
     const timeparams = wrapper.findComponent(TimeParameters);
-    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
-    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
     // @ts-expect-error
     timeparams.vm.emitParams();
 
@@ -155,27 +216,59 @@ describe("Test Job Parameters", () => {
 
     mockJobResponse.ok = false;
     mockJobResponse.status = 422;
-    (mockJobResponse.json = jest.fn().mockResolvedValue({ detail: "broken" })),
+    (mockJobResponse.json = jest.fn().mockResolvedValue([
+      {
+        loc: ["place"],
+        msg: "broken",
+        type: "error"
+      }
+    ])),
       wrapper.find("button").trigger("click");
     await flushPromises();
-
-    expect(wrapper.find("div.errors").text()).toBe("broken");
+    expect(wrapper.findComponent(APIErrors).exists()).toBe(true);
+    wrapper.destroy();
   });
   it("test post failure without api errors", async () => {
+    const div = document.createElement("div");
+    div.id = "root";
+    document.body.appendChild(div);
     const propsData = {
       systemId: testSystem.object_id,
       system: testSystem.definition,
       jobClass: "calculate"
     };
     const wrapper = mount(JobParams, {
+      attachTo: "#root",
       localVue,
       propsData,
       mocks
     });
 
+    const startend = wrapper.findAllComponents(DatetimeField);
+    const start = startend.wrappers[0];
+    start.vm.$data.year = 2020;
+    start.vm.$data.month = 1;
+    start.vm.$data.day = 1;
+    start.vm.$data.hour = 0;
+    start.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    start.vm.emitTimeParams();
+    await flushPromises();
+
+    const end = startend.wrappers[1];
+
+    end.vm.$data.year = 2020;
+    end.vm.$data.month = 2;
+    end.vm.$data.day = 1;
+    end.vm.$data.hour = 0;
+    end.vm.$data.minute = 0;
+
+    // @ts-expect-error
+    end.vm.emitTimeParams();
+    await flushPromises();
+
     const timeparams = wrapper.findComponent(TimeParameters);
-    timeparams.vm.$data.start = "2020-01-01T00:00:00.000Z";
-    timeparams.vm.$data.end = "2020-02-01T00:00:00.000Z";
     // @ts-expect-error
     timeparams.vm.emitParams();
 
@@ -185,9 +278,8 @@ describe("Test Job Parameters", () => {
     wrapper.find("button").trigger("click");
     await flushPromises();
 
-    expect(wrapper.find("div.errors").text()).toBe(
-      '{\n  "error": "Failed to start job with error code 201"\n}'
-    );
+    expect(wrapper.findComponent(APIErrors).text()).toBe("");
+    wrapper.destroy();
   });
 
   it("test loading calculate params", () => {

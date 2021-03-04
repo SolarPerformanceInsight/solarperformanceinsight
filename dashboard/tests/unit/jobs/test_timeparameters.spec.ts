@@ -15,8 +15,8 @@ describe("test timeparameters", () => {
     // @ts-expect-error
     expect(wrapper.emitted("new-timeparams")[0]).toEqual([
       {
-        start: "",
-        end: "",
+        start: null,
+        end: null,
         step: 3600,
         timezone: "America/Denver"
       }
@@ -24,11 +24,11 @@ describe("test timeparameters", () => {
     // @ts-expect-error
     expect(wrapper.emitted("new-timeparams").length).toBe(1);
 
-    wrapper.find(".vdatetime").trigger("click");
-    await flushPromises();
-    wrapper.vm.$data.start = "2020-01-01T00:00:00Z";
-    wrapper.vm.$data.end = "2020-02-01T00:00:00";
-    wrapper.find(".vdatetime").trigger("click");
+    wrapper.find("input.year").setValue(2020);
+    wrapper.find("input.month").setValue(2020);
+    wrapper.find("input.day").setValue(2020);
+    wrapper.find("input.hour").setValue(2020);
+    wrapper.find("input.minute").setValue(2020);
     // @ts-expect-error
     wrapper.vm.emitParams();
     await flushPromises();
