@@ -1,30 +1,82 @@
 <template>
-  <div class="datetime-container">
-    <span class="date-fields">
-      <span class="date-field-wrapper">
-        <input class="datetime-field date-field year" type="number" maxlength="4" placeholder="yyyy">
+  <div class="inline">
+    <div
+      class="date-fields datetime-container inline"
+      v-bind:class="{ invalid: currentDate && !currentDate.isValid }"
+    >
+      <span class="date-fields">
+        <span class="date-field-wrapper">
+          <input
+            class="datetime-field date-field year"
+            type="number"
+            maxlength="4"
+            max="2037"
+            min="1901"
+            placeholder="yyyy"
+            v-model.number="year"
+          />
+        </span>
+        <span class="date-field-wrapper">
+          <input
+            class="datetime-field date-field month"
+            type="number"
+            maxlength="2"
+            min="1"
+            max="12"
+            placeholder="mm"
+            v-model.number="month"
+          />
+        </span>
+        <span class="date-field-wrapper">
+          <input
+            class="datetime-field date-field day"
+            type="number"
+            maxlength="2"
+            min="1"
+            :max="dayMax"
+            placeholder="dd"
+            v-model.number="day"
+          />
+        </span>
       </span>
-      <span class="date-field-wrapper">
-        <input class="datetime-field date-field month" type="number" maxlength="2" min="1" max="12" placeholder="mm">
+    </div>
+    <div
+      class="date-fields datetime-container inline"
+      v-bind:class="{ invalid: currentDate && !currentDate.isValid }"
+    >
+      <span class="time-fields">
+        <span class="time-field-wrapper">
+          <input
+            class="datetime-field time-field hour"
+            type="number"
+            min="0"
+            max="24"
+            maxlength="2"
+            placeholder="HH"
+            v-model.number="hour"
+          />
+        </span>
+        <span class="time-field-wrapper">
+          <input
+            class="datetime-field time-field minute"
+            type="number"
+            min="0"
+            max="60"
+            maxlength="2"
+            placeholder="MM"
+            v-model.number="minute"
+          />
+        </span>
       </span>
-      <span class="date-field-wrapper">
-        <input class="datetime-field date-field day" type="number" maxlength="2" min="1" :max="dayMax" placeholder="dd">
-      </span>
-    </span>
-    <span class="time-fields">
-      <span class="time-field-wrapper">
-        <input class="datetime-field time-field hour" type="number" min="0" max="24" maxlength="2" placeholder="HH">
-      </span>
-      <span class="time-field-wrapper">
-        <input class="datetime-field time-field minute" type="number" min="0" max="60" maxlength="2" placeholder="MM">
-      </span>
-    </span>
+    </div>
+    <div v-if="currentDate && currentDate.invalid" class="warning-text inline">
+      {{ currentDate.invalid.explanation }}
+    </div>
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import Timezones from "@/constants/timezones.json";
-import { LocalZone } from "luxon";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { DateTime } from "luxon";
 import { Datetime as DatePicker } from "vue-datetime";
 import "vue-datetime/dist/vue-datetime.css";
 
@@ -32,18 +84,58 @@ Vue.component("datetime", DatePicker);
 
 @Component
 export default class DatetimeField extends Vue {
-  dayMax!: number;
+  @Prop() timezone!: string;
+  year!: number;
+  month!: number;
+  day!: number;
+  hour!: number;
+  minute!: number;
 
   data() {
     return {
-      dayMax: 30
+      year: "",
+      month: "",
+      day: "",
+      hour: "",
+      minute: ""
     };
+  }
+  get currentDate() {
+    let current: DateTime | null;
+    try {
+      current = DateTime.fromObject({
+        year: this.year,
+        month: this.month,
+        day: this.day,
+        hour: this.hour,
+        minute: this.minute,
+        zone: this.timezone
+      });
+    } catch {
+      current = null;
+    }
+    return current;
+  }
+  get dayMax() {
+    return 30;
+  }
+  @Watch("currentDate")
+  emitTimeParams() {
+    this.$emit("update-datetime", this.currentDate);
   }
 }
 </script>
 <style scoped>
-.datetime-container {
+.inline {
+  display: inline-block;
+}
+.datetime-container.invalid {
+  border: 1px solid red;
+}
+input {
   font-family: monospace;
+}
+.datetime-container {
   border: 1px solid #ccc;
   width: fit-content;
   padding: 5px;
@@ -51,11 +143,13 @@ export default class DatetimeField extends Vue {
 .datetime-field.year {
   width: 2.5em;
 }
-.datetime-field{
-  width: 2em;
+.datetime-field {
+  width: 1.5em;
   border: 0;
+  text-align: right;
 }
-span.date-fields, span.time-fields {
+span.date-fields,
+span.time-fields {
   display: inline-block;
 }
 span.date-field-wrapper:not(:last-child)::after {
@@ -70,7 +164,7 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
 </style>

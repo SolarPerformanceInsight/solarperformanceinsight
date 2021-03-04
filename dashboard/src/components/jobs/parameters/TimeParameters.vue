@@ -27,30 +27,19 @@
     </div>
     <div class="timefield">
       <b>Start:</b>
-      <datetime
-        @close="emitParams"
-        placeholder="Click here to set start date"
-        type="datetime"
-        v-model="start"
-        format="y-LL-dd HH:mmZZ"
-        :zone="timezone"
-        :picker-zone="timezone"
-        :max-datetime="end"
-      ></datetime>
+      <datetimefield @update-datetime="setStart" :timezone="timezone" />
     </div>
     <div class="timefield">
       <b>End:</b>
-      <datetime
-        @close="emitParams"
-        type="datetime"
-        placeholder="Click here to set start date"
-        v-model="end"
-        :zone="timezone"
-        :picker-zone="timezone"
-        :min-datetime="start"
-        format="y-LL-dd HH:mmZZ"
-      ></datetime>
-      <datetimefield/>
+      <datetimefield @update-datetime="setEnd" :timezone="timezone" />
+    </div>
+    <div v-if="errors">
+      <ul>
+        <li v-for="(error, key) of errors" :key="key" class="warning-text">
+          <b>{{ key }}:</b>
+          {{ error }}
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -58,11 +47,9 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
 import Timezones from "@/constants/timezones.json";
-import { LocalZone } from "luxon";
-import { Datetime as DatePicker } from "vue-datetime";
+import { DateTime, LocalZone } from "luxon";
 import "vue-datetime/dist/vue-datetime.css";
 
-Vue.component("datetime", DatePicker);
 Vue.component("datetimefield", DatetimeField);
 
 @Component
@@ -73,10 +60,12 @@ export default class JobTimeParameters extends Vue {
   timezone!: string;
   step!: number;
   timezoneList: Array<string> = Timezones;
+  errors!: Record<string, string>;
 
   data() {
     const zone = new LocalZone().name;
     return {
+      errors: {},
       start: null,
       end: null,
       step: 60,
@@ -101,13 +90,26 @@ export default class JobTimeParameters extends Vue {
     this.emitParams();
   }
   emitParams() {
-    const timeParams = {
-      start: this.start,
-      end: this.end,
-      step: this.step * 60,
-      timezone: this.timezone
-    };
-    this.$emit("new-timeparams", timeParams);
+    if (this.start && this.end && this.start >= this.end) {
+      this.errors = { "Start End": "Start must be before End." };
+    } else {
+      const timeParams = {
+        start: this.start,
+        end: this.end,
+        step: this.step * 60,
+        timezone: this.timezone
+      };
+      delete this.errors["Start End"];
+      this.$emit("new-timeparams", timeParams);
+    }
+  }
+  setStart(newStart: DateTime | null) {
+    this.start = newStart ? newStart.toISO() : null;
+    this.emitParams();
+  }
+  setEnd(newEnd: DateTime | null) {
+    this.end = newEnd ? newEnd.toISO() : null;
+    this.emitParams();
   }
 }
 </script>
