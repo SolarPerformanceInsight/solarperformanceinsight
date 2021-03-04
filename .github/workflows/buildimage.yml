@@ -69,7 +69,7 @@ jobs:
           git config user.name spi-bot
           git config user.email gh@solarperformanceinsight.org
           git checkout -b deploy/${REF}
-          cd overlays/development
+          cd overlays/development/spi
           kustomize edit set image ${IMG}@${DIGEST}
           git add kustomization.yaml
           git commit -m 'Update '${IMG}' built from '${REF}
