@@ -177,16 +177,6 @@ export default class JobResults extends Vue {
       console.log("Couldn't load results");
     }
   }
-  async loadErrors() {
-    const token = await this.$auth.getTokenSilently();
-    const response = await Jobs.getResults(token, this.jobId);
-    if (response.ok) {
-      this.errors = await response.json();
-      this.loading = false;
-    } else {
-      console.log("Couldn't load Errors");
-    }
-  }
   async loadResultData(dataId: string) {
     const token = await this.$auth.getTokenSilently();
     const response = await Jobs.getSingleResult(
