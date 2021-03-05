@@ -91,7 +91,7 @@ export default class JobTimeParameters extends Vue {
   }
   emitParams() {
     if (this.start && this.end && this.start >= this.end) {
-      this.errors = { "Start End": "Start must be before End." };
+      this.$set(this.errors, "Start End", "Start must be before End.");
     } else {
       const timeParams = {
         start: this.start,
@@ -99,7 +99,7 @@ export default class JobTimeParameters extends Vue {
         step: this.step * 60,
         timezone: this.timezone
       };
-      delete this.errors["Start End"];
+      this.$delete(this.errors, "Start End");
       this.$emit("new-timeparams", timeParams);
     }
   }
