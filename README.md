@@ -10,6 +10,7 @@ performance with modeled performance.
 The Solar Performance Insight platform has two main components:
 
 - *REST API*
+
  A REST API to enable programmatic access to Solar Performance Insight
  services that is built using [FastAPI](https://fastapi.tiangolo.com/).
  Documentation for the development instance of the API can be found at
@@ -22,6 +23,7 @@ The Solar Performance Insight platform has two main components:
  [db](tree/main/db) directory.
 
 - *Web Dashboard*
+
  Web front end provides a graphical interface to the Solar Performance
  Insight services build using [Vue.js](https://vuejs.org/).The development
  instance of the dashboard can be found at [dev.solarperformanceinsight.org/](https://dev.solarperformanceinsight.org/).
