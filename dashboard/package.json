@@ -24,7 +24,6 @@
     "plotly.js-basic-dist": "^1.58.4",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
-    "vue-datetime": "^1.0.0-beta.14",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
     "vue-template-loader": "^1.1.0",

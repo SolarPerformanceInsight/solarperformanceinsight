@@ -48,7 +48,6 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
 import Timezones from "@/constants/timezones.json";
 import { DateTime, LocalZone } from "luxon";
-import "vue-datetime/dist/vue-datetime.css";
 
 Vue.component("datetimefield", DatetimeField);
 

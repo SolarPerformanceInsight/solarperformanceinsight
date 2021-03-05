@@ -77,10 +77,6 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { DateTime } from "luxon";
-import { Datetime as DatePicker } from "vue-datetime";
-import "vue-datetime/dist/vue-datetime.css";
-
-Vue.component("datetime", DatePicker);
 
 @Component
 export default class DatetimeField extends Vue {
