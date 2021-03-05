@@ -12,14 +12,16 @@ The Solar Performance Insight platform has two main components:
 ### REST API
 
   A REST API to enable programmatic access to Solar Performance Insight
-  services that is built using [FastAPI](https://fastapi.tiangolo.com/).
+  services that is built using the [FastAPI](https://fastapi.tiangolo.com/)
+  Python web framework. The [pvLib python](https://pvlib-python.readthedocs.io/)
+  library provides PV system modeling functionality. Solar Performance
+  Insight's data model is defined using
+  [pydantic](https://pydantic-docs.helpmanual.io/) (a dependency of FastAPI)
+  and provides a translation layer between pvlib's PV system models and
+  modeling results and the JSON interface presented by the API.
   Documentation for the development instance of the API can be found at
   [dev.solarperformanceinsight.org/api/docs](https://dev.solarperformanceinsight.org/api/docs).
   Source code can be found in the [api](tree/main/api) directory.
-
-  The [PVLib](https://pvlib-python.readthedocs.io/) Python library is the
-  primary inspiration for Solar Performance Insight's data model and provides
-  all of the PV system modeling functionality.
 
   The API stores metadata and job results in a MySQL database. It uses the [dbmate](https://github.com/amacneil/dbmate)
   migration utility for keeping the database in sync during development.
