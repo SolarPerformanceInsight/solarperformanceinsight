@@ -158,9 +158,7 @@ describe("Test Job Parameters", () => {
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
 
     const button = wrapper.find("button");
-    console.log(button.attributes());
     button.trigger("click");
-    console.log(button);
     await flushPromises();
 
     expect(mockJobCreate).toHaveBeenCalled();
@@ -216,15 +214,18 @@ describe("Test Job Parameters", () => {
 
     mockJobResponse.ok = false;
     mockJobResponse.status = 422;
-    (mockJobResponse.json = jest.fn().mockResolvedValue([
-      {
-        loc: ["place"],
-        msg: "broken",
-        type: "error"
-      }
-    ])),
-      wrapper.find("button").trigger("click");
+    mockJobResponse.json = jest.fn().mockResolvedValue({
+      detail: [
+        {
+          loc: ["place"],
+          msg: "broken",
+          type: "error"
+        }
+      ]
+    });
+    wrapper.find("button").trigger("click");
     await flushPromises();
+
     expect(wrapper.findComponent(APIErrors).exists()).toBe(true);
     wrapper.destroy();
   });

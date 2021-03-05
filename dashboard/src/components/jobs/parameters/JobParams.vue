@@ -140,7 +140,7 @@
                 @new-timeparams="storeTimeParams"
               />
             </div>
-            <div class="errors" v-if="errorState">
+            <div class="errors" v-if="this.apiErrors.length">
               <api-errors :errors="apiErrors" :fields="errorFields" />
             </div>
             <button class="mt-1" :disabled="!isValid" type="submit">
@@ -186,7 +186,7 @@ export default class JobParameters extends Vue {
   jobSubmitted!: boolean;
   jobId!: string;
 
-  apiErrors!: Record<string, any>;
+  apiErrors!: Array<Record<string, any>>;
   errorState!: boolean;
   timeParams!: Record<string, any>;
   jobSetupComponent!: string;
@@ -197,7 +197,7 @@ export default class JobParameters extends Vue {
       jobSubmitted: false,
       weather_granularity: "system",
       irradiance_type: "standard",
-      apiErrors: {},
+      apiErrors: [],
       errorState: false,
       temperature_type: "air",
       jobId: null,
