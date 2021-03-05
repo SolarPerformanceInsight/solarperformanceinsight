@@ -5,7 +5,7 @@ plant performance. Solar Performance Insight aims to provide a tool for the PV
 Operations and Mainteneance (O&M) community to compare actual plant
 performance with modeled performance.
 
-# Platform Layout
+## Platform Layout
 
 The Solar Performance Insight platform has two main components:
 
