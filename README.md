@@ -1,9 +1,9 @@
 # Solar Performance Insight
 
 Solar Performance Insight is an open source platform for evaluating solar power
-plant performance. Solar Performance Insight aims to provide a tool for the PV
-Operations and Mainteneance (O&M) community to compare actual plant
-performance with modeled performance.
+plant performance. Solar Performance Insight aims to provide an alternative
+to available asset management tools for PV Operations and Mainteneance (O&M)
+providers where existing tools are unaffordable or impractical.
 
 ## Platform Layout
 
