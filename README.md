@@ -15,7 +15,7 @@ The Solar Performance Insight platform has two main components:
   services that is built using [FastAPI](https://fastapi.tiangolo.com/).
   Documentation for the development instance of the API can be found at
   [dev.solarperformanceinsight.org/api/docs](https://dev.solarperformanceinsight.org/api/docs).
-  Source code can be found in the [api](tree/main/api)` directory.
+  Source code can be found in the [api](tree/main/api) directory.
 
   The API utilizes a MySQL database for storage and uses the [dbmate](https://github.com/amacneil/dbmate)
   migration utility for keeping the database in sync during development.
