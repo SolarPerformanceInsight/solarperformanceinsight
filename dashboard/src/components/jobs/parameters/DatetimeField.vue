@@ -1,5 +1,5 @@
 <template>
-  <div class="inline">
+  <div class="datetime-component inline">
     <div
       class="date-fields datetime-container inline"
       v-bind:class="{ invalid: currentDate && !currentDate.isValid }"
@@ -162,5 +162,8 @@ input::-webkit-inner-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+.datetime-component {
+  margin-top: .5em;
 }
 </style>
