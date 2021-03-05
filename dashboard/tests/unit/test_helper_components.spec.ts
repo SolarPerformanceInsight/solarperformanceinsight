@@ -124,7 +124,7 @@ describe("Test Error Renderer", () => {
       msg: "Borked badder",
       type: "Value Error"
     }
-  ]
+  ];
   it("test all errors", async () => {
     const wrapper = mount(APIErrors, {
       propsData: {
@@ -134,12 +134,8 @@ describe("Test Error Renderer", () => {
     await flushPromises();
     const errorList = wrapper.findAll("li");
     expect(errorList.length).toBe(2);
-    expect(errorList.wrappers[0].text()).toBe(
-      "location:\n      Borked"
-    );
-    expect(errorList.wrappers[1].text()).toBe(
-      "thing:\n      Borked badder"
-    );
+    expect(errorList.wrappers[0].text()).toBe("location:\n      Borked");
+    expect(errorList.wrappers[1].text()).toBe("thing:\n      Borked badder");
   });
   it("test filtered errors", async () => {
     const wrapper = mount(APIErrors, {
@@ -151,10 +147,6 @@ describe("Test Error Renderer", () => {
     await flushPromises();
     const errorList = wrapper.findAll("li");
     expect(errorList.length).toBe(1);
-    expect(errorList.wrappers[0].text()).toBe(
-      "thing:\n      Borked badder"
-    );
+    expect(errorList.wrappers[0].text()).toBe("thing:\n      Borked badder");
   });
-
-
 });

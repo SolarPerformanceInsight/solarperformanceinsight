@@ -12,6 +12,9 @@
       >
         <option v-for="tz in timezoneList" :key="tz">{{ tz }}</option>
       </select>
+      <help
+        helpText="The timezone used in your data. If your data does not account for daylight savings, use the appropriate fixed-offset. (e.g. Etc/GMT-7)"
+      />
     </div>
     <div class="timefield">
       <b>Time between data points in minutes:</b>
@@ -28,10 +31,14 @@
     <div class="timefield">
       <b>Start:</b>
       <datetimefield @update-datetime="setStart" :timezone="timezone" />
+      <help helpText="The value of the first timestamp in your data." />
     </div>
     <div class="timefield">
       <b>End:</b>
       <datetimefield @update-datetime="setEnd" :timezone="timezone" />
+      <help
+        helpText="The last minute covered by your data. For example, 60 minute data with a last timestamp at 2020-12-31 23:00 should have an end of 2020-12-31 23:59."
+      />
     </div>
     <div v-if="errors">
       <ul>

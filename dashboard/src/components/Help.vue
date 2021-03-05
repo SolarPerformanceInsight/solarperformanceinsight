@@ -6,7 +6,12 @@ ups will close when the user clicks away.
 <template>
   <div class="help">
     <span v-if="helpText != undefined">
-      <button @click="toggleHelp" @hideHelp="hideHelp" tabindex="-1">
+      <button
+        @click="toggleHelp"
+        @hideHelp="hideHelp"
+        type="button"
+        tabindex="-1"
+      >
         ?
       </button>
       <!-- accessible-hidden class used to keep the help text accessible as a

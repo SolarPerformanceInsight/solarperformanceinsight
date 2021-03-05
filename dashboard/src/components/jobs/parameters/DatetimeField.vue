@@ -164,6 +164,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 .datetime-component {
-  margin-top: .5em;
+  margin-top: 0.5em;
 }
 </style>
