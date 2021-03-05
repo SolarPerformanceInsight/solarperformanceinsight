@@ -17,6 +17,10 @@ The Solar Performance Insight platform has two main components:
   [dev.solarperformanceinsight.org/api/docs](https://dev.solarperformanceinsight.org/api/docs).
   Source code can be found in the [api](tree/main/api) directory.
 
+  The [PVLib](https://pvlib-python.readthedocs.io/) Python library is the
+  primary inspiration for Solar Performance Insight's data model and provides
+  all of the PV system modeling functionality.
+
   The API stores metadata and job results in a MySQL database. It uses the [dbmate](https://github.com/amacneil/dbmate)
   migration utility for keeping the database in sync during development.
   Files related to the database and *dbmate* migrations can be found in the
