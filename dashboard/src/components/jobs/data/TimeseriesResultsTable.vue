@@ -103,6 +103,9 @@ export default class TimeseriesTable extends Vue {
     if (this.resultObjects) {
       for (const resultObject of this.resultObjects) {
         const resultType = resultObject.definition.type;
+        if (resultType == "error message") {
+          continue;
+        }
         const path = resultObject.definition.schema_path;
         const systemComponent = indexSystemFromSchemaPath(
           this.job.definition.system_definition,

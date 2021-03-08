@@ -3,25 +3,38 @@ Component for handling display/download of job results.
 -->
 <template>
   <div v-if="job">
-    <div v-if="results" class="job-results">
-      <h2 class="monthly-summary">Monthly Summary</h2>
-      <div v-if="summaryData">
-        <summary-table :tableData="summaryData"></summary-table>
+    <div v-if="results">
+      <div v-if="jobStatus == 'complete'" class="job-results">
+        <h2 class="monthly-summary">Monthly Summary</h2>
+        <div v-if="summaryData">
+          <summary-table :tableData="summaryData"></summary-table>
+        </div>
+        <h2 class="data-summary">Results and Measurements</h2>
+        <p>
+          Below is a table of the results of this calculation and user uploaded
+          measurements.
+          <timeseries-table
+            :job="job"
+            :resultObjects="results"
+            :dataObjects="job.data_objects"
+          />
+        </p>
+        <h2 class="timeseries-header">Timeseries Results</h2>
+        <div v-if="results">
+          <custom-plot :resultObjects="results" :job="job" />
+        </div>
       </div>
-      <h2 class="data-summary">Results and Measurements</h2>
-      <p>
-        Below is a table of the results of this calculation and user uploaded
-        measurements.
-        <timeseries-table
-          :job="job"
-          :resultObjects="results"
-          :dataObjects="job.data_objects"
-        />
-      </p>
-
-      <h2 class="timeseries-header">Timeseries Results</h2>
-      <div v-if="results">
-        <custom-plot :resultObjects="results" :job="job" />
+      <div v-else>
+        Errors occured while processing the calculation.
+        <ul v-if="errors">
+          <li
+            v-for="(error, errno) in errors"
+            :key="errno"
+            class="warning-text"
+          >
+            {{ error.error.details }}
+          </li>
+        </ul>
       </div>
     </div>
     <div v-else>
@@ -30,9 +43,6 @@ Component for handling display/download of job results.
       </template>
       <template v-else-if="jobStatus == 'running'">
         The calculation is running and will be ready soon.
-      </template>
-      <template v-else-if="jobStatus == 'error'">
-        An error occured while processing the calculation.
       </template>
       <template v-else-if="jobStatus == 'complete'">
         Calculation is complete. Results are loading.
@@ -71,6 +81,7 @@ export default class JobResults extends Vue {
   results!: Array<Record<string, any>>;
   timeseriesData!: any;
   summaryData!: Record<string, any>;
+  errors!: Record<string, Record<string, any>>;
 
   // for tracking the setTimeout callback used for reloading the job
   timeout!: any;
@@ -103,12 +114,9 @@ export default class JobResults extends Vue {
       // JobHandler can react accordingly.
       this.$emit("reload-job");
     }
-    if (jobStatus == "complete") {
+    if (jobStatus == "complete" || jobStatus == "error") {
       // load results when complete
       this.initializeResults();
-    } else if (jobStatus == "error") {
-      // discontinue polling
-      return;
     } else {
       // Wait 1 second and poll for status update
       this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
@@ -116,7 +124,11 @@ export default class JobResults extends Vue {
   }
   initializeResults() {
     this.loadResults().then(() => {
-      this.loadSummaryResults();
+      if (this.jobStatus == "complete") {
+        this.loadSummaryResults();
+      } else {
+        this.loadErrorResults();
+      }
     });
   }
   data() {
@@ -126,7 +138,7 @@ export default class JobResults extends Vue {
       selected: "",
       timeseriesData: null,
       summaryData: {},
-      errors: null
+      errors: {}
     };
   }
   get labelledSummaryResults() {
@@ -174,6 +186,15 @@ export default class JobResults extends Vue {
     ).then(response => response.arrayBuffer());
     return Table.from([new Uint8Array(response)]);
   }
+  async loadErrorResultsData(dataId: string) {
+    const token = await this.$auth.getTokenSilently();
+    const response = await Jobs.getSingleResult(
+      token,
+      this.jobId,
+      dataId
+    ).then(response => response.json());
+    return response;
+  }
   async loadTimeseriesData() {
     if (this.selected != "") {
       // Set Table to null to avoid drawing the plot before loaded.
@@ -205,6 +226,16 @@ export default class JobResults extends Vue {
       const object_id = this.labelledSummaryResults[summaryType];
       this.loadResultData(object_id).then(data => {
         this.$set(this.summaryData, summaryType, data);
+      });
+    }
+  }
+  loadErrorResults() {
+    const errorResults = this.results.filter((result: Record<string, any>) => {
+      return result.definition.type == "error message";
+    });
+    for (const result of errorResults) {
+      this.loadErrorResultsData(result.object_id).then(data => {
+        this.$set(this.errors, result.object_id, data);
       });
     }
   }

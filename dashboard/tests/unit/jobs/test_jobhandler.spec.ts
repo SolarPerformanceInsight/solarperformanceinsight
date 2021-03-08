@@ -620,7 +620,7 @@ describe("Test JobHandler", () => {
 
     // @ts-expect-error
     handler.vm.setStep();
-    expect(handler.vm.$data.step).toBe("error");
+    expect(handler.vm.$data.step).toBe("results");
 
     handler.vm.$data.job.status.status = "prepared";
 
