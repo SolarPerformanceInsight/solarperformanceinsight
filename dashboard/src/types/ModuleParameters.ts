@@ -75,6 +75,7 @@ export class CECModuleParameters {
   I_o_ref: number;
   R_sh_ref: number;
   R_s: number;
+  gamma_r: number;
   cells_in_series: number;
   Adjust: number;
   EgRef: number;
@@ -87,6 +88,7 @@ export class CECModuleParameters {
     I_o_ref = 0,
     R_sh_ref = 0,
     R_s = 0,
+    gamma_r = 0,
     cells_in_series = 0,
     Adjust = 0,
     EgRef = 1.121,
@@ -98,6 +100,7 @@ export class CECModuleParameters {
     this.I_o_ref = I_o_ref;
     this.R_sh_ref = R_sh_ref;
     this.R_s = R_s;
+    this.gamma_r = gamma_r;
     this.cells_in_series = cells_in_series;
     this.Adjust = Adjust;
     this.EgRef = EgRef;
@@ -112,6 +115,7 @@ export class CECModuleParameters {
       maybe.I_o_ref != undefined &&
       maybe.R_sh_ref != undefined &&
       maybe.R_s != undefined &&
+      maybe.gamma_r != undefined &&
       maybe.cells_in_series != undefined &&
       maybe.Adjust != undefined &&
       maybe.EgRef != undefined &&

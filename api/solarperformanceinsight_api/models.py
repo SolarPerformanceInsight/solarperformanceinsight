@@ -266,6 +266,13 @@ class CECModuleParameters(PVLibBase):
     R_s: float = Field(
         ..., description="Series resistance at reference conditions, in ohms"
     )
+    gamma_r: float = Field(
+        ...,
+        description=(
+            "Temperature coefficient of power in units of %/C. "
+            "Typically -0.2 to -0.5 % per degree C"
+        ),
+    )
     cells_in_series: int = Field(
         ..., description="Number of cells connected in series in a module", ge=0
     )
@@ -293,6 +300,11 @@ class CECModuleParameters(PVLibBase):
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("cec")
+
+    def pvlib_dict(self):
+        """Convert to a dict pvlib understands for `module_parameters`
+        i.e. scale gamma_r to 1/C"""
+        return {k: v / 100 if k == "gamma_r" else v for k, v in self.dict().items()}
 
 
 class PVsystTemperatureParameters(SPIBase):

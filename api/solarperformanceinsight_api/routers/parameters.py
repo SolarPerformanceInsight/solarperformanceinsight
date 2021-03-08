@@ -17,7 +17,7 @@ sandia_inverter_params = (
     .astype(float)
 )
 
-# Database does not provide the fields 'cells_in_series', 'EgRef', 'dEgdT'
+# Database does not provide the fields 'EgRef', 'dEgdT'
 # which have defaults in the model.
 cec_keys = [
     "alpha_sc",
@@ -26,6 +26,7 @@ cec_keys = [
     "I_o_ref",
     "R_sh_ref",
     "R_s",
+    "gamma_r",
     "Adjust",
     "N_s",
 ]

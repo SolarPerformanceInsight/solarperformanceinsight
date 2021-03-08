@@ -133,6 +133,12 @@
         :parameters="parameters"
         :errors="errors"
         :definitions="definitions"
+        field-name="gamma_r"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
         field-name="cells_in_series"
       />
       <model-field
