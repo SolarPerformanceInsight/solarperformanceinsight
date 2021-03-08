@@ -13,7 +13,7 @@
         <option v-for="tz in timezoneList" :key="tz">{{ tz }}</option>
       </select>
       <help
-        helpText="The timezone used in your data. If your data does not account for daylight savings, use the appropriate fixed-offset. (e.g. Etc/GMT-7)"
+        helpText="The timezone used in your data. If your data does not account for daylight savings, use the appropriate fixed-offset. (e.g. Etc/GMT+7)"
       />
     </div>
     <div class="timefield">
