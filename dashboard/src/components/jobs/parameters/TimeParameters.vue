@@ -30,14 +30,18 @@
     </div>
     <div class="timefield">
       <b>Start:</b>
-      <datetimefield @update-datetime="setStart" :timezone="timezone" />
-      <help helpText="The value of the first timestamp in your data." />
+      <datetimefield
+        @update-datetime="setStart"
+        :timezone="timezone"
+        helpText="The value of the first timestamp in your data."
+      />
     </div>
     <div class="timefield">
       <b>End:</b>
-      <datetimefield @update-datetime="setEnd" :timezone="timezone" />
-      <help
-        helpText="The last minute covered by your data. For example, 60 minute data with a last timestamp at 2020-12-31 23:00 should have an end of 2020-12-31 23:59."
+      <datetimefield
+        @update-datetime="setEnd"
+        :timezone="timezone"
+        helpText="The end date and time of your data. This may be any between the last timestamp and the beginning of the next timestep. For example, 60 minute data with a last timestamp at 2020-12-31 23:00 should have an end between 2020-12-31 23:01 and 2021-01-01 00:00."
       />
     </div>
     <div v-if="errors">

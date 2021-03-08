@@ -69,6 +69,7 @@
         </span>
       </span>
     </div>
+    <help v-if="helpText" :helpText="helpText" />
     <div v-if="currentDate && currentDate.invalid" class="warning-text inline">
       {{ currentDate.invalid.explanation }}
     </div>
@@ -81,6 +82,7 @@ import { DateTime } from "luxon";
 @Component
 export default class DatetimeField extends Vue {
   @Prop() timezone!: string;
+  @Prop() helpText!: string;
   year!: number;
   month!: number;
   day!: number;
