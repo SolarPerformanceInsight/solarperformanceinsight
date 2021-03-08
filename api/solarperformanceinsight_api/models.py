@@ -302,9 +302,9 @@ class CECModuleParameters(PVLibBase):
     _modelchain_dc_model: str = PrivateAttr("cec")
 
     def pvlib_dict(self):
-        """Convert to a dict pvlib understands for `module_parameters`
-        i.e. scale gamma_r to 1/C"""
-        return {k: v / 100 if k == "gamma_r" else v for k, v in self.dict().items()}
+        """Convert to a dict pvlib understands for `module_parameters` by removing
+        gamma_r"""
+        return {k: v for k, v in self.dict().items() if k != "gamma_r"}
 
 
 class PVsystTemperatureParameters(SPIBase):
