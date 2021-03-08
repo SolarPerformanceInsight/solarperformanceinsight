@@ -45,6 +45,7 @@ export default class ModelBase extends Vue {
     } else {
       this.errors = {};
     }
+    this.$emit("updateValidity", validity);
   }
 }
 </script>
