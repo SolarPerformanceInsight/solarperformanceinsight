@@ -41,7 +41,7 @@
       <datetimefield
         @update-datetime="setEnd"
         :timezone="timezone"
-        helpText="The end date and time of your data. This may be any between the last timestamp and the beginning of the next timestep. For example, 60 minute data with a last timestamp at 2020-12-31 23:00 should have an end between 2020-12-31 23:01 and 2021-01-01 00:00."
+        helpText="The end date and time of your data, exclusive. For example, 60 minute data with a last timestamp at 2020-12-31 23:00 should have an end between 2020-12-31 23:01 and 2021-01-01 00:00."
       />
     </div>
     <div v-if="errors">
