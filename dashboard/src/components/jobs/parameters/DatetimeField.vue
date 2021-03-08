@@ -13,7 +13,7 @@
             max="2037"
             min="1901"
             placeholder="yyyy"
-            v-model.number="year"
+            v-model="year"
           />
         </span>
         <span class="date-field-wrapper">
@@ -24,7 +24,7 @@
             min="1"
             max="12"
             placeholder="mm"
-            v-model.number="month"
+            v-model="month"
           />
         </span>
         <span class="date-field-wrapper">
@@ -35,7 +35,7 @@
             min="1"
             :max="dayMax"
             placeholder="dd"
-            v-model.number="day"
+            v-model="day"
           />
         </span>
       </span>
@@ -53,7 +53,7 @@
             max="24"
             maxlength="2"
             placeholder="HH"
-            v-model.number="hour"
+            v-model="hour"
           />
         </span>
         <span class="time-field-wrapper">
@@ -64,7 +64,7 @@
             max="60"
             maxlength="2"
             placeholder="MM"
-            v-model.number="minute"
+            v-model="minute"
           />
         </span>
       </span>
