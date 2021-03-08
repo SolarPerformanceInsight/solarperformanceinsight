@@ -115,9 +115,17 @@ export default class DBBrowser extends Vue {
   loadSpec() {
     this.specLoading = true;
     this.fetchSpec().then(spec => {
-      this.spec = spec;
+      this.spec = this.adjustValues(spec);
       this.specLoading = false;
     });
+  }
+  adjustValues(spec: Record<string, number>) {
+    const adjusted: Record<string, number> = {};
+    for (const key in spec) {
+      // 12 points is the highest precision in the database
+      adjusted[key] = parseFloat(spec[key].toFixed(12));
+    }
+    return adjusted;
   }
   commit() {
     this.$emit("parameters-selected", {
