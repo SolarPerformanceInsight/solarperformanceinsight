@@ -70,6 +70,7 @@
             :model="model"
           />
         </div>
+        <button class="save-system" @click="saveSystem">Save System</button>
       </template>
     </div>
   </div>
