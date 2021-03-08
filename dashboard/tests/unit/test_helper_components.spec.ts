@@ -87,7 +87,7 @@ describe("Test Browser Component", () => {
     wrapper.find("button.commit").trigger("click");
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.emitted("parameters-selected")[0]).toStrictEqual([
+    expect(wrapper.emitted("parameters-selected")[0]).toEqual([
       {
         parameters: mockParams,
         name: "inva"
@@ -108,5 +108,26 @@ describe("Test Browser Component", () => {
     wrapper.find("button.cancel").trigger("click");
     await flushPromises();
     expect(wrapper.emitted("cancel-selection")).toBeTruthy();
+  });
+  it("test adjust values", async () => {
+    const wrapper = mount(DBBrowser, {
+      propsData: {
+        componentName: "SandiaInverterParameters"
+      }
+    });
+    expect(
+      // @ts-expect-error
+      wrapper.vm.adjustValues({
+        v1: 0.0004940000000000001,
+        v2: -0.014925999999999998,
+        v3: 0.123456789012,
+        v4: 12345678901234.123
+      })
+    ).toEqual({
+      v1: 0.000494,
+      v2: -0.014926,
+      v3: 0.123456789012,
+      v4: 12345678901234.123
+    });
   });
 });
