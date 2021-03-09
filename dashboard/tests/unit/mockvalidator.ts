@@ -1,8 +1,8 @@
 import APISpec from "./openapi.json";
 import { APIValidator } from "@/types/validation/Validator";
 
-const $validator = new APIValidator();
+APIValidator.prototype.getAPISpec = jest.fn().mockResolvedValue(APISpec);
 
-$validator.getAPISpec = jest.fn().mockResolvedValue(APISpec);
+const $validator = new APIValidator();
 
 export { $validator };

@@ -96,8 +96,12 @@ export class VueAuth extends Vue {
       // Expect tokens stored in localStorage for dev situations
       clientOptions.cacheLocation = "localstorage";
     }
-    // @ts-expect-error
-    this.auth0Client = await createAuth0Client(clientOptions);
+
+    if (!navigator.userAgent.includes("jsdom")) {
+      // Do not instantiate a client in the testing environment.
+      // @ts-expect-error
+      this.auth0Client = await createAuth0Client(clientOptions);
+    }
 
     try {
       // If the user is returning to the app after authentication..
