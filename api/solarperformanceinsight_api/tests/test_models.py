@@ -679,3 +679,19 @@ def test_instantiate_array_w_sapm_temperature_parameters(system_def):
 def test_pvsystem_extra_param(system_def):
     with pytest.raises(ValidationError):
         models.PVSystem(**system_def.dict(), extra_field="not_valid")
+
+
+def test_cec_module_no_gamma():
+    cec = models.CECModuleParameters(
+        alpha_sc=0.004423,
+        a_ref=0.976,
+        I_L_ref=4.98,
+        I_o_ref=8.8e-10,
+        R_sh_ref=148.82,
+        R_s=0.32,
+        gamma_r=-0.487,
+        cells_in_series=36,
+        Adjust=10.48,
+    )
+    assert "gamma_r" in cec.dict()
+    assert "gamma_r" not in cec.pvlib_dict()
