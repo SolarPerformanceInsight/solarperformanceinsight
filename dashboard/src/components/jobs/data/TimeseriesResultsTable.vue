@@ -100,6 +100,7 @@ export default class TimeseriesTable extends Vue {
 
   get tableData() {
     const allData = [];
+
     if (this.resultObjects) {
       for (const resultObject of this.resultObjects) {
         const resultType = resultObject.definition.type;
@@ -112,14 +113,18 @@ export default class TimeseriesTable extends Vue {
           path
         );
         const componentName = `${systemComponent.name} (${path})`;
-        allData.push({
-          source: "Results",
-          metadata: resultObject,
-          path: componentName,
-          type: resultType,
-          variables: resultVariables[resultType].map(this.displayName),
-          present: true
-        });
+        try {
+          allData.push({
+            source: "Results",
+            metadata: resultObject,
+            path: componentName,
+            type: resultType,
+            variables: resultVariables[resultType].map(this.displayName),
+            present: true
+          });
+        } catch {
+          console.log("Result failure: ", JSON.stringify(resultType));
+        }
       }
     }
     if (this.dataObjects) {
@@ -130,14 +135,18 @@ export default class TimeseriesTable extends Vue {
           path
         );
         const componentName = `${systemComponent.name} (${path})`;
-        allData.push({
-          source: "Uploaded",
-          metadata: dataObject,
-          path: componentName,
-          type: dataObject.definition.type,
-          variables: dataObject.definition.data_columns.map(this.displayName),
-          present: dataObject.definition.present
-        });
+        try {
+          allData.push({
+            source: "Uploaded",
+            metadata: dataObject,
+            path: componentName,
+            type: dataObject.definition.type,
+            variables: dataObject.definition.data_columns.map(this.displayName),
+            present: dataObject.definition.present
+          });
+        } catch {
+          console.log("DO failure: ", JSON.stringify(dataObject));
+        }
       }
     }
     return allData;

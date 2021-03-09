@@ -11,6 +11,7 @@ import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue"
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
 import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import CSVUpload from "@/components/jobs/CSVUpload.vue";
+import HelpPopup from "@/components/Help.vue";
 
 import * as Jobs from "@/api/jobs";
 import { $auth } from "../mockauth";
@@ -112,7 +113,14 @@ const testJob = {
       definition: {
         schema_path: "/inverters/0/arrays/0",
         type: "original weather data",
-        present: false
+        present: false,
+        data_columns: [
+          "time",
+          "poa_global",
+          "poa_direct",
+          "poa_diffuse",
+          "module_temperature"
+        ]
       }
     }
   ]
@@ -124,6 +132,15 @@ localVue.use(VueRouter);
 
 // Mock jobs api wrapper function
 const mockedJobRead = jest.spyOn(Jobs, "read");
+
+const mockedJobResults = jest.spyOn(Jobs, "getResults");
+mockedJobResults.mockImplementation(
+  jest.fn().mockResolvedValue({
+    ok: true,
+    json: jest.fn().mockResolvedValue([]),
+    status: 200
+  })
+);
 
 const mockJobResponse = {
   ok: true,
@@ -183,6 +200,7 @@ Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("time-parameters", TimeParameters);
 Vue.component("job-results", JobResults);
+Vue.component("help", HelpPopup);
 
 describe("Test JobHandler", () => {
   it("load calculate job", async () => {
@@ -472,7 +490,14 @@ describe("Test JobHandler", () => {
         definition: {
           schema_path: "/inverters/0/arrays/0",
           type: "original weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       },
       {
@@ -483,7 +508,14 @@ describe("Test JobHandler", () => {
         definition: {
           schema_path: "/inverters/0/arrays/0",
           type: "actual weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       }
     ];
@@ -577,7 +609,14 @@ describe("Test JobHandler", () => {
         definition: {
           schema_path: "/inverters/0/arrays/0",
           type: "original weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       },
       {
@@ -588,7 +627,14 @@ describe("Test JobHandler", () => {
         definition: {
           schema_path: "/inverters/0/arrays/0",
           type: "actual weather data",
-          present: false
+          present: false,
+          data_columns: [
+            "time",
+            "poa_global",
+            "poa_direct",
+            "poa_diffuse",
+            "module_temperature"
+          ]
         }
       }
     ];
