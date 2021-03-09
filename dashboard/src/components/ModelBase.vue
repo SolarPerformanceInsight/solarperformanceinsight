@@ -32,8 +32,8 @@ export default class ModelBase extends Vue {
   }
 
   extraValidation() {
-    // Function for adding an extra validation step. Should set this.extraErrors with a key of the field name
-    // to update and an error message. Implementations should clear any errors they set when valid.
+    // Function for adding an extra validation step. Should set this.extraErrors with a fieldname key
+    // and string error message value. Implementations should clear any errors they set when valid.
     return true;
   }
   setValidationResult(validity: boolean) {
