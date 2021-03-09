@@ -63,7 +63,9 @@ export default class InverterView extends ModelBase {
       this.parameters.inverter_parameters = new SandiaInverterParameters(
         current_params
       );
-      this.parameters.losses = null;
+      if ("losses" in this.parameters) {
+        delete this.parameters.losses;
+      }
     } else if (newModel == "pvwatts") {
       this.parameters.inverter_parameters = new PVWattsInverterParameters({});
       this.parameters.losses = new PVWattsLosses({});

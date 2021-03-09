@@ -23,9 +23,11 @@
       v-on:change="changeTracking"
       value="singleAxis"
     />
-    Single Axis
-    <span v-if="numArrays > 1" class="warning-text">
-      Only supported for single array inverter.
+    <span v-bind:class="{ greyed: numArrays > 1 }">
+      Single Axis
+    </span>
+    <span v-if="numArrays > 1" class="greyed">
+      (Only supported for single array inverter)
     </span>
     <tracking-parameters
       :tracking="tracking"

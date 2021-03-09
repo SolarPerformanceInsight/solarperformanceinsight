@@ -30,9 +30,17 @@ export default class ModelBase extends Vue {
     throw new Error("apiComponentName getter not implemented.");
   }
 
+  extraValidation() {
+    // Function for adding an extra validation step. Should set this.errors with a key of the field name
+    // to update and an error message. Implementations should clear any errors they set when valid.
+    return true;
+  }
   setValidationResult(validity: boolean) {
+    const customValidity = this.extraValidation();
+    validity = validity && customValidity;
     if (!validity) {
       const errors = this.$validator.getErrors();
+      console.log(errors);
       const currentErrors: Record<string, any> = {};
       if (errors) {
         errors.forEach(function(error: Record<string, any>) {
@@ -41,10 +49,12 @@ export default class ModelBase extends Vue {
           currentErrors[field] = message;
         });
       }
-      this.errors = currentErrors;
+      // Insert errors and priorities custom messages
+      this.errors = { ...currentErrors, ...this.errors };
     } else {
       this.errors = {};
     }
+
     this.$emit("updateValidity", validity);
   }
 }

@@ -14,7 +14,9 @@
         <button class="download-system" @click="downloadSystem">
           Download System JSON
         </button>
-        <button class="save-system" @click="saveSystem" :disabled="specValid">Save System</button>
+        <button class="save-system" @click="saveSystem" :disabled="!specValid">
+          Save System
+        </button>
         <file-upload @uploadSuccess="uploadSuccess" />
         <div class="display-summary">
           Display JSON Summary
@@ -71,7 +73,9 @@
             @updateValidity="updateSpecValidity"
           />
         </div>
-        <button class="save-system" @click="saveSystem" :disabled="specValid">Save System</button>
+        <button class="save-system" @click="saveSystem" :disabled="!specValid">
+          Save System
+        </button>
       </template>
     </div>
   </div>
@@ -107,6 +111,10 @@ export default class SystemSpec extends Vue {
   specValid!: boolean;
 
   created() {
+    if (Object.keys(this.$store.state.systems).length == 0) {
+      // If there are no loaded systems, try to load them for system validation
+      this.$store.dispatch("fetchSystems");
+    }
     if (this.systemId != undefined) {
       this.loadSystem();
     } else {
