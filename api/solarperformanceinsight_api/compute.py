@@ -1,4 +1,5 @@
 import calendar
+from copy import deepcopy
 import datetime as dt
 from functools import partial
 import json
@@ -9,7 +10,11 @@ from uuid import UUID
 
 from fastapi import HTTPException
 import pandas as pd
-from pvlib.modelchain import ModelChainResult, ModelChain  # type: ignore
+from pvlib.modelchain import (  # type: ignore
+    ModelChainResult,
+    ModelChain,
+    _irrad_for_celltemp,
+)
 
 
 from . import storage, models, utils
@@ -55,6 +60,10 @@ def lookup_job_compute_function(
         job.definition.parameters, models.CompareExpectedActualJobParameters
     ):
         return compare_expected_and_actual
+    elif isinstance(
+        job.definition.parameters, models.ComparePredictedActualJobParameters
+    ):
+        return compare_predicted_and_actual
     return dummy_func
 
 
@@ -76,21 +85,28 @@ def _get_data(
 
 
 def generate_job_weather_data(
-    job: models.StoredJob, si: storage.StorageInterface
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    types=(
+        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.actual_weather,
+    ),
+    weather_granularity=None,
 ) -> Generator[List[pd.DataFrame], None, None]:
-    """Generator to fetch job data at the inverter level to run a ModelChain"""
+    """Generator to fetch job data at the inverter level to run a
+    ModelChain.  Iterates over each inverter in the system and returns a
+    list of weather dataframes for the arrays associated with that
+    inverter.
+    """
     data_id_by_schema_path = {
         do.definition.schema_path: do.object_id
         for do in job.data_objects
-        if do.definition.type
-        in (
-            models.JobDataTypeEnum.original_weather,
-            models.JobDataTypeEnum.actual_weather,
-        )
+        if do.definition.type in types
     }
     job_id = job.object_id
     num_inverters = len(job.definition.system_definition.inverters)
-    weather_granularity = getattr(job.definition.parameters, "weather_granularity")
+    if weather_granularity is None:
+        weather_granularity = getattr(job.definition.parameters, "weather_granularity")
 
     if weather_granularity == models.WeatherGranularityEnum.system:
         data_id = data_id_by_schema_path["/"]
@@ -114,6 +130,42 @@ def generate_job_weather_data(
             yield [_get_data(job_id, data_id, si) for data_id in data_ids]
     else:
         raise ValueError(f"Unknown weather granularity {weather_granularity}")
+
+
+def generate_job_performance_data(
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    types: List[models.JobDataTypeEnum],
+    performance_granularity: Optional[models.PerformanceGranularityEnum] = None,
+) -> Generator[Union[pd.DataFrame, None], None, None]:
+    """Generator to fetch job performance data at the inverter level."""
+    data_id_by_schema_path = {
+        do.definition.schema_path: do.object_id
+        for do in job.data_objects
+        if do.definition.type in types
+    }
+    job_id = job.object_id
+    num_inverters = len(job.definition.system_definition.inverters)
+    if performance_granularity is None:
+        performance_granularity = getattr(
+            job.definition.parameters, "performance_granularity"
+        )
+
+    if len(data_id_by_schema_path) == 0:
+        for _ in range(num_inverters):
+            yield None
+    elif performance_granularity == models.PerformanceGranularityEnum.system:
+        data_id = data_id_by_schema_path["/"]
+        df = _get_data(job_id, data_id, si)
+        for i in range(num_inverters):
+            yield df.copy()
+    elif performance_granularity == models.PerformanceGranularityEnum.inverter:
+        for i in range(num_inverters):
+            data_id = data_id_by_schema_path[f"/inverters/{i}"]
+            df = _get_data(job_id, data_id, si)
+            yield df
+    else:
+        raise ValueError(f"Unknown performance granularity {performance_granularity}")
 
 
 class DBResult(models.JobResultMetadata):
@@ -403,8 +455,7 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     save_results_to_db(job.object_id, result_list, si)
 
 
-def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
-    expected, result_list = _calculate_performance(job, si)
+def _get_actual_monthly_energy(job: models.StoredJob, si: storage.StorageInterface):
     # performance granularity validation means there won't be system level
     # perfromance and inverter level that you wouldn't want to sum
     performance_data_ids = [
@@ -426,6 +477,12 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     actual_monthly_energy = (
         actual_energy.groupby(actual_energy.index.month).sum().reindex(months)
     )
+    return actual_monthly_energy, months
+
+
+def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+    expected, result_list = _calculate_performance(job, si)
+    actual_monthly_energy, months = _get_actual_monthly_energy(job, si)
     diff = actual_monthly_energy - expected
     ratio = actual_monthly_energy / expected
     comparison_summary = pd.DataFrame(
@@ -444,3 +501,173 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
         )
     )
     save_results_to_db(job.object_id, result_list, si)
+
+
+def _temp_factor(gamma, t_ref, t_actual):
+    t0 = 25.0
+    return (1 - gamma * (t_actual - t0)) / (1 - gamma * (t_ref * t0))
+
+
+def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
+    test = _get_index(mcresult, "dc", 0)
+    if isinstance(test, pd.DataFrame):
+        out = sum([_get_index(mcresult, "dc", i)["p_mp"] for i in range(num_arrays)])
+    else:
+        out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
+    return pd.DataFrame({"performance": out})  # type: ignore
+
+
+def _calculate_weather_adjusted_predicted_performance(
+    job: models.StoredJob, si: storage.StorageInterface
+):
+    job_params: models.ComparePredictedActualJobParameters = (
+        job.definition.parameters  # type: ignore
+    )
+    time_params: models.JobTimeindex = job_params.time_parameters  # type: ignore
+    job_time_range = time_params._time_range
+    total_ref_pac = pd.DataFrame(
+        {
+            "performance": 0,  # type: ignore
+        },
+        index=job_time_range,
+    )
+    total_ref_pac.index.name = "time"  # type: ignore
+    data_available = job_params.predicted_data_parameters.data_available
+    tshift = time_params.step / 2
+    adjust = partial(_adjust_frame, tshift=tshift)
+    ref_model_method = job_params.predicted_data_parameters._model_chain_method
+    actual_model_method = job_params.actual_data_parameters._model_chain_method
+
+    chains = construct_modelchains(job.definition.system_definition)
+    ref_weather_gen = generate_job_weather_data(
+        job,
+        si,
+        types=(models.JobDataTypeEnum.original_weather,),
+        weather_granularity=job_params.predicted_data_parameters.weather_granularity,
+    )
+    actual_weather_gen = generate_job_weather_data(
+        job,
+        si,
+        types=(models.JobDataTypeEnum.actual_weather,),
+        weather_granularity=job_params.actual_data_parameters.weather_granularity,
+    )
+    ref_pac_gen = generate_job_performance_data(
+        job,
+        si,
+        types=[models.JobDataTypeEnum.predicted_performance],
+        performance_granularity=(
+            job_params.predicted_data_parameters.performance_granularity
+        ),
+    )
+    ref_pdc_gen = generate_job_performance_data(
+        job,
+        si,
+        types=[models.JobDataTypeEnum.predicted_performance_dc],
+        performance_granularity=(
+            job_params.predicted_data_parameters.performance_granularity
+        ),
+    )
+    # fail if pvsyst modules
+    results_list = []
+    for i, (chain, ref_weather, actual_weather, ref_pac, ref_pdc,) in enumerate(
+        zip(
+            chains,
+            ref_weather_gen,
+            actual_weather_gen,
+            ref_pac_gen,
+            ref_pdc_gen,
+        )
+    ):
+        # use the ModelChain for temperature etc and since it sets class
+        # properties, copy for the actuals calculations
+        chain_actual = deepcopy(chain)
+        pac0 = job.definition.system_definition.inverters[i].inverter_parameters._pac0
+        num_arrays = len(chain.system.arrays)
+        gammas = [
+            arr._gamma for arr in job.definition.system_definition.inverters[i].arrays
+        ]
+        if data_available == models.PredictedDataEnum.weather_only:
+            db_results, _ = process_single_modelchain(
+                chain, ref_weather, ref_model_method, tshift, i
+            )
+            results_list += db_results
+            ref_pdc = adjust(_get_mc_dc(chain.results, num_arrays))  # type: ignore
+        else:
+            # run chain on ref weather
+            getattr(chain, ref_model_method)(
+                [d.shift(freq=tshift) for d in ref_weather]  # type: ignore
+            )
+
+        # run chain on actual weather
+        getattr(chain_actual, actual_model_method)(
+            [d.shift(freq=tshift) for d in actual_weather]  # type: ignore
+        )
+        poa_ref = _irrad_for_celltemp(
+            chain.results.total_irrad, chain.results.effective_irradiance
+        )
+        poa_actual = _irrad_for_celltemp(
+            chain_actual.results.total_irrad, chain_actual.results.effective_irradiance
+        )
+        t_ref = chain.results.cell_temperature
+        t_actual = chain_actual.results.cell_temperature
+        # mean of array POArat * TempFactor for this inverter
+        # could make more sense to use weighted mean with weights set
+        # by array power percentage
+        poa_rat_x_temp_factor = adjust(
+            sum(
+                [
+                    pa / pr * _temp_factor(gamma, tr, ta)
+                    for pa, pr, gamma, tr, ta in zip(
+                        poa_actual, poa_ref, gammas, t_ref, t_actual
+                    )
+                ]
+            )
+            / num_arrays
+        )
+        if ref_pdc is not None:
+            pdc_ref_adj = ref_pdc * poa_rat_x_temp_factor  # type: ignore
+            pac_ref_adj = pdc_ref_adj * 0.985
+        else:
+            pac_ref_adj = ref_pac * poa_rat_x_temp_factor  # type: ignore
+        pac_adj = pac_ref_adj.clip(upper=pac0)  # type: ignore
+        pac_adj.index.name = "time"
+        total_ref_pac += pac_adj
+        results_list.append(
+            DBResult(
+                schema_path=f"/inverters/{i}",
+                type="weather adjusted performance",
+                data=pac_adj,
+            )
+        )
+    return results_list, total_ref_pac
+
+
+def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+    results_list, total_ref_pac = _calculate_weather_adjusted_predicted_performance(
+        job, si
+    )
+    actual_monthly_energy, months = _get_actual_monthly_energy(job, si)
+    ref_energy = total_ref_pac.resample("1h").mean()  # type: ignore
+    ref_monthly_energy = (
+        ref_energy.groupby(ref_energy.index.month).sum().reindex(months)
+    )
+    diff = actual_monthly_energy - ref_monthly_energy
+    ratio = actual_monthly_energy / ref_monthly_energy
+    comparison_summary = pd.DataFrame(
+        {
+            "actual_energy": actual_monthly_energy,
+            "weather_adjusted_energy": ref_monthly_energy,
+            "difference": diff,
+            "ratio": ratio,
+        }
+    )
+    month_name_index = pd.Index([calendar.month_name[i] for i in months], name="month")
+    comparison_summary.index = month_name_index
+    results_list.append(
+        DBResult(
+            schema_path="/",
+            type="actual vs weather adjusted reference",
+            data=comparison_summary,
+        )
+    )
+    save_results_to_db(job.object_id, results_list, si)
