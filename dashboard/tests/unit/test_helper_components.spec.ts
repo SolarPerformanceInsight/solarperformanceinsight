@@ -5,6 +5,8 @@ import flushPromises from "flush-promises";
 
 import HelpPopup from "@/components/Help.vue";
 
+import APIErrors from "@/components/ErrorRenderer.vue";
+
 describe("test help popup", () => {
   it("click hide/show", async () => {
     const wrapper = mount(HelpPopup, {
@@ -129,5 +131,43 @@ describe("Test Browser Component", () => {
       v3: 0.123456789012,
       v4: 12345678901234.123
     });
+  });
+});
+describe("Test Error Renderer", () => {
+  const errors = [
+    {
+      loc: ["this", "is", "location"],
+      msg: "Borked",
+      type: "Value Error"
+    },
+    {
+      loc: ["this", "thing", "__root__"],
+      msg: "Borked badder",
+      type: "Value Error"
+    }
+  ];
+  it("test all errors", async () => {
+    const wrapper = mount(APIErrors, {
+      propsData: {
+        errors
+      }
+    });
+    await flushPromises();
+    const errorList = wrapper.findAll("li");
+    expect(errorList.length).toBe(2);
+    expect(errorList.wrappers[0].text()).toBe("location:\n      Borked");
+    expect(errorList.wrappers[1].text()).toBe("thing:\n      Borked badder");
+  });
+  it("test filtered errors", async () => {
+    const wrapper = mount(APIErrors, {
+      propsData: {
+        errors,
+        fields: ["thing"]
+      }
+    });
+    await flushPromises();
+    const errorList = wrapper.findAll("li");
+    expect(errorList.length).toBe(1);
+    expect(errorList.wrappers[0].text()).toBe("thing:\n      Borked badder");
   });
 });
