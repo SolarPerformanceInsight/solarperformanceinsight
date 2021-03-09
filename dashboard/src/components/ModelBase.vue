@@ -17,6 +17,7 @@ import { Component, Vue } from "vue-property-decorator";
 @Component
 export default class ModelBase extends Vue {
   errors: Record<string, any> = {};
+  extraErrors: Record<string, any> = {};
 
   get validatorInit() {
     return this.$validator.initialized;
@@ -31,7 +32,7 @@ export default class ModelBase extends Vue {
   }
 
   extraValidation() {
-    // Function for adding an extra validation step. Should set this.errors with a key of the field name
+    // Function for adding an extra validation step. Should set this.extraErrors with a key of the field name
     // to update and an error message. Implementations should clear any errors they set when valid.
     return true;
   }
@@ -40,7 +41,6 @@ export default class ModelBase extends Vue {
     validity = validity && customValidity;
     if (!validity) {
       const errors = this.$validator.getErrors();
-      console.log(errors);
       const currentErrors: Record<string, any> = {};
       if (errors) {
         errors.forEach(function(error: Record<string, any>) {
@@ -50,7 +50,7 @@ export default class ModelBase extends Vue {
         });
       }
       // Insert errors and priorities custom messages
-      this.errors = { ...currentErrors, ...this.errors };
+      this.errors = { ...this.extraErrors, ...currentErrors };
     } else {
       this.errors = {};
     }

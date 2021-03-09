@@ -87,12 +87,12 @@ export default class SystemView extends ModelBase {
       }
     );
     if (existingSystems.includes(this.parameters.name)) {
-      this.errors[
+      this.extraErrors[
         "name"
       ] = `System with name "${this.parameters.name}" already exists.`;
       return false;
     }
-    delete this.errors["name"];
+    delete this.extraErrors["name"];
     return true;
   }
 }
