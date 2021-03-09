@@ -504,7 +504,7 @@ class SandiaInverterParameters(SPIBase):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._pac0 = self.paco
+        self._pac0 = self.Paco
 
 
 class AOIModelEnum(str, Enum):

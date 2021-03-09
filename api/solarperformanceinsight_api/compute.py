@@ -505,7 +505,7 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
 
 def _temp_factor(gamma, t_ref, t_actual):
     t0 = 25.0
-    return (1 - gamma * (t_actual - t0)) / (1 - gamma * (t_ref * t0))
+    return (1 - gamma * (t_actual - t0)) / (1 - gamma * (t_ref - t0))
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
@@ -519,17 +519,16 @@ def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
 
 def _calculate_weather_adjusted_predicted_performance(
     job: models.StoredJob, si: storage.StorageInterface
-):
+) -> Tuple[List[DBResult], pd.Series]:
     job_params: models.ComparePredictedActualJobParameters = (
         job.definition.parameters  # type: ignore
     )
     time_params: models.JobTimeindex = job_params.time_parameters  # type: ignore
     job_time_range = time_params._time_range
-    total_ref_pac = pd.DataFrame(
-        {
-            "performance": 0,  # type: ignore
-        },
-        index=job_time_range,
+    total_ref_pac = pd.Series(  # type: ignore
+        0,
+        index=job_time_range,  # type: ignore
+        name="performance",
     )
     total_ref_pac.index.name = "time"  # type: ignore
     data_available = job_params.predicted_data_parameters.data_available
@@ -613,25 +612,21 @@ def _calculate_weather_adjusted_predicted_performance(
         # mean of array POArat * TempFactor for this inverter
         # could make more sense to use weighted mean with weights set
         # by array power percentage
+
+        poa_rat = [pa / pr for pa, pr in zip(poa_actual, poa_ref)]
+        tempfactor = list(map(_temp_factor, gammas, t_ref, t_actual))
         poa_rat_x_temp_factor = adjust(
-            sum(
-                [
-                    pa / pr * _temp_factor(gamma, tr, ta)
-                    for pa, pr, gamma, tr, ta in zip(
-                        poa_actual, poa_ref, gammas, t_ref, t_actual
-                    )
-                ]
-            )
-            / num_arrays
+            sum([p * t for p, t in zip(poa_rat, tempfactor)]) / num_arrays
         )
+
         if ref_pdc is not None:
-            pdc_ref_adj = ref_pdc * poa_rat_x_temp_factor  # type: ignore
+            pdc_ref_adj = ref_pdc.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
             pac_ref_adj = pdc_ref_adj * 0.985
         else:
-            pac_ref_adj = ref_pac * poa_rat_x_temp_factor  # type: ignore
+            pac_ref_adj = ref_pac.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
         pac_adj = pac_ref_adj.clip(upper=pac0)  # type: ignore
         pac_adj.index.name = "time"
-        total_ref_pac += pac_adj
+        total_ref_pac += pac_adj["performance"]
         results_list.append(
             DBResult(
                 schema_path=f"/inverters/{i}",
