@@ -33,7 +33,12 @@ const store_system = new StoredSystem({
   object_type: "system",
   created_at: "2020-01-01T00:00Z",
   modified_at: "2020-01-01T00:00Z",
-  definition: new System({ name: "the system" })
+  definition: new System({
+    name: "the system",
+    inverters: [ new Inverter({
+      arrays: [new PVArray({})]
+    })],
+  })
 });
 
 const $store = {
@@ -120,6 +125,8 @@ describe("Test SystemSpec view", () => {
       mocks
     });
     jest.spyOn(router, "push");
+    // @ts-expect-error
+    wrapper.vm.updateSpecValidity(true);
     await flushPromises();
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");
@@ -155,7 +162,10 @@ describe("Test SystemSpec view", () => {
       mocks,
       router
     });
+    // @ts-expect-error
+    wrapper.vm.updateSpecValidity(true);
     jest.spyOn(router, "push");
+    await flushPromises();
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");
     await flushPromises();
@@ -173,6 +183,8 @@ describe("Test SystemSpec view", () => {
       mocks,
       router
     });
+    // @ts-expect-error
+    wrapper.vm.updateSpecValidity(true);
     await flushPromises();
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");

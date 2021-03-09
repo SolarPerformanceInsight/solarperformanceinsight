@@ -80,19 +80,21 @@ export default class SystemView extends ModelBase {
       .catch(error => console.log(error.message));
   }
   extraValidation() {
-    const existingSystems = Object.values(this.$store.state.systems).map(
-      // @ts-expect-error
-      (stored: StoredSystem) => {
-        return stored.definition.name;
+    if (!this.exists) {
+      const existingSystems = Object.values(this.$store.state.systems).map(
+        // @ts-expect-error
+        (stored: StoredSystem) => {
+          return stored.definition.name;
+        }
+      );
+      if (existingSystems.includes(this.parameters.name)) {
+        this.extraErrors[
+          "name"
+        ] = `System with name "${this.parameters.name}" already exists.`;
+        return false;
       }
-    );
-    if (existingSystems.includes(this.parameters.name)) {
-      this.extraErrors[
-        "name"
-      ] = `System with name "${this.parameters.name}" already exists.`;
-      return false;
+      delete this.extraErrors["name"];
     }
-    delete this.extraErrors["name"];
     return true;
   }
 }
