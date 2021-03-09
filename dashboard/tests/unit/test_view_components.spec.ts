@@ -35,9 +35,11 @@ const store_system = new StoredSystem({
   modified_at: "2020-01-01T00:00Z",
   definition: new System({
     name: "the system",
-    inverters: [ new Inverter({
-      arrays: [new PVArray({})]
-    })],
+    inverters: [
+      new Inverter({
+        arrays: [new PVArray({})]
+      })
+    ]
   })
 });
 

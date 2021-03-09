@@ -1,9 +1,11 @@
 import Vue from "vue";
+import Vuex from "vuex";
 import flushPromises from "flush-promises";
 import { createLocalVue, mount, shallowMount, Wrapper } from "@vue/test-utils";
 
 import APISpec from "./openapi.json";
 import { $validator } from "./mockvalidator";
+import { storeObject } from "./mockstore";
 
 import ArrayView from "@/components/model/Array.vue";
 import ArraysView from "@/components/model/Arrays.vue";
@@ -22,6 +24,7 @@ import FileUpload from "@/components/FileUpload.vue";
 import SystemView from "@/components/model/System.vue";
 
 const localVue = createLocalVue();
+localVue.use(Vuex);
 
 Vue.component("array-view", ArrayView);
 Vue.component("arrays-view", ArraysView);
@@ -63,6 +66,8 @@ const parentComponent: Vue = mount({
 const mocks = {
   $validator
 };
+
+const store = new Vuex.Store(storeObject);
 
 let fetchMock: any = {};
 global.fetch = jest.fn(() => Promise.resolve(fetchMock));
@@ -1001,8 +1006,7 @@ describe("Test Inverter", () => {
   it("pvsyst", () => {
     const propsData = {
       parameters: new Inverter({
-        inverter_parameters: new SandiaInverterParameters({}),
-        losses: null
+        inverter_parameters: new SandiaInverterParameters({})
       }),
       model: "pvsyst",
       index: 0
@@ -1102,7 +1106,7 @@ describe("Test Inverter", () => {
         propsData.parameters.inverter_parameters
       )
     ).toBe(true);
-    expect(propsData.parameters.losses).toBe(null);
+    expect(propsData.parameters.losses).toBe(undefined);
     // @ts-expect-error
     wrapper.vm.changeModel("pvwatts");
     expect(
@@ -1115,8 +1119,7 @@ describe("Test Inverter", () => {
   it("test loadInverterParameters", () => {
     const propsData = {
       parameters: new Inverter({
-        inverter_parameters: new SandiaInverterParameters({}),
-        losses: null
+        inverter_parameters: new SandiaInverterParameters({})
       }),
       model: "pvsyst",
       index: 0
@@ -1340,7 +1343,8 @@ describe("Test System", () => {
     const wrapper = shallowMount(SystemView, {
       localVue,
       propsData,
-      mocks
+      mocks,
+      store
     });
     await expectAllErrors(wrapper, Object.keys(new System({})));
     // @ts-expect-error
