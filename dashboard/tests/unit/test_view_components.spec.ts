@@ -154,7 +154,6 @@ describe("Test SystemSpec view", () => {
     expect(wrapper.vm.$data.specValid).toBe(true);
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");
-    console.log(saveBtn.attributes());
     await flushPromises();
     expect(wrapper.vm.$data.apiErrors).toEqual({});
     expect(wrapper.vm.$data.system).toEqual(system);
