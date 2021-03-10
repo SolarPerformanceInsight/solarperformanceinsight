@@ -67,32 +67,6 @@
             </label>
           </div>
         </div>
-        <div v-if="validForGranularity" class="my-1">
-          I will provide performance data as:
-          <br />
-          <div class="ml-1 mt-1">
-            <input
-              id="system"
-              value="system"
-              type="radio"
-              v-model="performance_granularity"
-            />
-            <label for="system">
-              one set for the entire system.
-            </label>
-            <br />
-            <input
-              id="inverter"
-              value="inverter"
-              type="radio"
-              v-model="performance_granularity"
-            />
-            <label for="inverter">
-              one set for each inverter and its associated arrays.
-            </label>
-            <br />
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -104,13 +78,11 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 @Component
 export default class CompareJobParams extends Vue {
   compare!: string;
-  performance_granularity!: string;
   timeResolution!: string;
 
   data() {
     return {
       compare: "expected and actual performance",
-      performance_granularity: "system",
       timeResolution: "leHourly"
     };
   }
@@ -120,7 +92,6 @@ export default class CompareJobParams extends Vue {
   emitParams() {
     let params = {
       compare: this.compare,
-      performance_granularity: this.performance_granularity
     };
     if (this.containsPredicted && this.timeResolution == "monthly") {
       // @ts-expect-error
@@ -132,9 +103,6 @@ export default class CompareJobParams extends Vue {
   }
   get containsPredicted() {
     return this.compare.includes("predicted");
-  }
-  get validForGranularity() {
-    return !this.containsPredicted || this.timeResolution == "leHourly";
   }
   @Watch("compare")
   setMonthly() {
