@@ -1368,11 +1368,14 @@ describe("Test System", () => {
       mocks,
       store
     });
+    store.dispatch("fetchSystems");
+    await flushPromises();
     // @ts-expect-error
     wrapper.vm.extraValidation();
+    await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.errors["name"]).toBe(
-      'System with name "Super System" already exists".'
+    expect(wrapper.vm.extraErrors["name"]).toBe(
+      'System with name "Super System" already exists.'
     );
   });
 });

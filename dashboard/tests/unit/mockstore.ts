@@ -25,7 +25,7 @@ const storedSystems = {
 jest.spyOn(actions, "fetchSystems").mockImplementation((context: any) => {
   context.commit("updateSystemsList", storedSystems);
 });
-spiStore.state.systems = storedSystems;
+spiStore.state.systems = {};
 const storeObject = spiStore;
 
 export { storeObject };
