@@ -2,6 +2,7 @@ import calendar
 from copy import deepcopy
 import datetime as dt
 from functools import partial
+from itertools import zip_longest
 import json
 import logging
 from typing import Callable, Generator, Union, List, Tuple, Optional
@@ -144,6 +145,8 @@ def generate_job_performance_data(
         for do in job.data_objects
         if do.definition.type in types
     }
+    if not data_id_by_schema_path:  # no data in types
+        return
     job_id = job.object_id
     num_inverters = len(job.definition.system_definition.inverters)
     if performance_granularity is None:
@@ -151,10 +154,7 @@ def generate_job_performance_data(
             job.definition.parameters, "performance_granularity"
         )
 
-    if len(data_id_by_schema_path) == 0:
-        for _ in range(num_inverters):
-            yield None
-    elif performance_granularity == models.PerformanceGranularityEnum.system:
+    if performance_granularity == models.PerformanceGranularityEnum.system:
         data_id = data_id_by_schema_path["/"]
         df = _get_data(job_id, data_id, si)
         for i in range(num_inverters):
@@ -536,8 +536,9 @@ def _calculate_weather_adjusted_predicted_performance(
     adjust = partial(_adjust_frame, tshift=tshift)
     ref_model_method = job_params.predicted_data_parameters._model_chain_method
     actual_model_method = job_params.actual_data_parameters._model_chain_method
-
+    # model chain for each inverter
     chains = construct_modelchains(job.definition.system_definition)
+    # generators at inverter level that return tuples of data at the array level
     ref_weather_gen = generate_job_weather_data(
         job,
         si,
@@ -566,10 +567,10 @@ def _calculate_weather_adjusted_predicted_performance(
             job_params.predicted_data_parameters.performance_granularity
         ),
     )
-    # fail if pvsyst modules
     results_list = []
+    # Loop through at the inverter level
     for i, (chain, ref_weather, actual_weather, ref_pac, ref_pdc,) in enumerate(
-        zip(
+        zip_longest(
             chains,
             ref_weather_gen,
             actual_weather_gen,
@@ -577,15 +578,22 @@ def _calculate_weather_adjusted_predicted_performance(
             ref_pdc_gen,
         )
     ):
-        # use the ModelChain for temperature etc and since it sets class
-        # properties, copy for the actuals calculations
+        # use the ModelChain for converting any temperature to cell temperature and
+        # converting irradiance to POA. In the future, could only run these conversions
+        # instead of full modelchain calculation.
+        # since it sets class properties, copy for the actuals calculations
         chain_actual = deepcopy(chain)
         pac0 = job.definition.system_definition.inverters[i].inverter_parameters._pac0
         num_arrays = len(chain.system.arrays)
         gammas = [
             arr._gamma for arr in job.definition.system_definition.inverters[i].arrays
         ]
-        if data_available == models.PredictedDataEnum.weather_only:
+        if any([g is None for g in gammas]):
+            raise TypeError(
+                "Currently unable to compare predicted and actual performance for "
+                "PVsyst specified arrays."
+            )
+        if data_available == models.PredictedDataEnum.weather_only:  # 2A-4
             db_results, _ = process_single_modelchain(
                 chain, ref_weather, ref_model_method, tshift, i
             )
@@ -601,28 +609,34 @@ def _calculate_weather_adjusted_predicted_performance(
         getattr(chain_actual, actual_model_method)(
             [d.shift(freq=tshift) for d in actual_weather]  # type: ignore
         )
+        # use pvlib.modelchain._irrad_for_celltemp that returns POA global if available
+        # otherwise uses effective irradiance
         poa_ref = _irrad_for_celltemp(
             chain.results.total_irrad, chain.results.effective_irradiance
         )
         poa_actual = _irrad_for_celltemp(
             chain_actual.results.total_irrad, chain_actual.results.effective_irradiance
         )
+        # use cell temperature from the pvlib modelchain
+        # If air temp + wind speed or module temperature were supplied, they are
+        # converted to cell temperature via the array's temperature model
         t_ref = chain.results.cell_temperature
         t_actual = chain_actual.results.cell_temperature
+
         # mean of array POArat * TempFactor for this inverter
         # could make more sense to use weighted mean with weights set
         # by array power percentage
-
+        # another alternative, calculate average POArat and TempFactor separately
         poa_rat = [pa / pr for pa, pr in zip(poa_actual, poa_ref)]
         tempfactor = list(map(_temp_factor, gammas, t_ref, t_actual))
-        poa_rat_x_temp_factor = adjust(
+        poa_rat_x_temp_factor = adjust(  # modelchain outputs are all shifted
             sum([p * t for p, t in zip(poa_rat, tempfactor)]) / num_arrays
         )
 
-        if ref_pdc is not None:
+        if ref_pdc is not None:  # 2A-1 and 2A-4
             pdc_ref_adj = ref_pdc.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
             pac_ref_adj = pdc_ref_adj * 0.985
-        else:
+        else:  # 2A-2
             pac_ref_adj = ref_pac.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
         pac_adj = pac_ref_adj.clip(upper=pac0)  # type: ignore
         pac_adj.index.name = "time"
