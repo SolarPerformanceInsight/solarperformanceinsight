@@ -130,6 +130,7 @@ describe("Test SystemSpec view", () => {
     // @ts-expect-error
     wrapper.vm.updateSpecValidity(true);
     await flushPromises();
+
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");
     await flushPromises();
@@ -147,8 +148,13 @@ describe("Test SystemSpec view", () => {
       mocks
     });
     await flushPromises();
+    // @ts-expect-error
+    wrapper.vm.updateSpecValidity(true);
+    await flushPromises();
+    expect(wrapper.vm.$data.specValid).toBe(true);
     const saveBtn = wrapper.find("button.save-system");
     saveBtn.trigger("click");
+    console.log(saveBtn.attributes());
     await flushPromises();
     expect(wrapper.vm.$data.apiErrors).toEqual({});
     expect(wrapper.vm.$data.system).toEqual(system);

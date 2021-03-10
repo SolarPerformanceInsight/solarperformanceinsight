@@ -1350,6 +1350,31 @@ describe("Test System", () => {
     // @ts-expect-error
     expect("name" in wrapper.vm.errors).toBe(true);
   });
+  it("test system exists error", async () => {
+    const propsData = {
+      parameters: new System({
+        name: "Super System",
+        inverters: [
+          new Inverter({
+            arrays: [new PVArray({})]
+          })
+        ]
+      }),
+      model: "pvwatts"
+    };
+    const wrapper = shallowMount(SystemView, {
+      localVue,
+      propsData,
+      mocks,
+      store
+    });
+    // @ts-expect-error
+    wrapper.vm.extraValidation();
+    // @ts-expect-error
+    expect(wrapper.vm.errors["name"]).toBe(
+      'System with name "Super System" already exists".'
+    );
+  });
 });
 
 /*
