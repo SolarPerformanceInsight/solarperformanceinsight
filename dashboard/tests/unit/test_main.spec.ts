@@ -1,3 +1,6 @@
+import "./mockauth";
+import "./mockvalidator";
+
 describe("Test main by hitting home", () => {
   it("home", async () => {
     document.body.innerHTML = '<div id="app"></div>';

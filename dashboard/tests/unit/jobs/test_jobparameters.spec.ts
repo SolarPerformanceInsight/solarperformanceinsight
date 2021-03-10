@@ -9,6 +9,7 @@ import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobPar
 import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import APIErrors from "@/components/ErrorRenderer.vue";
 import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
+import HelpPopup from "@/components/Help.vue";
 
 import { StoredSystem, System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
@@ -28,6 +29,7 @@ Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("time-parameters", TimeParameters);
+Vue.component("help", HelpPopup);
 
 // test prop constants
 const testSystem = new StoredSystem({
@@ -157,7 +159,7 @@ describe("Test Job Parameters", () => {
     expect(wrapper.vm.isValid).toBe(true);
     expect(wrapper.findComponent(TimeParameters).exists()).toBe(true);
 
-    const button = wrapper.find("button");
+    const button = wrapper.find("button[type=submit]");
     button.trigger("click");
     await flushPromises();
 
@@ -223,7 +225,7 @@ describe("Test Job Parameters", () => {
         }
       ]
     });
-    wrapper.find("button").trigger("click");
+    wrapper.find("button[type=submit]").trigger("click");
     await flushPromises();
 
     expect(wrapper.findComponent(APIErrors).exists()).toBe(true);
@@ -276,7 +278,7 @@ describe("Test Job Parameters", () => {
     await flushPromises();
 
     mockJobResponse.ok = false;
-    wrapper.find("button").trigger("click");
+    wrapper.find("button[type=submit]").trigger("click");
     await flushPromises();
 
     expect(wrapper.findComponent(APIErrors).text()).toBe("");

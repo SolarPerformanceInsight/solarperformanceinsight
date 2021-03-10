@@ -1,8 +1,12 @@
+import Vue from "vue";
 import flushPromises from "flush-promises";
 import { createLocalVue, mount } from "@vue/test-utils";
 
 import JobTimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
 import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
+import HelpPopup from "@/components/Help.vue";
+
+Vue.component("help", HelpPopup);
 
 const localVue = createLocalVue();
 

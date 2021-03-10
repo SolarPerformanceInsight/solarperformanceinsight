@@ -11,6 +11,8 @@ import router from "@/router";
 import { $auth } from "./mockauth";
 import { $validator } from "./mockvalidator";
 
+import { User } from "@/auth/User";
+
 const localVue = createLocalVue();
 
 const mocks = {
@@ -155,5 +157,32 @@ describe("Test authguard", () => {
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
     // Assert view at new path is rendered
     expect(view.find("h1").text()).toMatch(/Systems/);
+  });
+});
+
+describe("test user", () => {
+  it("instantiate a user object", () => {
+    const user = {
+      sub: "auth0|somestuff",
+      names: "names",
+      nickname: "rick",
+      picture: "http://www.photobucket.com/rickvacation",
+      updated_at: "2222-22-22T22:22:22-10:00"
+    };
+    const expected = {
+      sub: "auth0|somestuff",
+      provider: "auth0",
+      id: "somestuff",
+      names: "names",
+      nickname: "rick",
+      picture: "http://www.photobucket.com/rickvacation",
+      updated_at: "2222-22-22T22:22:22-10:00"
+    };
+    const instance = new User(user);
+    expect(instance).toEqual(expected);
+  });
+  it("instantiate a user object from falsey", () => {
+    // @ts-expect-error
+    expect(new User(null)).toEqual({});
   });
 });
