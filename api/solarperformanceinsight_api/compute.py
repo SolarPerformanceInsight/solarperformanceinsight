@@ -65,6 +65,10 @@ def lookup_job_compute_function(
         job.definition.parameters, models.ComparePredictedActualJobParameters
     ):
         return compare_predicted_and_actual
+    elif isinstance(
+        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+    ):
+        return compare_monthly_predicted_and_actual
     return dummy_func
 
 
@@ -82,7 +86,12 @@ def _get_data(
         raise TypeError(
             f"Data for /jobs/{job_id}/data/{data_id} not in Apache Arrow format"
         )
-    return utils.read_arrow(data).set_index("time")  # type: ignore
+    out = utils.read_arrow(data)
+    if "time" in out.columns:
+        out = out.set_index("time")  # type: ignore
+    elif "month" in out.columns:
+        out = out.set_index("month")  # type: ignore
+    return out
 
 
 def generate_job_weather_data(
@@ -680,3 +689,75 @@ def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInter
         )
     )
     save_results_to_db(job.object_id, results_list, si)
+
+
+def compare_monthly_predicted_and_actual(
+    job: models.StoredJob, si: storage.StorageInterface
+):
+    data_ids_by_type = {do.definition.type: do.object_id for do in job.data_objects}
+    ref_weather = _get_data(
+        job.object_id,
+        data_ids_by_type[models.JobDataTypeEnum.monthly_original_weather],
+        si,
+    )
+    actual_weather = _get_data(
+        job.object_id,
+        data_ids_by_type[models.JobDataTypeEnum.monthly_actual_weather],
+        si,
+    )
+    ref_perf = _get_data(
+        job.object_id,
+        data_ids_by_type[models.JobDataTypeEnum.monthly_original_performance],
+        si,
+    )["total_energy"]
+    actual_perf = _get_data(
+        job.object_id,
+        data_ids_by_type[models.JobDataTypeEnum.monthly_actual_performance],
+        si,
+    )["total_energy"]
+
+    inverters = job.definition.system_definition.inverters
+    pac0 = sum([inv.inverter_parameters._pac0 for inv in inverters])
+    G_0 = 1000
+
+    gammas = [arr._gamma for inv in inverters for arr in inv.arrays]
+    if any([g is None for g in gammas]):
+        raise TypeError(
+            "Currently unable to compare predicted and actual performance for "
+            "PVsyst specified arrays."
+        )
+
+    avg_gamma = sum(
+        [sum([arr._gamma for arr in inv.arrays]) / len(inv.arrays) for inv in inverters]
+    ) / len(inverters)
+    poa_insol_rat = (
+        actual_weather["total_poa_insolation"] / ref_weather["total_poa_insolation"]
+    )
+    temp_loss = (
+        pac0
+        / G_0
+        * poa_insol_rat
+        * avg_gamma
+        * (
+            actual_weather["average_daytime_cell_temperature"]
+            - ref_weather["average_daytime_cell_temperature"]
+        )
+    )
+    E_ref_adj = ref_perf * poa_insol_rat - temp_loss
+    diff = actual_perf - E_ref_adj
+    ratio = actual_perf / E_ref_adj
+    comparison_summary = pd.DataFrame(
+        {
+            "actual_energy": actual_perf,
+            "weather_adjusted_energy": E_ref_adj,
+            "difference": diff,
+            "ratio": ratio,
+        }
+    )
+    comparison_summary.index.name = "month"
+    result = DBResult(
+        schema_path="/",
+        type="actual vs weather adjusted reference",
+        data=comparison_summary,
+    )
+    save_results_to_db(job.object_id, [result], si)

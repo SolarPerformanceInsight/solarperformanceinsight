@@ -1,9 +1,11 @@
+import calendar
 from copy import deepcopy
 import datetime as dt
 from io import BytesIO
 from uuid import uuid1
 
 
+import numpy as np
 import pandas as pd
 from pvlib.location import Location
 from pvlib.modelchain import ModelChain
@@ -83,7 +85,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                     performance_granularity="system",
                 ),
             ),
-            compute.dummy_func,
+            compute.compare_predicted_and_actual,
         ),
         (
             dict(
@@ -122,6 +124,68 @@ def test_get_data_bad(job_id, job_data_ids, auth0_id):
     si = storage.StorageInterface(user=auth0_id)
     with pytest.raises(TypeError):
         compute._get_data(job_id, job_data_ids[0], si)
+
+
+@pytest.fixture()
+def insert_monthly_data(
+    monthlypa_job_id,
+    auth0_id,
+    nocommit_transaction,
+    monthly_weather_actuals_id,
+    monthly_weather_original_id,
+    monthly_perf_actuals_id,
+    monthly_perf_original_id,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    months = calendar.month_name[1:]
+    monthadj = [np.cos((i - 6) / 24 * np.pi) for i in range(12)]
+    energydf = pd.DataFrame(
+        {"total_energy": [60000 * x for x in monthadj], "month": months}
+    )
+    weatherdf = pd.DataFrame(
+        {
+            "total_poa_insolation": [500 * 8 * 30 * x for x in monthadj],
+            "average_daytime_cell_temperature": [25 * x for x in monthadj],
+            "month": months,
+        }
+    )
+    ref_energy = energydf.copy()
+    ref_energy.loc[:, "total_energy"] *= 0.9
+    ref_weather = weatherdf.copy()
+    ref_weather.loc[:, "total_poa_insolation"] *= 0.96
+    ref_weather.loc[:, "average_daytime_cell_temperature"] *= 1.2
+
+    with si.start_transaction() as st:
+        for did, df in [
+            (monthly_weather_actuals_id, weatherdf),
+            (monthly_perf_actuals_id, energydf),
+            (monthly_weather_original_id, ref_weather),
+            (monthly_perf_original_id, ref_energy),
+        ]:
+            iob = BytesIO()
+            df.to_feather(iob)
+            iob.seek(0)
+            st.add_job_data(
+                monthlypa_job_id,
+                did,
+                "test.arrow",
+                "application/vnd.apache.arrow.file",
+                iob.read(),
+            )
+    return energydf, weatherdf, ref_energy, ref_weather
+
+
+def test_get_data_month(
+    monthlypa_job_id,
+    monthly_perf_actuals_id,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    exp, *_ = insert_monthly_data
+    out = compute._get_data(monthlypa_job_id, monthly_perf_actuals_id, si)
+    pd.testing.assert_frame_equal(exp.set_index("month"), out)
 
 
 def test_DBResult_setting():
@@ -577,3 +641,87 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     assert ser.loc["actual_energy"] == 1.0
     assert (ser.loc["difference"] - -1.0) < 1e-7
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7
+
+
+def test_compare_monthly_predicted_and_actual_pvsyst(
+    mocker, auth0_id, nocommit_transaction, insert_monthly_data, monthlypa_job_id
+):
+    si = storage.StorageInterface(user=auth0_id)
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    assert isinstance(
+        job.definition.system_definition.inverters[0].arrays[0].module_parameters,
+        models.PVsystModuleParameters,
+    )
+    with pytest.raises(TypeError):
+        compute.compare_monthly_predicted_and_actual(job, si)
+
+
+@pytest.fixture()
+def pvwatts_system():
+    sysdict = deepcopy(models.SYSTEM_EXAMPLE)
+    arr = dict(
+        name="array",
+        make_model="custom",
+        albedo=0.2,
+        modules_per_string=10,
+        strings=5,
+        tracking=dict(tilt=20.0, azimuth=180.0),
+        temperature_model_parameters=dict(
+            a=-3.47,
+            b=-0.0594,
+            deltaT=3,
+        ),
+        module_parameters=dict(pdc0=240.0, gamma_pdc=-0.5),
+    )
+    inv = dict(
+        name="Inverter 1",
+        make_model="custom",
+        losses={},
+        airmass_model="kastenyoung1989",
+        aoi_model="physical",
+        clearsky_model="ineichen",
+        spectral_model="no_loss",
+        transposition_model="haydavies",
+        inverter_parameters=dict(pdc0=7500),
+        arrays=[arr],
+    )
+    inv1 = deepcopy(inv)
+    inv1["name"] = "inverter 2"
+    inv1["arrays"] = [arr, arr]
+    sysdict["inverters"] = [inv, inv1]
+    return models.PVSystem(**sysdict)
+
+
+def test_compare_monthly_predicted_and_actual(
+    mocker,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+    monthlypa_job_id,
+    pvwatts_system,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    job.definition.system_definition = pvwatts_system
+    compute.compare_monthly_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 1
+
+    summary = reslist[0]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[6]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "July"
+    assert ser.loc["actual_energy"] == 60000
+    assert ser.loc["weather_adjusted_energy"] == 56212.5
+    assert ser.loc["difference"] == 3787.5
+    assert (ser.loc["ratio"] - 1.0673783) < 1e-7
