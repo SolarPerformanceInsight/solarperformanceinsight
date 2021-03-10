@@ -49,7 +49,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
 
 
 @pytest.mark.parametrize(
-    "njp,exp",
+    "njp,exp,tp",
     [
         (
             dict(
@@ -59,6 +59,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.run_performance_job,
+            True,
         ),
         (
             dict(
@@ -68,6 +69,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.run_performance_job,
+            True,
         ),
         (
             dict(
@@ -86,6 +88,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 ),
             ),
             compute.compare_predicted_and_actual,
+            True,
         ),
         (
             dict(
@@ -96,17 +99,24 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.compare_expected_and_actual,
+            True,
+        ),
+        (
+            dict(compare="monthly predicted and actual performance"),
+            compute.compare_monthly_predicted_and_actual,
+            False,
         ),
     ],
 )
-def test_lookup_compute_function(njp, system_def, exp, system_id, stored_job):
+def test_lookup_compute_function(njp, system_def, exp, system_id, stored_job, tp):
     njp["system_id"] = system_id
-    njp["time_parameters"] = dict(
-        start="2020-01-01T00:00:00+00:00",
-        end="2020-12-31T23:59:59+00:00",
-        step="15:00",
-        timezone="UTC",
-    )
+    if tp:
+        njp["time_parameters"] = dict(
+            start="2020-01-01T00:00:00+00:00",
+            end="2020-12-31T23:59:59+00:00",
+            step="15:00",
+            timezone="UTC",
+        )
     job = models.Job(parameters=njp, system_definition=system_def)
     stored_job.definition = job
     assert compute.lookup_job_compute_function(stored_job) == exp
@@ -417,6 +427,98 @@ def test_generate_job_weather_data_fail(stored_job, auth0_id, mocker):
     stored_job.definition.parameters.weather_granularity = "unknown"
     with pytest.raises(ValueError):
         list(compute.generate_job_weather_data(stored_job, si))
+
+
+@pytest.mark.parametrize("numarr", [1, 2])
+def test_generate_job_performance_data_system(stored_job, auth0_id, mocker, numarr):
+    si = storage.StorageInterface(user=auth0_id)
+    arr = stored_job.definition.system_definition.inverters[0].arrays[0]
+    stored_job.definition.system_definition.inverters[0].arrays = [arr] * numarr
+
+    def mockgetdata(job_id, data_id, si):
+        return pd.DataFrame({"jid": job_id, "did": data_id}, index=[0])
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    ndo = deepcopy(stored_job.data_objects[0])
+    ndo.object_id = uuid1()
+    ndo.definition.schema_path = "/"
+    ndo.definition.type = "actual performance data"
+
+    stored_job.data_objects = [ndo]
+    gen = compute.generate_job_performance_data(
+        stored_job, si, [models.JobDataTypeEnum.actual_performance], "system"
+    )
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    assert len(genlist) == 1
+    # returns list of dataframes for each item
+    pd.testing.assert_frame_equal(
+        genlist[0],
+        pd.DataFrame({"jid": stored_job.object_id, "did": ndo.object_id}, index=[0]),
+    )
+
+
+def test_generate_job_performance_data_inverter(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+
+    def mockgetdata(job_id, data_id, si):
+        return (job_id, data_id)
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    do = stored_job.data_objects[0]
+    new_do = []
+    ids = []
+    for i in range(3):
+        ndo = deepcopy(do)
+        ndo.object_id = uuid1()
+        ids.append((stored_job.object_id, ndo.object_id))
+        ndo.definition.schema_path = f"/inverters/{i}"
+        if i == 1:
+            ndo.definition.type = "actual performance data"
+        else:
+            ndo.definition.type = "predicted performance data"
+        new_do.append(ndo)
+    inv = deepcopy(stored_job.definition.system_definition.inverters[0])
+    stored_job.definition.system_definition.inverters = [inv, inv, inv]
+    stored_job.data_objects = new_do
+    gen = compute.generate_job_performance_data(
+        stored_job,
+        si,
+        [
+            models.JobDataTypeEnum.actual_performance,
+            models.JobDataTypeEnum.predicted_performance,
+        ],
+        "inverter",
+    )
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    # returns list of dataframes for each item
+    assert genlist == ids
+
+
+def test_generate_job_performance_data_fail(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+
+    with pytest.raises(ValueError):
+        list(
+            compute.generate_job_performance_data(
+                stored_job, si, [models.JobDataTypeEnum.actual_performance], "unknown"
+            )
+        )
+
+
+def test_generate_job_performance_data_empty(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+    assert not list(
+        compute.generate_job_performance_data(
+            stored_job,
+            si,
+            [models.JobDataTypeEnum.predicted_performance_dc],
+            "inverter",
+        )
+    )
 
 
 def test_get_index():

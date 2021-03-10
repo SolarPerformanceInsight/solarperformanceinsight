@@ -146,8 +146,8 @@ def generate_job_performance_data(
     job: models.StoredJob,
     si: storage.StorageInterface,
     types: List[models.JobDataTypeEnum],
-    performance_granularity: Optional[models.PerformanceGranularityEnum] = None,
-) -> Generator[Union[pd.DataFrame, None], None, None]:
+    performance_granularity: Optional[models.PerformanceGranularityEnum],
+) -> Generator[pd.DataFrame, None, None]:
     """Generator to fetch job performance data at the inverter level."""
     data_id_by_schema_path = {
         do.definition.schema_path: do.object_id
@@ -728,7 +728,10 @@ def compare_monthly_predicted_and_actual(
         )
 
     avg_gamma = sum(
-        [sum([arr._gamma for arr in inv.arrays]) / len(inv.arrays) for inv in inverters]
+        [
+            sum([arr._gamma for arr in inv.arrays]) / len(inv.arrays)  # type: ignore
+            for inv in inverters
+        ]
     ) / len(inverters)
     poa_insol_rat = (
         actual_weather["total_poa_insolation"] / ref_weather["total_poa_insolation"]
@@ -754,7 +757,7 @@ def compare_monthly_predicted_and_actual(
             "ratio": ratio,
         }
     )
-    comparison_summary.index.name = "month"
+    comparison_summary.index.name = "month"  # type: ignore
     result = DBResult(
         schema_path="/",
         type="actual vs weather adjusted reference",
