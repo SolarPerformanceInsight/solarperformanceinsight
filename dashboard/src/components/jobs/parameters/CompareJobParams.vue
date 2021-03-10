@@ -94,7 +94,6 @@ export default class CompareJobParams extends Vue {
       compare: this.compare,
     };
     if (this.containsPredicted && this.timeResolution == "monthly") {
-      // @ts-expect-error
       params = {
         compare: `monthly ${this.compare}`
       };

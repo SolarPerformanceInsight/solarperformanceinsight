@@ -4,43 +4,10 @@
 
 -->
 <template>
-  <div class="predicted-performance-data">
+  <div class="calculated-data-parameters">
     <template>
         <div class="my-1">
             <div class="my-1">
-              <div>
-                My predicted data includes:
-                <br />
-                <div class="ml-1 mt-1">
-                  <label>
-                    <input
-                      value="weather only"
-                      type="radio"
-                      v-model="data_available"
-                    />
-                    weather only.
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      value="weather and AC performance"
-                      type="radio"
-                      v-model="data_available"
-                    />
-                    weather and AC performance.
-                  </label>
-                  <br />
-                  <label for="effective">
-                    <input
-                      value="weather, AC, and DC performance"
-                      type="radio"
-                      v-model="data_available"
-                    />
-                    weather, AC, and DC performance.
-                  </label>
-                  <br />
-                </div>
-              </div>
               <div>
                 My weather data file includes:
                 <br />

@@ -22,6 +22,12 @@
               </p>
             </div>
             <div v-if="!isMonthly" class="my-1">
+              <div style="border: 1px solid black" class="grid-container">
+                <predicted-data-params/>
+                <actual-expected-data-params/>
+              </div>
+              
+              <!--
               <div>
                 My weather data file includes:
                 <br />
@@ -135,6 +141,7 @@
                   <br />
                 </div>
               </div>
+              -->
               <time-parameters
                 :timeparams="timeParams"
                 @new-timeparams="storeTimeParams"
@@ -164,12 +171,17 @@ import * as Jobs from "@/api/jobs";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
+import PredictedDataParams from "@/components/jobs/parameters/PredictedDataParams.vue";
+import ActualExpectedDataParams from "@/components/jobs/parameters/ActualExpectedDataParams.vue";
+
 import APIErrors from "@/components/ErrorRenderer.vue";
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("api-errors", APIErrors);
+Vue.component("predicted-data-params", PredictedDataParams);
+Vue.component("actual-expected-data-params", ActualExpectedDataParams);
 
 @Component
 export default class JobParameters extends Vue {
@@ -277,6 +289,10 @@ export default class JobParameters extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.grid-container {
+  display: grid;
+  grid-template-rows: auto auto;
+}
 .ml-1 {
   margin-left: 1em;
 }
