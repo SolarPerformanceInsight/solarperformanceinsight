@@ -22,7 +22,7 @@ Vue.component("data-params", DataParams);
 @Component
 export default class DataParamHandler extends Vue {
   @Prop() jobTypeParams!: Record<string, string>;
-  parameters!: Record<string, string>;
+  parameters!: Record<string, any>;
   data() {
     return {
       parameters: {}
@@ -40,11 +40,12 @@ export default class DataParamHandler extends Vue {
     type: string;
     parameters: Record<string, string>;
   }) {
-    console.log("Type: ", type, " Parameters: ", parameters);
     if (type == "data_parameters") {
-      this.$set(this, "parameters", parameters);
+      // Generic data_parameters type indicates that the data parameters should
+      // be added to the root level job specification.
+      this.parameters = parameters;
     } else {
-      this.$set(this.parameters, type, parameters);
+      this.parameters[type] = parameters;
     }
     this.emitParams();
   }
@@ -94,12 +95,15 @@ export default class DataParamHandler extends Vue {
       return ["expected and actual"];
     }
   }
-  emitParams() {
-    this.$emit("new-data-params", this.parameters);
+  emitParams(parameters?: Record<string, string>) {
+    if (parameters) {
+      this.$emit("new-data-params", parameters);
+    } else {
+      this.$emit("new-data-params", this.parameters);
+    }
   }
-  @Watch("requiredDataTypes")
+  @Watch("jobTypeParams", { deep: true })
   resetParameters() {
-    console.log("required data changed");
     this.parameters = {};
   }
 }

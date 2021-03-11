@@ -48,7 +48,7 @@
         <br />
       </div>
     </div>
-    <div v-if="data_available != 'weather only'">
+    <div v-if="data_available != 'weather only'" class="mt-1">
       I will provide performance data as:
       <br />
       <div class="ml-1 mt-1">
