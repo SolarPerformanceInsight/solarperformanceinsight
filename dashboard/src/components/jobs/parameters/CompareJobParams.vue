@@ -104,7 +104,7 @@ export default class CompareJobParams extends Vue {
   }
   @Watch("compare")
   ensureValidTimeResolution() {
-    // Ensure that if we're not working with 
+    // Ensure that if we're not working with
     if (!this.containsPredicted) {
       this.timeResolution = "leHourly";
     }

@@ -48,6 +48,32 @@
         <br />
       </div>
     </div>
+    <div v-if="data_available != 'weather only'">
+      I will provide performance data as:
+      <br />
+      <div class="ml-1 mt-1">
+        <label>
+          <input
+            @change="emitParams"
+            value="system"
+            type="radio"
+            v-model="performance_granularity"
+          />
+          one set for the entire system.
+        </label>
+        <br />
+        <label>
+          <input
+            @change="emitParams"
+            value="inverter"
+            type="radio"
+            v-model="performance_granularity"
+          />
+          one set for each inverter and its associated arrays.
+        </label>
+        <br />
+      </div>
+    </div>
     <div class="my-1">
       My weather data file includes:
       <br />
@@ -149,7 +175,6 @@
           one set for each inverter and its associated arrays.
         </label>
         <br />
-
         <label>
           <input
             @change="emitParams"
@@ -158,33 +183,6 @@
             v-model="weather_granularity"
           />
           one set for each array.
-        </label>
-        <br />
-      </div>
-    </div>
-    <div v-if="data_available != 'weather only'">
-      I will provide performance data as:
-      <br />
-      <div class="ml-1 mt-1">
-        <label>
-          <input
-            @change="emitParams"
-            value="system"
-            type="radio"
-            v-model="performance_granularity"
-          />
-          one set for the entire system.
-        </label>
-        <br />
-
-        <label>
-          <input
-            @change="emitParams"
-            value="inverter"
-            type="radio"
-            v-model="performance_granularity"
-          />
-          one set for each inverter and its associated arrays.
         </label>
         <br />
       </div>
@@ -247,7 +245,7 @@ export default class DataParams extends Vue {
           extraParameters.performance_granularity = this.performance_granularity;
         }
       } else {
-        if (this.dataType == "expected_actual") {
+        if (this.dataType == "expected and actual") {
           type = "data_parameters";
         } else {
           type = `${this.dataType}_data_parameters`;

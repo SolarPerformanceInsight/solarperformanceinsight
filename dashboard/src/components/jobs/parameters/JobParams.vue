@@ -28,17 +28,12 @@
               </p>
             </div>
 
-            <!-- Handles the data parameters of the job. -->
             <div v-if="!isMonthly" class="my-1">
-              <div class="grid-container">
-                <data-params
-                  v-for="dataType of requiredDataParams"
-                  :key="dataType"
-                  :dataType="dataType"
-                  :jobClass="jobClass"
-                  @new-data-params="setDataParams"
-                />
-              </div>
+              <data-param-handler
+                v-if="Object.keys(jobTypeParams).length"
+                :jobTypeParams="jobTypeParams"
+                @new-data-params="setDataParams"
+              />
               <time-parameters
                 :timeparams="timeParams"
                 @new-timeparams="storeTimeParams"
@@ -69,7 +64,7 @@ import * as Jobs from "@/api/jobs";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
-import DataParams from "@/components/jobs/parameters/DataParams.vue";
+import DataParamHandler from "@/components/jobs/parameters/DataParamHandler.vue";
 
 import APIErrors from "@/components/ErrorRenderer.vue";
 
@@ -77,7 +72,7 @@ Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("api-errors", APIErrors);
-Vue.component("data-params", DataParams);
+Vue.component("data-param-handler", DataParamHandler);
 
 @Component
 export default class JobParameters extends Vue {
@@ -89,9 +84,6 @@ export default class JobParameters extends Vue {
 
   jobTypeParams!: Record<string, string>;
   dataParams!: Record<string, any>;
-  weather_granularity!: string;
-  irradiance_type!: string;
-  temperature_type!: string;
   jobSubmitted!: boolean;
   jobId!: string;
 
@@ -104,11 +96,8 @@ export default class JobParameters extends Vue {
     return {
       jobTypeParams: {},
       jobSubmitted: false,
-      weather_granularity: "system",
-      irradiance_type: "standard",
       apiErrors: [],
       errorState: false,
-      temperature_type: "air",
       jobId: null,
       timeParams: {},
       dataParams: {}
@@ -177,14 +166,8 @@ export default class JobParameters extends Vue {
     this.jobTypeParams = newParams;
   }
 
-  setDataParams({
-    type,
-    parameters
-  }: {
-    type: string;
-    parameters: Record<string, string>;
-  }) {
-    this.$set(this.dataParams, type, parameters);
+  setDataParams(parameters: Record<string, any>) {
+    this.dataParams = parameters;
   }
 
   get isMonthly() {
