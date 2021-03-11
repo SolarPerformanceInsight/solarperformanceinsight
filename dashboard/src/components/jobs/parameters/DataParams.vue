@@ -11,6 +11,7 @@
 -->
 <template>
   <div class="data-parameters my-1">
+    <h2 class="data-type">{{ dataType }}</h2>
     <div v-if="jobClass == 'compare' && this.dataType == 'predicted'">
       My predicted data includes:
       <br />
@@ -277,6 +278,9 @@ export default class DataParams extends Vue {
 }
 </script>
 <style>
+h2.data-type {
+  text-transform: capitalize;
+}
 .data-parameters {
   grid-row: 1;
 }

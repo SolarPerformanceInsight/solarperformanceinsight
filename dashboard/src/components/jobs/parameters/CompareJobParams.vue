@@ -46,13 +46,12 @@
           <p>What is the time resolution of your data?</p>
           <div class="ml-1 mt-1">
             <input
-              disabled="true"
               type="radio"
               id="hourly-resolution"
               v-model="timeResolution"
               value="leHourly"
             />
-            <label class="greyed" for="hourly-resolution">
+            <label for="hourly-resolution">
               My data is hourly or better.
             </label>
             <br />
@@ -82,7 +81,7 @@ export default class CompareJobParams extends Vue {
 
   data() {
     return {
-      compare: "expected and actual performance",
+      compare: "predicted and actual performance",
       timeResolution: "leHourly"
     };
   }
@@ -91,7 +90,7 @@ export default class CompareJobParams extends Vue {
   }
   emitParams() {
     let params = {
-      compare: this.compare,
+      compare: this.compare
     };
     if (this.containsPredicted && this.timeResolution == "monthly") {
       params = {
@@ -104,12 +103,9 @@ export default class CompareJobParams extends Vue {
     return this.compare.includes("predicted");
   }
   @Watch("compare")
-  setMonthly() {
-    // Temporary function to force monthly time resolution when predicted
-    // data is provided
-    if (this.containsPredicted) {
-      this.timeResolution = "monthly";
-    } else {
+  ensureValidTimeResolution() {
+    // Ensure that if we're not working with 
+    if (!this.containsPredicted) {
       this.timeResolution = "leHourly";
     }
   }

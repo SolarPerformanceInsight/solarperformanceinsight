@@ -30,7 +30,7 @@
 
             <!-- Handles the data parameters of the job. -->
             <div v-if="!isMonthly" class="my-1">
-              <div style="border: 1px solid black" class="grid-container">
+              <div class="grid-container">
                 <data-params
                   v-for="dataType of requiredDataParams"
                   :key="dataType"
@@ -184,7 +184,7 @@ export default class JobParameters extends Vue {
     type: string;
     parameters: Record<string, string>;
   }) {
-    this.dataParams[type] = parameters;
+    this.$set(this.dataParams, type, parameters);
   }
 
   get isMonthly() {
@@ -207,7 +207,7 @@ export default class JobParameters extends Vue {
     } else if (this.jobClass == "compare") {
       if (this.jobTypeParams["compare"] == "expected and actual performance") {
         // Single set of "data parameters" for both expected and actual performance
-        return ["expected_actual"];
+        return ["expected and actual"];
       } else if (
         this.jobTypeParams["compare"] == "predicted and actual performance"
       ) {
@@ -218,7 +218,7 @@ export default class JobParameters extends Vue {
     } else {
       // Calculate PR, may need to be updated, required actual weather, actual performance
       // optionally provides "expected" modelled performance.
-      return ["expected_actual"];
+      return ["expected and actual"];
     }
   }
 }
