@@ -69,7 +69,7 @@ def lookup_job_compute_function(
         job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
     ):
         return compare_monthly_predicted_and_actual
-    return dummy_func
+    return dummy_func  # pragma: no cover
 
 
 def dummy_func(job, storage):  # pragma: no cover
@@ -154,14 +154,11 @@ def generate_job_performance_data(
         for do in job.data_objects
         if do.definition.type in types
     }
-    if not data_id_by_schema_path:  # no data in types
+    # no data in types or no performance
+    if not data_id_by_schema_path or performance_granularity is None:
         return
     job_id = job.object_id
     num_inverters = len(job.definition.system_definition.inverters)
-    if performance_granularity is None:
-        performance_granularity = getattr(
-            job.definition.parameters, "performance_granularity"
-        )
 
     if performance_granularity == models.PerformanceGranularityEnum.system:
         data_id = data_id_by_schema_path["/"]
@@ -518,11 +515,7 @@ def _temp_factor(gamma, t_ref, t_actual):
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
-    test = _get_index(mcresult, "dc", 0)
-    if isinstance(test, pd.DataFrame):
-        out = sum([_get_index(mcresult, "dc", i)["p_mp"] for i in range(num_arrays)])
-    else:
-        out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
+    out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
     return pd.DataFrame({"performance": out})  # type: ignore
 
 

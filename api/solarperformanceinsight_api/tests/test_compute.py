@@ -519,6 +519,14 @@ def test_generate_job_performance_data_empty(stored_job, auth0_id, mocker):
             "inverter",
         )
     )
+    assert not list(
+        compute.generate_job_performance_data(
+            stored_job,
+            si,
+            [models.JobDataTypeEnum.actual_performance],
+            None,
+        )
+    )
 
 
 def test_get_index():
@@ -827,3 +835,197 @@ def test_compare_monthly_predicted_and_actual(
     assert ser.loc["weather_adjusted_energy"] == 56212.5
     assert ser.loc["difference"] == 3787.5
     assert (ser.loc["ratio"] - 1.0673783) < 1e-7
+
+
+# list(models.TemperatureTypeEnum))  pvlib#1192 for module_temperature
+@pytest.fixture(params=("air", "cell"))
+def temp_type(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.IrradianceTypeEnum))
+def irr_type(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.WeatherGranularityEnum))
+def weather_gran(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.PerformanceGranularityEnum))
+def perf_gran(request):
+    return request.param
+
+
+@pytest.fixture(
+    params=(
+        ("weather only", None),
+        ("weather and AC performance", "system"),
+        ("weather and AC performance", "inverter"),
+        ("weather, AC, and DC performance", "system"),
+        ("weather, AC, and DC performance", "inverter"),
+    )
+)
+def pred_params(irr_type, temp_type, weather_gran, request):
+    if request.param[0] == "weather only":
+        return dict(
+            irradiance_type=irr_type,
+            temperature_type=temp_type,
+            weather_granularity=weather_gran,
+            data_available=request.param[0],
+        )
+    else:
+        return dict(
+            irradiance_type=irr_type,
+            temperature_type=temp_type,
+            weather_granularity=weather_gran,
+            data_available=request.param[0],
+            performance_granularity=request.param[1],
+        )
+
+
+@pytest.fixture()
+def actual_params(irr_type, temp_type, weather_gran, perf_gran):
+    return dict(
+        irradiance_type=irr_type,
+        temperature_type=temp_type,
+        weather_granularity=weather_gran,
+        performance_granularity=perf_gran,
+    )
+
+
+@pytest.fixture()
+def mockup_predicted_actual(
+    mocker, pvwatts_system, system_id, pred_params, actual_params
+):
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+    cat = pd.Timestamp.utcnow()
+    job_params = models.ComparePredictedActualJobParameters(
+        system_id=system_id,
+        time_parameters=dict(
+            start="2021-02-01T00:00:00-07:00",
+            end="2021-04-01T00:00:00-07:00",
+            step="30:00",
+            timezone="Etc/GMT+7",
+        ),
+        compare="predicted and actual performance",
+        predicted_data_parameters=pred_params,
+        actual_data_parameters=actual_params,
+    )
+    index = job_params.time_parameters._time_range
+    job = models.Job(
+        parameters=job_params,
+        system_definition=pvwatts_system,  # TODO: add cec and pvsyst tests
+    )
+    ids = [uuid1() for _ in range(len(job._data_items))]
+    data_objects = [
+        models.StoredJobDataMetadata(
+            object_id=ids[i],
+            object_type="job_data",
+            created_at=cat,
+            modified_at=cat,
+            definition=dict(
+                present=True,
+                filename="data",
+                data_format="application/vnd.apache.arrow.file",
+                type=di.type,
+                data_columns=di._data_cols,
+                schema_path=di.schema_path,
+            ),
+        )
+        for i, di in enumerate(job._data_items.values())
+    ]
+    stored_job = models.StoredJob(
+        object_id=uuid1(),
+        definition=job,
+        status=dict(
+            status="queued",
+            last_change=cat,
+        ),
+        created_at=cat,
+        modified_at=cat,
+        data_objects=data_objects,
+    )
+    day = (index.hour > 8) & (index.hour < 17)
+    perf = pd.DataFrame({"performance": 4000 * day}, index=index)
+    perf.index.name = "time"
+    weather = pd.DataFrame(
+        {
+            "temp_air": 25.0,
+            "wind_speed": 10.0,
+            "module_temperature": 35.0,
+            "cell_temperature": 40.0,
+            "effective_irradiance": 1000 * day,
+            "poa_global": 1100 * day,
+            "poa_direct": 1000 * day,
+            "poa_diffuse": 100 * day,
+            "ghi": 1100 * day,
+            "dni": 1000 * day,
+            "dhi": 100 * day,
+        },
+        index=index,
+    )
+    weather.index.name = "time"
+
+    data = {}
+    for i, ((sp, type_), di) in enumerate(job._data_items.items()):
+        cols = set(di._data_cols) - {"time"}
+        if type_ == models.JobDataTypeEnum.actual_performance:
+            data[ids[i]] = perf.copy()
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.predicted_performance:
+            data[ids[i]] = perf.copy() * 0.9
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.predicted_performance_dc:
+            data[ids[i]] = perf.copy() * 0.98
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.actual_weather:
+            data[ids[i]] = weather[cols].copy()
+        elif type_ == models.JobDataTypeEnum.original_weather:
+            data[ids[i]] = weather[cols].copy() * 0.94
+
+    def _get_data(job_id, data_id, si):
+        return data[data_id]
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
+    return stored_job, save
+
+
+def test_compare_predicted_and_actual(
+    mockup_predicted_actual, auth0_id, nocommit_transaction
+):
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if (
+        job.definition.parameters.predicted_data_parameters.data_available
+        == "weather only"
+    ):
+        # 2 weather adj, 1 summary, 3 inv, 2 array
+        assert len(reslist) == 8
+    else:
+        assert len(reslist) == 3
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert "actual_energy" in ser
+    assert "weather_adjusted_energy" in ser
+    assert "difference" in ser
+    assert "ratio" in ser
