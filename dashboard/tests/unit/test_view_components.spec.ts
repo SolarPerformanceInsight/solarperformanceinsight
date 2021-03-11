@@ -1,4 +1,5 @@
 import Vue from "vue";
+import Vuex from "vuex";
 import VueRouter from "vue-router";
 import flushPromises from "flush-promises";
 
@@ -8,8 +9,9 @@ import SystemSpec from "@/views/SystemSpec.vue";
 import Systems from "@/views/Systems.vue";
 
 import { $auth } from "./mockauth";
+import { storeObject } from "./mockstore";
 
-import { StoredSystem, System } from "@/types/System";
+import { System } from "@/types/System";
 import { Inverter } from "@/types/Inverter";
 import {
   PVWattsInverterParameters,
@@ -27,31 +29,13 @@ import { $validator } from "./mockvalidator";
 
 const router = new VueRouter({ mode: "history", base: process.env.BASE_URL });
 const localVue = createLocalVue();
+localVue.use(Vuex);
 
-const store_system = new StoredSystem({
-  object_id: "1",
-  object_type: "system",
-  created_at: "2020-01-01T00:00Z",
-  modified_at: "2020-01-01T00:00Z",
-  definition: new System({
-    name: "the system",
-    inverters: [
-      new Inverter({
-        arrays: [new PVArray({})]
-      })
-    ]
-  })
-});
-
-const $store = {
-  state: { systems: [store_system] },
-  dispatch: jest.fn()
-};
+const store = new Vuex.Store(storeObject);
 
 const mocks = {
   $auth,
-  $validator,
-  $store
+  $validator
 };
 
 localVue.use(VueRouter);
@@ -90,6 +74,7 @@ describe("Test SystemSpec view", () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
       router,
+      store,
       propsData: {
         systemId: "banana"
       },
@@ -102,7 +87,8 @@ describe("Test SystemSpec view", () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
       mocks,
-      router
+      router,
+      store
     });
     await flushPromises();
     expect(wrapper.vm.$data.system).toEqual(new System({}));
@@ -115,7 +101,8 @@ describe("Test SystemSpec view", () => {
         systemId: "banana"
       },
       router,
-      mocks
+      mocks,
+      store
     });
     await flushPromises();
     expect(wrapper.vm.$data.errorState).toBe(true);
@@ -123,6 +110,7 @@ describe("Test SystemSpec view", () => {
   it("Test save system", async () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       router,
       mocks
     });
@@ -141,6 +129,7 @@ describe("Test SystemSpec view", () => {
   it("Test save existing system", async () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       propsData: {
         systemId: "banana"
       },
@@ -166,6 +155,7 @@ describe("Test SystemSpec view", () => {
     fetchMock.ok = false;
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       mocks,
       router
     });
@@ -187,6 +177,7 @@ describe("Test SystemSpec view", () => {
     fetchMock.status = 500;
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       mocks,
       router
     });
@@ -214,6 +205,7 @@ describe("Test SystemSpec view", () => {
     fetchMock.json = jest.fn().mockResolvedValue(jsonResponse);
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       propsData: {
         systemId: "someid"
       },
@@ -242,6 +234,7 @@ describe("Test SystemSpec view", () => {
     });
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       propsData: {
         systemId: "someid"
       },
@@ -256,6 +249,7 @@ describe("Test SystemSpec view", () => {
   it("Test upload handling", async () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       mocks,
       router
     });
@@ -289,6 +283,7 @@ describe("Test SystemSpec view", () => {
     });
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       propsData: {
         systemId: "someid"
       },
@@ -303,6 +298,7 @@ describe("Test SystemSpec view", () => {
   it("Test upload handling", async () => {
     const wrapper = shallowMount(SystemSpec, {
       localVue,
+      store,
       mocks,
       router
     });
@@ -324,11 +320,12 @@ describe("Test Systems view", () => {
   it("test delete a site", async () => {
     const wrapper = shallowMount(Systems, {
       localVue,
+      store,
       mocks,
       router
     });
     await flushPromises();
-    expect(wrapper.find(".system-name").text()).toBe("the system");
+    expect(wrapper.find(".system-name").text()).toBe("Super System");
     expect(wrapper.find("modal-block").exists()).toBe(false);
     const deleteLink = wrapper.find("a.delete-button");
     deleteLink.trigger("click");
@@ -337,18 +334,21 @@ describe("Test Systems view", () => {
     expect(deleteModal.exists()).toBe(true);
     deleteModal.find(".confirm-deletion").trigger("click");
     await flushPromises();
-    expect(fetch).toHaveBeenCalledWith("/api/systems/1", expect.anything());
-    expect($store.dispatch).toHaveBeenCalledWith("fetchSystems");
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/systems/someuuid",
+      expect.anything()
+    );
     expect(wrapper.find(".modal-block").exists()).toBe(false);
   });
   it("test delete a site", async () => {
     const wrapper = shallowMount(Systems, {
       localVue,
+      store,
       mocks,
       router
     });
     await flushPromises();
-    expect(wrapper.find(".system-name").text()).toBe("the system");
+    expect(wrapper.find(".system-name").text()).toBe("Super System");
     expect(wrapper.find("modal-block").exists()).toBe(false);
     const deleteLink = wrapper.find("a.delete-button");
     deleteLink.trigger("click");
