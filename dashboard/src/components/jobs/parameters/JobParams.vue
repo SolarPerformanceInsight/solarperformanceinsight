@@ -9,10 +9,16 @@
       <template v-if="!jobSubmitted">
         <div class="my-1">
           <form id="job-parameters" @submit="submitJob">
+            <!-- For selecting between diferent usecase variants e.g. CompareJobParams
+                 Allows user to select betweel predicted-actual, expected-actual, and
+                 predicted expected.    
+            -->
             <component
               v-bind:is="jobParamComponent"
               @new-job-type-params="setJobTypeParams"
             />
+
+            <!-- Prompts user about special requirements for monthly data -->
             <div v-if="isMonthly">
               <p>
                 Monthly data is expected to contain monthly averages actual
@@ -21,132 +27,24 @@
                 daytime cell temperature.
               </p>
             </div>
+
+            <!-- Handles the data parameters of the job. -->
             <div v-if="!isMonthly" class="my-1">
               <div style="border: 1px solid black" class="grid-container">
-                <predicted-data-params/>
-                <actual-expected-data-params/>
+                <data-params
+                  v-for="dataType of requiredDataParams"
+                  :key="dataType"
+                  :dataType="dataType"
+                  :jobClass="jobClass"
+                  @new-data-params="setDataParams"
+                />
               </div>
-              
-              <!--
-              <div>
-                My weather data file includes:
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="standard"
-                    value="standard"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="standard">
-                    global horizontal (GHI), direct normal (DNI), and diffuse
-                    horizontal (DHI) irradiance.
-                  </label>
-                  <br />
-                  <input
-                    id="poa"
-                    value="poa"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="poa">
-                    global plane of array (POA global), direct plane of array
-                    (POA direct), and diffuse plane of array (POA diffuse)
-                    irradiance.
-                  </label>
-                  <br />
-                  <input
-                    id="effective"
-                    value="effective"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="effective">
-                    effective irradiance.
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <div class="my-1">
-                How should we determine cell temperature?
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="air"
-                    value="air"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="air">
-                    Calculate cell temperature from irradiance, air temperature,
-                    and windspeed in my data.
-                  </label>
-                  <br />
-                  <input
-                    id="module"
-                    value="module"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="module">
-                    Calculate cell temperature from module temperature and
-                    irradiance in my data.
-                  </label>
-                  <br />
-                  <input
-                    id="cell"
-                    value="cell"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="cell">
-                    Cell temperature is included in my data.
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <div class="my-1">
-                I will provide weather data as:
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="system"
-                    value="system"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="system">
-                    one set for the entire system.
-                  </label>
-                  <br />
-                  <input
-                    id="inverter"
-                    value="inverter"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="inverter">
-                    one set for each inverter and its associated arrays.
-                  </label>
-                  <br />
-                  <input
-                    id="array"
-                    value="array"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="array">
-                    one set for each array.
-                  </label>
-                  <br />
-                </div>
-              </div>
-              -->
               <time-parameters
                 :timeparams="timeParams"
                 @new-timeparams="storeTimeParams"
               />
             </div>
+
             <div class="errors" v-if="this.apiErrors.length">
               <api-errors :errors="apiErrors" :fields="errorFields" />
             </div>
@@ -171,8 +69,7 @@ import * as Jobs from "@/api/jobs";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
-import PredictedDataParams from "@/components/jobs/parameters/PredictedDataParams.vue";
-import ActualExpectedDataParams from "@/components/jobs/parameters/ActualExpectedDataParams.vue";
+import DataParams from "@/components/jobs/parameters/DataParams.vue";
 
 import APIErrors from "@/components/ErrorRenderer.vue";
 
@@ -180,8 +77,7 @@ Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("api-errors", APIErrors);
-Vue.component("predicted-data-params", PredictedDataParams);
-Vue.component("actual-expected-data-params", ActualExpectedDataParams);
+Vue.component("data-params", DataParams);
 
 @Component
 export default class JobParameters extends Vue {
@@ -192,6 +88,7 @@ export default class JobParameters extends Vue {
   errorFields = ["time_parameters"];
 
   jobTypeParams!: Record<string, string>;
+  dataParams!: Record<string, any>;
   weather_granularity!: string;
   irradiance_type!: string;
   temperature_type!: string;
@@ -213,7 +110,8 @@ export default class JobParameters extends Vue {
       errorState: false,
       temperature_type: "air",
       jobId: null,
-      timeParams: {}
+      timeParams: {},
+      dataParams: {}
     };
   }
   storeTimeParams(timeParams: Record<string, any>) {
@@ -229,10 +127,8 @@ export default class JobParameters extends Vue {
       return {
         system_id: this.systemId,
         time_parameters: this.timeParams,
-        weather_granularity: this.weather_granularity,
-        irradiance_type: this.irradiance_type,
-        temperature_type: this.temperature_type,
-        ...this.jobTypeParams
+        ...this.jobTypeParams,
+        ...this.dataParams
       };
     }
   }
@@ -272,17 +168,58 @@ export default class JobParameters extends Vue {
     this.postJob();
     e.preventDefault();
   }
+
   get jobParamComponent() {
     return `${this.jobClass}-job-params`;
   }
+
   setJobTypeParams(newParams: Record<string, string>) {
     this.jobTypeParams = newParams;
   }
+
+  setDataParams({
+    type,
+    parameters
+  }: {
+    type: string;
+    parameters: Record<string, string>;
+  }) {
+    this.dataParams[type] = parameters;
+  }
+
   get isMonthly() {
     return (
       "compare" in this.jobTypeParams &&
       this.jobTypeParams["compare"].includes("monthly")
     );
+  }
+
+  get requiredDataParams() {
+    if (this.isMonthly) {
+      return [];
+    }
+    if (this.jobClass == "calculate") {
+      if (this.jobTypeParams["calculate"] == "predicted performance") {
+        return ["predicted"];
+      } else {
+        return ["expected"];
+      }
+    } else if (this.jobClass == "compare") {
+      if (this.jobTypeParams["compare"] == "expected and actual performance") {
+        // Single set of "data parameters" for both expected and actual performance
+        return ["expected_actual"];
+      } else if (
+        this.jobTypeParams["compare"] == "predicted and actual performance"
+      ) {
+        return ["predicted", "actual"];
+      } else {
+        return ["predicted", "expected"];
+      }
+    } else {
+      // Calculate PR, may need to be updated, required actual weather, actual performance
+      // optionally provides "expected" modelled performance.
+      return ["expected_actual"];
+    }
   }
 }
 </script>
