@@ -515,7 +515,11 @@ def _temp_factor(gamma, t_ref, t_actual):
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
-    out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
+    test = _get_index(mcresult, "dc", 0)
+    if isinstance(test, pd.DataFrame):
+        out = sum([_get_index(mcresult, "dc", i)["p_mp"] for i in range(num_arrays)])
+    else:
+        out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
     return pd.DataFrame({"performance": out})  # type: ignore
 
 
