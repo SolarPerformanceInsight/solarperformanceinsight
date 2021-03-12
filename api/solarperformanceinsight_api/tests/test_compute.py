@@ -895,9 +895,25 @@ def actual_params(irr_type, temp_type, weather_gran, perf_gran):
 
 
 @pytest.fixture()
-def pvsyst_system():
+def sandia_inverter():
+    return dict(
+        Paco=5000,
+        Pdco=5447.35,
+        Vdco=48,
+        Pso=18.11,
+        C0=-1.1e-5,
+        C1=3.26e-4,
+        C2=-5.6e-3,
+        C3=-1.2e-3,
+        Pnt=1.5,
+    )
+
+
+@pytest.fixture()
+def pvsyst_system(sandia_inverter):
     sysdict = deepcopy(models.SYSTEM_EXAMPLE)
     inv = sysdict["inverters"][0]
+    inv["inverter_parameters"] = sandia_inverter
     inv1 = deepcopy(inv)
     inv1["name"] = "inverter 2"
     inv1["arrays"] = [inv1["arrays"][0], inv1["arrays"][0]]
@@ -906,7 +922,7 @@ def pvsyst_system():
 
 
 @pytest.fixture()
-def cec_system():
+def cec_system(sandia_inverter):
     sysdict = deepcopy(models.SYSTEM_EXAMPLE)
     modparams = models.CECModuleParameters(
         alpha_sc=0.00208,
@@ -920,8 +936,10 @@ def cec_system():
         Adjust=13.095,
     )
     inv = sysdict["inverters"][0]
+    inv["inverter_parameters"] = sandia_inverter
     arr = inv["arrays"][0]
     arr["module_parameters"] = modparams
+    arr["strings"] = 1
     inv["arrays"] = [arr]
     inv1 = deepcopy(inv)
     inv1["name"] = "inverter 2"
@@ -1173,3 +1191,41 @@ def test_compare_predicted_and_actual_cec(
     )
     assert "difference" in ser
     assert "ratio" in ser
+
+
+def test_compare_predicted_and_actual_cec_module_temp_as_expected(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    cec_system,
+):
+    actual_params = dict(
+        irradiance_type="poa",
+        temperature_type="cell",
+        weather_granularity="system",
+        performance_granularity="inverter",
+    )
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type="module",
+        weather_granularity="system",
+        data_available="weather only",
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+
+    perf = reslist[2]
+    assert perf.type == "weather adjusted performance"
+    assert perf.schema_path == "/inverters/0"
+    iob = BytesIO(perf.data)
+    iob.seek(0)
+    # 2021-02-01 11:00:00-07:00    1069.703613 if using cell temp from 20C
+    assert (
+        pd.read_feather(iob)
+        .set_index("time")
+        .loc["2021-02-01 11:00:00-07:00", "performance"]
+        > 1070
+    )

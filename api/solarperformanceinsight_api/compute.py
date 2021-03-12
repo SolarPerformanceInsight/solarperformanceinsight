@@ -509,9 +509,17 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     save_results_to_db(job.object_id, result_list, si)
 
 
+def _zero_div(a, b):
+    out = a / b
+    a_almost_zero = abs(a) < 1e-16
+    nans = pd.isnull(out)  # nan when 0 / 0,  a > 0 /0 => inf
+    out[a_almost_zero & nans] = 0.0
+    return out
+
+
 def _temp_factor(gamma, t_ref, t_actual):
     t0 = 25.0
-    return (1 - gamma * (t_actual - t0)) / (1 - gamma * (t_ref - t0))
+    return _zero_div(1 - gamma * (t_actual - t0), 1 - gamma * (t_ref - t0))
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
@@ -521,6 +529,26 @@ def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
     else:
         out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
     return pd.DataFrame({"performance": out})  # type: ignore
+
+
+def _get_temp(
+    weather_df: Tuple[pd.DataFrame, ...],
+    cell_temp: Tuple[pd.Series, ...],
+    arrays: List[models.PVArray],
+    tshift: dt.timedelta,
+) -> Tuple[pd.Series, ...]:
+    out = []
+    for df, ct, arr in zip(weather_df, cell_temp, arrays):
+        if (
+            not isinstance(
+                arr.temperature_model_parameters, models.SAPMTemperatureParameters
+            )
+            and "module_temperature" in df.columns
+        ):
+            out.append(df["module_temperature"].shift(freq=tshift))  # type: ignore
+        else:
+            out.append(ct)
+    return tuple(out)
 
 
 def _calculate_weather_adjusted_predicted_performance(
@@ -589,7 +617,8 @@ def _calculate_weather_adjusted_predicted_performance(
         # instead of full modelchain calculation.
         # since it sets class properties, copy for the actuals calculations
         chain_actual = deepcopy(chain)
-        pac0 = job.definition.system_definition.inverters[i].inverter_parameters._pac0
+        inv = job.definition.system_definition.inverters[i]
+        pac0 = inv.inverter_parameters._pac0
         num_arrays = len(chain.system.arrays)
         gammas = [
             arr._gamma for arr in job.definition.system_definition.inverters[i].arrays
@@ -624,16 +653,23 @@ def _calculate_weather_adjusted_predicted_performance(
             chain_actual.results.total_irrad, chain_actual.results.effective_irradiance
         )
         # use cell temperature from the pvlib modelchain
-        # If air temp + wind speed or module temperature were supplied, they are
-        # converted to cell temperature via the array's temperature model
-        t_ref = chain.results.cell_temperature
-        t_actual = chain_actual.results.cell_temperature
+        # If air temp + wind speed were supplied, they are converted
+        # to cell temperature via the array's temperature model.  If
+        # module_temperature was supplied and the temperature model is
+        # sapm, it is converted to cell_temperature, otherwise module
+        # temperature is used in place of cell_temperature
+        t_ref = _get_temp(
+            ref_weather, chain.results.cell_temperature, inv.arrays, tshift
+        )
+        t_actual = _get_temp(
+            actual_weather, chain_actual.results.cell_temperature, inv.arrays, tshift
+        )
 
         # mean of array POArat * TempFactor for this inverter
         # could make more sense to use weighted mean with weights set
         # by array power percentage
         # another alternative, calculate average POArat and TempFactor separately
-        poa_rat = [pa / pr for pa, pr in zip(poa_actual, poa_ref)]
+        poa_rat = [_zero_div(pa, pr) for pa, pr in zip(poa_actual, poa_ref)]
         tempfactor = list(map(_temp_factor, gammas, t_ref, t_actual))
         poa_rat_x_temp_factor = adjust(  # modelchain outputs are all shifted
             sum([p * t for p, t in zip(poa_rat, tempfactor)]) / num_arrays
