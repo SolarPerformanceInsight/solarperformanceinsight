@@ -1013,17 +1013,11 @@ class CalculateWeatherAdjustedPRJobParameters(CompareMixin, JobParametersBase):
     _performance_types = PrivateAttr((JobDataTypeEnum.actual_performance,))
 
 
-def _get_model_chain_method(
-    irradiance_type: Optional[IrradianceTypeEnum],
-) -> Union[str, None]:
-    if irradiance_type == IrradianceTypeEnum.effective:
-        return "run_model_from_effective_irradiance"
-    elif irradiance_type == IrradianceTypeEnum.poa:
-        return "run_model_from_poa"
-    elif irradiance_type == IrradianceTypeEnum.standard:
-        return "run_model"
-    else:
-        return None
+MODEL_CHAIN_METHOD_MAP = {
+    IrradianceTypeEnum.effective: "run_model_from_effective_irradiance",
+    IrradianceTypeEnum.poa: "run_model_from_poa",
+    IrradianceTypeEnum.standard: "run_model",
+}
 
 
 class ActualDataParams(CompareMixin):
@@ -1035,7 +1029,7 @@ class ActualDataParams(CompareMixin):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._model_chain_method = _get_model_chain_method(self.irradiance_type)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
 class PredictedDataEnum(str, Enum):
@@ -1063,7 +1057,7 @@ class PredictedDataParams(CompareMixin):
             )
         else:
             self._performance_types = ()
-        self._model_chain_method = _get_model_chain_method(self.irradiance_type)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
     @root_validator
     def check_performance_granularity(cls, values):
@@ -1185,7 +1179,7 @@ class Job(SPIBase):
         self._data_items = self.parameters._construct_data_items(self.system_definition)
         # determine what columns to expect in uploads
         irradiance_type = getattr(self.parameters, "irradiance_type", None)
-        self._model_chain_method = _get_model_chain_method(irradiance_type)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP.get(irradiance_type, None)
 
 
 class JobStatusEnum(str, Enum):

@@ -648,7 +648,7 @@ def _calculate_weather_adjusted_predicted_performance(
         # could make more sense to use weighted mean with weights set
         # by array power percentage
         # another alternative, calculate average POArat and TempFactor separately
-        poa_rat = [_zero_div(pa, pr) for pa, pr in zip(poa_actual, poa_ref)]
+        poa_rat = list(map(_zero_div, poa_actual, poa_ref))
         tempfactor = list(map(_temp_factor, gammas, t_ref, t_actual))
         poa_rat_x_temp_factor = adjust(  # modelchain outputs are all shifted
             sum([p * t for p, t in zip(poa_rat, tempfactor)]) / num_arrays
@@ -739,9 +739,9 @@ def compare_monthly_predicted_and_actual(
             "PVsyst specified arrays."
         )
 
-    avg_gamma = mean(
+    avg_gamma: float = mean(
         [
-            mean([arr.module_parameters._gamma for arr in inv.arrays])
+            mean([arr.module_parameters._gamma for arr in inv.arrays])  # type: ignore
             for inv in inverters
         ]
     )
