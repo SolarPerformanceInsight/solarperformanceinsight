@@ -1,10 +1,37 @@
 <!--
-  Component for handling the data parameters of a job. Takes the "jobTypeParams" as
-  a Prop. This is an object containing a `compare` or `calculate` property and the
-  associated job type string.
+  Component for handling the data parameters of a job. 
+  Props:
+    jobTypeParams: an object containing the "calculate" or "compare" property and a
+      string value as expected by the REST API.
+      Example: 
+        {
+          calculate: "predicted performance" 
+        }
 
   Emits a `new-data-params` event that contains an object that should be merged into
   the root job parameters object.
+    Example event payloads:
+      {
+        weather_granularity: "system",
+        irradiance_type: "standard",
+        temperature_type: "cell"
+      }
+    Or:
+      {
+        predicted_data_parameters: {
+          data_available: "weather only",
+          weather_granularity: "system",
+          irradiance_type: "standard",
+          temperature_type: "cell"
+        },
+        actual_data_parameters: {
+          weather_granularity: "system",
+          irradiance_type: "standard",
+          temperature_type: "cell",
+          performance_granularity: "system"
+        }
+      }
+
 -->
 <template>
   <div class="data-param-handler">
