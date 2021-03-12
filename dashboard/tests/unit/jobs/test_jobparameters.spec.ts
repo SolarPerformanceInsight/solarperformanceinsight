@@ -431,6 +431,32 @@ describe("Test Compare Parameters", () => {
       }
     ]);
   });
+  it("test ensure timeres", async () => {
+    const wrapper = mount(CompareJobParams, {
+      localVue
+    });
+
+    wrapper.find("input[value='monthly']").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.vm.$data.timeResolution).toBe("monthly");
+
+    // trigger no effect
+    wrapper.find("input[value='monthly']").trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.vm.$data.timeResolution).toBe("monthly");
+
+    wrapper
+      .find("input[value='expected and actual performance']")
+      .trigger("click");
+
+    await flushPromises();
+
+    expect(wrapper.vm.$data.timeResolution).toBe("leHourly");
+  });
 });
 describe("Test DataParamHandler", () => {
   it("test requiredDataParams", async () => {
