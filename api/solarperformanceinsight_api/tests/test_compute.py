@@ -837,8 +837,7 @@ def test_compare_monthly_predicted_and_actual(
     assert (ser.loc["ratio"] - 1.0673783) < 1e-7
 
 
-# list(models.TemperatureTypeEnum))  pvlib#1192 for module_temperature
-@pytest.fixture(params=("air", "cell"))
+@pytest.fixture(params=list(models.TemperatureTypeEnum))
 def temp_type(request):
     return request.param
 
