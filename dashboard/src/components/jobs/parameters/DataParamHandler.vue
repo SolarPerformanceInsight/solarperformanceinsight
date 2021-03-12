@@ -103,12 +103,8 @@ export default class DataParamHandler extends Vue {
       return ["expected and actual"];
     }
   }
-  emitParams(parameters?: Record<string, string>) {
-    if (parameters) {
-      this.$emit("new-data-params", parameters);
-    } else {
-      this.$emit("new-data-params", this.parameters);
-    }
+  emitParams() {
+    this.$emit("new-data-params", this.parameters);
   }
   @Watch("jobTypeParams", { deep: true })
   resetParameters() {

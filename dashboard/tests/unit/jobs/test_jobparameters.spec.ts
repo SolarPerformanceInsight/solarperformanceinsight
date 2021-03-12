@@ -448,6 +448,15 @@ describe("Test DataParamHandler", () => {
 
     wrapper.setProps({
       jobTypeParams: {
+        calculate: "expected"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["expected"]);
+
+    wrapper.setProps({
+      jobTypeParams: {
         calculate: "weather-adjusted performance ratio"
       }
     });
@@ -481,6 +490,14 @@ describe("Test DataParamHandler", () => {
     await flushPromises();
     // @ts-expect-error
     expect(wrapper.vm.requiredDataParams).toEqual(["predicted", "expected"]);
+    wrapper.setProps({
+      jobTypeParams: {
+        compare: "monthly predicted and actual performance"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual([]);
   });
 });
 describe("Test DataParams", () => {
