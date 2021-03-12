@@ -191,34 +191,6 @@ export default class JobParameters extends Vue {
       this.jobTypeParams["compare"].includes("monthly")
     );
   }
-
-  get requiredDataParams() {
-    if (this.isMonthly) {
-      return [];
-    }
-    if (this.jobClass == "calculate") {
-      if (this.jobTypeParams["calculate"] == "predicted performance") {
-        return ["predicted"];
-      } else {
-        return ["expected"];
-      }
-    } else if (this.jobClass == "compare") {
-      if (this.jobTypeParams["compare"] == "expected and actual performance") {
-        // Single set of "data parameters" for both expected and actual performance
-        return ["expected and actual"];
-      } else if (
-        this.jobTypeParams["compare"] == "predicted and actual performance"
-      ) {
-        return ["predicted", "actual"];
-      } else {
-        return ["predicted", "expected"];
-      }
-    } else {
-      // Calculate PR, may need to be updated, required actual weather, actual performance
-      // optionally provides "expected" modelled performance.
-      return ["expected and actual"];
-    }
-  }
 }
 </script>
 
