@@ -1,3 +1,11 @@
+<!--
+  Component for handling the data parameters of a job. Takes the "jobTypeParams" as
+  a Prop. This is an object containing a `compare` or `calculate` property and the
+  associated job type string.
+
+  Emits a `new-data-params` event that contains an object that should be merged into
+  the root job parameters object.
+-->
 <template>
   <div class="data-param-handler">
     <div class="grid-container my-1">

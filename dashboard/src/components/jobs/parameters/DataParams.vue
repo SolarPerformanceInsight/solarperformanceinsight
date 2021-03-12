@@ -1,13 +1,20 @@
 <!--
-  View for handling the PredictedDataParams object.
+  View for handling the "data_parameters" for a single type of data(Or the whole
+  job if one set of data params is expected).
 
   Emits a new-data-params event with an object of the form: 
     {
       type: "predicted_data_params",
       params: {
-        ...parameters
+        data_available(only for predicted in compare usecases),
+        weather_granularity,
+        irradiance_type,
+        temperature_type,
+        performance_granularity(when performance is included)
       }
     }
+
+  Type will be set to `data_parameters`
 -->
 <template>
   <div class="data-parameters my-1">

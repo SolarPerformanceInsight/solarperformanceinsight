@@ -7,8 +7,11 @@ import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
 import TimeParameters from "@/components/jobs/parameters/TimeParameters.vue";
-import APIErrors from "@/components/ErrorRenderer.vue";
 import DatetimeField from "@/components/jobs/parameters/DatetimeField.vue";
+import DataParamHandler from "@/components/jobs/parameters/DataParamHandler.vue";
+import DataParams from "@/components/jobs/parameters/DataParams.vue";
+
+import APIErrors from "@/components/ErrorRenderer.vue";
 import HelpPopup from "@/components/Help.vue";
 
 import { StoredSystem, System } from "@/types/System";
@@ -88,25 +91,26 @@ describe("Test Job Parameters", () => {
       propsData,
       mocks
     });
+    await flushPromises();
     // @ts-expect-error
     expect(wrapper.vm.jobParamComponent).toBe("calculate-job-params");
 
     // irradiance type
-    expect(wrapper.find("input#standard").exists()).toBe(true);
-    expect(wrapper.find("input#poa").exists()).toBe(true);
-    expect(wrapper.find("input#effective").exists()).toBe(true);
+    expect(wrapper.find("input[value='standard']").exists()).toBe(true);
+    expect(wrapper.find("input[value='poa']").exists()).toBe(true);
+    expect(wrapper.find("input[value='effective']").exists()).toBe(true);
 
     // temperature
-    expect(wrapper.find("input#cell").exists()).toBe(true);
-    expect(wrapper.find("input#module").exists()).toBe(true);
-    expect(wrapper.find("input#air").exists()).toBe(true);
+    expect(wrapper.find("input[value='cell']").exists()).toBe(true);
+    expect(wrapper.find("input[value='module']").exists()).toBe(true);
+    expect(wrapper.find("input[value='air']").exists()).toBe(true);
 
     // granularity
-    expect(wrapper.find("input#system").exists()).toBe(true);
-    expect(wrapper.find("input#inverter").exists()).toBe(true);
-    expect(wrapper.find("input#array").exists()).toBe(true);
+    expect(wrapper.find("input[value='system']").exists()).toBe(true);
+    expect(wrapper.find("input[value='inverter']").exists()).toBe(true);
+    expect(wrapper.find("input[value='array']").exists()).toBe(true);
 
-    const effective = wrapper.find("input#effective");
+    const effective = wrapper.find("input[value='effective']");
     // @ts-expect-error
     effective.element.selected = true;
     effective.trigger("change");
@@ -399,20 +403,187 @@ describe("Test Compare Parameters", () => {
 
     await flushPromises();
 
+    wrapper.vm.$data.compare = "expected and actual performance";
+
+    await flushPromises();
+
+    // @ts-expect-error
+    expect(wrapper.emitted("new-job-type-params").length).toBe(3);
+
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
       {
-        compare: "expected and actual performance",
-        performance_granularity: "system"
+        compare: "predicted and actual performance"
       }
     ]);
-    // @ts-expect-error
-    expect(wrapper.emitted("new-job-type-params").length).toBe(2);
+
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
       {
         compare: "monthly predicted and actual performance"
       }
     ]);
+
+    // @ts-expect-error
+    expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
+      {
+        compare: "predicted and actual performance"
+      }
+    ]);
+  });
+});
+describe("Test DataParamHandler", () => {
+  it("test requiredDataParams", async () => {
+    const propsData = {
+      jobTypeParams: {
+        calculate: "predicted performance"
+      }
+    };
+    const wrapper = mount(DataParamHandler, {
+      localVue,
+      propsData
+    });
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["predicted"]);
+
+    wrapper.setProps({
+      jobTypeParams: {
+        calculate: "weather-adjusted performance ratio"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["expected and actual"]);
+
+    wrapper.setProps({
+      jobTypeParams: {
+        compare: "expected and actual performance"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["expected and actual"]);
+
+    wrapper.setProps({
+      jobTypeParams: {
+        compare: "predicted and actual performance"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["predicted", "actual"]);
+
+    wrapper.setProps({
+      jobTypeParams: {
+        compare: "predicted and expected performance"
+      }
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.requiredDataParams).toEqual(["predicted", "expected"]);
+  });
+});
+describe("Test DataParams", () => {
+  // default parameters
+  const base_parameters = {
+    irradiance_type: "standard",
+    weather_granularity: "system",
+    temperature_type: "air"
+  };
+  it("test parameters for predicted", async () => {
+    const propsData = {
+      dataType: "predicted",
+      jobClass: "compare"
+    };
+
+    const wrapper = mount(DataParams, {
+      propsData
+    });
+
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "predicted_data_parameters",
+      parameters: {
+        data_available: "weather only",
+        ...base_parameters
+      }
+    });
+
+    wrapper.vm.$data.data_available = "weather and AC performance";
+    await flushPromises();
+
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "predicted_data_parameters",
+      parameters: {
+        data_available: "weather and AC performance",
+        performance_granularity: "system",
+        ...base_parameters
+      }
+    });
+  });
+  it("test parameters for other", async () => {
+    const propsData = {
+      dataType: "expected",
+      jobClass: "compare"
+    };
+
+    const wrapper = mount(DataParams, {
+      propsData
+    });
+
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "expected_data_parameters",
+      parameters: {
+        performance_granularity: "system",
+        ...base_parameters
+      }
+    });
+
+    wrapper.setProps({
+      dataType: "actual",
+      jobClass: "compare"
+    });
+
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "actual_data_parameters",
+      parameters: {
+        performance_granularity: "system",
+        ...base_parameters
+      }
+    });
+
+    wrapper.setProps({
+      dataType: "expected",
+      jobClass: "calculate"
+    });
+
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "data_parameters",
+      parameters: {
+        performance_granularity: "system",
+        ...base_parameters
+      }
+    });
+
+    wrapper.setProps({
+      dataType: "expected and actual",
+      jobClass: "compare"
+    });
+
+    await flushPromises();
+    // @ts-expect-error
+    expect(wrapper.vm.parameters).toEqual({
+      type: "data_parameters",
+      parameters: {
+        performance_granularity: "system",
+        ...base_parameters
+      }
+    });
   });
 });
