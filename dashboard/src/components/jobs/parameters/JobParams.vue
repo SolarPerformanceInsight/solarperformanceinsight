@@ -21,10 +21,10 @@
             <!-- Prompts user about special requirements for monthly data -->
             <div v-if="isMonthly">
               <p>
-                Monthly data is expected to contain monthly averages actual
-                performance and weather for the entire system. Weather data is
-                expected to include total plane of array insolation and average
-                daytime cell temperature.
+                When comparing monthly data users are expected to provide
+                monthly totals of energy and POA insolation and monthly average
+                daytime cell temperature. Monthly data should be provided as one
+                set for the entire system.
               </p>
             </div>
 
