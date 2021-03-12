@@ -92,6 +92,24 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
         ),
         (
             dict(
+                compare="predicted and expected performance",
+                predicted_data_parameters=dict(
+                    data_available="weather only",
+                    weather_granularity="system",
+                    irradiance_type="standard",
+                    temperature_type="air",
+                ),
+                expected_data_parameters=dict(
+                    weather_granularity="system",
+                    irradiance_type="standard",
+                    temperature_type="air",
+                ),
+            ),
+            compute.compare_predicted_and_expected,
+            True,
+        ),
+        (
+            dict(
                 compare="expected and actual performance",
                 performance_granularity="system",
                 weather_granularity="system",
@@ -927,28 +945,64 @@ def cec_system(sandia_inverter):
     return models.PVSystem(**sysdict)
 
 
+def _data_mock(job, ids, mocker):
+    index = job.parameters.time_parameters._time_range
+    day = (index.hour > 8) & (index.hour < 17)
+    perf = pd.DataFrame({"performance": 4000 * day}, index=index)
+    perf.index.name = "time"
+    weather = pd.DataFrame(
+        {
+            "temp_air": 25.0,
+            "wind_speed": 10.0,
+            "module_temperature": 35.0,
+            "cell_temperature": 40.0,
+            "effective_irradiance": 1000 * day,
+            "poa_global": 1100 * day,
+            "poa_direct": 1000 * day,
+            "poa_diffuse": 100 * day,
+            "ghi": 1100 * day,
+            "dni": 1000 * day,
+            "dhi": 100 * day,
+        },
+        index=index,
+    )
+    weather.index.name = "time"
+
+    data = {}
+    for i, ((sp, type_), di) in enumerate(job._data_items.items()):
+        cols = set(di._data_cols) - {"time"}
+        if type_ == models.JobDataTypeEnum.actual_performance:
+            data[ids[i]] = perf.copy()
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.predicted_performance:
+            data[ids[i]] = perf.copy() * 0.9
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.predicted_performance_dc:
+            data[ids[i]] = perf.copy() * 0.98
+            if sp == "/":
+                data[ids[i]] *= 3
+        elif type_ == models.JobDataTypeEnum.actual_weather:
+            data[ids[i]] = weather[cols].copy()
+        elif type_ == models.JobDataTypeEnum.original_weather:
+            data[ids[i]] = weather[cols].copy() * 0.94
+
+    def _get_data(job_id, data_id, si):
+        return data[data_id]
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
+
+
 @pytest.fixture()
-def mockup_predicted_actual(mocker, system_id):
-    def mockem(system, pred_params, actual_params):
-        save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
-        cat = pd.Timestamp.utcnow()
-        job_params = models.ComparePredictedActualJobParameters(
-            system_id=system_id,
-            time_parameters=dict(
-                start="2021-02-01T00:00:00-07:00",
-                end="2021-04-01T00:00:00-07:00",
-                step="30:00",
-                timezone="Etc/GMT+7",
-            ),
-            compare="predicted and actual performance",
-            predicted_data_parameters=pred_params,
-            actual_data_parameters=actual_params,
-        )
-        index = job_params.time_parameters._time_range
+def make_mock_job(mocker, system_id):
+    def mockjob(system, job_params):
         job = models.Job(
             parameters=job_params,
             system_definition=system,
         )
+        save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+        cat = pd.Timestamp.utcnow()
         ids = [uuid1() for _ in range(len(job._data_items))]
         data_objects = [
             models.StoredJobDataMetadata(
@@ -978,52 +1032,28 @@ def mockup_predicted_actual(mocker, system_id):
             modified_at=cat,
             data_objects=data_objects,
         )
-        day = (index.hour > 8) & (index.hour < 17)
-        perf = pd.DataFrame({"performance": 4000 * day}, index=index)
-        perf.index.name = "time"
-        weather = pd.DataFrame(
-            {
-                "temp_air": 25.0,
-                "wind_speed": 10.0,
-                "module_temperature": 35.0,
-                "cell_temperature": 40.0,
-                "effective_irradiance": 1000 * day,
-                "poa_global": 1100 * day,
-                "poa_direct": 1000 * day,
-                "poa_diffuse": 100 * day,
-                "ghi": 1100 * day,
-                "dni": 1000 * day,
-                "dhi": 100 * day,
-            },
-            index=index,
-        )
-        weather.index.name = "time"
-
-        data = {}
-        for i, ((sp, type_), di) in enumerate(job._data_items.items()):
-            cols = set(di._data_cols) - {"time"}
-            if type_ == models.JobDataTypeEnum.actual_performance:
-                data[ids[i]] = perf.copy()
-                if sp == "/":
-                    data[ids[i]] *= 3
-            elif type_ == models.JobDataTypeEnum.predicted_performance:
-                data[ids[i]] = perf.copy() * 0.9
-                if sp == "/":
-                    data[ids[i]] *= 3
-            elif type_ == models.JobDataTypeEnum.predicted_performance_dc:
-                data[ids[i]] = perf.copy() * 0.98
-                if sp == "/":
-                    data[ids[i]] *= 3
-            elif type_ == models.JobDataTypeEnum.actual_weather:
-                data[ids[i]] = weather[cols].copy()
-            elif type_ == models.JobDataTypeEnum.original_weather:
-                data[ids[i]] = weather[cols].copy() * 0.94
-
-        def _get_data(job_id, data_id, si):
-            return data[data_id]
-
-        mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
+        _data_mock(job, ids, mocker)
         return stored_job, save
+
+    return mockjob
+
+
+@pytest.fixture()
+def mockup_predicted_actual(make_mock_job, system_id):
+    def mockem(system, pred_params, actual_params):
+        job_params = models.ComparePredictedActualJobParameters(
+            system_id=system_id,
+            time_parameters=dict(
+                start="2021-02-01T00:00:00-07:00",
+                end="2021-04-01T00:00:00-07:00",
+                step="30:00",
+                timezone="Etc/GMT+7",
+            ),
+            compare="predicted and actual performance",
+            predicted_data_parameters=pred_params,
+            actual_data_parameters=actual_params,
+        )
+        return make_mock_job(system, job_params)
 
     return mockem
 

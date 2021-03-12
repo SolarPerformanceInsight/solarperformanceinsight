@@ -70,6 +70,10 @@ def lookup_job_compute_function(
         job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
     ):
         return compare_monthly_predicted_and_actual
+    elif isinstance(
+        job.definition.parameters, models.ComparePredictedExpectedJobParameters
+    ):
+        return compare_predicted_and_expected
     return dummy_func  # pragma: no cover
 
 
@@ -331,7 +335,14 @@ def process_single_modelchain(
 
 
 def _calculate_performance(
-    job: models.StoredJob, si: storage.StorageInterface
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    weather_types: Tuple[models.JobDataTypeEnum] = (
+        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.actual_weather,
+    ),
+    weather_granularity: Optional[models.WeatherGranularityEnum] = None,
+    run_model_method: Optional[str] = None,
 ) -> Tuple[pd.Series, List[DBResult]]:
     """Compute the performance, and other modeling variables, for the Job and
     store the inverter level performance, total system performance, array level weather,
@@ -352,7 +363,8 @@ def _calculate_performance(
         index=job_time_range,
     )
     summary.index.name = "time"  # type: ignore
-    run_model_method: str = job.definition._model_chain_method  # type: ignore
+    if run_model_method is None:
+        run_model_method: str = job.definition._model_chain_method  # type: ignore
     # compute solar position at the middle of the interval
     # positive value assumes left (beginning) label convention
     tshift = time_params.step / 2
@@ -366,7 +378,11 @@ def _calculate_performance(
     # Weather data is shifted right by half the interval length and
     # process_single_modelchain shifts the results back to original labels
     # so that solar position used for modeling is midpoint of interval
-    for i, weather_data in enumerate(generate_job_weather_data(job, si)):
+    for i, weather_data in enumerate(
+        generate_job_weather_data(
+            job, si, types=weather_types, weather_granularity=weather_granularity
+        )
+    ):
         db_results, array_summary = process_single_modelchain(
             chains[i], weather_data, run_model_method, tshift, i
         )
@@ -530,7 +546,11 @@ def _get_temp(
 
 
 def _calculate_weather_adjusted_predicted_performance(
-    job: models.StoredJob, si: storage.StorageInterface
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    actual_data_parameters: Union[
+        None, models.ActualDataParams, models.ExpectedDataParams
+    ] = None,
 ) -> Tuple[List[DBResult], pd.Series]:
     job_params: models.ComparePredictedActualJobParameters = (
         job.definition.parameters  # type: ignore
@@ -547,7 +567,9 @@ def _calculate_weather_adjusted_predicted_performance(
     tshift = time_params.step / 2
     adjust = partial(_adjust_frame, tshift=tshift)
     ref_model_method = job_params.predicted_data_parameters._model_chain_method
-    actual_model_method = job_params.actual_data_parameters._model_chain_method
+    if actual_data_parameters is None:
+        actual_data_parameters = job_params.actual_data_parameters
+    actual_model_method = actual_data_parameters._model_chain_method
     # model chain for each inverter
     chains = construct_modelchains(job.definition.system_definition)
     # generators at inverter level that return tuples of data at the array level
@@ -561,7 +583,7 @@ def _calculate_weather_adjusted_predicted_performance(
         job,
         si,
         types=(models.JobDataTypeEnum.actual_weather,),
-        weather_granularity=job_params.actual_data_parameters.weather_granularity,
+        weather_granularity=actual_data_parameters.weather_granularity,
     )
     ref_pac_gen = generate_job_performance_data(
         job,
@@ -776,3 +798,48 @@ def compare_monthly_predicted_and_actual(
         data=comparison_summary,
     )
     save_results_to_db(job.object_id, [result], si)
+
+
+def compare_predicted_and_expected(job: models.StoredJob, si: storage.StorageInterface):
+    job_params: models.ComparePredictedExpectedJobParameters = job.definition.parameters
+    job_time_range = job_params.time_parameters._time_range
+
+    expected_monthly_energy, results_list = _calculate_performance(
+        job,
+        si,
+        weather_types=(models.JobDataTypeEnum.actual_weather,),
+        weather_granularity=job_params.expected_data_parameters.weather_granularity,
+        run_model_method=job_params.expected_data_parameters._model_chain_method,
+    )
+    breakpoint()
+    # inefficient as it runs the model chain for each inverter
+    # twice for expected. once above and once below
+    pred_results, total_ref_pac = _calculate_weather_adjusted_predicted_performance(
+        job, si, actual_data_parameters=job_params.expected_data_parameters
+    )
+    results_list += pred_results
+    months = job_time_range.month.unique().sort_values()  # type: ignore
+    ref_energy = total_ref_pac.resample("1h").mean()  # type: ignore
+    ref_monthly_energy = (
+        ref_energy.groupby(ref_energy.index.month).sum().reindex(months)
+    )
+    diff = expected_monthly_energy - ref_monthly_energy
+    ratio = expected_monthly_energy / ref_monthly_energy
+    comparison_summary = pd.DataFrame(
+        {
+            "expected_energy": expected_monthly_energy,
+            "weather_adjusted_energy": ref_monthly_energy,
+            "difference": diff,
+            "ratio": ratio,
+        }
+    )
+    month_name_index = pd.Index([calendar.month_name[i] for i in months], name="month")
+    comparison_summary.index = month_name_index
+    results_list.append(
+        DBResult(
+            schema_path="/",
+            type="expected vs weather adjusted reference",
+            data=comparison_summary,
+        )
+    )
+    save_results_to_db(job.object_id, results_list, si)
