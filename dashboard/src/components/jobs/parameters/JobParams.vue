@@ -24,7 +24,7 @@
                 When comparing monthly data users are expected to provide
                 monthly totals of energy and POA insolation and monthly average
                 daytime cell temperature. Monthly data should be provided as one
-                set for the entire system.
+                set for the entire system and include all 12 months.
               </p>
             </div>
 
@@ -44,13 +44,15 @@
                       jobTypeParams.compare.includes('predicted')
                   "
                 >
-                  Predicted data may be provided for a year previous to the time
+                  Predicted data may be provided for a different year from the time
                   index described below. An attempt will be made to shift
                   predicted data by full years to match the index. The timestep
                   and the month, day, and time of the start and end of the
                   predicted data must match the index. Any extra timestamps in
                   the predicted data will be ignored, for instance when February
-                  29th exists in the predicted data but not in the index.
+                  29th exists in the predicted data but not in the index. When 
+                  shifting predicted data from a non-leap year to a leap year, 
+                  February 29 will be dropped from the analysis.
                 </template>
               </time-parameters>
             </div>
