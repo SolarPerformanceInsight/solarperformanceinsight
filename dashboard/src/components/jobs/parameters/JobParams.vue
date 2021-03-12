@@ -37,7 +37,22 @@
               <time-parameters
                 :timeparams="timeParams"
                 @new-timeparams="storeTimeParams"
-              />
+              >
+                <template
+                  v-if="
+                    jobTypeParams.compare &&
+                      jobTypeParams.compare.includes('predicted')
+                  "
+                >
+                  Predicted data may be provided for a year previous to the time
+                  index described below. An attempt will be made to shift
+                  predicted data by full years to match the index. The timestep
+                  and the month, day, and time of the start and end of the
+                  predicted data must match the index. Any extra timestamps in
+                  the predicted data will be ignored, for instance when February
+                  29th exists in the predicted data but not in the index.
+                </template>
+              </time-parameters>
             </div>
 
             <div class="errors" v-if="this.apiErrors.length">

@@ -1,7 +1,12 @@
 <template>
   <div class="time-parameters">
     <h3>Time Parameters</h3>
-    <p>Tell us about the time index of your data files.</p>
+    <p class="p-body">
+      Tell us about the time index of your data files.
+    </p>
+    <p class="p-body">
+      <slot></slot>
+    </p>
     <div class="timefield">
       <label for="timezoneSelect"><b>Timezone:</b></label>
       <select
