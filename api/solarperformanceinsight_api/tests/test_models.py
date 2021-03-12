@@ -711,12 +711,12 @@ def test_array_gamma(system_def):
     )
     arrd = deepcopy(system_def.inverters[0].arrays[0].dict())
     mod = models.PVArray(**arrd)
-    assert mod._gamma is None  # PVsyst
+    assert mod.module_parameters._gamma is None  # PVsyst
 
     arrd["module_parameters"] = cec
     mod = models.PVArray(**arrd)
-    assert mod._gamma == -0.487
+    assert mod.module_parameters._gamma == -4.87e-3
 
     arrd["module_parameters"] = {"pdc0": 100, "gamma_pdc": -0.328}
     mod = models.PVArray(**arrd)
-    assert mod._gamma == -0.328
+    assert mod.module_parameters._gamma == -3.28e-3

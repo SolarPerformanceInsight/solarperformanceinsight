@@ -203,6 +203,7 @@ class PVsystModuleParameters(PVLibBase):
         gt=0,
     )
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
+    _gamma: Optional[float] = PrivateAttr(None)
 
 
 class PVWattsModuleParameters(PVLibBase):
@@ -220,6 +221,11 @@ class PVWattsModuleParameters(PVLibBase):
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("pvwatts")
+    _gamma: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._gamma = self.gamma_pdc / 100
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters`
@@ -300,6 +306,11 @@ class CECModuleParameters(PVLibBase):
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("cec")
+    _gamma: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._gamma = self.gamma_r / 100
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters` by removing
@@ -382,7 +393,6 @@ class PVArray(SPIBase):
         ..., description="Number of parallel strings in the array", gt=0
     )
     _modelchain_models: Tuple[Tuple[str, str], ...] = PrivateAttr()
-    _gamma: Optional[float] = PrivateAttr(None)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -393,10 +403,6 @@ class PVArray(SPIBase):
                 self.temperature_model_parameters._modelchain_temperature_model,
             ),
         )
-        if isinstance(self.module_parameters, PVWattsModuleParameters):
-            self._gamma = self.module_parameters.gamma_pdc
-        elif isinstance(self.module_parameters, CECModuleParameters):
-            self._gamma = self.module_parameters.gamma_r
 
 
 class PVWattsLosses(SPIBase):

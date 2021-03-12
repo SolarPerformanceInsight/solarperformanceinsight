@@ -832,9 +832,9 @@ def test_compare_monthly_predicted_and_actual(
     assert len(ser) == 5
     assert ser.loc["month"] == "July"
     assert ser.loc["actual_energy"] == 60000
-    assert ser.loc["weather_adjusted_energy"] == 56212.5
-    assert ser.loc["difference"] == 3787.5
-    assert (ser.loc["ratio"] - 1.0673783) < 1e-7
+    assert ser.loc["weather_adjusted_energy"] == 56249.625
+    assert ser.loc["difference"] == 3750.375
+    assert (ser.loc["ratio"] - 1.0666738) < 1e-10
 
 
 @pytest.fixture(params=list(models.TemperatureTypeEnum))
@@ -1091,7 +1091,7 @@ def test_compare_predicted_and_actual(
     )
     assert ser["weather_adjusted_energy"] > 0
     assert "difference" in ser
-    assert 0.5 < ser["ratio"] < 1.5
+    assert 0.5 < ser["ratio"] < 1.8
 
 
 @pytest.mark.parametrize(

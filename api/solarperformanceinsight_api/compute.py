@@ -5,6 +5,7 @@ from functools import partial
 from itertools import zip_longest
 import json
 import logging
+from statistics import mean
 from typing import Callable, Generator, Union, List, Tuple, Optional
 from uuid import UUID
 
@@ -621,7 +622,8 @@ def _calculate_weather_adjusted_predicted_performance(
         pac0 = inv.inverter_parameters._pac0
         num_arrays = len(chain.system.arrays)
         gammas = [
-            arr._gamma for arr in job.definition.system_definition.inverters[i].arrays
+            arr.module_parameters._gamma
+            for arr in job.definition.system_definition.inverters[i].arrays
         ]
         if any([g is None for g in gammas]):
             raise TypeError(
@@ -753,19 +755,19 @@ def compare_monthly_predicted_and_actual(
     pac0 = sum([inv.inverter_parameters._pac0 for inv in inverters])
     G_0 = 1000
 
-    gammas = [arr._gamma for inv in inverters for arr in inv.arrays]
+    gammas = [arr.module_parameters._gamma for inv in inverters for arr in inv.arrays]
     if any([g is None for g in gammas]):
         raise TypeError(
             "Currently unable to compare predicted and actual performance for "
             "PVsyst specified arrays."
         )
 
-    avg_gamma = sum(
+    avg_gamma = mean(
         [
-            sum([arr._gamma for arr in inv.arrays]) / len(inv.arrays)  # type: ignore
+            mean([arr.module_parameters._gamma for arr in inv.arrays])
             for inv in inverters
         ]
-    ) / len(inverters)
+    )
     poa_insol_rat = (
         actual_weather["total_poa_insolation"] / ref_weather["total_poa_insolation"]
     )
