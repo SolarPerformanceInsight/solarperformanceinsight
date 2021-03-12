@@ -219,27 +219,6 @@ def _adjust_frame(
     return out
 
 
-def _get_index(
-    result: ModelChainResult, prop: str, index: int
-) -> Union[pd.DataFrame, pd.Series]:
-    # handle possible issues when only one array with results not being
-    # a tuple until pvlib#1139 is resolved
-    val = getattr(result, prop)
-    if isinstance(val, (tuple, list)):
-        out = val[index]
-        if isinstance(out, (pd.DataFrame, pd.Series)):
-            return out
-        else:  # issue described in pvlib/pvlib-python#1139
-            # nans for now
-            return pd.Series(
-                None, index=result.ac.index, dtype=float, name=prop
-            )  # type: ignore
-    elif isinstance(val, (pd.DataFrame, pd.Series)):
-        return val
-    else:
-        raise TypeError(f"Unknown result format {type(val)}")
-
-
 def process_single_modelchain(
     chain: ModelChain,
     weather_data: List[pd.DataFrame],
@@ -296,20 +275,18 @@ def process_single_modelchain(
     num_arrays = len(mc.system.arrays)
     out = []
     for i in range(num_arrays):
-        array_weather: pd.DataFrame = _get_index(
-            results, "effective_irradiance", i
-        ).to_frame(
+        array_weather: pd.DataFrame = (results.effective_irradiance[i]).to_frame(
             "effective_irradiance"
         )  # type: ignore
         # total irrad empty if effective irradiance supplied initially
-        array_weather.loc[:, "poa_global"] = _get_index(
-            results, "total_irrad", i
+        array_weather.loc[:, "poa_global"] = (
+            results.total_irrad[i]
         ).get(  # type: ignore
             "poa_global", float("NaN")
         )
-        array_weather.loc[:, "cell_temperature"] = _get_index(
-            results, "cell_temperature", i
-        )  # type: ignore
+        array_weather.loc[:, "cell_temperature"] = results.cell_temperature[
+            i
+        ]  # type: ignore
         array_weather = adjust(array_weather)  # type: ignore
         weather_sum += array_weather  # type: ignore
         out.append(
@@ -524,11 +501,11 @@ def _temp_factor(gamma, t_ref, t_actual):
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
-    test = _get_index(mcresult, "dc", 0)
+    test = mcresult.dc[0]
     if isinstance(test, pd.DataFrame):
-        out = sum([_get_index(mcresult, "dc", i)["p_mp"] for i in range(num_arrays)])
+        out = sum([mcresult.dc[i]["p_mp"] for i in range(num_arrays)])
     else:
-        out = sum([_get_index(mcresult, "dc", i) for i in range(num_arrays)])
+        out = sum([mcresult.dc[i] for i in range(num_arrays)])
     return pd.DataFrame({"performance": out})  # type: ignore
 
 

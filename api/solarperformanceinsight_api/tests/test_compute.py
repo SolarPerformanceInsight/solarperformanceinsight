@@ -529,27 +529,6 @@ def test_generate_job_performance_data_empty(stored_job, auth0_id, mocker):
     )
 
 
-def test_get_index():
-    class Res:
-        cell_temperature = (43,)
-        ac = pd.Series(0, dtype=float, index=[0, 1])
-        total_irrad = (pd.DataFrame({"a": [0]}, dtype=float, index=[0]),)
-        what = "str"
-
-    res = Res()
-
-    with pytest.raises(TypeError):
-        compute._get_index(res, "what", 0)
-    with pytest.raises(IndexError):
-        compute._get_index(res, "total_irrad", 1)
-    pd.testing.assert_series_equal(res.ac, compute._get_index(res, "ac", 0))
-    pd.testing.assert_frame_equal(
-        res.total_irrad[0], compute._get_index(res, "total_irrad", 0)
-    )
-    nans = compute._get_index(res, "cell_temperature", 0)
-    assert pd.isna(nans).all()
-
-
 # pytest param ids are helpful finding combos that fail
 @pytest.mark.parametrize(
     "tempcols",
