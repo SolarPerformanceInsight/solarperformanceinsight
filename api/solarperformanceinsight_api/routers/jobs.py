@@ -7,6 +7,7 @@ from accept_types import AcceptableType  # type: ignore
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Body,
     Response,
     Request,
     Depends,
@@ -65,9 +66,11 @@ job_links = {
     status_code=201,
 )
 async def create_job(
-    job_parameters: models.JobParametersType,
     response: Response,
     request: Request,
+    job_parameters: models.JobParametersType = Body(
+        ..., example=models.JOB_PARAMS_EXAMPLE
+    ),
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.StoredObjectID:
     """Create a new job"""
@@ -80,7 +83,11 @@ async def create_job(
 
 
 @router.post("/check", responses={201: {}, 401: {}, 403: {}, 422: {}}, status_code=201)
-async def check_job(job: models.JobParametersType):  # pragma: no cover
+async def check_job(
+    job_parameters: models.JobParametersType = Body(
+        ..., example=models.JOB_PARAMS_EXAMPLE
+    ),
+):
     pass
 
 
