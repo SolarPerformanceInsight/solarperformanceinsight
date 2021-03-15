@@ -6,7 +6,7 @@ from itertools import zip_longest
 import json
 import logging
 from statistics import mean
-from typing import Callable, Generator, Union, List, Tuple, Optional
+from typing import Callable, Generator, Union, List, Tuple, Optional, Set
 from uuid import UUID
 
 
@@ -455,7 +455,11 @@ def run_performance_job(job: models.StoredJob, si: storage.StorageInterface):
     save_results_to_db(job.object_id, result_list, si)
 
 
-def _get_actual_monthly_energy(job: models.StoredJob, si: storage.StorageInterface):
+def _get_actual_monthly_energy(
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    missing_leap_days: List[dt.datetime] = [],
+):
     # performance granularity validation means there won't be system level
     # perfromance and inverter level that you wouldn't want to sum
     performance_data_ids = [
@@ -473,7 +477,13 @@ def _get_actual_monthly_energy(job: models.StoredJob, si: storage.StorageInterfa
     )[
         "performance"
     ]  # type: ignore
-    actual_energy = actual_performance.resample("1h").mean()  # type: ignore
+    # drop times from missing_leap_days
+    new_index = actual_performance.index.difference(
+        pd.DatetimeIndex(missing_leap_days)  # type: ignore
+    )
+    actual_energy = (
+        actual_performance.reindex(new_index).resample("1h").mean()  # type: ignore
+    )
     actual_monthly_energy = (
         actual_energy.groupby(actual_energy.index.month).sum().reindex(months)
     )
@@ -545,13 +555,40 @@ def _get_temp(
     return tuple(out)
 
 
+def _get_missing_leap_days(dfs: List[pd.DataFrame]) -> Set[dt.datetime]:
+    if len(dfs) == 0:
+        return set()
+
+    per_df = []
+    for df in dfs:
+        thisset = set()
+        if not df.index.is_leap_year.any():  # type: ignore
+            return set()
+        leap_df = df.loc[df.index.is_leap_year]  # type: ignore
+
+        for _, grp in leap_df.groupby(leap_df.index.year):  # type: ignore
+            feb29 = grp.index.is_leap_year & (grp.index.dayofyear == 60)  # type: ignore
+            if not feb29.any():
+                continue
+            nans = pd.isnull(grp.loc[feb29])
+            # if not all data is nan on feb29, don't drop
+            if not nans.all().all():
+                continue
+            thisset |= set(grp.index[feb29].to_list())
+        per_df.append(thisset)
+    out = per_df[0]
+    out.intersection_update(*per_df[1:])
+    return out
+
+
 def _calculate_weather_adjusted_predicted_performance(
     job: models.StoredJob,
     si: storage.StorageInterface,
     actual_data_parameters: Union[
         None, models.ActualDataParams, models.ExpectedDataParams
     ] = None,
-) -> Tuple[List[DBResult], pd.Series]:
+) -> Tuple[List[DBResult], pd.Series, List[dt.datetime]]:
+    missing_leap_days = set()
     job_params: models.ComparePredictedActualJobParameters = (
         job.definition.parameters  # type: ignore
     )
@@ -691,14 +728,20 @@ def _calculate_weather_adjusted_predicted_performance(
                 data=pac_adj,
             )
         )
-    return results_list, total_ref_pac
+        missing_leap_days |= _get_missing_leap_days(ref_weather)
+
+    return results_list, total_ref_pac, list(missing_leap_days)
 
 
 def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInterface):
-    results_list, total_ref_pac = _calculate_weather_adjusted_predicted_performance(
-        job, si
+    (
+        results_list,
+        total_ref_pac,
+        missing_leap_days,
+    ) = _calculate_weather_adjusted_predicted_performance(job, si)
+    actual_monthly_energy, months = _get_actual_monthly_energy(
+        job, si, missing_leap_days
     )
-    actual_monthly_energy, months = _get_actual_monthly_energy(job, si)
     ref_energy = total_ref_pac.resample("1h").mean()  # type: ignore
     ref_monthly_energy = (
         ref_energy.groupby(ref_energy.index.month).sum().reindex(months)
@@ -815,7 +858,11 @@ def compare_predicted_and_expected(job: models.StoredJob, si: storage.StorageInt
     )
     # inefficient as it runs the model chain for each inverter
     # twice for expected. once above and once below
-    pred_results, total_ref_pac = _calculate_weather_adjusted_predicted_performance(
+    (
+        pred_results,
+        total_ref_pac,
+        missing_leap_days,
+    ) = _calculate_weather_adjusted_predicted_performance(
         job, si, actual_data_parameters=job_params.expected_data_parameters
     )
     results_list += pred_results

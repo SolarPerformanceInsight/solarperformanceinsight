@@ -1240,6 +1240,309 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
     )
 
 
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2020-02-28T23:00Z"),
+                        pd.Timestamp("2020-02-29T23:00Z"),
+                        pd.Timestamp("2020-03-01T23:00Z"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T23:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [float("NaN"), float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2020-02-29T03:00Z"),
+                        pd.Timestamp("2020-02-29T23:00Z"),
+                        pd.Timestamp("2020-03-01T23:00Z"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T03:00Z"), pd.Timestamp("2020-02-29T23:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2020-02-28T23:00-07:00"),
+                        pd.Timestamp("2020-02-29T23:00-07:00"),
+                        pd.Timestamp("2020-03-01T23:00-07:00"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T23:00-07:00")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2020-02-28T23:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2020-02-29T02:00Z"),
+                    ],
+                )
+            ],
+            set(),
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2021-02-28T23:00Z"),
+                        pd.Timestamp("2021-03-01T01:00Z"),
+                        pd.Timestamp("2021-03-01T02:00Z"),
+                    ],
+                )
+            ],
+            set(),
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T01:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), float("NaN")]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T01:00Z"), pd.Timestamp("2024-02-29T02:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {
+                        "performance": [0, float("NaN"), float("NaN")],
+                        "other": [1, 2, 3],
+                    },
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                )
+            ],
+            set(),
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {
+                        "performance": [0, float("NaN"), float("NaN")],
+                    },
+                    index=[
+                        pd.Timestamp("2016-04-29T00:00Z"),
+                        pd.Timestamp("2020-04-29T01:00Z"),
+                        pd.Timestamp("2024-04-29T02:00Z"),
+                    ],
+                )
+            ],
+            set(),
+        ),
+        ([], set()),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), float("NaN")]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                ),
+                pd.DataFrame(
+                    {"per": [0, float("NaN"), 99]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                ),
+            ],
+            {pd.Timestamp("2020-02-29T01:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {"performance": [0, float("NaN"), float("NaN")]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                ),
+                pd.DataFrame(
+                    {"per": [0, float("NaN"), 99]},
+                    index=[
+                        pd.Timestamp("2016-02-29T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                ),
+                pd.DataFrame(
+                    {"per": [0, float("NaN"), float("NaN")]},
+                    index=[
+                        pd.Timestamp("2017-02-28T00:00Z"),
+                        pd.Timestamp("2020-02-29T01:00Z"),
+                        pd.Timestamp("2029-02-28T02:00Z"),
+                    ],
+                ),
+            ],
+            {pd.Timestamp("2020-02-29T01:00Z")},
+        ),
+    ],
+)
+def test_get_missing_leap_days(inp, exp):
+    out = compute._get_missing_leap_days(inp)
+    assert out == exp
+
+
+def test_compare_predicted_and_actual_leap_day_dropped(
+    auth0_id,
+    nocommit_transaction,
+    cec_system,
+    mocker,
+    system_id,
+):
+    actual_params = dict(
+        irradiance_type="poa",
+        temperature_type="cell",
+        weather_granularity="system",
+        performance_granularity="inverter",
+    )
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type="module",
+        weather_granularity="system",
+        data_available="weather only",
+    )
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+    cat = pd.Timestamp.utcnow()
+    job_params = models.ComparePredictedActualJobParameters(
+        system_id=system_id,
+        time_parameters=dict(
+            start="2020-02-27T00:00:00-07:00",
+            end="2020-03-04T00:00:00-07:00",
+            step="30:00",
+            timezone="Etc/GMT+7",
+        ),
+        compare="predicted and actual performance",
+        predicted_data_parameters=pred_params,
+        actual_data_parameters=actual_params,
+    )
+    index = job_params.time_parameters._time_range
+    index.name = "time"
+    job = models.Job(
+        parameters=job_params,
+        system_definition=cec_system,
+    )
+    ids = [uuid1() for _ in range(len(job._data_items))]
+    data_objects = [
+        models.StoredJobDataMetadata(
+            object_id=ids[i],
+            object_type="job_data",
+            created_at=cat,
+            modified_at=cat,
+            definition=dict(
+                present=True,
+                filename="data",
+                data_format="application/vnd.apache.arrow.file",
+                type=di.type,
+                data_columns=di._data_cols,
+                schema_path=di.schema_path,
+            ),
+        )
+        for i, di in enumerate(job._data_items.values())
+    ]
+    stored_job = models.StoredJob(
+        object_id=uuid1(),
+        definition=job,
+        status=dict(
+            status="queued",
+            last_change=cat,
+        ),
+        created_at=cat,
+        modified_at=cat,
+        data_objects=data_objects,
+    )
+    weather = pd.DataFrame(
+        {
+            "module_temperature": 35.0,
+            "ghi": 1100,
+            "dni": 1000,
+            "dhi": 100,
+        },
+        index=index,
+    )
+    weather.loc[index.dayofyear == 60, :] = float("NaN")
+    weather.index.name = "time"
+
+    data = {}
+    for i, ((sp, type_), di) in enumerate(job._data_items.items()):
+        cols = set(di._data_cols) - {"time"}
+        if type_ == models.JobDataTypeEnum.actual_performance:
+            data[ids[i]] = pd.DataFrame(
+                {"performance": 1000 * (index.dayofyear == 60).astype(int)}, index=index
+            )  # zero expect on leap day
+        elif type_ == models.JobDataTypeEnum.predicted_performance:
+            data[ids[i]] = pd.DataFrame({"performance": 4000.0}, index=index)
+        elif type_ == models.JobDataTypeEnum.actual_weather:
+            data[ids[i]] = pd.DataFrame(
+                {
+                    "cell_temperature": 40.0,
+                    "poa_global": 1100,
+                    "poa_direct": 1000,
+                    "poa_diffuse": 100,
+                },
+                index=index,
+            )
+        elif type_ == models.JobDataTypeEnum.original_weather:
+            data[ids[i]] = weather[cols].copy()
+
+    def _get_data(job_id, data_id, si):
+        return data[data_id]
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
+
+    si = storage.StorageInterface(user=auth0_id)
+    compute.compare_predicted_and_actual(stored_job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert (summary_df["actual_energy"] == 0).all()
+
+
 @pytest.fixture()
 def mockup_predicted_expected(make_mock_job, system_id):
     def mockem(system, pred_params, expected_params):
