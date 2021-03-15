@@ -47,7 +47,6 @@ const pvsyst_test_system = {
         C3: 0,
         Pnt: 0
       },
-      losses: null,
       arrays: [
         {
           name: "New Array",
@@ -225,8 +224,8 @@ test("Empty Inverter init", () => {
   expect(inverter.name).toBe("");
   expect(inverter.make_model).toBe("");
   expect(inverter.inverter_parameters instanceof SandiaInverterParameters);
-  expect(inverter.losses).toStrictEqual(null);
   expect(inverter.arrays).toStrictEqual([]);
+  expect("losses" in inverter).toBe(false);
 });
 
 test("Empty pvwatts inverter parameters init", () => {
@@ -288,14 +287,14 @@ describe("Array typeguard", () => {
   });
 });
 describe("Inverter typeguard", () => {
-  test.each(["name", "make_model", "inverter_parameters", "losses", "arrays"])(
+  test.each(["name", "make_model", "inverter_parameters", "arrays"])(
     "Inverter typeguard missing %p",
     missing => {
       const anon_inv: { [key: string]: any } = {
         name: "name",
         make_model: "mk_model",
         inverter_parameters: {},
-        losses: {},
+        losses: new PVWattsLosses({}),
         arrays: []
       };
       anon_inv[missing] = undefined;

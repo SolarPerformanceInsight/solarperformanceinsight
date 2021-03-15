@@ -127,3 +127,6 @@ table.striped-table tr:nth-child(odd) td {
 p.p-body {
   max-width: 80vw;
 }
+.greyed {
+  color: #9b9b9b;
+}

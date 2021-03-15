@@ -9,15 +9,15 @@ export class Inverter {
   name: string;
   make_model: string;
   inverter_parameters: SandiaInverterParameters | PVWattsInverterParameters;
-  losses: PVWattsLosses | null;
+  losses?: PVWattsLosses;
   arrays: Array<PVArray>;
 
   constructor({
     name = "",
     make_model = "",
     inverter_parameters = new SandiaInverterParameters({}),
-    losses = null,
-    arrays = []
+    arrays = [],
+    losses
   }: Partial<Inverter>) {
     this.name = name;
     this.make_model = make_model;
@@ -32,9 +32,7 @@ export class Inverter {
     }
     if (PVWattsLosses.isInstance(losses)) {
       this.losses = new PVWattsLosses(losses);
-    } else {
-      this.losses = losses;
-    }
+    } //
     if (arrays.length == 0) {
       this.arrays = [];
     } else {
@@ -48,7 +46,6 @@ export class Inverter {
       maybe.name != undefined &&
       maybe.make_model != undefined &&
       maybe.inverter_parameters != undefined &&
-      maybe.losses != undefined &&
       maybe.arrays != undefined
     );
   }

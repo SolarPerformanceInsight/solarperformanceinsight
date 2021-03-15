@@ -17,6 +17,7 @@ import { Component, Vue } from "vue-property-decorator";
 @Component
 export default class ModelBase extends Vue {
   errors: Record<string, any> = {};
+  extraErrors: Record<string, any> = {};
 
   get validatorInit() {
     return this.$validator.initialized;
@@ -30,7 +31,14 @@ export default class ModelBase extends Vue {
     throw new Error("apiComponentName getter not implemented.");
   }
 
+  extraValidation() {
+    // Function for adding an extra validation step. Should set this.extraErrors with a fieldname key
+    // and string error message value. Implementations should clear any errors they set when valid.
+    return true;
+  }
   setValidationResult(validity: boolean) {
+    const customValidity = this.extraValidation();
+    validity = validity && customValidity;
     if (!validity) {
       const errors = this.$validator.getErrors();
       const currentErrors: Record<string, any> = {};
@@ -41,10 +49,13 @@ export default class ModelBase extends Vue {
           currentErrors[field] = message;
         });
       }
-      this.errors = currentErrors;
+      // Insert errors and priorities custom messages
+      this.errors = { ...this.extraErrors, ...currentErrors };
     } else {
       this.errors = {};
     }
+
+    this.$emit("updateValidity", validity);
   }
 }
 </script>

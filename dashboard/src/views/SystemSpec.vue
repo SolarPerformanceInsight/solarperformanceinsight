@@ -14,7 +14,9 @@
         <button class="download-system" @click="downloadSystem">
           Download System JSON
         </button>
-        <button class="save-system" @click="saveSystem">Save System</button>
+        <button class="save-system" @click="saveSystem" :disabled="!specValid">
+          Save System
+        </button>
         <file-upload @uploadSuccess="uploadSuccess" />
         <div class="display-summary">
           Display JSON Summary
@@ -68,8 +70,12 @@
             :exists="systemId != null"
             :parameters="system"
             :model="model"
+            @updateValidity="updateSpecValidity"
           />
         </div>
+        <button class="save-system" @click="saveSystem" :disabled="!specValid">
+          Save System
+        </button>
       </template>
     </div>
   </div>
@@ -102,8 +108,13 @@ export default class SystemSpec extends Vue {
   loading!: boolean;
   errorState!: boolean;
   apiErrors!: Record<string, any>;
+  specValid!: boolean;
 
   created() {
+    if (Object.keys(this.$store.state.systems).length == 0) {
+      // If there are no loaded systems, try to load them for system validation
+      this.$store.dispatch("fetchSystems");
+    }
     if (this.systemId != undefined) {
       this.loadSystem();
     } else {
@@ -124,7 +135,8 @@ export default class SystemSpec extends Vue {
       displayAdvanced: false,
       loading: false,
       errorState: false,
-      apiErrors: {}
+      apiErrors: {},
+      specValid: false
     };
   }
   uploadSuccess(fileMetadata: string) {
@@ -190,31 +202,36 @@ export default class SystemSpec extends Vue {
     }
   }
   async saveSystem() {
-    const token = await this.$auth.getTokenSilently();
-    let apiPath = "/api/systems/";
-    if (this.systemId) {
-      apiPath = apiPath + this.systemId;
-    }
-    const response = await fetch(apiPath, {
-      method: "post",
-      body: JSON.stringify(this.system),
-      headers: new Headers({
-        Authorization: `Bearer ${token}`
-      })
-    });
-    if (response.ok) {
-      this.$router.push("/systems");
-    } else {
-      this.loading = false;
-      this.errorState = true;
-      try {
-        this.apiErrors = await response.json();
-      } catch (error) {
-        this.apiErrors = {
-          error: `API responded with status code: ${response.status}`
-        };
+    if (this.specValid) {
+      const token = await this.$auth.getTokenSilently();
+      let apiPath = "/api/systems/";
+      if (this.systemId) {
+        apiPath = apiPath + this.systemId;
+      }
+      const response = await fetch(apiPath, {
+        method: "post",
+        body: JSON.stringify(this.system),
+        headers: new Headers({
+          Authorization: `Bearer ${token}`
+        })
+      });
+      if (response.ok) {
+        this.$router.push("/systems");
+      } else {
+        this.loading = false;
+        this.errorState = true;
+        try {
+          this.apiErrors = await response.json();
+        } catch (error) {
+          this.apiErrors = {
+            error: `API responded with status code: ${response.status}`
+          };
+        }
       }
     }
+  }
+  updateSpecValidity(isValid: boolean) {
+    this.specValid = isValid;
   }
 }
 </script>

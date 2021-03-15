@@ -5,8 +5,8 @@
       <button class="add-array" @click="addArray()" :disabled="!allFixed">
         Add Array
       </button>
-      <span v-if="!allFixed" class="warning-text">
-        Multiple arrays only supported for fixed tracking.
+      <span v-if="!allFixed" class="greyed">
+        (Multiple arrays only supported for fixed tracking.)
       </span>
       <div class="msg warning" v-if="pvarrays.length == 0">
         Inverter requires at least one array.

@@ -45,7 +45,7 @@
 import ModelBase from "@/components/ModelBase.vue";
 
 import { Component, Prop, Watch } from "vue-property-decorator";
-import { System } from "@/types/System";
+import { System, StoredSystem } from "@/types/System";
 
 import { getElevation } from "@/utils/elevation";
 import { resetIndex } from "@/utils/fieldIndex";
@@ -78,6 +78,24 @@ export default class SystemView extends ModelBase {
     getElevation(this.parameters.latitude, this.parameters.longitude)
       .then((elevation: number) => (this.parameters.elevation = elevation))
       .catch(error => console.log(error.message));
+  }
+  extraValidation() {
+    if (!this.exists) {
+      const existingSystems = Object.values(this.$store.state.systems).map(
+        // @ts-expect-error
+        (stored: StoredSystem) => {
+          return stored.definition.name;
+        }
+      );
+      if (existingSystems.includes(this.parameters.name)) {
+        this.extraErrors[
+          "name"
+        ] = `System with name "${this.parameters.name}" already exists.`;
+        return false;
+      }
+      delete this.extraErrors["name"];
+    }
+    return true;
   }
 }
 </script>
