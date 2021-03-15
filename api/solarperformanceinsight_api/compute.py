@@ -539,22 +539,29 @@ def _get_temp(
     return tuple(out)
 
 
-def _get_missing_leap_days(df: Optional[pd.DataFrame]) -> Set[dt.datetime]:
-    # if df is None:
-    #    return set()
-    if not df.index.is_leap_year.any():  # type: ignore
+def _get_missing_leap_days(dfs: List[pd.DataFrame]) -> Set[dt.datetime]:
+    if len(dfs) == 0:
         return set()
-    leap_df = df.loc[df.index.is_leap_year]  # type: ignore
-    out = set()
-    for _, grp in leap_df.groupby(leap_df.index.year):  # type: ignore
-        feb29 = grp.index.is_leap_year & (grp.index.dayofyear == 60)  # type: ignore
-        if not feb29.any():
-            continue
-        nans = pd.isnull(grp.loc[feb29])
-        # if not all data is nan on feb29, don't drop
-        if not nans.all().all():
-            continue
-        out |= set(grp.index[feb29].to_list())
+
+    per_df = []
+    for df in dfs:
+        thisset = set()
+        if not df.index.is_leap_year.any():  # type: ignore
+            return set()
+        leap_df = df.loc[df.index.is_leap_year]  # type: ignore
+
+        for _, grp in leap_df.groupby(leap_df.index.year):  # type: ignore
+            feb29 = grp.index.is_leap_year & (grp.index.dayofyear == 60)  # type: ignore
+            if not feb29.any():
+                continue
+            nans = pd.isnull(grp.loc[feb29])
+            # if not all data is nan on feb29, don't drop
+            if not nans.all().all():
+                continue
+            thisset |= set(grp.index[feb29].to_list())
+        per_df.append(thisset)
+    out = per_df[0]
+    out.intersection_update(*per_df[1:])
     return out
 
 
@@ -699,8 +706,7 @@ def _calculate_weather_adjusted_predicted_performance(
                 data=pac_adj,
             )
         )
-        for rw in ref_weather:
-            missing_leap_days |= _get_missing_leap_days(rw)
+        missing_leap_days |= _get_missing_leap_days(ref_weather)
 
     return results_list, total_ref_pac, list(missing_leap_days)
 
