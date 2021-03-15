@@ -1229,6 +1229,19 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
         (
             [
                 pd.DataFrame(
+                    {"performance": [float("NaN"), float("NaN"), 0]},
+                    index=[
+                        pd.Timestamp("2020-02-29T03:00Z"),
+                        pd.Timestamp("2020-02-29T23:00Z"),
+                        pd.Timestamp("2020-03-01T23:00Z"),
+                    ],
+                )
+            ],
+            {pd.Timestamp("2020-02-29T03:00Z"), pd.Timestamp("2020-02-29T23:00Z")},
+        ),
+        (
+            [
+                pd.DataFrame(
                     {"performance": [0, float("NaN"), 0]},
                     index=[
                         pd.Timestamp("2020-02-28T23:00-07:00"),
@@ -1302,6 +1315,21 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
                         pd.Timestamp("2016-02-29T00:00Z"),
                         pd.Timestamp("2020-02-29T01:00Z"),
                         pd.Timestamp("2024-02-29T02:00Z"),
+                    ],
+                )
+            ],
+            set(),
+        ),
+        (
+            [
+                pd.DataFrame(
+                    {
+                        "performance": [0, float("NaN"), float("NaN")],
+                    },
+                    index=[
+                        pd.Timestamp("2016-04-29T00:00Z"),
+                        pd.Timestamp("2020-04-29T01:00Z"),
+                        pd.Timestamp("2024-04-29T02:00Z"),
                     ],
                 )
             ],
