@@ -1238,3 +1238,77 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
         .loc["2021-02-01 11:00:00-07:00", "performance"]
         > 1070
     )
+
+
+@pytest.fixture()
+def mockup_predicted_expected(make_mock_job, system_id):
+    def mockem(system, pred_params, expected_params):
+        job_params = models.ComparePredictedExpectedJobParameters(
+            system_id=system_id,
+            time_parameters=dict(
+                start="2021-02-01T00:00:00-07:00",
+                end="2021-04-01T00:00:00-07:00",
+                step="30:00",
+                timezone="Etc/GMT+7",
+            ),
+            compare="predicted and expected performance",
+            predicted_data_parameters=pred_params,
+            expected_data_parameters=expected_params,
+        )
+        return make_mock_job(system, job_params)
+
+    return mockem
+
+
+@pytest.fixture()
+def expected_params(irr_type, temp_type, weather_gran, perf_gran):
+    return dict(
+        irradiance_type=irr_type,
+        temperature_type=temp_type,
+        weather_granularity=weather_gran,
+    )
+
+
+def test_compare_predicted_and_expected(
+    mockup_predicted_expected,
+    auth0_id,
+    nocommit_transaction,
+    pvwatts_system,
+    pred_params,
+    expected_params,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_expected(pvwatts_system, pred_params, expected_params)
+    compute.compare_predicted_and_expected(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if (
+        job.definition.parameters.predicted_data_parameters.data_available
+        == "weather only"
+    ):
+        # 2 weather adj, 1 summary, 3 inv, 2 array  + 8 expected
+        assert len(reslist) == 16
+    else:
+        assert len(reslist) == 11
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "expected vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert (
+        abs(ser["expected_energy"] - ser["weather_adjusted_energy"])
+        / ser["expected_energy"]
+        < 2
+    )
+    assert ser["weather_adjusted_energy"] > 0
+    assert "difference" in ser
+    assert 0.5 < ser["ratio"] < 1.9

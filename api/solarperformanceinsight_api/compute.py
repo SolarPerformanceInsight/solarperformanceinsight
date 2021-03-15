@@ -811,7 +811,6 @@ def compare_predicted_and_expected(job: models.StoredJob, si: storage.StorageInt
         weather_granularity=job_params.expected_data_parameters.weather_granularity,
         run_model_method=job_params.expected_data_parameters._model_chain_method,
     )
-    breakpoint()
     # inefficient as it runs the model chain for each inverter
     # twice for expected. once above and once below
     pred_results, total_ref_pac = _calculate_weather_adjusted_predicted_performance(

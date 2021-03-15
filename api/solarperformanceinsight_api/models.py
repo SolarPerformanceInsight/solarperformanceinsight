@@ -1125,7 +1125,7 @@ class ExpectedDataParams(CalculateMixin):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._model_chain_method = _get_model_chain_method(self.irradiance_type)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
 class PredictedExpectedEnum(str, Enum):
