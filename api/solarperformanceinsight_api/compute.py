@@ -337,7 +337,7 @@ def process_single_modelchain(
 def _calculate_performance(
     job: models.StoredJob,
     si: storage.StorageInterface,
-    weather_types: Tuple[models.JobDataTypeEnum] = (
+    weather_types: Tuple[models.JobDataTypeEnum, ...] = (
         models.JobDataTypeEnum.original_weather,
         models.JobDataTypeEnum.actual_weather,
     ),
@@ -364,7 +364,7 @@ def _calculate_performance(
     )
     summary.index.name = "time"  # type: ignore
     if run_model_method is None:
-        run_model_method: str = job.definition._model_chain_method  # type: ignore
+        run_model_method = job.definition._model_chain_method
     # compute solar position at the middle of the interval
     # positive value assumes left (beginning) label convention
     tshift = time_params.step / 2
@@ -384,7 +384,7 @@ def _calculate_performance(
         )
     ):
         db_results, array_summary = process_single_modelchain(
-            chains[i], weather_data, run_model_method, tshift, i
+            chains[i], weather_data, run_model_method, tshift, i  # type: ignore
         )
         result_list += db_results
         summary += array_summary  # type: ignore
@@ -801,7 +801,9 @@ def compare_monthly_predicted_and_actual(
 
 
 def compare_predicted_and_expected(job: models.StoredJob, si: storage.StorageInterface):
-    job_params: models.ComparePredictedExpectedJobParameters = job.definition.parameters
+    job_params: models.ComparePredictedExpectedJobParameters = (
+        job.definition.parameters  # type: ignore
+    )
     job_time_range = job_params.time_parameters._time_range
 
     expected_monthly_energy, results_list = _calculate_performance(
