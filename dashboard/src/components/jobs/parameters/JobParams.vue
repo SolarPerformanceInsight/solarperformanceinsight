@@ -9,137 +9,54 @@
       <template v-if="!jobSubmitted">
         <div class="my-1">
           <form id="job-parameters" @submit="submitJob">
+            <!-- For selecting between diferent usecase variants e.g. CompareJobParams
+                 Allows user to select betweel predicted-actual, expected-actual, and
+                 predicted expected.    
+            -->
             <component
               v-bind:is="jobParamComponent"
               @new-job-type-params="setJobTypeParams"
             />
+
+            <!-- Prompts user about special requirements for monthly data -->
             <div v-if="isMonthly">
               <p>
-                Monthly data is expected to contain monthly averages actual
-                performance and weather for the entire system. Weather data is
-                expected to include total plane of array insolation and average
-                daytime cell temperature.
+                When comparing monthly data users are expected to provide
+                monthly totals of energy and POA insolation and monthly average
+                daytime cell temperature. Monthly data should be provided as one
+                set for the entire system and include all 12 months.
               </p>
             </div>
+
             <div v-if="!isMonthly" class="my-1">
-              <div>
-                My weather data file includes:
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="standard"
-                    value="standard"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="standard">
-                    global horizontal (GHI), direct normal (DNI), and diffuse
-                    horizontal (DHI) irradiance.
-                  </label>
-                  <br />
-                  <input
-                    id="poa"
-                    value="poa"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="poa">
-                    global plane of array (POA global), direct plane of array
-                    (POA direct), and diffuse plane of array (POA diffuse)
-                    irradiance.
-                  </label>
-                  <br />
-                  <input
-                    id="effective"
-                    value="effective"
-                    type="radio"
-                    v-model="irradiance_type"
-                  />
-                  <label for="effective">
-                    effective irradiance.
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <div class="my-1">
-                How should we determine cell temperature?
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="air"
-                    value="air"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="air">
-                    Calculate cell temperature from irradiance, air temperature,
-                    and windspeed in my data.
-                  </label>
-                  <br />
-                  <input
-                    id="module"
-                    value="module"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="module">
-                    Calculate cell temperature from module temperature and
-                    irradiance in my data.
-                  </label>
-                  <br />
-                  <input
-                    id="cell"
-                    value="cell"
-                    type="radio"
-                    v-model="temperature_type"
-                  />
-                  <label for="cell">
-                    Cell temperature is included in my data.
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <div class="my-1">
-                I will provide weather data as:
-                <br />
-                <div class="ml-1 mt-1">
-                  <input
-                    id="system"
-                    value="system"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="system">
-                    one set for the entire system.
-                  </label>
-                  <br />
-                  <input
-                    id="inverter"
-                    value="inverter"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="inverter">
-                    one set for each inverter and its associated arrays.
-                  </label>
-                  <br />
-                  <input
-                    id="array"
-                    value="array"
-                    type="radio"
-                    v-model="weather_granularity"
-                  />
-                  <label for="array">
-                    one set for each array.
-                  </label>
-                  <br />
-                </div>
-              </div>
+              <data-param-handler
+                v-if="Object.keys(jobTypeParams).length"
+                :jobTypeParams="jobTypeParams"
+                @new-data-params="setDataParams"
+              />
               <time-parameters
                 :timeparams="timeParams"
                 @new-timeparams="storeTimeParams"
-              />
+              >
+                <template
+                  v-if="
+                    jobTypeParams.compare &&
+                      jobTypeParams.compare.includes('predicted')
+                  "
+                >
+                  Predicted data may be provided for a different year from the
+                  time index described below. An attempt will be made to shift
+                  predicted data by full years to match the index. The timestep
+                  and the month, day, and time of the start and end of the
+                  predicted data must match the index. Any extra timestamps in
+                  the predicted data will be ignored, for instance when February
+                  29th exists in the predicted data but not in the index. When
+                  shifting predicted data from a non-leap year to a leap year,
+                  February 29 will be dropped from the analysis.
+                </template>
+              </time-parameters>
             </div>
+
             <div class="errors" v-if="this.apiErrors.length">
               <api-errors :errors="apiErrors" :fields="errorFields" />
             </div>
@@ -164,12 +81,15 @@ import * as Jobs from "@/api/jobs";
 import CalculateJobParams from "@/components/jobs/parameters/CalculateJobParams.vue";
 import CompareJobParams from "@/components/jobs/parameters/CompareJobParams.vue";
 import CalculatePRJobParams from "@/components/jobs/parameters/CalculatePRJobParams.vue";
+import DataParamHandler from "@/components/jobs/parameters/DataParamHandler.vue";
+
 import APIErrors from "@/components/ErrorRenderer.vue";
 
 Vue.component("calculate-job-params", CalculateJobParams);
 Vue.component("compare-job-params", CompareJobParams);
 Vue.component("calculatepr-job-params", CalculatePRJobParams);
 Vue.component("api-errors", APIErrors);
+Vue.component("data-param-handler", DataParamHandler);
 
 @Component
 export default class JobParameters extends Vue {
@@ -180,9 +100,7 @@ export default class JobParameters extends Vue {
   errorFields = ["time_parameters"];
 
   jobTypeParams!: Record<string, string>;
-  weather_granularity!: string;
-  irradiance_type!: string;
-  temperature_type!: string;
+  dataParams!: Record<string, any>;
   jobSubmitted!: boolean;
   jobId!: string;
 
@@ -195,13 +113,11 @@ export default class JobParameters extends Vue {
     return {
       jobTypeParams: {},
       jobSubmitted: false,
-      weather_granularity: "system",
-      irradiance_type: "standard",
       apiErrors: [],
       errorState: false,
-      temperature_type: "air",
       jobId: null,
-      timeParams: {}
+      timeParams: {},
+      dataParams: {}
     };
   }
   storeTimeParams(timeParams: Record<string, any>) {
@@ -217,10 +133,8 @@ export default class JobParameters extends Vue {
       return {
         system_id: this.systemId,
         time_parameters: this.timeParams,
-        weather_granularity: this.weather_granularity,
-        irradiance_type: this.irradiance_type,
-        temperature_type: this.temperature_type,
-        ...this.jobTypeParams
+        ...this.jobTypeParams,
+        ...this.dataParams
       };
     }
   }
@@ -260,12 +174,19 @@ export default class JobParameters extends Vue {
     this.postJob();
     e.preventDefault();
   }
+
   get jobParamComponent() {
     return `${this.jobClass}-job-params`;
   }
+
   setJobTypeParams(newParams: Record<string, string>) {
     this.jobTypeParams = newParams;
   }
+
+  setDataParams(parameters: Record<string, any>) {
+    this.dataParams = parameters;
+  }
+
   get isMonthly() {
     return (
       "compare" in this.jobTypeParams &&
@@ -277,6 +198,10 @@ export default class JobParameters extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.grid-container {
+  display: grid;
+  grid-template-rows: auto auto;
+}
 .ml-1 {
   margin-left: 1em;
 }
