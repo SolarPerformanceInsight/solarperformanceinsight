@@ -2,6 +2,16 @@
   View for handling the "data_parameters" for a single type of data(Or the whole
   job if one set of data params is expected).
 
+  A slot is provided at the top of the component. This slot will display the `dataType Prop as an <h2>
+  tag by default for all job types except calculate.
+
+  Props:
+    jobClass: string - One of "calculate", "compare", or "calculatepr"
+    dataType: string - The type of data being collected, one of "predicted", "actual", or "all_data".
+      Ignored for "calculate" job class. The "all_data" option is used to display a single set of
+      parameter fields for a compare job.
+
+
   Emits a new-data-params event with an object of the form: 
     {
       type: "predicted_data_params",
@@ -14,11 +24,14 @@
       }
     }
 
-  Type will be set to `data_parameters`
+  Type will be set to `data_parameters` for parameters that should be added to the
+  root job object.
 -->
 <template>
   <div class="data-parameters my-1">
-    <h2 class="data-type">{{ dataType }}</h2>
+    <slot>
+      <h2 class="data-type" v-if="jobClass != 'calculate'">{{ dataType }}</h2>
+    </slot>
     <div v-if="jobClass == 'compare' && this.dataType == 'predicted'">
       My predicted data includes:
       <br />
@@ -221,13 +234,11 @@ export default class DataParams extends Vue {
   }
   created() {
     if (this.jobClass == "compare") {
-      // Ensure the correct data availability is set for compare usecase
-      // This field will not be included in the posted job JSON for
-      // dataTypes other than predicted.
-      if (this.dataType == "predicted") {
-        this.data_available = "weather only";
-      } else {
-        this.data_available = "weather and AC performance";
+      this.data_available = "weather and AC performance";
+      console.log(this.dataType);
+      if (this.dataType == "predicted" || this.dataType == "actual") {
+        this.temperature_type = "cell";
+        this.irradiance_type = "poa";
       }
     }
   }
@@ -252,7 +263,7 @@ export default class DataParams extends Vue {
           extraParameters.performance_granularity = this.performance_granularity;
         }
       } else {
-        if (this.dataType == "expected and actual") {
+        if (this.dataType == "all_data") {
           type = "data_parameters";
         } else {
           type = `${this.dataType}_data_parameters`;
