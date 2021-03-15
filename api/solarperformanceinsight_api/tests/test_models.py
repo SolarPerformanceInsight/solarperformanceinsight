@@ -695,3 +695,28 @@ def test_cec_module_no_gamma():
     )
     assert "gamma_r" in cec.dict()
     assert "gamma_r" not in cec.pvlib_dict()
+
+
+def test_array_gamma(system_def):
+    cec = dict(
+        alpha_sc=0.004423,
+        a_ref=0.976,
+        I_L_ref=4.98,
+        I_o_ref=8.8e-10,
+        R_sh_ref=148.82,
+        R_s=0.32,
+        gamma_r=-0.487,
+        cells_in_series=36,
+        Adjust=10.48,
+    )
+    arrd = deepcopy(system_def.inverters[0].arrays[0].dict())
+    mod = models.PVArray(**arrd)
+    assert mod.module_parameters._gamma is None  # PVsyst
+
+    arrd["module_parameters"] = cec
+    mod = models.PVArray(**arrd)
+    assert mod.module_parameters._gamma == -4.87e-3
+
+    arrd["module_parameters"] = {"pdc0": 100, "gamma_pdc": -0.328}
+    mod = models.PVArray(**arrd)
+    assert mod.module_parameters._gamma == -3.28e-3

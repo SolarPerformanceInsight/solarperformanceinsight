@@ -1,9 +1,11 @@
+import calendar
 from copy import deepcopy
 import datetime as dt
 from io import BytesIO
 from uuid import uuid1
 
 
+import numpy as np
 import pandas as pd
 from pvlib.location import Location
 from pvlib.modelchain import ModelChain
@@ -47,7 +49,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
 
 
 @pytest.mark.parametrize(
-    "njp,exp",
+    "njp,exp,tp",
     [
         (
             dict(
@@ -57,6 +59,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.run_performance_job,
+            True,
         ),
         (
             dict(
@@ -66,6 +69,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.run_performance_job,
+            True,
         ),
         (
             dict(
@@ -83,7 +87,8 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                     performance_granularity="system",
                 ),
             ),
-            compute.dummy_func,
+            compute.compare_predicted_and_actual,
+            True,
         ),
         (
             dict(
@@ -94,17 +99,24 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                 temperature_type="air",
             ),
             compute.compare_expected_and_actual,
+            True,
+        ),
+        (
+            dict(compare="monthly predicted and actual performance"),
+            compute.compare_monthly_predicted_and_actual,
+            False,
         ),
     ],
 )
-def test_lookup_compute_function(njp, system_def, exp, system_id, stored_job):
+def test_lookup_compute_function(njp, system_def, exp, system_id, stored_job, tp):
     njp["system_id"] = system_id
-    njp["time_parameters"] = dict(
-        start="2020-01-01T00:00:00+00:00",
-        end="2020-12-31T23:59:59+00:00",
-        step="15:00",
-        timezone="UTC",
-    )
+    if tp:
+        njp["time_parameters"] = dict(
+            start="2020-01-01T00:00:00+00:00",
+            end="2020-12-31T23:59:59+00:00",
+            step="15:00",
+            timezone="UTC",
+        )
     job = models.Job(parameters=njp, system_definition=system_def)
     stored_job.definition = job
     assert compute.lookup_job_compute_function(stored_job) == exp
@@ -122,6 +134,68 @@ def test_get_data_bad(job_id, job_data_ids, auth0_id):
     si = storage.StorageInterface(user=auth0_id)
     with pytest.raises(TypeError):
         compute._get_data(job_id, job_data_ids[0], si)
+
+
+@pytest.fixture()
+def insert_monthly_data(
+    monthlypa_job_id,
+    auth0_id,
+    nocommit_transaction,
+    monthly_weather_actuals_id,
+    monthly_weather_original_id,
+    monthly_perf_actuals_id,
+    monthly_perf_original_id,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    months = calendar.month_name[1:]
+    monthadj = [np.cos((i - 6) / 24 * np.pi) for i in range(12)]
+    energydf = pd.DataFrame(
+        {"total_energy": [60000 * x for x in monthadj], "month": months}
+    )
+    weatherdf = pd.DataFrame(
+        {
+            "total_poa_insolation": [500 * 8 * 30 * x for x in monthadj],
+            "average_daytime_cell_temperature": [25 * x for x in monthadj],
+            "month": months,
+        }
+    )
+    ref_energy = energydf.copy()
+    ref_energy.loc[:, "total_energy"] *= 0.9
+    ref_weather = weatherdf.copy()
+    ref_weather.loc[:, "total_poa_insolation"] *= 0.96
+    ref_weather.loc[:, "average_daytime_cell_temperature"] *= 1.2
+
+    with si.start_transaction() as st:
+        for did, df in [
+            (monthly_weather_actuals_id, weatherdf),
+            (monthly_perf_actuals_id, energydf),
+            (monthly_weather_original_id, ref_weather),
+            (monthly_perf_original_id, ref_energy),
+        ]:
+            iob = BytesIO()
+            df.to_feather(iob)
+            iob.seek(0)
+            st.add_job_data(
+                monthlypa_job_id,
+                did,
+                "test.arrow",
+                "application/vnd.apache.arrow.file",
+                iob.read(),
+            )
+    return energydf, weatherdf, ref_energy, ref_weather
+
+
+def test_get_data_month(
+    monthlypa_job_id,
+    monthly_perf_actuals_id,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    exp, *_ = insert_monthly_data
+    out = compute._get_data(monthlypa_job_id, monthly_perf_actuals_id, si)
+    pd.testing.assert_frame_equal(exp.set_index("month"), out)
 
 
 def test_DBResult_setting():
@@ -355,25 +429,104 @@ def test_generate_job_weather_data_fail(stored_job, auth0_id, mocker):
         list(compute.generate_job_weather_data(stored_job, si))
 
 
-def test_get_index():
-    class Res:
-        cell_temperature = (43,)
-        ac = pd.Series(0, dtype=float, index=[0, 1])
-        total_irrad = (pd.DataFrame({"a": [0]}, dtype=float, index=[0]),)
-        what = "str"
+@pytest.mark.parametrize("numarr", [1, 2])
+def test_generate_job_performance_data_system(stored_job, auth0_id, mocker, numarr):
+    si = storage.StorageInterface(user=auth0_id)
+    arr = stored_job.definition.system_definition.inverters[0].arrays[0]
+    stored_job.definition.system_definition.inverters[0].arrays = [arr] * numarr
 
-    res = Res()
+    def mockgetdata(job_id, data_id, si):
+        return pd.DataFrame({"jid": job_id, "did": data_id}, index=[0])
 
-    with pytest.raises(TypeError):
-        compute._get_index(res, "what", 0)
-    with pytest.raises(IndexError):
-        compute._get_index(res, "total_irrad", 1)
-    pd.testing.assert_series_equal(res.ac, compute._get_index(res, "ac", 0))
-    pd.testing.assert_frame_equal(
-        res.total_irrad[0], compute._get_index(res, "total_irrad", 0)
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    ndo = deepcopy(stored_job.data_objects[0])
+    ndo.object_id = uuid1()
+    ndo.definition.schema_path = "/"
+    ndo.definition.type = "actual performance data"
+
+    stored_job.data_objects = [ndo]
+    gen = compute.generate_job_performance_data(
+        stored_job, si, [models.JobDataTypeEnum.actual_performance], "system"
     )
-    nans = compute._get_index(res, "cell_temperature", 0)
-    assert pd.isna(nans).all()
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    assert len(genlist) == 1
+    # returns list of dataframes for each item
+    pd.testing.assert_frame_equal(
+        genlist[0],
+        pd.DataFrame({"jid": stored_job.object_id, "did": ndo.object_id}, index=[0]),
+    )
+
+
+def test_generate_job_performance_data_inverter(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+
+    def mockgetdata(job_id, data_id, si):
+        return (job_id, data_id)
+
+    mocker.patch("solarperformanceinsight_api.compute._get_data", new=mockgetdata)
+
+    do = stored_job.data_objects[0]
+    new_do = []
+    ids = []
+    for i in range(3):
+        ndo = deepcopy(do)
+        ndo.object_id = uuid1()
+        ids.append((stored_job.object_id, ndo.object_id))
+        ndo.definition.schema_path = f"/inverters/{i}"
+        if i == 1:
+            ndo.definition.type = "actual performance data"
+        else:
+            ndo.definition.type = "predicted performance data"
+        new_do.append(ndo)
+    inv = deepcopy(stored_job.definition.system_definition.inverters[0])
+    stored_job.definition.system_definition.inverters = [inv, inv, inv]
+    stored_job.data_objects = new_do
+    gen = compute.generate_job_performance_data(
+        stored_job,
+        si,
+        [
+            models.JobDataTypeEnum.actual_performance,
+            models.JobDataTypeEnum.predicted_performance,
+        ],
+        "inverter",
+    )
+    assert str(type(gen)) == "<class 'generator'>"
+    genlist = list(gen)
+    # returns list of dataframes for each item
+    assert genlist == ids
+
+
+def test_generate_job_performance_data_fail(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+
+    with pytest.raises(ValueError):
+        list(
+            compute.generate_job_performance_data(
+                stored_job, si, [models.JobDataTypeEnum.actual_performance], "unknown"
+            )
+        )
+
+
+def test_generate_job_performance_data_empty(stored_job, auth0_id, mocker):
+    si = storage.StorageInterface(user=auth0_id)
+    assert not list(
+        compute.generate_job_performance_data(
+            stored_job,
+            si,
+            [models.JobDataTypeEnum.predicted_performance_dc],
+            "inverter",
+        )
+    )
+    assert not list(
+        compute.generate_job_performance_data(
+            stored_job,
+            si,
+            [models.JobDataTypeEnum.actual_performance],
+            None,
+        )
+    )
 
 
 # pytest param ids are helpful finding combos that fail
@@ -577,3 +730,481 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     assert ser.loc["actual_energy"] == 1.0
     assert (ser.loc["difference"] - -1.0) < 1e-7
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7
+
+
+def test_compare_monthly_predicted_and_actual_pvsyst(
+    mocker, auth0_id, nocommit_transaction, insert_monthly_data, monthlypa_job_id
+):
+    si = storage.StorageInterface(user=auth0_id)
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    assert isinstance(
+        job.definition.system_definition.inverters[0].arrays[0].module_parameters,
+        models.PVsystModuleParameters,
+    )
+    with pytest.raises(TypeError):
+        compute.compare_monthly_predicted_and_actual(job, si)
+
+
+@pytest.fixture()
+def pvwatts_system():
+    sysdict = deepcopy(models.SYSTEM_EXAMPLE)
+    arr = dict(
+        name="array",
+        make_model="custom",
+        albedo=0.2,
+        modules_per_string=10,
+        strings=5,
+        tracking=dict(tilt=20.0, azimuth=180.0),
+        temperature_model_parameters=dict(
+            a=-3.47,
+            b=-0.0594,
+            deltaT=3,
+        ),
+        module_parameters=dict(pdc0=240.0, gamma_pdc=-0.5),
+    )
+    inv = dict(
+        name="Inverter 1",
+        make_model="custom",
+        losses={},
+        airmass_model="kastenyoung1989",
+        aoi_model="physical",
+        clearsky_model="ineichen",
+        spectral_model="no_loss",
+        transposition_model="haydavies",
+        inverter_parameters=dict(pdc0=7500),
+        arrays=[arr],
+    )
+    inv1 = deepcopy(inv)
+    inv1["name"] = "inverter 2"
+    inv1["arrays"] = [arr, arr]
+    sysdict["inverters"] = [inv, inv1]
+    return models.PVSystem(**sysdict)
+
+
+def test_compare_monthly_predicted_and_actual(
+    mocker,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+    monthlypa_job_id,
+    pvwatts_system,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    job.definition.system_definition = pvwatts_system
+    compute.compare_monthly_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 1
+
+    summary = reslist[0]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[6]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "July"
+    assert ser.loc["actual_energy"] == 60000
+    assert ser.loc["weather_adjusted_energy"] == 56249.625
+    assert ser.loc["difference"] == 3750.375
+    assert (ser.loc["ratio"] - 1.0666738) < 1e-10
+
+
+@pytest.fixture(params=list(models.TemperatureTypeEnum))
+def temp_type(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.IrradianceTypeEnum))
+def irr_type(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.WeatherGranularityEnum))
+def weather_gran(request):
+    return request.param
+
+
+@pytest.fixture(params=list(models.PerformanceGranularityEnum))
+def perf_gran(request):
+    return request.param
+
+
+@pytest.fixture(
+    params=(
+        ("weather only", None),
+        ("weather and AC performance", "system"),
+        ("weather and AC performance", "inverter"),
+        ("weather, AC, and DC performance", "system"),
+        ("weather, AC, and DC performance", "inverter"),
+    )
+)
+def pred_params(irr_type, temp_type, weather_gran, request):
+    if request.param[0] == "weather only":
+        return dict(
+            irradiance_type=irr_type,
+            temperature_type=temp_type,
+            weather_granularity=weather_gran,
+            data_available=request.param[0],
+        )
+    else:
+        return dict(
+            irradiance_type=irr_type,
+            temperature_type=temp_type,
+            weather_granularity=weather_gran,
+            data_available=request.param[0],
+            performance_granularity=request.param[1],
+        )
+
+
+@pytest.fixture()
+def actual_params(irr_type, temp_type, weather_gran, perf_gran):
+    return dict(
+        irradiance_type=irr_type,
+        temperature_type=temp_type,
+        weather_granularity=weather_gran,
+        performance_granularity=perf_gran,
+    )
+
+
+@pytest.fixture()
+def sandia_inverter():
+    return dict(
+        Paco=5000,
+        Pdco=5447.35,
+        Vdco=48,
+        Pso=18.11,
+        C0=-1.1e-5,
+        C1=3.26e-4,
+        C2=-5.6e-3,
+        C3=-1.2e-3,
+        Pnt=1.5,
+    )
+
+
+@pytest.fixture()
+def pvsyst_system(sandia_inverter):
+    sysdict = deepcopy(models.SYSTEM_EXAMPLE)
+    inv = sysdict["inverters"][0]
+    inv["inverter_parameters"] = sandia_inverter
+    inv1 = deepcopy(inv)
+    inv1["name"] = "inverter 2"
+    inv1["arrays"] = [inv1["arrays"][0], inv1["arrays"][0]]
+    sysdict["inverters"] = [inv, inv1]
+    return models.PVSystem(**sysdict)
+
+
+@pytest.fixture()
+def cec_system(sandia_inverter):
+    sysdict = deepcopy(models.SYSTEM_EXAMPLE)
+    modparams = models.CECModuleParameters(
+        alpha_sc=0.00208,
+        a_ref=1.876,
+        I_L_ref=5.81,
+        I_o_ref=3.7e-11,
+        R_sh_ref=298.4,
+        R_s=0.514,
+        gamma_r=-0.37,
+        cells_in_series=72,
+        Adjust=13.095,
+    )
+    inv = sysdict["inverters"][0]
+    inv["inverter_parameters"] = sandia_inverter
+    arr = inv["arrays"][0]
+    arr["module_parameters"] = modparams
+    arr["strings"] = 1
+    inv["arrays"] = [arr]
+    inv1 = deepcopy(inv)
+    inv1["name"] = "inverter 2"
+    inv1["arrays"] = [arr, arr]
+    sysdict["inverters"] = [inv, inv1]
+    return models.PVSystem(**sysdict)
+
+
+@pytest.fixture()
+def mockup_predicted_actual(mocker, system_id):
+    def mockem(system, pred_params, actual_params):
+        save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+        cat = pd.Timestamp.utcnow()
+        job_params = models.ComparePredictedActualJobParameters(
+            system_id=system_id,
+            time_parameters=dict(
+                start="2021-02-01T00:00:00-07:00",
+                end="2021-04-01T00:00:00-07:00",
+                step="30:00",
+                timezone="Etc/GMT+7",
+            ),
+            compare="predicted and actual performance",
+            predicted_data_parameters=pred_params,
+            actual_data_parameters=actual_params,
+        )
+        index = job_params.time_parameters._time_range
+        job = models.Job(
+            parameters=job_params,
+            system_definition=system,
+        )
+        ids = [uuid1() for _ in range(len(job._data_items))]
+        data_objects = [
+            models.StoredJobDataMetadata(
+                object_id=ids[i],
+                object_type="job_data",
+                created_at=cat,
+                modified_at=cat,
+                definition=dict(
+                    present=True,
+                    filename="data",
+                    data_format="application/vnd.apache.arrow.file",
+                    type=di.type,
+                    data_columns=di._data_cols,
+                    schema_path=di.schema_path,
+                ),
+            )
+            for i, di in enumerate(job._data_items.values())
+        ]
+        stored_job = models.StoredJob(
+            object_id=uuid1(),
+            definition=job,
+            status=dict(
+                status="queued",
+                last_change=cat,
+            ),
+            created_at=cat,
+            modified_at=cat,
+            data_objects=data_objects,
+        )
+        day = (index.hour > 8) & (index.hour < 17)
+        perf = pd.DataFrame({"performance": 4000 * day}, index=index)
+        perf.index.name = "time"
+        weather = pd.DataFrame(
+            {
+                "temp_air": 25.0,
+                "wind_speed": 10.0,
+                "module_temperature": 35.0,
+                "cell_temperature": 40.0,
+                "effective_irradiance": 1000 * day,
+                "poa_global": 1100 * day,
+                "poa_direct": 1000 * day,
+                "poa_diffuse": 100 * day,
+                "ghi": 1100 * day,
+                "dni": 1000 * day,
+                "dhi": 100 * day,
+            },
+            index=index,
+        )
+        weather.index.name = "time"
+
+        data = {}
+        for i, ((sp, type_), di) in enumerate(job._data_items.items()):
+            cols = set(di._data_cols) - {"time"}
+            if type_ == models.JobDataTypeEnum.actual_performance:
+                data[ids[i]] = perf.copy()
+                if sp == "/":
+                    data[ids[i]] *= 3
+            elif type_ == models.JobDataTypeEnum.predicted_performance:
+                data[ids[i]] = perf.copy() * 0.9
+                if sp == "/":
+                    data[ids[i]] *= 3
+            elif type_ == models.JobDataTypeEnum.predicted_performance_dc:
+                data[ids[i]] = perf.copy() * 0.98
+                if sp == "/":
+                    data[ids[i]] *= 3
+            elif type_ == models.JobDataTypeEnum.actual_weather:
+                data[ids[i]] = weather[cols].copy()
+            elif type_ == models.JobDataTypeEnum.original_weather:
+                data[ids[i]] = weather[cols].copy() * 0.94
+
+        def _get_data(job_id, data_id, si):
+            return data[data_id]
+
+        mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
+        return stored_job, save
+
+    return mockem
+
+
+def test_compare_predicted_and_actual(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    pvwatts_system,
+    pred_params,
+    actual_params,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(pvwatts_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if (
+        job.definition.parameters.predicted_data_parameters.data_available
+        == "weather only"
+    ):
+        # 2 weather adj, 1 summary, 3 inv, 2 array
+        assert len(reslist) == 8
+    else:
+        assert len(reslist) == 3
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert (
+        abs(ser["actual_energy"] - ser["weather_adjusted_energy"])
+        / ser["actual_energy"]
+        < 2
+    )
+    assert ser["weather_adjusted_energy"] > 0
+    assert "difference" in ser
+    assert 0.5 < ser["ratio"] < 1.8
+
+
+@pytest.mark.parametrize(
+    "data_available,pg",
+    (
+        ("weather only", None),
+        ("weather and AC performance", "inverter"),
+        ("weather, AC, and DC performance", "inverter"),
+    ),
+)
+def test_compare_predicted_and_actual_pvsyst(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    pvsyst_system,
+    temp_type,
+    pg,
+    data_available,
+):
+    actual_params = dict(
+        irradiance_type="poa",
+        temperature_type="cell",
+        weather_granularity="system",
+        performance_granularity="inverter",
+    )
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type=temp_type,
+        weather_granularity="system",
+        performance_granularity=pg,
+        data_available=data_available,
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(pvsyst_system, pred_params, actual_params)
+    with pytest.raises(TypeError):  # pvlib#1190
+        compute.compare_predicted_and_actual(job, si)
+
+
+@pytest.mark.parametrize(
+    "data_available,pg",
+    (
+        ("weather only", None),
+        ("weather and AC performance", "inverter"),
+        ("weather, AC, and DC performance", "inverter"),
+    ),
+)
+def test_compare_predicted_and_actual_cec(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    cec_system,
+    temp_type,
+    pg,
+    data_available,
+):
+    actual_params = dict(
+        irradiance_type="poa",
+        temperature_type="cell",
+        weather_granularity="system",
+        performance_granularity="inverter",
+    )
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type=temp_type,
+        weather_granularity="system",
+        performance_granularity=pg,
+        data_available=data_available,
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if data_available == "weather only":
+        # 2 weather adj, 1 summary, 3 inv, 2 array
+        assert len(reslist) == 8
+    else:
+        assert len(reslist) == 3
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert (
+        abs(ser["actual_energy"] - ser["weather_adjusted_energy"])
+        / ser["actual_energy"]
+        < 2
+    )
+    assert "difference" in ser
+    assert "ratio" in ser
+
+
+def test_compare_predicted_and_actual_cec_module_temp_as_expected(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    cec_system,
+):
+    actual_params = dict(
+        irradiance_type="poa",
+        temperature_type="cell",
+        weather_granularity="system",
+        performance_granularity="inverter",
+    )
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type="module",
+        weather_granularity="system",
+        data_available="weather only",
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+
+    perf = reslist[2]
+    assert perf.type == "weather adjusted performance"
+    assert perf.schema_path == "/inverters/0"
+    iob = BytesIO(perf.data)
+    iob.seek(0)
+    # 2021-02-01 11:00:00-07:00    1069.703613 if using cell temp from 20C
+    assert (
+        pd.read_feather(iob)
+        .set_index("time")
+        .loc["2021-02-01 11:00:00-07:00", "performance"]
+        > 1070
+    )

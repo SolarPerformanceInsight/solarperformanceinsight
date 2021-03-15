@@ -42,7 +42,7 @@ CREATE TABLE `job_results` (
   `id` binary(16) NOT NULL DEFAULT (uuid_to_bin(uuid(),1)),
   `job_id` binary(16) NOT NULL,
   `schema_path` varchar(128) NOT NULL,
-  `type` varchar(32) NOT NULL,
+  `type` varchar(64) NOT NULL,
   `format` varchar(64) NOT NULL,
   `data` longblob NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -470,7 +470,7 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`insert_objects`@`localhost` PROCEDURE `add_job_result`(auth0id varchar(32), jobid char(36),
-                            new_schema_path varchar(128), new_type varchar(32),
+                            new_schema_path varchar(128), new_type varchar(64),
                             new_format varchar(64), new_result longblob)
     MODIFIES SQL DATA
     COMMENT 'Add a result for a job'
@@ -1627,5 +1627,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20210112213845'),
   ('20210122173304'),
   ('20210223174423'),
-  ('20210223230007');
+  ('20210223230007'),
+  ('20210310162457');
 UNLOCK TABLES;

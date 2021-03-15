@@ -203,6 +203,7 @@ class PVsystModuleParameters(PVLibBase):
         gt=0,
     )
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
+    _gamma: Optional[float] = PrivateAttr(None)
 
 
 class PVWattsModuleParameters(PVLibBase):
@@ -220,6 +221,11 @@ class PVWattsModuleParameters(PVLibBase):
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("pvwatts")
+    _gamma: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._gamma = self.gamma_pdc / 100
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters`
@@ -300,6 +306,11 @@ class CECModuleParameters(PVLibBase):
         ),
     )
     _modelchain_dc_model: str = PrivateAttr("cec")
+    _gamma: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._gamma = self.gamma_r / 100
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters` by removing
@@ -427,6 +438,11 @@ class PVWattsInverterParameters(SPIBase):
         0.9637, description="Reference inverter efficiency, unitless"
     )
     _modelchain_ac_model: str = PrivateAttr("pvwatts")
+    _pac0: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._pac0 = self.pdc0 * self.eta_inv_nom
 
 
 class SandiaInverterParameters(SPIBase):
@@ -490,6 +506,11 @@ class SandiaInverterParameters(SPIBase):
         ),
     )
     _modelchain_ac_model: str = PrivateAttr("sandia")
+    _pac0: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._pac0 = self.Paco
 
 
 class AOIModelEnum(str, Enum):
@@ -992,11 +1013,23 @@ class CalculateWeatherAdjustedPRJobParameters(CompareMixin, JobParametersBase):
     _performance_types = PrivateAttr((JobDataTypeEnum.actual_performance,))
 
 
+MODEL_CHAIN_METHOD_MAP = {
+    IrradianceTypeEnum.effective: "run_model_from_effective_irradiance",
+    IrradianceTypeEnum.poa: "run_model_from_poa",
+    IrradianceTypeEnum.standard: "run_model",
+}
+
+
 class ActualDataParams(CompareMixin):
     """Parameters for the "actual" data series"""
 
     _weather_types = PrivateAttr((JobDataTypeEnum.actual_weather,))
     _performance_types = PrivateAttr((JobDataTypeEnum.actual_performance,))
+    _model_chain_method: str = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
 class PredictedDataEnum(str, Enum):
@@ -1011,6 +1044,7 @@ class PredictedDataParams(CompareMixin):
     data_available: PredictedDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
     _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
+    _model_chain_method: str = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -1023,6 +1057,7 @@ class PredictedDataParams(CompareMixin):
             )
         else:
             self._performance_types = ()
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
     @root_validator
     def check_performance_granularity(cls, values):
@@ -1144,14 +1179,7 @@ class Job(SPIBase):
         self._data_items = self.parameters._construct_data_items(self.system_definition)
         # determine what columns to expect in uploads
         irradiance_type = getattr(self.parameters, "irradiance_type", None)
-        if irradiance_type == IrradianceTypeEnum.effective:
-            self._model_chain_method = "run_model_from_effective_irradiance"
-        elif irradiance_type == IrradianceTypeEnum.poa:
-            self._model_chain_method = "run_model_from_poa"
-        elif irradiance_type == IrradianceTypeEnum.standard:
-            self._model_chain_method = "run_model"
-        else:
-            self._model_chain_method = None
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP.get(irradiance_type, None)
 
 
 class JobStatusEnum(str, Enum):
@@ -1273,6 +1301,8 @@ class JobResultTypeEnum(str, Enum):
     monthy_summary = "monthly summary"
     daytime_flag = "daytime flag"
     actual_vs_expected = "actual vs expected energy"
+    weather_adjusted_performance = "weather adjusted performance"
+    actual_vs_adjusted_reference = "actual vs weather adjusted reference"
     # will need other types for performance ratio etc.
 
 
@@ -1289,6 +1319,12 @@ class JobResultMetadata(SPIBase):
   effective insolation (Wh/m^2), and average daytime cell temperature.
 - actual vs expected energy: Monthly totals of actual energy (Wh), expected energy (Wh),
   the difference (actual - expected) (Wh), and the ratio of actual / expected.
+- weather adjusted performance: AC performance adjusted for differences in weather
+  conditions at the level (system or inverter) given by  schema_path. Data has
+  columns are time and performance.
+- actual vs adjusted reference: Monthly totals of actual energy (Wh), weather adjusted
+  reference energy (Wh), the difference (actual - reference) (Wh), and the ratio of
+  actual / reference.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will
