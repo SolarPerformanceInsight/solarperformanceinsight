@@ -1208,3 +1208,79 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
         .loc["2021-02-01 11:00:00-07:00", "performance"]
         > 1070
     )
+
+
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), 0]},
+                index=[
+                    pd.Timestamp("2020-02-28T23:00Z"),
+                    pd.Timestamp("2020-02-29T23:00Z"),
+                    pd.Timestamp("2020-03-01T23:00Z"),
+                ],
+            ),
+            {pd.Timestamp("2020-02-29T23:00Z")},
+        ),
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), 0]},
+                index=[
+                    pd.Timestamp("2020-02-28T23:00-07:00"),
+                    pd.Timestamp("2020-02-29T23:00-07:00"),
+                    pd.Timestamp("2020-03-01T23:00-07:00"),
+                ],
+            ),
+            {pd.Timestamp("2020-02-29T23:00-07:00")},
+        ),
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), 0]},
+                index=[
+                    pd.Timestamp("2020-02-28T23:00Z"),
+                    pd.Timestamp("2020-02-29T01:00Z"),
+                    pd.Timestamp("2020-02-29T02:00Z"),
+                ],
+            ),
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), 0]},
+                index=[
+                    pd.Timestamp("2021-02-28T23:00Z"),
+                    pd.Timestamp("2021-03-01T01:00Z"),
+                    pd.Timestamp("2021-03-01T02:00Z"),
+                ],
+            ),
+            set(),
+        ),
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), 0]},
+                index=[
+                    pd.Timestamp("2016-02-29T00:00Z"),
+                    pd.Timestamp("2020-02-29T01:00Z"),
+                    pd.Timestamp("2024-02-29T02:00Z"),
+                ],
+            ),
+            {pd.Timestamp("2020-02-29T01:00Z")},
+        ),
+        (
+            pd.DataFrame(
+                {"performance": [0, float("NaN"), float("NaN")]},
+                index=[
+                    pd.Timestamp("2016-02-29T00:00Z"),
+                    pd.Timestamp("2020-02-29T01:00Z"),
+                    pd.Timestamp("2024-02-29T02:00Z"),
+                ],
+            ),
+            {pd.Timestamp("2020-02-29T01:00Z"), pd.Timestamp("2024-02-29T02:00Z")},
+        ),
+    ],
+)
+def test_get_missing_leap_days(inp, exp):
+    out = compute._get_missing_leap_days(inp)
+    assert out == exp
