@@ -488,7 +488,7 @@ describe("Test DataParamHandler", () => {
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["expected and actual"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["all_data"]);
 
     wrapper.setProps({
       jobTypeParams: {
@@ -497,7 +497,7 @@ describe("Test DataParamHandler", () => {
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["expected and actual"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["all_data"]);
 
     wrapper.setProps({
       jobTypeParams: {
@@ -506,7 +506,7 @@ describe("Test DataParamHandler", () => {
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["predicted", "actual"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["actual", "predicted"]);
 
     wrapper.setProps({
       jobTypeParams: {
@@ -515,7 +515,7 @@ describe("Test DataParamHandler", () => {
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["predicted", "expected"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["actual", "predicted"]);
     wrapper.setProps({
       jobTypeParams: {
         compare: "monthly predicted and actual performance"
@@ -547,8 +547,11 @@ describe("Test DataParams", () => {
     expect(wrapper.vm.parameters).toEqual({
       type: "predicted_data_parameters",
       parameters: {
-        data_available: "weather only",
-        ...base_parameters
+        data_available: "weather and AC performance",
+        irradiance_type: "poa",
+        performance_granularity: "system",
+        temperature_type: "cell",
+        weather_granularity: "system"
       }
     });
 
@@ -561,7 +564,9 @@ describe("Test DataParams", () => {
       parameters: {
         data_available: "weather and AC performance",
         performance_granularity: "system",
-        ...base_parameters
+        irradiance_type: "poa",
+        temperature_type: "cell",
+        weather_granularity: "system"
       }
     });
   });
@@ -615,7 +620,7 @@ describe("Test DataParams", () => {
     });
 
     wrapper.setProps({
-      dataType: "expected and actual",
+      dataType: "all_data",
       jobClass: "compare"
     });
 
