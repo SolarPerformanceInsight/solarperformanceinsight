@@ -7,9 +7,9 @@
 
   Props:
     jobClass: string - One of "calculate", "compare", or "calculatepr"
-    dataType: string - The type of data being collected, one of "predicted", "actual", or "all_data".
-      Ignored for "calculate" job class. The "all_data" option is used to display a single set of
-      parameter fields for a compare job.
+    dataType: string - The type of data being collected, one of "predicted", "actual", "expected",
+      or "all_data". Ignored for "calculate" job class. The "all_data" option is used to display a
+      single set of parameter fields for a compare job.
 
 
   Emits a new-data-params event with an object of the form: 
@@ -235,7 +235,6 @@ export default class DataParams extends Vue {
   created() {
     if (this.jobClass == "compare") {
       this.data_available = "weather and AC performance";
-      console.log(this.dataType);
       if (this.dataType == "predicted" || this.dataType == "actual") {
         this.temperature_type = "cell";
         this.irradiance_type = "poa";

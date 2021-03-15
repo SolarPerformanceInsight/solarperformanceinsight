@@ -126,7 +126,7 @@ export default class DataParamHandler extends Vue {
       ) {
         return ["actual", "predicted"];
       } else {
-        return ["actual", "predicted"];
+        return ["expected", "predicted"];
       }
     } else {
       // Calculate PR, may need to be updated, required actual weather, actual performance

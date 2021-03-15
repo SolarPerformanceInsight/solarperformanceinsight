@@ -515,7 +515,7 @@ describe("Test DataParamHandler", () => {
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["actual", "predicted"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["expected", "predicted"]);
     wrapper.setProps({
       jobTypeParams: {
         compare: "monthly predicted and actual performance"
