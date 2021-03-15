@@ -45,6 +45,7 @@ const headerMap: Record<string, string> = {
 // collection of anonymous functions for displaying values
 const formatFuncs = {
   actual_energy: (x: number) => x.toFixed(0),
+  weather_adjusted_energy: (x: number) => x.toFixed(0),
   expected_energy: (x: number) => x.toFixed(0),
   difference: (x: number) => x.toFixed(0),
   ratio: (x: number) => (x * 100).toFixed(1),
@@ -59,7 +60,15 @@ export default class SummaryTable extends Vue {
   @Prop() tableData!: Record<string, Table>;
 
   get headers() {
-    if ("actual vs expected energy" in this.tableData) {
+    if ("actual vs weather adjusted reference" in this.tableData) {
+      return [
+        "month",
+        "actual_energy",
+        "weather_adjusted_energy",
+        "difference",
+        "ratio"
+      ];
+    } else if ("actual vs expected energy" in this.tableData) {
       return [
         "month",
         "actual_energy",
@@ -97,7 +106,15 @@ export default class SummaryTable extends Vue {
         if (header == "month") {
           return;
         }
-        const dataType = headerMap[header];
+        let dataType = firstKey;
+
+        // Jobs with 'actual vs weather adjusted reference' results do
+        // not contain any other monthly summary data to be merged and
+        // contain overlapping fields, so just access expected headers
+        // directly.
+        if (dataType != "actual vs weather adjusted reference") {
+          dataType = headerMap[header];
+        }
         const dataTable = this.tableData[dataType];
         if (dataTable) {
           data.push(dataTable.getColumn(header));

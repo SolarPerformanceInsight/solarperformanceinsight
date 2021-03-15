@@ -115,7 +115,7 @@ export default class DatetimeField extends Vue {
     return current;
   }
   get dayMax() {
-    return 30;
+    return this.currentDate ? this.currentDate.daysInMonth : 31;
   }
   @Watch("currentDate")
   emitTimeParams() {

@@ -21,7 +21,8 @@ export const variableUnits: Record<string, string> = {
   actual_energy: "Wh",
   expected_energy: "Wh",
   difference: "Wh",
-  ratio: "%"
+  ratio: "%",
+  weather_adjusted_energy: "Wh"
 };
 
 export function getVariableUnits(variable: string) {

@@ -23,7 +23,8 @@ export const variableDisplayNames: Record<string, string> = {
   actual_energy: "Actual Energy",
   expected_energy: "Expected Energy",
   difference: "Difference",
-  ratio: "Ratio"
+  ratio: "Ratio",
+  weather_adjusted_energy: "Weather Adjusted Reference Energy"
 };
 
 export function getVariableDisplayName(variable: string) {
