@@ -68,24 +68,12 @@ describe("Test power conversion", () => {
     }
   });
   it("W/m^2 => MW", () => {
-    const expected = [
-      [1, 1000],
-      [1.5, 1500]
-    ];
-    for (const results of expected) {
-      const converter = getUnitConverter("W/m^2", "MW");
-      expect(converter).toBe(null);
-    }
+    const converter = getUnitConverter("W/m^2", "MW");
+    expect(converter).toBe(null);
   });
   it("DNE", () => {
-    const expected = [
-      [1, 1000],
-      [1.5, 1500]
-    ];
-    for (const results of expected) {
-      const converter = getUnitConverter("DNE", "DNE/m^2");
-      expect(converter).toBe(null);
-    }
+    const converter = getUnitConverter("DNE", "DNE/m^2");
+    expect(converter).toBe(null);
   });
   it("kWh => Wh", () => {
     const expected = [

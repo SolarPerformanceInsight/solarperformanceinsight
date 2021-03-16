@@ -1,3 +1,5 @@
+import { getVariableUnits } from "@/utils/units.ts";
+
 const powerUnitValues: Record<string, number> = {
   W: 1,
   kW: 1000,
@@ -43,4 +45,9 @@ export function getUnitConverter(origUnits: string, targetUnits: string) {
   const target = unitValues[targetUnits];
   const factor = orig / target;
   return (value: number) => value * factor;
+}
+
+export function getUnitOptions(variable: string) {
+  const defaultUnits = getVariableUnits(variable);
+  return Object.keys(getUnitValues(defaultUnits));
 }
