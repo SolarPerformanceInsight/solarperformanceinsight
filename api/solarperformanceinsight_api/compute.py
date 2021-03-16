@@ -733,7 +733,7 @@ def _calculate_weather_adjusted_predicted_performance(
         )
         missing_leap_days |= _get_missing_leap_days(ref_weather)
 
-    return results_list, total_ref_pac, list(missing_leap_days)
+    return results_list, total_ref_pac, sorted(missing_leap_days)
 
 
 def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInterface):
