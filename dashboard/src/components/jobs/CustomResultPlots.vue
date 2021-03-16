@@ -278,7 +278,6 @@ export default class CustomPlots extends Vue {
   }
   setUnits(key: number) {
     const variable = this.selectedVariables[key];
-    console.log("VARIABLE: '", variable, "'");
     if (variable && variable != "") {
       this.units[key] = getVariableUnits(variable);
     }
