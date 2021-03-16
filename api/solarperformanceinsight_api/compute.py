@@ -400,7 +400,7 @@ def _calculate_performance(
     daytime.name = "daytime_flag"  # type: ignore
     # index of data actually uploaded - any leap days that shouldn't be in the summaries
     input_data_range = daytime.dropna().index.difference(
-        pd.DatetimeIndex(missing_leap_days)
+        pd.DatetimeIndex(missing_leap_days)  # type: ignore
     )
     # months in output according to job time range
     months = job_time_range.month.unique().sort_values()  # type: ignore
