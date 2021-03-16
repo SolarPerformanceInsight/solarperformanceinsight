@@ -555,10 +555,10 @@ def _get_missing_leap_days(dfs: List[pd.DataFrame]) -> Set[dt.datetime]:
             if not feb29.any():
                 continue
             nans = pd.isnull(grp.loc[feb29])
-            # if not all data is nan on feb29, don't drop
-            if not nans.all().all():
-                continue
-            thisset |= set(grp.index[feb29].to_list())
+            # all data is nan on feb29, so user did not include date in
+            # upload (likely) or just specified nan values (less likely)
+            if nans.all().all():
+                thisset |= set(grp.index[feb29].to_list())
         per_df.append(thisset)
     out = per_df[0]
     out.intersection_update(*per_df[1:])
