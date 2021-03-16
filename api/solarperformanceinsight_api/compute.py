@@ -343,6 +343,7 @@ def _calculate_performance(
     ),
     weather_granularity: Optional[models.WeatherGranularityEnum] = None,
     run_model_method: Optional[str] = None,
+    missing_leap_days: List[dt.datetime] = [],
 ) -> Tuple[pd.Series, List[DBResult]]:
     """Compute the performance, and other modeling variables, for the Job and
     store the inverter level performance, total system performance, array level weather,
@@ -397,8 +398,10 @@ def _calculate_performance(
     # average zenith
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
-    # index of data actually uploaded
-    input_data_range = daytime.dropna().index
+    # index of data actually uploaded - any leap days that shouldn't be in the summaries
+    input_data_range = daytime.dropna().index.difference(
+        pd.DatetimeIndex(missing_leap_days)
+    )
     # months in output according to job time range
     months = job_time_range.month.unique().sort_values()  # type: ignore
 
@@ -849,21 +852,22 @@ def compare_predicted_and_expected(job: models.StoredJob, si: storage.StorageInt
     )
     job_time_range = job_params.time_parameters._time_range
 
-    expected_monthly_energy, results_list = _calculate_performance(
-        job,
-        si,
-        weather_types=(models.JobDataTypeEnum.actual_weather,),
-        weather_granularity=job_params.expected_data_parameters.weather_granularity,
-        run_model_method=job_params.expected_data_parameters._model_chain_method,
-    )
-    # inefficient as it runs the model chain for each inverter
-    # twice for expected. once above and once below
     (
         pred_results,
         total_ref_pac,
         missing_leap_days,
     ) = _calculate_weather_adjusted_predicted_performance(
         job, si, actual_data_parameters=job_params.expected_data_parameters
+    )
+    # inefficient as it runs the model chain for each inverter
+    # twice for expected. once above and once below
+    expected_monthly_energy, results_list = _calculate_performance(
+        job,
+        si,
+        weather_types=(models.JobDataTypeEnum.actual_weather,),
+        weather_granularity=job_params.expected_data_parameters.weather_granularity,
+        run_model_method=job_params.expected_data_parameters._model_chain_method,
+        missing_leap_days=missing_leap_days,
     )
     results_list += pred_results
     months = job_time_range.month.unique().sort_values()  # type: ignore
