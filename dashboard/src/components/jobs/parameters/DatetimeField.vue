@@ -12,7 +12,7 @@
             maxlength="4"
             max="2037"
             min="1901"
-            placeholder="yyyy"
+            placeholder="YYYY"
             v-model="year"
           />
         </span>
@@ -23,7 +23,7 @@
             maxlength="2"
             min="1"
             max="12"
-            placeholder="mm"
+            placeholder="MM"
             v-model="month"
           />
         </span>
@@ -34,7 +34,7 @@
             maxlength="2"
             min="1"
             :max="dayMax"
-            placeholder="dd"
+            placeholder="DD"
             v-model="day"
           />
         </span>

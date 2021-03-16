@@ -288,7 +288,7 @@ label {
   margin-bottom: tpx;
 }
 label input {
-  position:absolute;
+  position: absolute;
   left: 0;
 }
 input[type="radio"] {
