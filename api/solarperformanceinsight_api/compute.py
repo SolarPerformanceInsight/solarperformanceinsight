@@ -497,17 +497,27 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     save_results_to_db(job.object_id, result_list, si)
 
 
-def _zero_div(a, b):
-    out = a / b
+def _zero_nans(out, a):
     a_almost_zero = abs(a) < 1e-16
     nans = pd.isnull(out)  # nan when 0 / 0,  a > 0 /0 => inf
     out[a_almost_zero & nans] = 0.0
     return out
 
 
+def _zero_div(a, b):
+    out = a / b
+    return _zero_nans(out, a)
+
+
 def _temp_factor(gamma, t_ref, t_actual):
     t0 = 25.0
     return _zero_div(1 - gamma * (t_actual - t0), 1 - gamma * (t_ref - t0))
+
+
+def _inf_mul(a, b):
+    """set 0 * inf = 0"""
+    out = a.mul(b, axis=0)
+    return _zero_nans(out, a)
 
 
 def _get_mc_dc(mcresult: ModelChainResult, num_arrays: int) -> pd.DataFrame:
@@ -692,10 +702,10 @@ def _calculate_weather_adjusted_predicted_performance(
         )
 
         if ref_pdc is not None:  # 2A-1 and 2A-4
-            pdc_ref_adj = ref_pdc.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
+            pdc_ref_adj = _inf_mul(ref_pdc, poa_rat_x_temp_factor)
             pac_ref_adj = pdc_ref_adj * 0.985
         else:  # 2A-2
-            pac_ref_adj = ref_pac.mul(poa_rat_x_temp_factor, axis=0)  # type: ignore
+            pac_ref_adj = _inf_mul(ref_pac, poa_rat_x_temp_factor)
         pac_adj = pac_ref_adj.clip(upper=pac0)  # type: ignore
         pac_adj.index.name = "time"
         total_ref_pac += pac_adj["performance"]
