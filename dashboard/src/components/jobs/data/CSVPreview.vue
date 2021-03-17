@@ -23,7 +23,11 @@
                 mapped: mapping[header]
               }"
             >
-              {{ header.csv_header ? header.csv_header : `Column ${header.header_index + 1}` }}
+              {{
+                header.header
+                  ? header.header
+                  : `Column ${header.header_index + 1}`
+              }}
             </th>
           </tr>
         </thead>
@@ -66,7 +70,7 @@
                   mapped: mapping[col]
                 }"
               >
-                {{ row[col.csv_header] }}
+                {{ row[col.header] }}
               </td>
             </template>
           </tr>

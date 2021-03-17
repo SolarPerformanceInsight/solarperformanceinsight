@@ -12,39 +12,63 @@ export interface Mapping {
 
 export function mapToCSV(
   data: Array<Record<string, any>> | Array<Array<string>>,
-  Mapping: Record<string, Mapping>
+  mapping: Record<string, Mapping>
 ) {
-  const originalHeaders: Array<string | number> = [];
-  const mappedHeaders: Array<string | number> = [];
+  const originalHeaders: Array<CSVHeader> = [];
+  let mappedHeaders: Array<string | number> = [];
   const hasHeaders = !Array.isArray(data[0]);
-
-  for (const mapped in Mapping) {
-    let originalHeader: string | number;
-    if (Mapping[mapped].csv_header.header) {
-      // @ts-expect-error
-      originalHeader = Mapping[mapped].csv_header.header;
+  for (const mapped in mapping) {
+    let originalIndex: string | number;
+    const originalHeader = mapping[mapped].csv_header;
+    if (originalHeader.header !== undefined) {
+      originalIndex = originalHeader.header;
     } else {
-      originalHeader = Mapping[mapped].csv_header.header_index;
+      originalIndex = originalHeader.header_index;
     }
     originalHeaders.push(originalHeader);
     mappedHeaders.push(mapped);
-    const originalUnits = Mapping[mapped].units;
+    const originalUnits = mapping[mapped].units;
+
     if (originalUnits !== undefined) {
       const converter = getUnitConverter(originalUnits, "W");
       if (converter) {
         data.forEach((row: Record<string, number>) => {
-          row[originalHeader] = converter(row[originalHeader]);
+          row[originalIndex] = converter(row[originalIndex]);
         });
       }
     }
+  }
+  if (!hasHeaders) {
+    // If headers were not provided, we cannot unparse particular columns,
+    // so generate the expected headers.
+    const headersOut = data[0].map(() => "");
+    for (let i = 0; i < originalHeaders.length; i++) {
+      const columnIndex = originalHeaders[i].header_index;
+      const newHeader = mappedHeaders[i];
+      headersOut[columnIndex] = newHeader;
+    }
+    mappedHeaders = headersOut;
   }
   const newHeaders = papa.unparse(
     { fields: mappedHeaders, data: [] },
     { header: true }
   );
-  const newData = papa.unparse(
-    { fields: originalHeaders, data: data },
-    { header: false }
-  );
-  return newHeaders + newData;
+  let dataOut: string;
+  if (hasHeaders) {
+    // Headers were provided, we can use papa.unparse to parse those fields from objects
+    dataOut = papa.unparse(
+      {
+        fields: originalHeaders.map((x: CSVHeader) => x.header),
+        data: data
+      },
+      {
+        header: false
+      }
+    );
+  } else {
+    dataOut = papa.unparse(data, {
+      header: false
+    });
+  }
+  return newHeaders + dataOut;
 }

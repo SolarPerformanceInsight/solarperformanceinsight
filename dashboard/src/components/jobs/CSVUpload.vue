@@ -294,7 +294,6 @@ export default class CSVUpload extends Vue {
         // @ts-expect-error
         headers = parsingResult.data[0].map((x: string, i: number) => {
           return {
-            csv_header: `Column ${i+1}`,
             header_index: i
           };
         });
@@ -303,7 +302,7 @@ export default class CSVUpload extends Vue {
         // @ts-expect-error
         headers = parsingResult.meta.fields.map((header: string, i: number) => {
           return {
-            csv_header: header,
+            header: header,
             header_index: i
           };
         });

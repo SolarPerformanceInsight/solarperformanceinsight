@@ -32,14 +32,14 @@ Takes the following props:
             Unmapped
           </option>
           <option
-            v-for="(u, i) in headers"
+            v-for="(header, i) in headers"
             :key="i"
-            :name="u"
-            :value="u"
-            :disabled="usedHeaders.includes(u.header_index)"
+            :name="header.header"
+            :value="header.header_index"
+            :disabled="usedHeaders.includes(header.header_index)"
           >
-            <template v-if="u == ''">column {{ i + 1 }}</template>
-            <template v-else>{{ u }}</template>
+            <template v-if="header.header">{{ header.header }}</template>
+            <template v-else>Column {{ i + 1 }}</template>
           </option>
         </select>
         <template v-if="!indexMapped">
@@ -188,6 +188,7 @@ export default class CSVMapper extends Vue {
     return this.data_objects[0].definition.data_columns;
   }
   useHeader(header: CSVHeader) {
+    console.log(JSON.stringify(header));
     this.usedHeaders.push(header.header_index);
   }
   freeHeader(header: CSVHeader | null) {
@@ -246,11 +247,12 @@ export default class CSVMapper extends Vue {
   }
   mapIndex(event: any) {
     this.freeHeader(this.indexHeader);
-    const indexHeader = event.target.value;
-    console.log(indexHeader);
+    const index = event.target.value;
+    const indexHeader = this.headers[index];
+    console.log(index);
+    console.log(JSON.stringify(indexHeader));
     this.indexHeader = indexHeader;
 
-    // @ts-expect-error
     this.useHeader(this.indexHeader);
     for (const dataObject of this.data_objects) {
       const loc = dataObject.definition.schema_path;
