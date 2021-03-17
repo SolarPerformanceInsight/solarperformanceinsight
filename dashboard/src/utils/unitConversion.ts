@@ -14,13 +14,19 @@ const energyUnitValues: Record<string, number> = {
   GWh: 1000000000
 };
 
-const insolationUnitValues: Record<string, number> = {
+const irradianceUnitValues: Record<string, number> = {
   "W/m^2": 1,
   "kW/m^2": 1000,
   "MW/m^2": 1000000,
   "GW/m^2": 1000000000
 };
 
+const insolationUnitValues: Record<string, number> = {
+  "Wh/m^2": 1,
+  "kWh/m^2": 1000,
+  "MWh/m^2": 1000000,
+  "GWh/m^2": 1000000000
+};
 function getUnitValues(units: string) {
   if (units in powerUnitValues) {
     return powerUnitValues;
@@ -28,6 +34,8 @@ function getUnitValues(units: string) {
     return energyUnitValues;
   } else if (units in insolationUnitValues) {
     return insolationUnitValues;
+  } else if (units in irradianceUnitValues) {
+    return irradianceUnitValues;
   } else {
     return {};
   }

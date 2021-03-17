@@ -234,7 +234,7 @@ export default class CustomPlots extends Vue {
     for (const index in this.selectedVariables) {
       const variable = this.selectedVariables[index];
       // @ts-expect-error
-      convertable[index] = ["W", "Wh", "W/m^2"].includes(
+      convertable[index] = ["W", "Wh", "W/m^2", "Wh/m^2"].includes(
         getVariableUnits(variable)
       );
     }
