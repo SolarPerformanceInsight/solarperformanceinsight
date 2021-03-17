@@ -497,14 +497,14 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     save_results_to_db(job.object_id, result_list, si)
 
 
-def _zero_nans(out, a):
-    a_almost_zero = abs(a) < 1e-16
+def _zero_nans(out: pd.Series, a: pd.Series) -> pd.Series:
+    a_almost_zero = a.abs() < 1e-16  # type: ignore
     nans = pd.isnull(out)  # nan when 0 / 0,  a > 0 /0 => inf
-    out[a_almost_zero & nans] = 0.0
+    out[a_almost_zero & nans] = 0.0  # type: ignore
     return out
 
 
-def _zero_div(a, b):
+def _zero_div(a: pd.Series, b: pd.Series) -> pd.Series:
     out = a / b
     return _zero_nans(out, a)
 
@@ -514,9 +514,9 @@ def _temp_factor(gamma, t_ref, t_actual):
     return _zero_div(1 - gamma * (t_actual - t0), 1 - gamma * (t_ref - t0))
 
 
-def _inf_mul(a, b):
+def _inf_mul(a: pd.Series, b: pd.Series) -> pd.Series:
     """set 0 * inf = 0"""
-    out = a.mul(b, axis=0)
+    out = a * b
     return _zero_nans(out, a)
 
 
@@ -697,23 +697,25 @@ def _calculate_weather_adjusted_predicted_performance(
         # another alternative, calculate average POArat and TempFactor separately
         poa_rat = list(map(_zero_div, poa_actual, poa_ref))
         tempfactor = list(map(_temp_factor, gammas, t_ref, t_actual))
-        poa_rat_x_temp_factor = adjust(  # modelchain outputs are all shifted
+        # modelchain outputs are all shifted
+        poa_rat_x_temp_factor: pd.Series = adjust(  # type: ignore
             sum([p * t for p, t in zip(poa_rat, tempfactor)]) / num_arrays
         )
 
         if ref_pdc is not None:  # 2A-1 and 2A-4
-            pdc_ref_adj = _inf_mul(ref_pdc, poa_rat_x_temp_factor)
+            pdc_ref_adj = _inf_mul(ref_pdc["performance"], poa_rat_x_temp_factor)
             pac_ref_adj = pdc_ref_adj * 0.985
         else:  # 2A-2
-            pac_ref_adj = _inf_mul(ref_pac, poa_rat_x_temp_factor)
+            pac_ref_adj = _inf_mul(ref_pac["performance"], poa_rat_x_temp_factor)
         pac_adj = pac_ref_adj.clip(upper=pac0)  # type: ignore
         pac_adj.index.name = "time"
-        total_ref_pac += pac_adj["performance"]
+        pac_adj.name = "performance"
+        total_ref_pac += pac_adj
         results_list.append(
             DBResult(
                 schema_path=f"/inverters/{i}",
                 type="weather adjusted performance",
-                data=pac_adj,
+                data=pac_adj.to_frame(),
             )
         )
         missing_leap_days |= _get_missing_leap_days(ref_weather)
