@@ -8,6 +8,14 @@
         <tr>
           <th v-for="(header, i) of headers" :key="i">
             {{ displayName(header) }}
+            <template v-if="unitOptions[header] && unitOptions[header].length">
+              <select v-model="units[header]">
+                <option v-for="u of unitOptions[header]" :key="u" :value="u">
+                  {{ u }}
+                </option>
+              </select>
+            </template>
+            <template v-else-if="units[header]">[{{ units[header] }}]</template>
           </th>
         </tr>
 
@@ -24,9 +32,10 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
+import { getUnitConverter, getUnitOptions } from "@/utils/unitConversion";
 
 import { Table } from "apache-arrow";
 
@@ -42,23 +51,55 @@ const headerMap: Record<string, string> = {
   average_daytime_cell_temperature: "monthly summary"
 };
 
+function wattUnitFormatter(value: number, units: string | undefined) {
+  // allow for more points of precision when now using watts
+  let decimalPrecision = 0;
+  if (units) {
+    if (units.startsWith("W")) {
+      decimalPrecision = 0;
+    } else if (units.startsWith("k")) {
+      decimalPrecision = 3;
+    } else if (units.startsWith("M")) {
+      decimalPrecision = 6;
+    } else if (units.startsWith("G")) {
+      decimalPrecision = 9;
+    }
+  }
+  return value.toFixed(decimalPrecision);
+}
 // collection of anonymous functions for displaying values
 const formatFuncs = {
-  actual_energy: (x: number) => x.toFixed(0),
-  weather_adjusted_energy: (x: number) => x.toFixed(0),
-  expected_energy: (x: number) => x.toFixed(0),
-  difference: (x: number) => x.toFixed(0),
+  actual_energy: wattUnitFormatter,
+  weather_adjusted_energy: wattUnitFormatter,
+  expected_energy: wattUnitFormatter,
+  difference: wattUnitFormatter,
   ratio: (x: number) => (x * 100).toFixed(1),
-  plane_of_array_insolation: (x: number) => x.toFixed(0),
-  effective_insolation: (x: number) => x.toFixed(0),
-  total_energy: (x: number) => x.toFixed(0),
+  plane_of_array_insolation: wattUnitFormatter,
+  effective_insolation: wattUnitFormatter,
+  total_energy: wattUnitFormatter,
   average_daytime_cell_temperature: (x: number) => x.toFixed(0)
 };
 
 @Component
 export default class SummaryTable extends Vue {
   @Prop() tableData!: Record<string, Table>;
+  units!: Record<string, string>;
+  unitOptions!: Record<string, Array<string>>;
 
+  data() {
+    return {
+      units: {},
+      unitOptions: {}
+    };
+  }
+  @Watch("headers")
+  initUnits() {
+    // fill units with default units for each header variable
+    for (const variable of this.headers) {
+      this.$set(this.units, variable, getVariableUnits(variable));
+      this.$set(this.unitOptions, variable, getUnitOptions(variable));
+    }
+  }
   get headers() {
     if ("actual vs weather adjusted reference" in this.tableData) {
       return [
@@ -88,14 +129,9 @@ export default class SummaryTable extends Vue {
       ];
     }
   }
+
   displayName(varName: string) {
-    const units = getVariableUnits(varName);
-    const name = getVariableDisplayName(varName);
-    if (units) {
-      return `${name} [${units}]`;
-    } else {
-      return name;
-    }
+    return getVariableDisplayName(varName);
   }
   get mergedTableData() {
     const data = [];
@@ -126,9 +162,16 @@ export default class SummaryTable extends Vue {
     }
   }
   formatValues(variable: string, value: string | number) {
+    const converter = getUnitConverter(
+      getVariableUnits(variable),
+      this.units[variable]
+    );
+    if (converter && typeof value == "number") {
+      value = converter(value);
+    }
     try {
       // @ts-expect-error
-      return formatFuncs[variable](value);
+      return formatFuncs[variable](value, this.units[variable]);
     } catch {
       return value;
     }
