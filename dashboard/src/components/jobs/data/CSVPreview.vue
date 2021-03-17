@@ -45,6 +45,19 @@
             <td>
               <b>Data Row {{ i + 1 }}</b>
             </td>
+            <template v-if="Array.isArray(row)">
+              <td
+                v-for="(col, j) of headers"
+                :key="j"
+                v-bind:class="{
+                  hovered: currentlySelected == col,
+                  mapped: mapping[col]
+                }"
+              >
+                {{ row[j] }}
+              </td>
+            </template>
+            <template v-else>
             <td
               v-for="(col, j) of headers"
               :key="j"
@@ -55,6 +68,7 @@
             >
               {{ row[col] }}
             </td>
+            </template>
           </tr>
         </tbody>
       </table>
