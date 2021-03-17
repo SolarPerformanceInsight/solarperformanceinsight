@@ -23,7 +23,7 @@
                 mapped: mapping[header]
               }"
             >
-              {{ header }}
+              {{ header.csv_header ? header.csv_header : `Column ${header.header_index + 1}` }}
             </th>
           </tr>
         </thead>
@@ -54,20 +54,20 @@
                   mapped: mapping[col]
                 }"
               >
-                {{ row[j] }}
+                {{ row[col.header_index] }}
               </td>
             </template>
             <template v-else>
-            <td
-              v-for="(col, j) of headers"
-              :key="j"
-              v-bind:class="{
-                hovered: currentlySelected == col,
-                mapped: mapping[col]
-              }"
-            >
-              {{ row[col] }}
-            </td>
+              <td
+                v-for="(col, j) of headers"
+                :key="j"
+                v-bind:class="{
+                  hovered: currentlySelected == col,
+                  mapped: mapping[col]
+                }"
+              >
+                {{ row[col.csv_header] }}
+              </td>
             </template>
           </tr>
         </tbody>

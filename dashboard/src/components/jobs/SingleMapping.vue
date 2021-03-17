@@ -43,12 +43,13 @@ Components using the mapper should react to events emitted from this component:
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { CSVHeader } from "@/utils/mapToCSV";
 
 @Component
 export default class SingleMapping extends Vue {
   @Prop() variable!: string;
-  @Prop() headers!: Array<string>;
-  @Prop() usedHeaders!: Array<string>;
+  @Prop() headers!: Array<CSVHeader>;
+  @Prop() usedHeaders!: Array<number>;
   selected!: string;
   units!: string;
 

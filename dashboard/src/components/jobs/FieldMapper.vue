@@ -76,6 +76,7 @@ import { Inverter } from "@/types/Inverter";
 import { PVArray } from "@/types/PVArray";
 import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
+import { CSVHeader } from "@/utils/mapToCSV";
 
 import SingleMapping from "@/components/jobs/SingleMapping.vue";
 
@@ -94,8 +95,8 @@ Vue.component("single-mapping", SingleMapping);
 
 @Component
 export default class FieldMapper extends Vue {
-  @Prop() headers!: Array<string>;
-  @Prop() usedHeaders!: Array<string>;
+  @Prop() headers!: Array<CSVHeader>;
+  @Prop() usedHeaders!: Array<number>;
   @Prop() comp!: MetadataWithDataObject;
   @Prop() show!: boolean;
   @Prop() indexField!: string;

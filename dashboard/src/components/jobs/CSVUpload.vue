@@ -23,16 +23,16 @@ Takes the following props that can be extracted from job metadata.
   <div class="csv-upload">
     <slot>Upload your weather data</slot>
     <br />
-    <label >
+    <label>
       CSV headers are on line:
-    <input
-      id="header-line"
-      type="number"
-      step="1"
-      min="0"
-      @change="enforceDataStartOrder"
-      v-model.number="headerLine"
-    />
+      <input
+        id="header-line"
+        type="number"
+        step="1"
+        min="0"
+        @change="enforceDataStartOrder"
+        v-model.number="headerLine"
+      />
     </label>
     <br />
     <label for="data-start-line">Data begins on line:</label>
@@ -132,7 +132,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 
 import parseCSV from "@/utils/parseCSV";
-import { mapToCSV, Mapping} from "@/utils/mapToCSV";
+import { mapToCSV, Mapping, CSVHeader } from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
 
 import { addData } from "@/api/jobs";
@@ -155,7 +155,7 @@ export default class CSVUpload extends Vue {
   @Prop() data_objects!: Array<Record<string, any>>;
   mapping!: Record<string, Record<string, Mapping>>;
   promptForMapping!: boolean;
-  headers!: Array<string>;
+  headers!: Array<CSVHeader>;
   csv!: string;
   csvData!: Array<Record<string, Array<string | number>>>;
   required!: Array<string>;
@@ -204,13 +204,20 @@ export default class CSVUpload extends Vue {
     // Special mapping of headers to expected variables for the csv preview
     const newMap: Record<string, any> = {};
     for (const header of this.headers) {
-      newMap[header] = null;
+      newMap[header.header_index] = null;
     }
     // Invert mappings so they are accessible by header
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        const header = mapping[variable].csv_header;
+        let header: string;
+        if (mapping[variable].csv_header.header) {
+          // @ts-expect-error
+          header = mapping[variable].csv_header.header;
+        } else {
+          const header_index = mapping[variable].csv_header.header_index;
+          header = `Column ${header_index}`;
+        }
         if (variable == this.indexField && newMap[this.indexField]) {
           continue;
         }
@@ -247,9 +254,9 @@ export default class CSVUpload extends Vue {
       for (linesRead; linesRead < this.dataStartLine; linesRead++) {
         csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
       }
-      if (headerString.length > 0 ) {
+      if (headerString.length > 0) {
         csv = headerString + lineSep + csv;
-      } 
+      }
     }
     return csv;
   }
@@ -282,14 +289,24 @@ export default class CSVUpload extends Vue {
       });
       this.parsingErrors = errors;
     } else {
-      let headers: Array<string>; 
+      let headers: Array<CSVHeader>;
       if (this.headerLine == 0) {
         // @ts-expect-error
-        headers = parsingResult.data[0].map((x:string, i: number) => `Column ${i + 1}`);
+        headers = parsingResult.data[0].map((x: string, i: number) => {
+          return {
+            csv_header: `Column ${i+1}`,
+            header_index: i
+          };
+        });
         console.log(headers);
       } else {
         // @ts-expect-error
-        headers = parsingResult.meta.fields;
+        headers = parsingResult.meta.fields.map((header: string, i: number) => {
+          return {
+            csv_header: header,
+            header_index: i
+          };
+        });
       }
       if (headers && headers.length < this.totalMappings) {
         // Handle case where CSV is parsable but does not contain enough data
@@ -359,20 +376,7 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       // TODO: handle this on a single loc basis instead of looping all at once
       this.uploadStatuses[dataObject.object_id].status = "uploading";
       const loc = dataObject.definition.schema_path;
-      let mapping = this.mapping[loc];
-      if (this.headerLine == 0) {
-        // CSV file did not contain headers, parse the column numbers from
-        // the generated 'Column x' headers.
-        const integerMap = { ...mapping };
-        for (const key in integerMap) {
-          const strHeader = integerMap[key].csv_header;
-          // @ts-expect-error
-          const headerParts = strHeader.split(" ");
-          const intHeader = parseInt(headerParts[headerParts.length - 1]) - 1;
-          integerMap[key].csv_header = intHeader;
-        }
-        mapping = integerMap;
-      }
+      const mapping = this.mapping[loc];
       const csv = mapToCSV(this.csvData, mapping);
       const token = await this.$auth.getTokenSilently();
       const response = await addData(
