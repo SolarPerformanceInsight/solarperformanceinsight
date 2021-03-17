@@ -51,32 +51,16 @@ const headerMap: Record<string, string> = {
   average_daytime_cell_temperature: "monthly summary"
 };
 
-function wattUnitFormatter(value: number, units: string | undefined) {
-  // allow for more points of precision when now using watts
-  let decimalPrecision = 0;
-  if (units) {
-    if (units.startsWith("W")) {
-      decimalPrecision = 0;
-    } else if (units.startsWith("k")) {
-      decimalPrecision = 3;
-    } else if (units.startsWith("M")) {
-      decimalPrecision = 6;
-    } else if (units.startsWith("G")) {
-      decimalPrecision = 9;
-    }
-  }
-  return value.toFixed(decimalPrecision);
-}
 // collection of anonymous functions for displaying values
 const formatFuncs = {
-  actual_energy: wattUnitFormatter,
-  weather_adjusted_energy: wattUnitFormatter,
-  expected_energy: wattUnitFormatter,
-  difference: wattUnitFormatter,
+  actual_energy: (x: number) => x.toFixed(0),
+  weather_adjusted_energy: (x: number) => x.toFixed(0),
+  expected_energy: (x: number) => x.toFixed(0),
+  difference: (x: number) => x.toFixed(0),
   ratio: (x: number) => (x * 100).toFixed(1),
-  plane_of_array_insolation: wattUnitFormatter,
-  effective_insolation: wattUnitFormatter,
-  total_energy: wattUnitFormatter,
+  plane_of_array_insolation: (x: number) => x.toFixed(0),
+  effective_insolation: (x: number) => x.toFixed(0),
+  total_energy: (x: number) => x.toFixed(0),
   average_daytime_cell_temperature: (x: number) => x.toFixed(0)
 };
 
@@ -171,7 +155,7 @@ export default class SummaryTable extends Vue {
     }
     try {
       // @ts-expect-error
-      return formatFuncs[variable](value, this.units[variable]);
+      return formatFuncs[variable](value);
     } catch {
       return value;
     }
