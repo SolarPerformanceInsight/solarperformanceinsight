@@ -30,7 +30,11 @@
         </option>
       </select>
       <!-- Select the variable to add -->
-      <select v-model="selectedVariables[id]" v-if="selectedObjects[id]">
+      <select
+        v-model="selectedVariables[id]"
+        v-if="selectedObjects[id]"
+        @change="setUnits(id)"
+      >
         <option value="">Select A Variable</option>
         <option
           v-for="variable in variables[id]"
@@ -38,6 +42,15 @@
           :value="variable"
         >
           {{ variableName(variable) }}
+        </option>
+      </select>
+      <select v-model="units[id]" v-if="convertableVariables[id]">
+        <option
+          v-for="units of getUnitOptions(selectedVariables[id])"
+          :key="units"
+          :value="units"
+        >
+          {{ units }}
         </option>
       </select>
       <button :disabled="!selectedVariables[id]" @click="addToPlot(id)">
@@ -79,6 +92,7 @@ import { Table } from "apache-arrow";
 import { getIndex } from "@/utils/fieldIndex";
 import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
+import { getUnitConverter, getUnitOptions } from "@/utils/unitConversion";
 
 Vue.component("multi-plot", MultiTimeseriesPlots);
 
@@ -97,6 +111,7 @@ export default class CustomPlots extends Vue {
   loadingData!: boolean;
   variables!: Record<number, Array<string>>;
   selectedVariables!: Record<string, string>;
+  units!: Record<number, string>;
 
   plotData!: Record<number, any>;
 
@@ -109,7 +124,8 @@ export default class CustomPlots extends Vue {
       loadingData: false,
       variables: {},
       toPlot: {},
-      plotData: {}
+      plotData: {},
+      units: {}
     };
   }
   addToPlot(key: number) {
@@ -120,19 +136,31 @@ export default class CustomPlots extends Vue {
     );
     let columnData: Array<any>;
     const firstValue = column.get(0);
+    // get a converter function if necessary
+    const converter = getUnitConverter(
+      getVariableUnits(this.selectedVariables[key]),
+      this.units[key]
+    );
     if (firstValue && firstValue.length && firstValue.length > 1) {
       // Handles values like int64 which are encoded as length 2 int32 array
       columnData = [];
       for (let i = 0; i < column.length; i++) {
-        columnData.push(parseFloat(column.get(i)));
+        if (converter) {
+          columnData.push(converter(parseFloat(column.get(i))));
+        } else {
+          columnData.push(parseFloat(column.get(i)));
+        }
       }
     } else {
       columnData = column.toArray();
+      if (converter) {
+        columnData = columnData.map(converter);
+      }
     }
     this.$set(this.plotData[key], dataId, {
       data: columnData,
       index: this.loadedTimeseries[data_object_id].getColumn("time"),
-      units: getVariableUnits(this.selectedVariables[key]),
+      units: this.units[key],
       name: this.currentName(key)
     });
   }
@@ -200,6 +228,19 @@ export default class CustomPlots extends Vue {
   get timezone() {
     return this.job.definition.parameters.time_parameters.timezone;
   }
+
+  get convertableVariables() {
+    const convertable: Array<string> = [];
+    for (const index in this.selectedVariables) {
+      const variable = this.selectedVariables[index];
+      // @ts-expect-error
+      convertable[index] = ["W", "Wh", "W/m^2", "Wh/m^2"].includes(
+        getVariableUnits(variable)
+      );
+    }
+    return convertable;
+  }
+
   currentName(key: number) {
     let source = "Uploaded";
     if (this.dataSources[key] == "results") {
@@ -207,7 +248,7 @@ export default class CustomPlots extends Vue {
     }
     const dataType = this.selectedObjects[key].definition.type;
     const varName = getVariableDisplayName(this.selectedVariables[key]);
-    const units = getVariableUnits(this.selectedVariables[key]);
+    const units = this.units[key];
     return `${source} ${dataType} ${varName} [${units}]`;
   }
   updateData(key: number) {
@@ -234,6 +275,15 @@ export default class CustomPlots extends Vue {
   setDataOption(key: number) {
     this.selectedObjects[key] = this.dataOptions(key)[0];
     this.updateData(key);
+  }
+  setUnits(key: number) {
+    const variable = this.selectedVariables[key];
+    if (variable && variable != "") {
+      this.units[key] = getVariableUnits(variable);
+    }
+  }
+  getUnitOptions(variable: string) {
+    return getUnitOptions(variable);
   }
 }
 </script>

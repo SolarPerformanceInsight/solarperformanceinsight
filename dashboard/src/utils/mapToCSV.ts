@@ -1,5 +1,5 @@
 import papa from "papaparse";
-import powerConversion from "@/utils/powerConversion";
+import { getUnitConverter } from "@/utils/unitConversion";
 
 export default function(
   data: Array<Record<string, any>>,
@@ -13,13 +13,12 @@ export default function(
     mappedHeaders.push(mapped);
     if ("units" in Mapping[mapped]) {
       const originalUnits = Mapping[mapped].units;
-      data.forEach((row: Record<string, number>) => {
-        row[originalHeader] = powerConversion(
-          originalUnits,
-          "W",
-          row[originalHeader]
-        );
-      });
+      const converter = getUnitConverter(originalUnits, "W");
+      if (converter) {
+        data.forEach((row: Record<string, number>) => {
+          row[originalHeader] = converter(row[originalHeader]);
+        });
+      }
     }
   }
   const newHeaders = papa.unparse(
