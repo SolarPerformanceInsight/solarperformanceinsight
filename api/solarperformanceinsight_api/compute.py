@@ -645,15 +645,10 @@ def _calculate_weather_adjusted_predicted_performance(
         inv = job.definition.system_definition.inverters[i]
         pac0 = inv.inverter_parameters._pac0
         num_arrays = len(chain.system.arrays)
-        gammas = [
+        gammas: List[float] = [
             arr.module_parameters._gamma
             for arr in job.definition.system_definition.inverters[i].arrays
         ]
-        if any([g is None for g in gammas]):
-            raise TypeError(
-                "Currently unable to compare predicted and actual performance for "
-                "PVsyst specified arrays."
-            )
         if data_available == models.PredictedDataEnum.weather_only:  # 2A-4
             db_results, _ = process_single_modelchain(
                 chain, ref_weather, ref_model_method, tshift, i
@@ -786,13 +781,6 @@ def compare_monthly_predicted_and_actual(
     inverters = job.definition.system_definition.inverters
     pac0 = sum([inv.inverter_parameters._pac0 for inv in inverters])
     G_0 = 1000
-
-    gammas = [arr.module_parameters._gamma for inv in inverters for arr in inv.arrays]
-    if any([g is None for g in gammas]):
-        raise TypeError(
-            "Currently unable to compare predicted and actual performance for "
-            "PVsyst specified arrays."
-        )
 
     avg_gamma: float = mean(
         [

@@ -6,6 +6,7 @@ import re
 
 from hypothesis import given, example, assume
 from hypothesis.strategies import floats, booleans, composite, from_regex
+from numpy.testing import assert_allclose
 import pandas as pd
 from pydantic import BaseModel, ValidationError
 import pytest
@@ -711,7 +712,7 @@ def test_array_gamma(system_def):
     )
     arrd = deepcopy(system_def.inverters[0].arrays[0].dict())
     mod = models.PVArray(**arrd)
-    assert mod.module_parameters._gamma is None  # PVsyst
+    assert_allclose(mod.module_parameters._gamma, -5.359e-3, atol=1e-7)
 
     arrd["module_parameters"] = cec
     mod = models.PVArray(**arrd)

@@ -732,20 +732,6 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7
 
 
-def test_compare_monthly_predicted_and_actual_pvsyst(
-    mocker, auth0_id, nocommit_transaction, insert_monthly_data, monthlypa_job_id
-):
-    si = storage.StorageInterface(user=auth0_id)
-    with si.start_transaction() as st:
-        job = st.get_job(monthlypa_job_id)
-    assert isinstance(
-        job.definition.system_definition.inverters[0].arrays[0].module_parameters,
-        models.PVsystModuleParameters,
-    )
-    with pytest.raises(TypeError):
-        compute.compare_monthly_predicted_and_actual(job, si)
-
-
 @pytest.fixture()
 def pvwatts_system():
     sysdict = deepcopy(models.SYSTEM_EXAMPLE)
@@ -780,40 +766,6 @@ def pvwatts_system():
     inv1["arrays"] = [arr, arr]
     sysdict["inverters"] = [inv, inv1]
     return models.PVSystem(**sysdict)
-
-
-def test_compare_monthly_predicted_and_actual(
-    mocker,
-    auth0_id,
-    nocommit_transaction,
-    insert_monthly_data,
-    monthlypa_job_id,
-    pvwatts_system,
-):
-    si = storage.StorageInterface(user=auth0_id)
-    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
-
-    with si.start_transaction() as st:
-        job = st.get_job(monthlypa_job_id)
-    job.definition.system_definition = pvwatts_system
-    compute.compare_monthly_predicted_and_actual(job, si)
-    assert save.call_count == 1
-    reslist = save.call_args[0][1]
-    assert len(reslist) == 1
-
-    summary = reslist[0]
-    assert summary.type == "actual vs weather adjusted reference"
-    iob = BytesIO(summary.data)
-    iob.seek(0)
-    summary_df = pd.read_feather(iob)
-    assert len(summary_df.index) == 12
-    ser = summary_df.iloc[6]
-    assert len(ser) == 5
-    assert ser.loc["month"] == "July"
-    assert ser.loc["actual_energy"] == 60000
-    assert ser.loc["weather_adjusted_energy"] == 56249.625
-    assert ser.loc["difference"] == 3750.375
-    assert (ser.loc["ratio"] - 1.0666738) < 1e-10
 
 
 @pytest.fixture(params=list(models.TemperatureTypeEnum))
@@ -925,6 +877,49 @@ def cec_system(sandia_inverter):
     inv1["arrays"] = [arr, arr]
     sysdict["inverters"] = [inv, inv1]
     return models.PVSystem(**sysdict)
+
+
+@pytest.mark.parametrize("syst", ["pvwatts", "cec", "pvsyst"])
+def test_compare_monthly_predicted_and_actual(
+    mocker,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+    monthlypa_job_id,
+    pvwatts_system,
+    cec_system,
+    pvsyst_system,
+    syst,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    if syst == "pvwatts":
+        job.definition.system_definition = pvwatts_system
+    elif syst == "cec":
+        job.definition.system_definition = cec_system
+    else:
+        job.definition.system_definition = pvsyst_system
+    compute.compare_monthly_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 1
+
+    summary = reslist[0]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[6]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "July"
+    assert ser.loc["actual_energy"] == 60000
+    np.testing.assert_allclose(ser.loc["weather_adjusted_energy"], 56249.625, atol=0.2)
+    np.testing.assert_allclose(ser.loc["difference"], 3750.375, atol=0.2)
+    np.testing.assert_allclose(ser.loc["ratio"], 1.06667, atol=1e-5)
 
 
 @pytest.fixture()
@@ -1073,6 +1068,7 @@ def test_compare_predicted_and_actual(
     assert 0.5 < ser["ratio"] < 1.8
 
 
+@pytest.mark.parametrize("syst", ["cec", "pvsyst"])
 @pytest.mark.parametrize(
     "data_available,pg",
     (
@@ -1081,50 +1077,16 @@ def test_compare_predicted_and_actual(
         ("weather, AC, and DC performance", "inverter"),
     ),
 )
-def test_compare_predicted_and_actual_pvsyst(
+def test_compare_predicted_and_actual_other_modules(
     mockup_predicted_actual,
     auth0_id,
     nocommit_transaction,
     pvsyst_system,
-    temp_type,
-    pg,
-    data_available,
-):
-    actual_params = dict(
-        irradiance_type="poa",
-        temperature_type="cell",
-        weather_granularity="system",
-        performance_granularity="inverter",
-    )
-    pred_params = dict(
-        irradiance_type="standard",
-        temperature_type=temp_type,
-        weather_granularity="system",
-        performance_granularity=pg,
-        data_available=data_available,
-    )
-    si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(pvsyst_system, pred_params, actual_params)
-    with pytest.raises(TypeError):  # pvlib#1190
-        compute.compare_predicted_and_actual(job, si)
-
-
-@pytest.mark.parametrize(
-    "data_available,pg",
-    (
-        ("weather only", None),
-        ("weather and AC performance", "inverter"),
-        ("weather, AC, and DC performance", "inverter"),
-    ),
-)
-def test_compare_predicted_and_actual_cec(
-    mockup_predicted_actual,
-    auth0_id,
-    nocommit_transaction,
     cec_system,
     temp_type,
     pg,
     data_available,
+    syst,
 ):
     actual_params = dict(
         irradiance_type="poa",
@@ -1140,7 +1102,8 @@ def test_compare_predicted_and_actual_cec(
         data_available=data_available,
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
+    system = pvsyst_system if syst == "pvsyst" else cec_system
+    job, save = mockup_predicted_actual(system, pred_params, actual_params)
     compute.compare_predicted_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]

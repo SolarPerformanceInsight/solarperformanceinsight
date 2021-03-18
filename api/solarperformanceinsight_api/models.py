@@ -5,6 +5,7 @@ from typing import Union, List, Optional, Any, Tuple, Dict
 
 import pandas as pd
 import pvlib  # type: ignore
+from pvlib.ivtools.sdm import pvsyst_temperature_coeff  # type: ignore
 from pydantic import BaseModel, Field, PrivateAttr, validator, root_validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID
@@ -203,7 +204,11 @@ class PVsystModuleParameters(PVLibBase):
         gt=0,
     )
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
-    _gamma: Optional[float] = PrivateAttr(None)
+    _gamma: float = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._gamma = pvsyst_temperature_coeff(**self.dict())
 
 
 class PVWattsModuleParameters(PVLibBase):
