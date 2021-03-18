@@ -352,6 +352,42 @@ class SAPMTemperatureParameters(SPIBase):
     _modelchain_temperature_model: str = PrivateAttr("sapm")
 
 
+class NOCTSAMTemperatureParameters(SPIBase):
+    """Parameters for the NOCT SAM temperature model"""
+
+    noct: float = Field(
+        ..., description=(
+            "Nominal operating cell temperature [C], determined at conditions of"
+            "800 W/m^2 irradiance, 20 C ambient air temperature and 1 m/s wind."
+        )
+    )
+    eta_m_ref: float = Field(
+        ..., description=(
+            "Module external efficiency [unitless] at reference conditions of "
+            "1000 W/m^2 and 20C."
+        )
+    )
+    transmittance_absorptance: float = Field(
+        0.9, description=(
+            "Coefficient for combined transmittance and absorptance effects. [unitless]"
+        )
+    )
+    array_height: int = Field(
+        1, description=(
+            "Height of array above ground in stories (one story is about 3m). Must"
+            "be either 1 or 2. For systems elevated less than one story, use 1."
+            "If system is elevated more than two stories, use 2."
+        )
+    )
+    mount_standoff: float = Field(
+        4, description=(
+            "Distance between array mounting and mounting surface. Use default
+            "if system is ground-mounted. [inches]"
+        )
+    )
+    _modelchain_temperature_model: str = PrivateAttr("noct_sam")
+
+
 class PVArray(SPIBase):
     """Parameters of a PV array that feeds into one inverter"""
 
@@ -369,7 +405,8 @@ class PVArray(SPIBase):
         description="Parameters describing PV modules in this array",
     )
     temperature_model_parameters: Union[
-        PVsystTemperatureParameters, SAPMTemperatureParameters
+        PVsystTemperatureParameters, SAPMTemperatureParameters,
+        NOCTSAMTemperatureParameters
     ] = Field(
         ...,
         title="Temperature Model Parameters",
