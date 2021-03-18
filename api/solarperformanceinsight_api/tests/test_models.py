@@ -721,3 +721,37 @@ def test_array_gamma(system_def):
     arrd["module_parameters"] = {"pdc0": 100, "gamma_pdc": -0.328}
     mod = models.PVArray(**arrd)
     assert mod.module_parameters._gamma == -3.28e-3
+
+
+@pytest.mark.parametrize("gr", [0, 0.1])
+def test_pvsyst_bad_params(gr):
+    params = dict(
+        alpha_sc=0,
+        gamma_ref=gr,
+        mu_gamma=0,
+        I_L_ref=0,
+        I_o_ref=0,
+        R_sh_ref=0,
+        R_sh_0=0,
+        R_s=0,
+        cells_in_series=0,
+    )
+    with pytest.raises(ValidationError) as exc:
+        models.PVsystModuleParameters(**params)
+    assert "single diode parameters" in exc.value.errors()[0]["msg"]
+
+
+def test_cec_bad_params():
+    params = dict(
+        alpha_sc=0,
+        a_ref=0,
+        I_L_ref=0,
+        I_o_ref=0,
+        R_sh_ref=0,
+        R_s=0,
+        cells_in_series=0,
+        gamma_r=0,
+    )
+    with pytest.raises(ValidationError) as exc:
+        models.CECModuleParameters(**params)
+    assert "single diode parameters" in exc.value.errors()[0]["msg"]

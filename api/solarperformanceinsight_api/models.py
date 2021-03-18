@@ -206,9 +206,19 @@ class PVsystModuleParameters(PVLibBase):
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
     _gamma: float = PrivateAttr()
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self._gamma = pvsyst_temperature_coeff(**self.dict())
+    @root_validator(skip_on_failure=True)
+    def validate_diode_params(cls, values):
+        # and set _gamma here since it could raise an error with bad params
+        try:
+            pvlib.pvsystem.calcparams_pvsyst(
+                effective_irradiance=1000, temp_cell=25, **values
+            )
+            cls._gamma = pvsyst_temperature_coeff(**values)
+        except Exception:
+            raise ValueError(
+                "Unable to calculate single diode parameters from parameters supplied."
+            )
+        return values
 
 
 class PVWattsModuleParameters(PVLibBase):
@@ -316,6 +326,18 @@ class CECModuleParameters(PVLibBase):
     def __init__(self, **data):
         super().__init__(**data)
         self._gamma = self.gamma_r / 100
+
+    @root_validator(skip_on_failure=True)
+    def validate_diode_params(cls, values):
+        try:
+            pvlib.pvsystem.calcparams_cec(
+                effective_irradiance=1000, temp_cell=25, **values
+            )
+        except Exception:
+            raise ValueError(
+                "Unable to calculate single diode parameters from parameters supplied."
+            )
+        return values
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters` by removing
