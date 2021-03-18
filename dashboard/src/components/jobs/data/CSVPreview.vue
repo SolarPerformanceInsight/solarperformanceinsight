@@ -67,6 +67,8 @@
                   mapped: mapping[header.header_index]
                 }"
               >
+                {{ mapping }}
+                {{ header.header }}
                 {{ row[header.header_index] }}
               </td>
             </template>

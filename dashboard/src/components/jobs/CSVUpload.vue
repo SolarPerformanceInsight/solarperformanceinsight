@@ -206,25 +206,28 @@ export default class CSVUpload extends Vue {
   get headerMapping() {
     // Special mapping of headers to expected variables for the csv preview
     const newMap: Record<string, any> = {};
-    for (const header of this.headers) {
-      newMap[header.header_index] = null;
-    }
+
     // Invert mappings so they are accessible by header
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
         let header: string | number;
-        if (mapping[variable].csv_header.header) {
-          // @ts-expect-error
-          header = mapping[variable].csv_header.header;
-        } else {
-          header = mapping[variable].csv_header.header_index;
-          //header = `Column ${header_index}`;
+        if (mapping[variable].csv_header) {
+          if (
+            mapping[variable].csv_header.header == "" ||
+            mapping[variable].csv_header.header
+          ) {
+            // @ts-expect-error
+            header = mapping[variable].csv_header.header;
+          } else {
+            header = mapping[variable].csv_header.header_index;
+            //header = `Column ${header_index}`;
+          }
+          if (variable == this.indexField && newMap[this.indexField]) {
+            continue;
+          }
+          newMap[header] = variable;
         }
-        if (variable == this.indexField && newMap[this.indexField]) {
-          continue;
-        }
-        newMap[header] = variable;
       }
     }
     return newMap;
@@ -253,7 +256,7 @@ export default class CSVUpload extends Vue {
     }
 
     // skip lines until we reach the start of data in the csv
-    for (linesRead; linesRead < this.dataStartLine; linesRead++) {
+    for (linesRead; linesRead < this.dataStartLine - 1; linesRead++) {
       csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
     }
     if (headerString.length > 0) {
@@ -289,7 +292,7 @@ export default class CSVUpload extends Vue {
       });
       this.parsingErrors = errors;
     } else {
-      let headers: Array<CSVHeader>;
+      let headers: Array<CSVHeader> = [];
       if (this.headerLine == 0) {
         // @ts-expect-error
         headers = parsingResult.data[0].map((x: string, i: number) => {
@@ -299,15 +302,37 @@ export default class CSVUpload extends Vue {
         });
       } else {
         const csvHeaders = parsingResult.meta.fields;
-        // @ts-expect-error
-        headers = csvHeaders.map((header: string, i: number) => {
-          return {
-            header: header,
-            header_index: i
-          };
-        });
+        if (csvHeaders !== undefined) {
+          let duplicates = csvHeaders.filter(
+            (header: string, index: number) => {
+              return csvHeaders.indexOf(header) != index;
+            }
+          );
+          duplicates = Array.from(new Set(duplicates));
+          if (duplicates.length > 0) {
+            this.parsingErrors = {
+              0: {
+                type: "Duplicate CSV Header",
+                message: `Cannot parse CSV with duplicate headers. Found duplicates: ${duplicates.join(
+                  ","
+                )}`
+              }
+            };
+          } else {
+            headers = csvHeaders.map((header: string, i: number) => {
+              return {
+                header: header,
+                header_index: i
+              };
+            });
+          }
+        }
       }
-      if (headers && headers.length < this.totalMappings) {
+      if (
+        !this.parsingErrors &&
+        headers &&
+        headers.length < this.totalMappings
+      ) {
         // Handle case where CSV is parsable but does not contain enough data
         this.parsingErrors = {
           0: {
@@ -323,7 +348,8 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
           }
         };
         this.csvData = [{}];
-      } else {
+      }
+      if (this.parsingErrors == null) {
         this.csvData = parsingResult.data;
         this.headers = headers ? headers : [];
         this.promptForMapping = true;
