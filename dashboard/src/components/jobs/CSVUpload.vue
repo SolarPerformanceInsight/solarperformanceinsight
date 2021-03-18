@@ -64,7 +64,7 @@ Takes the following props that can be extracted from job metadata.
       </div>
     </template>
     <template v-if="parsingErrors">
-      <div class="warning">
+      <div class="mt-1 warning">
         Errors encountered processing your csv.
         <ul>
           <li v-for="(error, i) of parsingErrors" :key="i">
@@ -75,7 +75,7 @@ Takes the following props that can be extracted from job metadata.
       </div>
     </template>
     <transition name="fade">
-      <div v-if="!processingFile && csv">
+      <div v-if="promptForMapping">
         <csv-preview
           :headers="headers"
           :csvData="csvPreview"
@@ -313,9 +313,9 @@ export default class CSVUpload extends Vue {
             this.parsingErrors = {
               0: {
                 type: "Duplicate CSV Header",
-                message: `Cannot parse CSV with duplicate headers. Found duplicates: ${duplicates.join(
-                  ","
-                )}`
+                message: `Cannot parse CSV with duplicate headers. Found duplicates: "${duplicates.join(
+                  '","'
+                )}".`
               }
             };
           } else {
