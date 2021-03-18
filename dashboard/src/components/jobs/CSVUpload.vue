@@ -34,6 +34,9 @@ Takes the following props that can be extracted from job metadata.
         v-model.number="headerLine"
       />
     </label>
+    <help
+      helpText="The line number where headers are found in your CSV. For files without headers, set this value to 0."
+    />
     <br />
     <label for="data-start-line">Data begins on line:</label>
     <input
@@ -210,13 +213,13 @@ export default class CSVUpload extends Vue {
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        let header: string;
+        let header: string | number;
         if (mapping[variable].csv_header.header) {
           // @ts-expect-error
           header = mapping[variable].csv_header.header;
         } else {
-          const header_index = mapping[variable].csv_header.header_index;
-          header = `Column ${header_index}`;
+          header = mapping[variable].csv_header.header_index;
+          //header = `Column ${header_index}`;
         }
         if (variable == this.indexField && newMap[this.indexField]) {
           continue;
@@ -235,28 +238,26 @@ export default class CSVUpload extends Vue {
     }
   }
   removeMetadata(csv: string) {
-    if (!(this.headerLine == 1 && this.dataStartLine == 2)) {
-      // Determine the characters used for line separation
-      const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
+    // Determine the characters used for line separation
+    const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
 
-      // parse out header
-      let linesRead = 0;
-      let headerString = "";
+    // parse out header
+    let linesRead = 0;
+    let headerString = "";
 
-      // Read in a line as the header until we reach the header line defined
-      // by the user.
-      for (linesRead; linesRead < this.headerLine; linesRead++) {
-        headerString = csv.substring(0, csv.indexOf(lineSep));
-        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
-      }
+    // Read in a line as the header until we reach the header line defined
+    // by the user.
+    for (linesRead; linesRead < this.headerLine; linesRead++) {
+      headerString = csv.substring(0, csv.indexOf(lineSep));
+      csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+    }
 
-      // skip lines until we reach the start of data in the csv
-      for (linesRead; linesRead < this.dataStartLine; linesRead++) {
-        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
-      }
-      if (headerString.length > 0) {
-        csv = headerString + lineSep + csv;
-      }
+    // skip lines until we reach the start of data in the csv
+    for (linesRead; linesRead < this.dataStartLine; linesRead++) {
+      csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+    }
+    if (headerString.length > 0) {
+      csv = headerString + lineSep + csv;
     }
     return csv;
   }
@@ -274,7 +275,6 @@ export default class CSVUpload extends Vue {
     // data.
     csv = this.removeMetadata(csv);
     const parsingResult = parseCSV(csv.trim(), this.headerLine != 0);
-    console.log(parsingResult);
     if (parsingResult.errors.length > 0) {
       const errors: Record<string, any> = {};
       parsingResult.errors.forEach((error, index) => {
@@ -297,10 +297,10 @@ export default class CSVUpload extends Vue {
             header_index: i
           };
         });
-        console.log(headers);
       } else {
+        const csvHeaders = parsingResult.meta.fields;
         // @ts-expect-error
-        headers = parsingResult.meta.fields.map((header: string, i: number) => {
+        headers = csvHeaders.map((header: string, i: number) => {
           return {
             header: header,
             header_index: i

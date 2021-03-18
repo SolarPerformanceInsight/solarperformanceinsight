@@ -63,7 +63,7 @@ export default class SingleMapping extends Vue {
   emitMapping() {
     const mapping = {
       variable: this.variable,
-      header: this.selected
+      csv_header: this.selected
     };
     if (this.isPower) {
       // @ts-expect-error

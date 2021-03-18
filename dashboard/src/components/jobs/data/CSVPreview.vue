@@ -20,7 +20,7 @@
               :key="i"
               v-bind:class="{
                 hovered: currentlySelected == header,
-                mapped: mapping[header]
+                mapped: mapping[header.header] || mapping[header.header_index]
               }"
             >
               {{
@@ -35,14 +35,24 @@
           <tr>
             <td><b>Mapped Variable</b></td>
             <td
-              v-for="(col, j) of headers"
+              v-for="(header, j) of headers"
               :key="j"
               v-bind:class="{
-                hovered: currentlySelected == col,
-                mapped: mapping[col]
+                mapped: mapping[header.header] || mapping[header.header_index]
               }"
             >
-              {{ mapping[col] ? displayName(mapping[col]) : `Not Mapped` }}
+              <template
+                v-if="mapping[header.header] || mapping[header.header_index]"
+              >
+                {{
+                  mapping[header.header]
+                    ? displayName(mapping[header.header])
+                    : displayName(mapping[header.header_index])
+                }}
+              </template>
+              <template v-else>
+                Not Mapped
+              </template>
             </td>
           </tr>
           <tr v-for="(row, i) of csvData" :key="i">
@@ -51,26 +61,24 @@
             </td>
             <template v-if="Array.isArray(row)">
               <td
-                v-for="(col, j) of headers"
+                v-for="(header, j) of headers"
                 :key="j"
                 v-bind:class="{
-                  hovered: currentlySelected == col,
-                  mapped: mapping[col]
+                  mapped: mapping[header.header_index]
                 }"
               >
-                {{ row[col.header_index] }}
+                {{ row[header.header_index] }}
               </td>
             </template>
             <template v-else>
               <td
-                v-for="(col, j) of headers"
+                v-for="(header, j) of headers"
                 :key="j"
                 v-bind:class="{
-                  hovered: currentlySelected == col,
-                  mapped: mapping[col]
+                  mapped: mapping[header.header]
                 }"
               >
-                {{ row[col.header] }}
+                {{ row[header.header] }}
               </td>
             </template>
           </tr>

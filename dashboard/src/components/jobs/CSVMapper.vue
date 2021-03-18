@@ -28,7 +28,7 @@ Takes the following props:
           column:
         </b>
         <select @change="mapIndex">
-          <option value="" disabled selected>
+          <option value="" disabled :selected="!indexHeader">
             Unmapped
           </option>
           <option
@@ -188,7 +188,6 @@ export default class CSVMapper extends Vue {
     return this.data_objects[0].definition.data_columns;
   }
   useHeader(header: CSVHeader) {
-    console.log(JSON.stringify(header));
     this.usedHeaders.push(header.header_index);
   }
   freeHeader(header: CSVHeader | null) {
@@ -200,7 +199,7 @@ export default class CSVMapper extends Vue {
     // pop the index from the mapping
     const loc = newMap.loc;
     newMap = { ...newMap };
-    newMap[this.indexField] = this.indexHeader;
+    newMap[this.indexField] = { csv_header: this.indexHeader };
     delete newMap["loc"];
     this.mapping[loc] = newMap;
     this.checkValidity();
@@ -249,21 +248,18 @@ export default class CSVMapper extends Vue {
     this.freeHeader(this.indexHeader);
     const index = event.target.value;
     const indexHeader = this.headers[index];
-    console.log(index);
-    console.log(JSON.stringify(indexHeader));
     this.indexHeader = indexHeader;
 
     this.useHeader(this.indexHeader);
     for (const dataObject of this.data_objects) {
       const loc = dataObject.definition.schema_path;
-      const indexMapping = this.indexHeader;
+      const indexMapping = { csv_header: this.indexHeader };
       // update the index field or create a mapping
       if (loc in this.mapping) {
         // @ts-expect-error
         this.mapping[loc][this.indexField] = indexMapping;
       } else {
         const fieldMapping: Record<string, Record<string, CSVHeader>> = {};
-        // @ts-expect-error
         fieldMapping[this.indexField] = indexMapping;
         // @ts-expect-error
         this.mapping[loc] = fieldMapping;
