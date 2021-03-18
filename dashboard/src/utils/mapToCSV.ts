@@ -41,7 +41,9 @@ export function mapToCSV(
   if (!hasHeaders) {
     // If headers were not provided, we cannot unparse particular columns,
     // so generate the expected headers.
-    const headersOut = data[0].map(() => "");
+    const headersOut = data[0].map(
+      (x: string, i: number) => `_missing_col_${i}`
+    );
     for (let i = 0; i < originalHeaders.length; i++) {
       const columnIndex = originalHeaders[i].header_index;
       const newHeader = mappedHeaders[i];
