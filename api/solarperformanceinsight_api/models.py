@@ -382,6 +382,8 @@ class NOCTSAMTemperatureParameters(SPIBase):
             "be either 1 or 2. For systems elevated less than one story, use 1. "
             "If system is elevated more than two stories, use 2."
         ),
+        ge=1,
+        le=2,
     )
     mount_standoff: float = Field(
         4,
