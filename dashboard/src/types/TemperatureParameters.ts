@@ -54,9 +54,9 @@ export class NOCTSAMTemperatureParameters {
   constructor({
     noct = 0,
     eta_m_ref = 0,
-    transmittance_absorptance = 0,
-    array_height = 0,
-    mount_standoff = 0
+    transmittance_absorptance = 0.9,
+    array_height = 1,
+    mount_standoff = 4
   }: Partial<NOCTSAMTemperatureParameters>) {
     this.noct = noct;
     this.eta_m_ref = eta_m_ref;
