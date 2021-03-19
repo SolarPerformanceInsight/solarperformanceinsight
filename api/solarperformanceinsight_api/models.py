@@ -445,6 +445,7 @@ class PVArray(SPIBase):
                 "temperature_model",
                 self.temperature_model_parameters._modelchain_temperature_model,
             ),
+            ("dc_ohmic_model", "no_loss")
         )
 
 
