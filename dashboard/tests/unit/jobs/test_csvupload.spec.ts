@@ -4,6 +4,7 @@ import { createLocalVue, mount } from "@vue/test-utils";
 
 import CSVMapper from "@/components/jobs/CSVMapper.vue";
 import CSVUpload from "@/components/jobs/CSVUpload.vue";
+import HelpPopup from "@/components/Help.vue";
 
 import * as Jobs from "@/api/jobs";
 import { $auth } from "../mockauth";
@@ -118,11 +119,11 @@ const testCSV = "a,b,c,d,e\n1,2,3,4,5";
 
 const testMapping = {
   "/inverters/0/arrays/0": {
-    time: { csv_header: "a" },
-    poa_global: { csv_header: "b" },
-    poa_direct: { csv_header: "c" },
-    poa_diffuse: { csv_header: "d" },
-    module_temperature: { csv_header: "e" }
+    time: { csv_header: { header: "a", header_index: 0 } },
+    poa_global: { csv_header: { header: "b", header_index: 1 } },
+    poa_direct: { csv_header: { header: "c", header_index: 2 } },
+    poa_diffuse: { csv_header: { header: "d", header_index: 3 } },
+    module_temperature: { csv_header: { header: "e", header_index: 4 } }
   }
 };
 
@@ -130,6 +131,7 @@ const testMapping = {
 const localVue = createLocalVue();
 
 Vue.component("csv-mapper", CSVMapper);
+Vue.component("help", HelpPopup);
 
 const mocks = {
   $auth

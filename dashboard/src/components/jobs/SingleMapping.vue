@@ -9,7 +9,7 @@ Takes the following properties
 Components using the mapper should react to events emitted from this component:
   - new-mapping: {
       variable: The variable being mapped,
-      csv_header: The header from the csv mapped to the variable,
+      header: The header from the csv mapped to the variable,
       units(if power variable): Units of the power measurement.
     } - Should remove the variable property and include in the mapping.
 -->
@@ -18,16 +18,14 @@ Components using the mapper should react to events emitted from this component:
     <select @change="emitMapping" v-model="selected">
       <option>Not included</option>
       <option
-        v-for="(u, i) in headers"
+        v-for="(header, i) in headers"
         :key="i"
-        :name="u"
-        :value="u"
-        :disabled="usedHeaders.includes(u)"
+        :name="header.header"
+        :value="header"
+        :disabled="usedHeaders.includes(header.header_index)"
       >
-        <template v-if="u == ''">column {{ i + 1 }}</template>
-        <template v-else>
-          {{ u }}
-        </template>
+        <template v-if="header.header">{{ header.header }}</template>
+        <template v-else>Column {{ i + 1 }}</template>
       </option>
     </select>
     <div v-if="isPower" class="power-units">
@@ -43,12 +41,13 @@ Components using the mapper should react to events emitted from this component:
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { CSVHeader } from "@/utils/mapToCSV";
 
 @Component
 export default class SingleMapping extends Vue {
   @Prop() variable!: string;
-  @Prop() headers!: Array<string>;
-  @Prop() usedHeaders!: Array<string>;
+  @Prop() headers!: Array<CSVHeader>;
+  @Prop() usedHeaders!: Array<number>;
   selected!: string;
   units!: string;
 
