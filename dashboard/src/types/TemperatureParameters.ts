@@ -43,3 +43,36 @@ export class SAPMTemperatureParameters {
     );
   }
 }
+
+export class NOCTSAMTemperatureParameters {
+  noct: number;
+  eta_m_ref: number;
+  transmittance_absorptance: number;
+  array_height: number;
+  mount_standoff: number;
+
+  constructor({
+    noct = 0,
+    eta_m_ref = 0,
+    transmittance_absorptance = 0,
+    array_height = 0,
+    mount_standoff = 0
+  }: Partial<NOCTSAMTemperatureParameters>) {
+    this.noct = noct;
+    this.eta_m_ref = eta_m_ref;
+    this.transmittance_absorptance = transmittance_absorptance;
+    this.array_height = array_height;
+    this.mount_standoff = mount_standoff;
+  }
+
+  static isInstance(obj: any): obj is NOCTSAMTemperatureParameters {
+    const maybe = obj as NOCTSAMTemperatureParameters;
+    return (
+      maybe.noct != undefined &&
+      maybe.eta_m_ref != undefined &&
+      maybe.transmittance_absorptance != undefined &&
+      maybe.array_height != undefined &&
+      maybe.mount_standoff != undefined
+    );
+  }
+}

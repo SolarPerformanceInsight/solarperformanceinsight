@@ -4,7 +4,8 @@ import {
 } from "./Tracking";
 import {
   PVSystTemperatureParameters,
-  SAPMTemperatureParameters
+  SAPMTemperatureParameters,
+  NOCTSAMTemperatureParameters
 } from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
@@ -22,7 +23,8 @@ export class PVArray {
   temperature_model_parameters:
     | Array<number>
     | PVSystTemperatureParameters
-    | SAPMTemperatureParameters;
+    | SAPMTemperatureParameters
+    | NOCTSAMTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   albedo: number;
