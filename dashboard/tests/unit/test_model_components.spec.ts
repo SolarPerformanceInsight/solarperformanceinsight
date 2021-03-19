@@ -145,7 +145,8 @@ async function expectAllErrors(wrapper: Wrapper<any>, keys: Array<string>) {
  */
 import {
   PVSystTemperatureParameters,
-  SAPMTemperatureParameters
+  SAPMTemperatureParameters,
+  NOCTSAMTemperatureParameters
 } from "@/types/TemperatureParameters";
 describe("Tests temperature parameters", () => {
   it("pvsyst", () => {
@@ -655,18 +656,6 @@ describe("Test array", () => {
       parentComponent,
       mocks
     });
-    // @ts-expect-error
-    wrapper.vm.changeModel("sam", "pvsyst");
-
-    expect(
-      CECModuleParameters.isInstance(propsData.parameters.module_parameters)
-    ).toBe(true);
-    expect(propsData.parameters.temperature_model_parameters).toEqual(
-      origTParams
-    );
-
-    // @ts-expect-error
-    wrapper.vm.changeModel("pvsyst", "sam");
 
     expect(
       PVSystModuleParameters.isInstance(propsData.parameters.module_parameters)
@@ -674,8 +663,18 @@ describe("Test array", () => {
     expect(propsData.parameters.temperature_model_parameters).toEqual(
       origTParams
     );
+
     // @ts-expect-error
-    wrapper.vm.changeModel("pvwatts", "pvsyst");
+    wrapper.vm.changeModel("sam");
+
+    expect(
+      CECModuleParameters.isInstance(propsData.parameters.module_parameters)
+    ).toBe(true);
+    expect(propsData.parameters.temperature_model_parameters).toEqual(
+      new NOCTSAMTemperatureParameters({})
+    );
+    // @ts-expect-error
+    wrapper.vm.changeModel("pvwatts");
 
     expect(
       PVWattsModuleParameters.isInstance(propsData.parameters.module_parameters)
@@ -708,7 +707,7 @@ describe("Test array", () => {
       mocks
     });
     // @ts-expect-error
-    wrapper.vm.changeModel("sam", "pvwatts");
+    wrapper.vm.changeModel("sam");
 
     expect(
       CECModuleParameters.isInstance(propsData.parameters.module_parameters)
@@ -739,7 +738,7 @@ describe("Test array", () => {
       mocks
     });
     // @ts-expect-error
-    wrapper.vm.changeModel("pvsyst", "pvwatts");
+    wrapper.vm.changeModel("pvsyst");
 
     expect(
       PVSystModuleParameters.isInstance(propsData.parameters.module_parameters)
