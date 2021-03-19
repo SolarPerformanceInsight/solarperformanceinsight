@@ -4,7 +4,8 @@ import {
 } from "./Tracking";
 import {
   PVSystTemperatureParameters,
-  SAPMTemperatureParameters
+  SAPMTemperatureParameters,
+  NOCTSAMTemperatureParameters
 } from "./TemperatureParameters";
 import {
   PVSystModuleParameters,
@@ -22,7 +23,8 @@ export class PVArray {
   temperature_model_parameters:
     | Array<number>
     | PVSystTemperatureParameters
-    | SAPMTemperatureParameters;
+    | SAPMTemperatureParameters
+    | NOCTSAMTemperatureParameters;
   tracking: FixedTrackingParameters | SingleAxisTrackingParameters;
   // PVSyst parameters
   albedo: number;
@@ -33,7 +35,7 @@ export class PVArray {
     name = "",
     make_model = "",
     module_parameters = new PVSystModuleParameters({}),
-    temperature_model_parameters = new PVSystTemperatureParameters({}),
+    temperature_model_parameters = new NOCTSAMTemperatureParameters({}),
     tracking = new FixedTrackingParameters({}),
     albedo = 0,
     modules_per_string = 1,
@@ -67,6 +69,12 @@ export class PVArray {
       SAPMTemperatureParameters.isInstance(temperature_model_parameters)
     ) {
       this.temperature_model_parameters = new SAPMTemperatureParameters(
+        temperature_model_parameters
+      );
+    } else if (
+      NOCTSAMTemperatureParameters.isInstance(temperature_model_parameters)
+    ) {
+      this.temperature_model_parameters = new NOCTSAMTemperatureParameters(
         temperature_model_parameters
       );
     } else {
