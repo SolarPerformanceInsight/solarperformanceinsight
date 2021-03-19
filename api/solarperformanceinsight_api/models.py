@@ -381,7 +381,7 @@ class NOCTSAMTemperatureParameters(SPIBase):
     )
     mount_standoff: float = Field(
         4, description=(
-            "Distance between array mounting and mounting surface. Use default
+            "Distance between array mounting and mounting surface. Use default"
             "if system is ground-mounted. [inches]"
         )
     )
