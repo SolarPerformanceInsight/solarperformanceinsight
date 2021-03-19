@@ -357,7 +357,7 @@ class NOCTSAMTemperatureParameters(SPIBase):
 
     noct: float = Field(
         ..., description=(
-            "Nominal operating cell temperature [C], determined at conditions of"
+            "Nominal operating cell temperature [C], determined at conditions of "
             "800 W/m^2 irradiance, 20 C ambient air temperature and 1 m/s wind."
         )
     )
@@ -374,14 +374,14 @@ class NOCTSAMTemperatureParameters(SPIBase):
     )
     array_height: int = Field(
         1, description=(
-            "Height of array above ground in stories (one story is about 3m). Must"
-            "be either 1 or 2. For systems elevated less than one story, use 1."
+            "Height of array above ground in stories (one story is about 3m). Must "
+            "be either 1 or 2. For systems elevated less than one story, use 1. "
             "If system is elevated more than two stories, use 2."
         )
     )
     mount_standoff: float = Field(
         4, description=(
-            "Distance between array mounting and mounting surface. Use default"
+            "Distance between array mounting and mounting surface. Use default "
             "if system is ground-mounted. [inches]"
         )
     )

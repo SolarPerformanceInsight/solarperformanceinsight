@@ -40,7 +40,8 @@ import {
 } from "@/types/ModuleParameters";
 import {
   SAPMTemperatureParameters,
-  PVSystTemperatureParameters
+  PVSystTemperatureParameters,
+  NOCTSAMTemperatureParameters
 } from "@/types/TemperatureParameters";
 
 @Component
@@ -63,7 +64,7 @@ export default class ArraysView extends Vue {
         tempParamClass = PVSystTemperatureParameters;
       } else if (this.model == "sam") {
         modParamClass = CECModuleParameters;
-        tempParamClass = PVSystTemperatureParameters;
+        tempParamClass = NOCTSAMTemperatureParameters;
       }
 
       const modParams = new modParamClass({});

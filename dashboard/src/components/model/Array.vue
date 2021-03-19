@@ -154,7 +154,7 @@ export default class ArrayView extends ModelBase {
     }
   }
   @Watch("model")
-  changeModel(newModel: string, oldModel: string) {
+  changeModel(newModel: string) {
     if (newModel == "pvsyst") {
       this.parameters.module_parameters = new PVSystModuleParameters({});
       this.parameters.temperature_model_parameters = new PVSystTemperatureParameters(
