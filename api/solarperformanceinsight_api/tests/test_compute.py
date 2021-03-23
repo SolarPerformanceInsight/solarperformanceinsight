@@ -813,7 +813,7 @@ def test_compare_monthly_predicted_and_actual(
     assert ser.loc["actual_energy"] == 60000
     assert ser.loc["weather_adjusted_energy"] == 56250.375  # 56249.625 pre GH190
     assert ser.loc["difference"] == 3749.625  # 3750.375 pre GH190
-    assert (ser.loc["ratio"] - 1.0666738) < 1e-10
+    assert (ser.loc["ratio"] - 1.0666738) < 1e-10  # no difference with GH190
 
 
 @pytest.fixture(params=list(models.TemperatureTypeEnum))
@@ -1119,7 +1119,9 @@ def test_compare_predicted_and_actual_precise(
     assert len(ser) == 5
     assert ser.loc["month"] == "February"
     assert ser.loc["actual_energy"] == 2688000
-    assert (ser.loc["weather_adjusted_energy"] - 3157708.2) < 1e-1  # 3165232.0 pre GH190
+    assert (
+        ser.loc["weather_adjusted_energy"] - 3157708.2
+    ) < 1e-1  # 3165232.0 pre GH190
     assert (ser.loc["difference"] - -469708.16) < 1e-2  # -477231.97 pre GH190
     assert (ser.loc["ratio"] - 0.8512503) < 1e-8  # 0.84922683 pre GH190
 
