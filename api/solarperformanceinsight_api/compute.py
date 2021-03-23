@@ -511,7 +511,7 @@ def _zero_div(a: pd.Series, b: pd.Series) -> pd.Series:
 
 def _temp_factor(gamma, t_ref, t_actual):
     t0 = 25.0
-    return _zero_div(1 - gamma * (t_actual - t0), 1 - gamma * (t_ref - t0))
+    return _zero_div(1 + gamma * (t_actual - t0), 1 + gamma * (t_ref - t0))
 
 
 def _inf_mul(a: pd.Series, b: pd.Series) -> pd.Series:
@@ -813,7 +813,7 @@ def compare_monthly_predicted_and_actual(
             - ref_weather["average_daytime_cell_temperature"]
         )
     )
-    E_ref_adj = ref_perf * poa_insol_rat - temp_loss
+    E_ref_adj = ref_perf * poa_insol_rat + temp_loss
     diff = actual_perf - E_ref_adj
     ratio = actual_perf / E_ref_adj
     comparison_summary = pd.DataFrame(
