@@ -1073,6 +1073,57 @@ def test_compare_predicted_and_actual(
     assert 0.5 < ser["ratio"] < 1.8
 
 
+def test_compare_predicted_and_actual_precise(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    pvwatts_system,
+):
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type="air",
+        weather_granularity="system",
+        data_available="weather only",
+    )
+    actual_params = dict(
+        irradiance_type="standard",
+        temperature_type="air",
+        weather_granularity="system",
+        performance_granularity="system",
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(pvwatts_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if (
+        job.definition.parameters.predicted_data_parameters.data_available
+        == "weather only"
+    ):
+        # 2 weather adj, 1 summary, 3 inv, 2 array
+        assert len(reslist) == 8
+    else:
+        assert len(reslist) == 3
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert ser.loc["actual_energy"] == 2688000
+    assert ser.loc["weather_adjusted_energy"] == 3165232.0
+    assert (ser.loc["difference"] - -477231.97) < 1e-2
+    assert (ser.loc["ratio"] - 0.84922683) < 1e-8
+
+
 @pytest.mark.parametrize(
     "data_available,pg",
     (
