@@ -158,8 +158,6 @@ import { addData } from "@/api/jobs";
 
 import CSVPreview from "@/components/jobs/data/CSVPreview.vue";
 
-import { DateTime } from "luxon";
-
 Vue.component("csv-preview", CSVPreview);
 
 interface HTMLInputEvent extends Event {
@@ -266,8 +264,8 @@ export default class CSVUpload extends Vue {
       return "Data for each month of the year";
     }
     const timeParameters = this.job.definition.parameters.time_parameters;
-    const start = DateTime.fromISO(timeParameters.start);
-    const end = DateTime.fromISO(timeParameters.end);
+    const start = timeParameters.start;
+    const end = timeParameters.end;
     const step = timeParameters.step / 60;
     return `Data from ${start} to ${end} with ${step} minutes between data points.`;
   }
