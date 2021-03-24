@@ -9,15 +9,19 @@ Component for handling display/download of job results.
         <div v-if="summaryData">
           <summary-table :tableData="summaryData"></summary-table>
         </div>
-        <h2 class="data-summary">Results and Measurements</h2>
+        <h2 class="data-summary">Results</h2>
         <p>
-          Below is a table of the results of this calculation and user uploaded
-          measurements.
+          This table contains the results of this calculation. Files can be
+          downloaded using the links to the right.
           <timeseries-table :job="job" :resultObjects="orderedResults" />
         </p>
         <details>
           <summary>Uploaded Data</summary>
-          <timeseries-table :job="job" :dataObjects="job.data_objects" />
+          <p>
+            This table contains the data uploaded for this calculation. Files
+            can be downloaded using the links to the right.
+            <timeseries-table :job="job" :dataObjects="job.data_objects" />
+          </p>
         </details>
         <h2 class="timeseries-header">Timeseries Results</h2>
         <div v-if="results">
