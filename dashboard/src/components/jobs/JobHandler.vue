@@ -118,7 +118,7 @@ Component that handles basic job/workflows.
           <template v-if="step == 'original weather data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
               :granularity="jobParameters.weather_granularity"

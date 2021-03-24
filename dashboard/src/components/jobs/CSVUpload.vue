@@ -48,7 +48,22 @@ Takes the following props that can be extracted from job metadata.
       v-model.number="dataStartLine"
     />
     <br />
-    <label for="csv-upload">Select a file with {{ dataType }}:</label>
+    <label for="csv-upload" class="mt-1">
+      Select a file with {{ dataType }} containing:
+    </label>
+    <ul>
+      <li>{{ timeParameterSummary }}</li>
+      <li>One {{ indexField }} field.</li>
+      <li>
+        The following variables for
+        <template v-if="granularity == 'system'">the</template>
+        <template v-else>each</template>
+        {{ granularity }}:
+        <ul>
+          <li v-for="req of requiredFieldSummary" :key="req">{{ req }}</li>
+        </ul>
+      </li>
+    </ul>
     <input
       id="csv-upload"
       type="file"
@@ -137,10 +152,13 @@ import { System } from "@/types/System";
 import parseCSV from "@/utils/parseCSV";
 import { mapToCSV, Mapping, CSVHeader } from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 import { addData } from "@/api/jobs";
 
 import CSVPreview from "@/components/jobs/data/CSVPreview.vue";
+
+import { DateTime } from "luxon";
 
 Vue.component("csv-preview", CSVPreview);
 
@@ -150,7 +168,7 @@ interface HTMLInputEvent extends Event {
 
 @Component
 export default class CSVUpload extends Vue {
-  @Prop() jobId!: string;
+  @Prop() job!: Record<string, any>;
   @Prop() granularity!: string;
   @Prop() irradiance_type!: string;
   @Prop() system!: System;
@@ -192,6 +210,9 @@ export default class CSVUpload extends Vue {
       dataStartLine: 2,
       currentSelection: null
     };
+  }
+  get jobId() {
+    return this.job.object_id;
   }
   get dataType() {
     return this.data_objects[0].definition.type;
@@ -239,6 +260,21 @@ export default class CSVUpload extends Vue {
     } else {
       return "month";
     }
+  }
+  get timeParameterSummary() {
+    if (this.dataType.includes("monthly")) {
+      return "Data for each month of the year";
+    }
+    const timeParameters = this.job.definition.parameters.time_parameters;
+    const start = DateTime.fromISO(timeParameters.start);
+    const end = DateTime.fromISO(timeParameters.end);
+    const step = timeParameters.step / 60;
+    return `Data from ${start} to ${end} with ${step} minutes between data points.`;
+  }
+  get requiredFieldSummary() {
+    const nonIndexRequired = this.required.filter(x => x != this.indexField);
+    const displayNames = nonIndexRequired.map(x => getVariableDisplayName(x));
+    return displayNames;
   }
   removeMetadata(csv: string) {
     // Determine the characters used for line separation
@@ -461,5 +497,8 @@ ul.upload-statuses {
 #header-line,
 #data-start-line {
   width: 3em;
+}
+label {
+  display: inline-block;
 }
 </style>
