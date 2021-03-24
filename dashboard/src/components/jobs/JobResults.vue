@@ -15,7 +15,7 @@ Component for handling display/download of job results.
           measurements.
           <timeseries-table
             :job="job"
-            :resultObjects="results"
+            :resultObjects="orderedResults"
             :dataObjects="job.data_objects"
           />
         </p>
@@ -166,6 +166,18 @@ export default class JobResults extends Vue {
         result.definition.type.includes("vs")
       );
     });
+  }
+  get orderedResults() {
+    // Return results with any summary results bumped to the front
+    const summaryResults = this.results.filter(
+      (result: Record<string, any>) => {
+        return (
+          result.definition.type.includes("summary") ||
+          result.definition.type.includes("vs")
+        );
+      }
+    );
+    return summaryResults.concat(this.timeseriesResults);
   }
   async loadResults() {
     const token = await this.$auth.getTokenSilently();
