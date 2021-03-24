@@ -71,7 +71,7 @@
     </div>
     <help v-if="helpText" :helpText="helpText" />
     <div v-if="currentDate && currentDate.invalid" class="warning-text inline">
-      {{ currentDate.invalid.explanation }}
+      {{ cleanError(currentDate.invalid.explanation) }}
     </div>
   </div>
 </template>
@@ -120,6 +120,10 @@ export default class DatetimeField extends Vue {
   @Watch("currentDate")
   emitTimeParams() {
     this.$emit("update-datetime", this.currentDate);
+  }
+  cleanError(errorMessage: string) {
+    // remove extra unwanted text from error messages
+    return errorMessage.replace(/\(of type .*\)/, "");
   }
 }
 </script>
