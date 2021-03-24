@@ -13,12 +13,12 @@ Component for handling display/download of job results.
         <p>
           Below is a table of the results of this calculation and user uploaded
           measurements.
-          <timeseries-table
-            :job="job"
-            :resultObjects="orderedResults"
-            :dataObjects="job.data_objects"
-          />
+          <timeseries-table :job="job" :resultObjects="orderedResults" />
         </p>
+        <details>
+          <summary>Uploaded Data</summary>
+          <timeseries-table :job="job" :dataObjects="job.data_objects" />
+        </details>
         <h2 class="timeseries-header">Timeseries Results</h2>
         <div v-if="results">
           <custom-plot :resultObjects="results" :job="job" />
