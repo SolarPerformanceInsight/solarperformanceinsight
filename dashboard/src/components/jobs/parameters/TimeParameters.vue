@@ -5,6 +5,11 @@
       Tell us about the time index of your data files.
     </p>
     <p class="p-body">
+      Data files are expected to contain at least 90% of the times
+      defined by this time index. Any files missing more than 10% of
+      the times will be rejected.
+    </p>
+    <p class="p-body">
       <slot></slot>
     </p>
     <div class="timefield">
