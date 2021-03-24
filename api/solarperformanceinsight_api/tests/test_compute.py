@@ -811,9 +811,9 @@ def test_compare_monthly_predicted_and_actual(
     assert len(ser) == 5
     assert ser.loc["month"] == "July"
     assert ser.loc["actual_energy"] == 60000
-    assert ser.loc["weather_adjusted_energy"] == 56249.625
-    assert ser.loc["difference"] == 3750.375
-    assert (ser.loc["ratio"] - 1.0666738) < 1e-10
+    assert ser.loc["weather_adjusted_energy"] == 56250.375  # 56249.625 pre GH190
+    assert ser.loc["difference"] == 3749.625  # 3750.375 pre GH190
+    assert (ser.loc["ratio"] - 1.0666738) < 1e-10  # no difference with GH190
 
 
 @pytest.fixture(params=list(models.TemperatureTypeEnum))
@@ -1071,6 +1071,59 @@ def test_compare_predicted_and_actual(
     assert ser["weather_adjusted_energy"] > 0
     assert "difference" in ser
     assert 0.5 < ser["ratio"] < 1.8
+
+
+def test_compare_predicted_and_actual_precise(
+    mockup_predicted_actual,
+    auth0_id,
+    nocommit_transaction,
+    pvwatts_system,
+):
+    pred_params = dict(
+        irradiance_type="standard",
+        temperature_type="air",
+        weather_granularity="system",
+        data_available="weather only",
+    )
+    actual_params = dict(
+        irradiance_type="standard",
+        temperature_type="air",
+        weather_granularity="system",
+        performance_granularity="system",
+    )
+    si = storage.StorageInterface(user=auth0_id)
+    job, save = mockup_predicted_actual(pvwatts_system, pred_params, actual_params)
+    compute.compare_predicted_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    if (
+        job.definition.parameters.predicted_data_parameters.data_available
+        == "weather only"
+    ):
+        # 2 weather adj, 1 summary, 3 inv, 2 array
+        assert len(reslist) == 8
+    else:
+        assert len(reslist) == 3
+
+    assert (
+        len([1 for res in reslist if res.type == "weather adjusted performance"]) == 2
+    )
+
+    summary = reslist[-1]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 2
+    ser = summary_df.iloc[0]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "February"
+    assert ser.loc["actual_energy"] == 2688000
+    assert (
+        ser.loc["weather_adjusted_energy"] - 3157708.2
+    ) < 1e-1  # 3165232.0 pre GH190
+    assert (ser.loc["difference"] - -469708.16) < 1e-2  # -477231.97 pre GH190
+    assert (ser.loc["ratio"] - 0.8512503) < 1e-8  # 0.84922683 pre GH190
 
 
 @pytest.mark.parametrize(
