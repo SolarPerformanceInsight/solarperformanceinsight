@@ -70,7 +70,7 @@
       </span>
     </div>
     <help v-if="helpText" :helpText="helpText" />
-    <div v-if="currentDate && currentDate.invalid" class="warning-text inline">
+    <div v-if="currentDate && currentDate.invalid" class="warning-text ml-1 inline">
       {{ cleanError(currentDate.invalid.explanation) }}
     </div>
   </div>

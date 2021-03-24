@@ -51,7 +51,7 @@
     </div>
     <div v-if="errors">
       <ul>
-        <li v-for="(error, key) of errors" :key="key" class="warning-text">
+        <li v-for="(error, key) of errors" :key="key" class="warning-text ml-1">
           <b>{{ key }}:</b>
           {{ error }}
         </li>
@@ -129,7 +129,5 @@ export default class JobTimeParameters extends Vue {
 }
 </script>
 <style scoped>
-.vdatetime {
-  display: inline-block;
-}
+
 </style>

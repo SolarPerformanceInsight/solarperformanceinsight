@@ -64,7 +64,7 @@
               Get Started
             </button>
             <span v-if="!isValid" class="warning-text">
-              Start and End required.
+              Start and end are required.
             </span>
           </form>
         </div>
