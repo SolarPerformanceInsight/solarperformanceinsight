@@ -265,7 +265,16 @@ export default class CSVUpload extends Vue {
   }
   get requiredFieldSummary() {
     const nonIndexRequired = this.required.filter(x => x != this.indexField);
-    const displayNames = nonIndexRequired.map(x => getVariableDisplayName(x));
+    const displayNames = nonIndexRequired.map(variable => {
+      let variableName: string;
+      if (variable == "effective_irradiance") {
+        variableName =
+          "Effective Irradiance or Plane of Array Global Irradiance";
+      } else {
+        variableName = getVariableDisplayName(variable);
+      }
+      return variableName;
+    });
     return displayNames;
   }
   removeMetadata(csv: string) {
