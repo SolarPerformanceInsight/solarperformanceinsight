@@ -259,7 +259,9 @@ export default class CSVUpload extends Vue {
     const start = timeParameters.start;
     const end = timeParameters.end;
     const step = timeParameters.step / 60;
-    return `Data from ${start} to ${end} with ${step} minutes between data points.`;
+    return `Data from ${start} to ${end} with ${step} minute${
+      step == 1 ? "" : "s"
+    } between data points.`;
   }
   get requiredFieldSummary() {
     const nonIndexRequired = this.required.filter(x => x != this.indexField);
