@@ -246,7 +246,9 @@ export default class CustomPlots extends Vue {
     if (this.dataSources[key] == "results") {
       source = "Calculated";
     }
-    const dataType = this.selectedObjects[key].definition.type;
+    const dataType = this.cleanDataType(
+      this.selectedObjects[key].definition.type
+    );
     const varName = getVariableDisplayName(this.selectedVariables[key]);
     const units = this.units[key];
     return `${source} ${dataType} ${varName} [${units}]`;
@@ -284,6 +286,16 @@ export default class CustomPlots extends Vue {
   }
   getUnitOptions(variable: string) {
     return getUnitOptions(variable);
+  }
+  cleanDataType(dataType: string) {
+    // strip out unwanted redundant data type information
+    if (dataType.includes("performance data")) {
+      return dataType.replace("performance data", "");
+    }
+    if (dataType == "weather adjusted performance") {
+      return "weather adjusted predicted";
+    }
+    return dataType;
   }
 }
 </script>

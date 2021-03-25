@@ -5,12 +5,6 @@ Takes the following props that can be extracted from job metadata.
     - "module": requires that "module_temperature" be provided in the file.
     - "cell": requires that "cell_temperature" be provided in the file.
     - "air": requires that "temp_air" and "wind_speed" be provided".
-  - irradiance_type: string - Type of irradiance found in weather data. One of:
-    - "standard": requires "ghi", "dni", and "dhi" provided in the file.
-    - "poa": requires "poa_global", "poa_direct", and "poa_diffuse" provided in
-      the file.
-    - "effictive_irradiance": required "effective_irradiance" provided in the
-      file.
   - granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -48,7 +42,22 @@ Takes the following props that can be extracted from job metadata.
       v-model.number="dataStartLine"
     />
     <br />
-    <label for="csv-upload">Select a file with {{ dataType }}:</label>
+    <label for="csv-upload" class="mt-1">
+      Select a file with {{ dataType }} containing:
+    </label>
+    <ul>
+      <li>{{ timeParameterSummary }}</li>
+      <li>One {{ indexField }} field.</li>
+      <li>
+        The following variables for
+        <template v-if="granularity == 'system'">the</template>
+        <template v-else>each</template>
+        {{ granularity }}:
+        <ul>
+          <li v-for="req of requiredFieldSummary" :key="req">{{ req }}</li>
+        </ul>
+      </li>
+    </ul>
     <input
       id="csv-upload"
       type="file"
@@ -137,6 +146,7 @@ import { System } from "@/types/System";
 import parseCSV from "@/utils/parseCSV";
 import { mapToCSV, Mapping, CSVHeader } from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 import { addData } from "@/api/jobs";
 
@@ -150,9 +160,7 @@ interface HTMLInputEvent extends Event {
 
 @Component
 export default class CSVUpload extends Vue {
-  @Prop() jobId!: string;
-  @Prop() granularity!: string;
-  @Prop() irradiance_type!: string;
+  @Prop() job!: Record<string, any>;
   @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
@@ -192,6 +200,9 @@ export default class CSVUpload extends Vue {
       dataStartLine: 2,
       currentSelection: null
     };
+  }
+  get jobId() {
+    return this.job.object_id;
   }
   get dataType() {
     return this.data_objects[0].definition.type;
@@ -239,6 +250,23 @@ export default class CSVUpload extends Vue {
     } else {
       return "month";
     }
+  }
+  get timeParameterSummary() {
+    if (this.dataType.includes("monthly")) {
+      return "Data for each month of the year.";
+    }
+    const timeParameters = this.job.definition.parameters.time_parameters;
+    const start = timeParameters.start;
+    const end = timeParameters.end;
+    const step = timeParameters.step / 60;
+    return `Data from ${start} to ${end} with ${step} minute${
+      step == 1 ? "" : "s"
+    } between data points.`;
+  }
+  get requiredFieldSummary() {
+    const nonIndexRequired = this.required.filter(x => x != this.indexField);
+    const displayNames = nonIndexRequired.map(x => getVariableDisplayName(x));
+    return displayNames;
   }
   removeMetadata(csv: string) {
     // Determine the characters used for line separation
@@ -443,6 +471,36 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       this.storeCSV(null);
     }
   }
+  get granularity() {
+    if (this.dataType.includes("monthly")) {
+      return "system";
+    } else {
+      let source: any;
+      if (
+        this.dataType.includes("original") ||
+        this.dataType.includes("predicted")
+      ) {
+        if ("predicted_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.predicted_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else if (this.dataType.includes("actual")) {
+        if ("actual_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.actual_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else {
+        source = this.job.definition.parameters;
+      }
+      if (this.dataType.includes("performance")) {
+        return source.performance_granularity;
+      } else {
+        return source.weather_granularity;
+      }
+    }
+  }
 }
 </script>
 <style scoped>
@@ -461,5 +519,8 @@ ul.upload-statuses {
 #header-line,
 #data-start-line {
   width: 3em;
+}
+label {
+  display: inline-block;
 }
 </style>

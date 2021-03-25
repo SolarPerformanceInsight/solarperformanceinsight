@@ -150,7 +150,7 @@ beforeEach(() => jest.clearAllMocks());
 describe("Test CSV Upload", () => {
   it("Test getters and init", async () => {
     const propsData = {
-      jobId: testJob.object_id,
+      job: testJob,
       granularity: testJob.definition.parameters.weather_granularity,
       irradiance_type: testJob.definition.parameters.irradiance_type,
       temperature_type: testJob.definition.parameters.temperature_type,
@@ -173,7 +173,7 @@ describe("Test CSV Upload", () => {
   });
   it("Test store and map csv", async () => {
     const propsData = {
-      jobId: testJob.object_id,
+      job: testJob,
       granularity: testJob.definition.parameters.weather_granularity,
       irradiance_type: testJob.definition.parameters.irradiance_type,
       temperature_type: testJob.definition.parameters.temperature_type,

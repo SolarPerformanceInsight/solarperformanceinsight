@@ -45,7 +45,7 @@
                   "
                 >
                   Predicted data may be provided for a different year from the
-                  time index described below. An attempt will be made to shift
+                  time index described below. SPI will attempt to shift
                   predicted data by full years to match the index. The timestep
                   and the month, day, and time of the start and end of the
                   predicted data must match the index. Any extra timestamps in
@@ -64,7 +64,7 @@
               Get Started
             </button>
             <span v-if="!isValid" class="warning-text">
-              Start and End required.
+              Start and end are required.
             </span>
           </form>
         </div>
