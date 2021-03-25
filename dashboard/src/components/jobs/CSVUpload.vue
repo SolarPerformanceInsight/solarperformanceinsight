@@ -494,8 +494,6 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       } else {
         source = this.job.definition.parameters;
       }
-      console.log(this.dataType);
-      console.log(source);
       if (this.dataType.includes("performance")) {
         return source.performance_granularity;
       } else {
