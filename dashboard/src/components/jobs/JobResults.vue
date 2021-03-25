@@ -52,7 +52,8 @@ Component for handling display/download of job results.
         Calculation is complete. Results are loading.
       </template>
       <template v-else>
-        Calculation has not been submitted.
+        The calculation is missing required data. Once all data has been
+        uploaded processing will begin.
       </template>
     </div>
   </div>
@@ -122,6 +123,9 @@ export default class JobResults extends Vue {
       // load results when complete
       this.initializeResults();
     } else {
+      if (jobStatus == "prepared") {
+        this.$emit("compute-job");
+      }
       // Wait 1 second and poll for status update
       this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
     }
