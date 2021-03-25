@@ -5,12 +5,6 @@ Takes the following props that can be extracted from job metadata.
     - "module": requires that "module_temperature" be provided in the file.
     - "cell": requires that "cell_temperature" be provided in the file.
     - "air": requires that "temp_air" and "wind_speed" be provided".
-  - irradiance_type: string - Type of irradiance found in weather data. One of:
-    - "standard": requires "ghi", "dni", and "dhi" provided in the file.
-    - "poa": requires "poa_global", "poa_direct", and "poa_diffuse" provided in
-      the file.
-    - "effictive_irradiance": required "effective_irradiance" provided in the
-      file.
   - granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -167,8 +161,6 @@ interface HTMLInputEvent extends Event {
 @Component
 export default class CSVUpload extends Vue {
   @Prop() job!: Record<string, any>;
-  @Prop() granularity!: string;
-  @Prop() irradiance_type!: string;
   @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
@@ -475,6 +467,38 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       this.processingFile = true;
       this.promptForMapping = false;
       this.storeCSV(null);
+    }
+  }
+  get granularity() {
+    if (this.dataType.includes("monthly")) {
+      return "system";
+    } else {
+      let source: any;
+      if (
+        this.dataType.includes("original") ||
+        this.dataType.includes("predicted")
+      ) {
+        if ("predicted_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.predicted_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else if (this.dataType.includes("actual")) {
+        if ("actual_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.actual_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else {
+        source = this.job.definition.parameters;
+      }
+      console.log(this.dataType);
+      console.log(source);
+      if (this.dataType.includes("performance")) {
+        return source.performance_granularity;
+      } else {
+        return source.weather_granularity;
+      }
     }
   }
 }

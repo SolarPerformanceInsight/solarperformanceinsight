@@ -111,8 +111,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Original Weather Data</b>
@@ -126,8 +124,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Original Weather Data</b>
@@ -141,8 +137,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Weather Data</b>
@@ -156,8 +150,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Weather Data</b>
@@ -171,8 +163,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Predicted Performance</b>
@@ -186,8 +176,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Predicted Performance</b>
@@ -201,8 +189,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Expected Performance</b>
@@ -216,8 +202,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Performance</b>
@@ -231,8 +215,6 @@ Component that handles basic job/workflows.
               :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Performance</b>
@@ -380,15 +362,6 @@ export default class JobHandler extends Vue {
 
   get jobParameters() {
     const params = this.job.definition.parameters;
-
-    // For monthly data, granularity is assumed to be system, but properties
-    // are not provid.
-    if (!("weather_granularity" in params)) {
-      params["weather_granularity"] = "system";
-    }
-    if (!("performance_granularity" in params)) {
-      params["performance_granularity"] = "system";
-    }
     return params;
   }
 
