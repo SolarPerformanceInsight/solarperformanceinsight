@@ -261,7 +261,7 @@ export default class CSVUpload extends Vue {
   }
   get timeParameterSummary() {
     if (this.dataType.includes("monthly")) {
-      return "Data for each month of the year";
+      return "Data for each month of the year.";
     }
     const timeParameters = this.job.definition.parameters.time_parameters;
     const start = timeParameters.start;
