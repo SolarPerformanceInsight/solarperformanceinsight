@@ -108,8 +108,9 @@ export default class SystemView extends ModelBase {
           "name"
         ] = `System with name "${this.parameters.name}" already exists.`;
         valid = false;
+      } else {
+        delete this.extraErrors["name"];
       }
-      delete this.extraErrors["name"];
     }
     return valid;
   }
