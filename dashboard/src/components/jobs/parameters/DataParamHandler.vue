@@ -44,7 +44,7 @@
         @new-data-params="setDataParams"
       >
         <template v-if="dataType == 'all_data' && jobClass == 'compare'">
-          Actual
+          <span></span>
         </template>
       </data-params>
     </div>
