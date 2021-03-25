@@ -16,7 +16,9 @@
       </div>
       <template v-else>
         <div v-if="this.spec">
-          <template v-if="browserType">Parameters for {{ browserType }}:</template>
+          <template v-if="browserType">
+            Parameters for {{ browserType }}:
+          </template>
           <b>{{ this.selection }}</b>
           <br />
           <ul class="parameter-summary">
