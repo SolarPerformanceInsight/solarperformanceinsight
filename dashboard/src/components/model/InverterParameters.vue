@@ -10,6 +10,7 @@
         @parameters-selected="showBrowser = false"
         @cancel-selection="showBrowser = false"
         v-if="showBrowser"
+        browserType="inverter"
         :componentName="apiComponentName"
       />
       <br />

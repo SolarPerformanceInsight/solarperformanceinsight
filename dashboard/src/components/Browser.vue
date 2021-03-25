@@ -16,7 +16,7 @@
       </div>
       <template v-else>
         <div v-if="this.spec">
-          Parameters for Inverter :
+          <template v-if="browserType">Parameters for {{ browserType }}:</template>
           <b>{{ this.selection }}</b>
           <br />
           <ul class="parameter-summary">
@@ -40,6 +40,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 @Component
 export default class DBBrowser extends Vue {
   @Prop() componentName!: string;
+  @Prop() browserType!: string;
   optionsLoading = true;
   specLoading = false;
   options!: Array<string>;
