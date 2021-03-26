@@ -32,7 +32,7 @@ ups will close when the user clicks away.
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 
-// extend HTMLElement interface to tell typescript our custom event is expected 
+// extend HTMLElement interface to tell typescript our custom event is expected
 interface HTMLElement {
   clickAway: () => void;
 }
