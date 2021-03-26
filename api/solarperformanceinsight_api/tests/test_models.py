@@ -133,12 +133,12 @@ def timeindex():
     return outd, models.JobTimeindex(**outd)
 
 
-def test_calculate_predicted_job(timeindex, system_def, system_id):
+def test_calculate_reference_job(timeindex, system_def, system_id):
     timedict, timeind = timeindex
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            calculate="predicted performance",
+            calculate="reference performance",
             irradiance_type="poa",
             temperature_type="module",
             weather_granularity="array",
@@ -246,20 +246,20 @@ def test_calculate_weather_adjusted_pr_job(timeindex, system_def, system_id):
     ]
 
 
-def test_compare_predicted_actual_job_2A1(timeindex, system_def, system_id):
+def test_compare_reference_actual_job_2A1(timeindex, system_def, system_id):
     # UC 2A-1
     timedict, timeind = timeindex
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            compare="predicted and actual performance",
+            compare="reference and actual performance",
             actual_data_parameters=dict(
                 irradiance_type="standard",
                 temperature_type="air",
                 weather_granularity="system",
                 performance_granularity="system",
             ),
-            predicted_data_parameters=dict(
+            reference_data_parameters=dict(
                 data_available="weather, AC, and DC performance",
                 irradiance_type="poa",
                 temperature_type="module",
@@ -291,30 +291,30 @@ def test_compare_predicted_actual_job_2A1(timeindex, system_def, system_id):
         "time",
         "performance",
     ]
-    assert job._data_items[("/", "predicted performance data")]._data_cols == [
+    assert job._data_items[("/", "reference performance data")]._data_cols == [
         "time",
         "performance",
     ]
-    assert job._data_items[("/", "predicted DC performance data")]._data_cols == [
+    assert job._data_items[("/", "reference DC performance data")]._data_cols == [
         "time",
         "performance",
     ]
 
 
-def test_compare_predicted_actual_job_2A2(timeindex, system_def, system_id):
+def test_compare_reference_actual_job_2A2(timeindex, system_def, system_id):
     # UC 2A-2
     timedict, timeind = timeindex
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            compare="predicted and actual performance",
+            compare="reference and actual performance",
             actual_data_parameters=dict(
                 irradiance_type="poa",
                 temperature_type="module",
                 weather_granularity="array",
                 performance_granularity="inverter",
             ),
-            predicted_data_parameters=dict(
+            reference_data_parameters=dict(
                 data_available="weather and AC performance",
                 irradiance_type="standard",
                 temperature_type="air",
@@ -348,17 +348,17 @@ def test_compare_predicted_actual_job_2A2(timeindex, system_def, system_id):
         "time",
         "performance",
     ]
-    assert job._data_items[("/", "predicted performance data")]._data_cols == [
+    assert job._data_items[("/", "reference performance data")]._data_cols == [
         "time",
         "performance",
     ]
 
 
-def test_compare_predicted_actual_job_2A3(system_def, system_id):
+def test_compare_reference_actual_job_2A3(system_def, system_id):
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            compare="monthly predicted and actual performance",
+            compare="monthly reference and actual performance",
             system_id=system_id,
         ),
     )
@@ -378,24 +378,24 @@ def test_compare_predicted_actual_job_2A3(system_def, system_id):
         "month",
         "total_energy",
     ]
-    assert job._data_items[("/", "predicted monthly performance data")]._data_cols == [
+    assert job._data_items[("/", "reference monthly performance data")]._data_cols == [
         "month",
         "total_energy",
     ]
 
 
-def test_compare_predicted_actual_job_2A4(timeindex, system_def, system_id):
+def test_compare_reference_actual_job_2A4(timeindex, system_def, system_id):
     # UC 2A-4
     timedict, timeind = timeindex
     param_dict = dict(
-        compare="predicted and actual performance",
+        compare="reference and actual performance",
         actual_data_parameters=dict(
             irradiance_type="poa",
             temperature_type="module",
             weather_granularity="system",
             performance_granularity="inverter",
         ),
-        predicted_data_parameters=dict(
+        reference_data_parameters=dict(
             data_available="weather only",
             irradiance_type="standard",
             temperature_type="air",
@@ -428,7 +428,7 @@ def test_compare_predicted_actual_job_2A4(timeindex, system_def, system_id):
     ]
 
     bad_params = param_dict.copy()
-    bad_params["predicted_data_parameters"]["performance_granularity"] = "system"
+    bad_params["reference_data_parameters"]["performance_granularity"] = "system"
     with pytest.raises(ValidationError):
         models.Job(system_definition=system_def, parameters=bad_params)
 
@@ -604,8 +604,8 @@ def test_jobdataitem_columns(irr, temp, expected, type_):
 
 def test_jobdataitem_columns_others():
     for type_ in (
-        "predicted performance data",
-        "predicted DC performance data",
+        "reference performance data",
+        "reference DC performance data",
         "expected performance data",
         "actual performance data",
     ):
@@ -618,7 +618,7 @@ def test_jobdataitem_columns_others():
         ]
     for type_ in (
         "actual monthly performance data",
-        "predicted monthly performance data",
+        "reference monthly performance data",
     ):
         models.JobDataItem.from_types("/", type_)._data_cols == ["time", "total_energy"]
 

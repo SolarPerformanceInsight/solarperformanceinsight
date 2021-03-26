@@ -144,7 +144,7 @@ def predvsactual_job_id():
 
 
 @pytest.fixture(scope="module")
-def predicted_perf_job_data_id():
+def reference_perf_job_data_id():
     return "4eb8697c-76c3-11eb-afc5-f4939feddd82"
 
 

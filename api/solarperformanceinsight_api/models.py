@@ -874,14 +874,14 @@ class TemperatureTypeEnum(str, Enum):
 class JobDataTypeEnum(str, Enum):
     original_weather = "original weather data"
     actual_weather = "actual weather data"
-    predicted_performance = "predicted performance data"
-    predicted_performance_dc = "predicted DC performance data"
+    reference_performance = "reference performance data"
+    reference_performance_dc = "reference DC performance data"
     expected_performance = "expected performance data"
     actual_performance = "actual performance data"
     monthly_actual_weather = "actual monthly weather data"
     monthly_original_weather = "original monthly weather data"
     monthly_actual_performance = "actual monthly performance data"
-    monthly_original_performance = "predicted monthly performance data"
+    monthly_original_performance = "reference monthly performance data"
 
 
 class JobDataItem(SPIBase):
@@ -919,10 +919,10 @@ class JobDataItem(SPIBase):
             else:
                 cols += ["temp_air", "wind_speed"]
         elif type_ in (
-            JobDataTypeEnum.predicted_performance,
+            JobDataTypeEnum.reference_performance,
             JobDataTypeEnum.actual_performance,
             JobDataTypeEnum.expected_performance,
-            JobDataTypeEnum.predicted_performance_dc,
+            JobDataTypeEnum.reference_performance_dc,
         ):
             cols += ["performance"]
         elif type_ in (
@@ -1014,7 +1014,7 @@ class CompareMixin(CalculateMixin):
 
 
 class CalculateEnum(str, Enum):
-    predicted_performance = "predicted performance"
+    reference_performance = "reference performance"
     expected_performance = "expected performance"
 
 
@@ -1025,7 +1025,7 @@ class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.calculate == CalculateEnum.predicted_performance:
+        if self.calculate == CalculateEnum.reference_performance:
             self._weather_types = (JobDataTypeEnum.original_weather,)
         else:
             self._weather_types = (JobDataTypeEnum.actual_weather,)
@@ -1095,11 +1095,11 @@ class PredictedDataParams(CompareMixin):
     def __init__(self, **data):
         super().__init__(**data)
         if self.data_available == PredictedDataEnum.weather_and_ac:
-            self._performance_types = (JobDataTypeEnum.predicted_performance,)
+            self._performance_types = (JobDataTypeEnum.reference_performance,)
         elif self.data_available == PredictedDataEnum.weather_and_ac_and_dc:
             self._performance_types = (
-                JobDataTypeEnum.predicted_performance,
-                JobDataTypeEnum.predicted_performance_dc,
+                JobDataTypeEnum.reference_performance,
+                JobDataTypeEnum.reference_performance_dc,
             )
         else:
             self._performance_types = ()
@@ -1111,37 +1111,37 @@ class PredictedDataParams(CompareMixin):
         pg = values.get("performance_granularity")
         if da == PredictedDataEnum.weather_only and pg is not None:
             raise ValueError(
-                "Performance granularity is invalid when not providing predicted "
+                "Performance granularity is invalid when not providing reference "
                 "performance"
             )
         return values
 
 
 class PredictedActualEnum(str, Enum):
-    predicted_actual = "predicted and actual performance"
+    reference_actual = "reference and actual performance"
 
 
 class ComparePredictedActualJobParameters(JobParametersBase):
-    """Compare predicted to actual performance"""
+    """Compare reference to actual performance"""
 
-    predicted_data_parameters: PredictedDataParams
+    reference_data_parameters: PredictedDataParams
     actual_data_parameters: ActualDataParams
     compare: PredictedActualEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
     ) -> Dict[Tuple[str, JobDataTypeEnum], JobDataItem]:
-        out = self.predicted_data_parameters._construct_data_items(system_definition)
+        out = self.reference_data_parameters._construct_data_items(system_definition)
         out.update(self.actual_data_parameters._construct_data_items(system_definition))
         return out
 
 
 class MonthlyPredictedActualEnum(str, Enum):
-    monthly_predicted_actual = "monthly predicted and actual performance"
+    monthly_reference_actual = "monthly reference and actual performance"
 
 
 class CompareMonthlyPredictedActualJobParameters(SPIBase):
-    """Compare predicted to actual performance on a monthly time
+    """Compare reference to actual performance on a monthly time
     scale. Data is expected to be at the system level and include
     monthly insolation, energy, and average daytime temperature.
     """
