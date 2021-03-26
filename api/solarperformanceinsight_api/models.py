@@ -1301,7 +1301,7 @@ class StoredJob(StoredObject):
 
 
 class DataPeriods(SPIBase):
-    modeled: str = Field(..., description="Expected period of the data")
+    expected: str = Field(..., description="Expected period of the data")
     uploaded: str = Field(..., description="Most common period of the uploaded data")
 
 
