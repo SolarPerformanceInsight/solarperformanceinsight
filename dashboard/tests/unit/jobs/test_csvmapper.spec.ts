@@ -72,7 +72,7 @@ const testJob = {
     },
     parameters: {
       system_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-      calculate: "predicted performance",
+      calculate: "reference performance",
       time_parameters: {
         start: "2020-01-01T00:00:00+00:00",
         end: "2020-12-31T23:59:59+00:00",
@@ -152,7 +152,7 @@ describe("Test CSV Mapper", () => {
 
     const inverter = testJob.definition.system_definition.inverters[0];
     const array = inverter.arrays[0];
-    const expectedMetadata = {
+    const modeledMetadata = {
       parent: inverter,
       ...array
     };
@@ -160,7 +160,7 @@ describe("Test CSV Mapper", () => {
     expect(weatherHandler.vm.toMap).toEqual([
       {
         data_object: testJob.data_objects[0],
-        metadata: expectedMetadata
+        metadata: modeledMetadata
       }
     ]);
 

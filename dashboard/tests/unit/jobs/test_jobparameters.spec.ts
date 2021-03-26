@@ -75,7 +75,7 @@ beforeEach(() => {
   mockJobResponse.status = 201;
 });
 describe("Test Job Parameters", () => {
-  it("test expected inputs exist", async () => {
+  it("test modeled inputs exist", async () => {
     const div = document.createElement("div");
     div.id = "root";
     document.body.appendChild(div);
@@ -148,7 +148,7 @@ describe("Test Job Parameters", () => {
     // @ts-expect-error
     expect(wrapper.vm.jobSpec).toEqual({
       system_id: testSystem.object_id,
-      calculate: "predicted performance",
+      calculate: "reference performance",
       time_parameters: {
         start: "2020-01-01T00:00:00.000-07:00",
         end: "2020-02-01T00:00:00.000-07:00",
@@ -337,7 +337,7 @@ describe("Test Job Parameters", () => {
       mocks
     });
     const compareParams = {
-      compare: "monthly predicted and actual performance"
+      compare: "monthly reference and actual performance"
     };
 
     wrapper.vm.$data.jobTypeParams = compareParams;
@@ -353,39 +353,39 @@ describe("Test Job Parameters", () => {
   });
 });
 describe("Test Calculate Parameters", () => {
-  it("test expected inputs exist", async () => {
+  it("test modeled inputs exist", async () => {
     const wrapper = mount(CalculateJobParams, {
       localVue
     });
-    expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
-    expect(wrapper.find("input#expected-performance").exists()).toBe(true);
+    expect(wrapper.find("input#reference-performance").exists()).toBe(true);
+    expect(wrapper.find("input#modeled-performance").exists()).toBe(true);
   });
   it("test emits on change", async () => {
     const wrapper = mount(CalculateJobParams, {
       localVue
     });
-    expect(wrapper.find("input#predicted-performance").exists()).toBe(true);
-    expect(wrapper.find("input#expected-performance").exists()).toBe(true);
+    expect(wrapper.find("input#reference-performance").exists()).toBe(true);
+    expect(wrapper.find("input#modeled-performance").exists()).toBe(true);
 
     await flushPromises();
 
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
       {
-        calculate: "predicted performance"
+        calculate: "reference performance"
       }
     ]);
 
-    const expected = wrapper.find("input#expected-performance");
+    const modeled = wrapper.find("input#modeled-performance");
     // @ts-expect-error
-    expected.element.selected = true;
-    expected.trigger("change");
+    modeled.element.selected = true;
+    modeled.trigger("change");
 
     await flushPromises();
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
       {
-        calculate: "expected performance"
+        calculate: "modeled performance"
       }
     ]);
   });
@@ -399,11 +399,11 @@ describe("Test Compare Parameters", () => {
     await flushPromises();
 
     wrapper.vm.$data.timeResolution = "monthly";
-    wrapper.vm.$data.compare = "predicted and actual performance";
+    wrapper.vm.$data.compare = "reference and actual performance";
 
     await flushPromises();
 
-    wrapper.vm.$data.compare = "expected and actual performance";
+    wrapper.vm.$data.compare = "modeled and actual performance";
 
     await flushPromises();
 
@@ -413,21 +413,21 @@ describe("Test Compare Parameters", () => {
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
       {
-        compare: "predicted and actual performance"
+        compare: "reference and actual performance"
       }
     ]);
 
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[1]).toEqual([
       {
-        compare: "monthly predicted and actual performance"
+        compare: "monthly reference and actual performance"
       }
     ]);
 
     // @ts-expect-error
     expect(wrapper.emitted("new-job-type-params")[0]).toEqual([
       {
-        compare: "predicted and actual performance"
+        compare: "reference and actual performance"
       }
     ]);
   });
@@ -450,7 +450,7 @@ describe("Test Compare Parameters", () => {
     expect(wrapper.vm.$data.timeResolution).toBe("monthly");
 
     wrapper
-      .find("input[value='expected and actual performance']")
+      .find("input[value='modeled and actual performance']")
       .trigger("click");
 
     await flushPromises();
@@ -462,7 +462,7 @@ describe("Test DataParamHandler", () => {
   it("test requiredDataParams", async () => {
     const propsData = {
       jobTypeParams: {
-        calculate: "predicted performance"
+        calculate: "reference performance"
       }
     };
     const wrapper = mount(DataParamHandler, {
@@ -470,16 +470,16 @@ describe("Test DataParamHandler", () => {
       propsData
     });
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["predicted"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["reference"]);
 
     wrapper.setProps({
       jobTypeParams: {
-        calculate: "expected"
+        calculate: "modeled"
       }
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["expected"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["modeled"]);
 
     wrapper.setProps({
       jobTypeParams: {
@@ -492,7 +492,7 @@ describe("Test DataParamHandler", () => {
 
     wrapper.setProps({
       jobTypeParams: {
-        compare: "expected and actual performance"
+        compare: "modeled and actual performance"
       }
     });
     await flushPromises();
@@ -501,24 +501,24 @@ describe("Test DataParamHandler", () => {
 
     wrapper.setProps({
       jobTypeParams: {
-        compare: "predicted and actual performance"
+        compare: "reference and actual performance"
       }
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["actual", "predicted"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["actual", "reference"]);
 
     wrapper.setProps({
       jobTypeParams: {
-        compare: "predicted and expected performance"
+        compare: "reference and modeled performance"
       }
     });
     await flushPromises();
     // @ts-expect-error
-    expect(wrapper.vm.requiredDataParams).toEqual(["expected", "predicted"]);
+    expect(wrapper.vm.requiredDataParams).toEqual(["modeled", "reference"]);
     wrapper.setProps({
       jobTypeParams: {
-        compare: "monthly predicted and actual performance"
+        compare: "monthly reference and actual performance"
       }
     });
     await flushPromises();
@@ -533,9 +533,9 @@ describe("Test DataParams", () => {
     weather_granularity: "system",
     temperature_type: "air"
   };
-  it("test parameters for predicted", async () => {
+  it("test parameters for reference", async () => {
     const propsData = {
-      dataType: "predicted",
+      dataType: "reference",
       jobClass: "compare"
     };
 
@@ -545,7 +545,7 @@ describe("Test DataParams", () => {
 
     // @ts-expect-error
     expect(wrapper.vm.parameters).toEqual({
-      type: "predicted_data_parameters",
+      type: "reference_data_parameters",
       parameters: {
         data_available: "weather and AC performance",
         irradiance_type: "poa",
@@ -560,7 +560,7 @@ describe("Test DataParams", () => {
 
     // @ts-expect-error
     expect(wrapper.vm.parameters).toEqual({
-      type: "predicted_data_parameters",
+      type: "reference_data_parameters",
       parameters: {
         data_available: "weather and AC performance",
         performance_granularity: "system",
@@ -572,7 +572,7 @@ describe("Test DataParams", () => {
   });
   it("test parameters for other", async () => {
     const propsData = {
-      dataType: "expected",
+      dataType: "modeled",
       jobClass: "compare"
     };
 
@@ -582,7 +582,7 @@ describe("Test DataParams", () => {
 
     // @ts-expect-error
     expect(wrapper.vm.parameters).toEqual({
-      type: "expected_data_parameters",
+      type: "modeled_data_parameters",
       parameters: {
         performance_granularity: "system",
         ...base_parameters
@@ -605,7 +605,7 @@ describe("Test DataParams", () => {
     });
 
     wrapper.setProps({
-      dataType: "expected",
+      dataType: "modeled",
       jobClass: "calculate"
     });
 
