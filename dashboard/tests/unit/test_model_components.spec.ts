@@ -1377,6 +1377,29 @@ describe("Test System", () => {
       'System with name "Super System" already exists.'
     );
   });
+  it("test model field input change propagation", async () => {
+    const propsData = {
+      parameters: new System({
+        name: "Some System",
+        inverters: [
+          new Inverter({
+            arrays: [new PVArray({})]
+          })
+        ]
+      }),
+      model: "sam"
+    };
+    const wrapper = mount(SystemView, {
+      localVue,
+      propsData,
+      mocks,
+      store
+    });
+    const mf = wrapper.findComponent(ModelField);
+    mf.find("input").trigger("change");
+    await flushPromises();
+    expect(mf.emitted("change")).toBeTruthy();
+  });
 });
 
 /*
