@@ -21,7 +21,7 @@ export const variableDisplayNames: Record<string, string> = {
   total_poa_insolation: "Total Plane of Array Insolation",
   month: "Month",
   actual_energy: "Actual Energy",
-  expected_energy: "Expected Energy",
+  modeled_energy: "Modeled Energy",
   difference: "Difference",
   ratio: "Ratio",
   weather_adjusted_energy: "Weather Adjusted Reference Energy"

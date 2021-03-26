@@ -23,7 +23,7 @@ export function indexSystemFromSchemaPath(
 
   // Pull first index, so the "" that exists for the root component does not
   // fail, and when we have a valid non-falsy index we'll traverse the system
-  // as expected.
+  // as modeled.
   // @ts-expect-error
   let index: string | number = indices.shift();
 

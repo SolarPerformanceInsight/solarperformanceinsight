@@ -10,8 +10,8 @@
         <div class="my-1">
           <form id="job-parameters" @submit="submitJob">
             <!-- For selecting between diferent usecase variants e.g. CompareJobParams
-                 Allows user to select betweel predicted-actual, expected-actual, and
-                 predicted expected.    
+                 Allows user to select betweel predicted-actual, modeled-actual, and
+                 predicted modeled.
             -->
             <component
               v-bind:is="jobParamComponent"

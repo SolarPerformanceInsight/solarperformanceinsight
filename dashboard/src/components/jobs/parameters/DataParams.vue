@@ -7,7 +7,7 @@
 
   Props:
     jobClass: string - One of "calculate", "compare", or "calculatepr"
-    dataType: string - The type of data being collected, one of "predicted", "actual", "expected",
+    dataType: string - The type of data being collected, one of "predicted", "actual", "modeled",
       or "all_data". Ignored for "calculate" job class. The "all_data" option is used to display a
       single set of parameter fields for a compare job.
 

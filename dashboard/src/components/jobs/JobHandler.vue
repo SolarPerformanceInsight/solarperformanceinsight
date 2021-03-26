@@ -9,7 +9,7 @@ Component that handles basic job/workflows.
            - Job setup state: No job exists. Display generic "calculate",
                "compare" or "calculate pr" header"
            - Job exists: We have the type of job, display a more descriptive
-               page header e.g. "Compare predicted and expected performance"
+               page header e.g. "Compare predicted and modeled performance"
        -->
       <h1 class="job-handler-title">
         <template v-if="jobClass == 'calculate'">
@@ -183,7 +183,7 @@ Component that handles basic job/workflows.
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'expected performance data'">
+          <template v-if="step == 'modeled performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"

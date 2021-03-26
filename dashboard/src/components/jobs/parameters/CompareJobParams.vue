@@ -20,25 +20,25 @@
           <br />
           <input
             @change="emitParams"
-            id="expected-and-actual-performance"
-            value="expected and actual performance"
+            id="modeled-and-actual-performance"
+            value="modeled and actual performance"
             type="radio"
             v-model="compare"
           />
-          <label for="expected-and-actual-performance">
-            expected performance to actual performance.
+          <label for="modeled-and-actual-performance">
+            modeled performance to actual performance.
           </label>
           <br />
           <input
             @change="emitParams"
-            id="predicted-and-expected-performance"
-            value="predicted and expected performance"
+            id="predicted-and-modeled-performance"
+            value="predicted and modeled performance"
             type="radio"
             v-model="compare"
             disabled="true"
           />
-          <label class="greyed" for="predicted-and-expected-performance">
-            predicted performance to expected performance.
+          <label class="greyed" for="predicted-and-modeled-performance">
+            predicted performance to modeled performance.
           </label>
           <br />
         </div>

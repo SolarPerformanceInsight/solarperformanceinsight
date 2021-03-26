@@ -115,22 +115,22 @@ export default class DataParamHandler extends Vue {
       if (this.jobTypeParams["calculate"] == "predicted performance") {
         return ["predicted"];
       } else {
-        return ["expected"];
+        return ["modeled"];
       }
     } else if (this.jobClass == "compare") {
-      if (this.jobTypeParams["compare"] == "expected and actual performance") {
-        // Single set of "data parameters" for both expected and actual performance
+      if (this.jobTypeParams["compare"] == "modeled and actual performance") {
+        // Single set of "data parameters" for both modeled and actual performance
         return ["all_data"];
       } else if (
         this.jobTypeParams["compare"] == "predicted and actual performance"
       ) {
         return ["actual", "predicted"];
       } else {
-        return ["expected", "predicted"];
+        return ["modeled", "predicted"];
       }
     } else {
       // Calculate PR, may need to be updated, required actual weather, actual performance
-      // optionally provides "expected" modelled performance.
+      // optionally provides "modeled" modeled performance.
       return ["all_data"];
     }
   }
