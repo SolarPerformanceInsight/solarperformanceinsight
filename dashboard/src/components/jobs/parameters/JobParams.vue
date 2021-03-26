@@ -10,8 +10,8 @@
         <div class="my-1">
           <form id="job-parameters" @submit="submitJob">
             <!-- For selecting between diferent usecase variants e.g. CompareJobParams
-                 Allows user to select betweel predicted-actual, modeled-actual, and
-                 predicted modeled.
+                 Allows user to select betweel reference-actual, modeled-actual, and
+                 reference modeled.
             -->
             <component
               v-bind:is="jobParamComponent"
@@ -41,17 +41,17 @@
                 <template
                   v-if="
                     jobTypeParams.compare &&
-                      jobTypeParams.compare.includes('predicted')
+                      jobTypeParams.compare.includes('reference')
                   "
                 >
                   Predicted data may be provided for a different year from the
                   time index described below. SPI will attempt to shift
-                  predicted data by full years to match the index. The timestep
+                  reference data by full years to match the index. The timestep
                   and the month, day, and time of the start and end of the
-                  predicted data must match the index. Any extra timestamps in
-                  the predicted data will be ignored, for instance when February
-                  29th exists in the predicted data but not in the index. When
-                  shifting predicted data from a non-leap year to a leap year,
+                  reference data must match the index. Any extra timestamps in
+                  the reference data will be ignored, for instance when February
+                  29th exists in the reference data but not in the index. When
+                  shifting reference data from a non-leap year to a leap year,
                   February 29 will be dropped from the analysis.
                 </template>
               </time-parameters>

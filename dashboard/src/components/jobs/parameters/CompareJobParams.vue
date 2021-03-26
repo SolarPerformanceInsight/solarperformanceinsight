@@ -9,13 +9,13 @@
         <div class="ml-1 mt-1">
           <input
             @change="emitParams"
-            id="predicted-and-actual-performance"
-            value="predicted and actual performance"
+            id="reference-and-actual-performance"
+            value="reference and actual performance"
             type="radio"
             v-model="compare"
           />
-          <label for="predicted-and-actual-performance">
-            predicted performance to actual performance.
+          <label for="reference-and-actual-performance">
+            reference performance to actual performance.
           </label>
           <br />
           <input
@@ -31,14 +31,14 @@
           <br />
           <input
             @change="emitParams"
-            id="predicted-and-modeled-performance"
-            value="predicted and modeled performance"
+            id="reference-and-modeled-performance"
+            value="reference and modeled performance"
             type="radio"
             v-model="compare"
             disabled="true"
           />
-          <label class="greyed" for="predicted-and-modeled-performance">
-            predicted performance to modeled performance.
+          <label class="greyed" for="reference-and-modeled-performance">
+            reference performance to modeled performance.
           </label>
           <br />
         </div>
@@ -81,7 +81,7 @@ export default class CompareJobParams extends Vue {
 
   data() {
     return {
-      compare: "predicted and actual performance",
+      compare: "reference and actual performance",
       timeResolution: "leHourly"
     };
   }
@@ -100,7 +100,7 @@ export default class CompareJobParams extends Vue {
     this.$emit("new-job-type-params", params);
   }
   get containsPredicted() {
-    return this.compare.includes("predicted");
+    return this.compare.includes("reference");
   }
   @Watch("compare")
   ensureValidTimeResolution() {
