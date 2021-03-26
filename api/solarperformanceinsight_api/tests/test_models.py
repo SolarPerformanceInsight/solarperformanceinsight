@@ -161,12 +161,12 @@ def test_calculate_reference_job(timeindex, system_def, system_id):
     ]
 
 
-def test_calculate_expected_job(timeindex, system_def, system_id):
+def test_calculate_modeled_job(timeindex, system_def, system_id):
     timedict, timeind = timeindex
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            calculate="expected performance",
+            calculate="modeled performance",
             irradiance_type="standard",
             temperature_type="module",
             weather_granularity="inverter",
@@ -187,13 +187,13 @@ def test_calculate_expected_job(timeindex, system_def, system_id):
     ]
 
 
-def test_compare_expected_actual_job(timeindex, system_def, system_id):
+def test_compare_modeled_actual_job(timeindex, system_def, system_id):
     # UC 2C
     timedict, timeind = timeindex
     job = models.Job(
         system_definition=system_def,
         parameters=dict(
-            compare="expected and actual performance",
+            compare="modeled and actual performance",
             irradiance_type="effective",
             temperature_type="cell",
             weather_granularity="system",
@@ -606,7 +606,7 @@ def test_jobdataitem_columns_others():
     for type_ in (
         "reference performance data",
         "reference DC performance data",
-        "expected performance data",
+        "modeled performance data",
         "actual performance data",
     ):
         models.JobDataItem.from_types("/", type_)._data_cols == ["time", "performance"]

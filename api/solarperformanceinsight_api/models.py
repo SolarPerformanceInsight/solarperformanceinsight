@@ -876,7 +876,7 @@ class JobDataTypeEnum(str, Enum):
     actual_weather = "actual weather data"
     reference_performance = "reference performance data"
     reference_performance_dc = "reference DC performance data"
-    expected_performance = "expected performance data"
+    modeled_performance = "modeled performance data"
     actual_performance = "actual performance data"
     monthly_actual_weather = "actual monthly weather data"
     monthly_original_weather = "original monthly weather data"
@@ -921,7 +921,7 @@ class JobDataItem(SPIBase):
         elif type_ in (
             JobDataTypeEnum.reference_performance,
             JobDataTypeEnum.actual_performance,
-            JobDataTypeEnum.expected_performance,
+            JobDataTypeEnum.modeled_performance,
             JobDataTypeEnum.reference_performance_dc,
         ):
             cols += ["performance"]
@@ -1015,7 +1015,7 @@ class CompareMixin(CalculateMixin):
 
 class CalculateEnum(str, Enum):
     reference_performance = "reference performance"
-    expected_performance = "expected performance"
+    modeled_performance = "modeled performance"
 
 
 class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
@@ -1032,11 +1032,11 @@ class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
 
 
 class ExpectedActualEnum(str, Enum):
-    expected_actual = "expected and actual performance"
+    modeled_actual = "modeled and actual performance"
 
 
 class CompareExpectedActualJobParameters(CompareMixin, JobParametersBase):
-    """Calculate and compare expected to actual performance"""
+    """Calculate and compare modeled to actual performance"""
 
     compare: ExpectedActualEnum
     _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
@@ -1173,7 +1173,7 @@ JobParametersType = Union[
 
 JOB_PARAMS_EXAMPLE = dict(
     system_id=SYSTEM_ID,
-    compare="expected and actual performance",
+    compare="modeled and actual performance",
     time_parameters=dict(
         start="2020-01-01T00:00:00+00:00",
         end="2020-12-31T23:59:59+00:00",
@@ -1301,7 +1301,7 @@ class StoredJob(StoredObject):
 
 
 class DataPeriods(SPIBase):
-    expected: str = Field(..., description="Expected period of the data")
+    modeled: str = Field(..., description="Expected period of the data")
     uploaded: str = Field(..., description="Most common period of the uploaded data")
 
 
@@ -1327,7 +1327,7 @@ class DataParsingStats(SPIBase):
     missing_times: List[dt.datetime] = Field(
         ...,
         description=(
-            "Times that were expected based on the job time parameters "
+            "Times that were modeled based on the job time parameters "
             "but missing from the upload."
         ),
     )
@@ -1346,7 +1346,7 @@ class JobResultTypeEnum(str, Enum):
     error = "error message"
     monthy_summary = "monthly summary"
     daytime_flag = "daytime flag"
-    actual_vs_expected = "actual vs expected energy"
+    actual_vs_modeled = "actual vs modeled energy"
     weather_adjusted_performance = "weather adjusted performance"
     actual_vs_adjusted_reference = "actual vs weather adjusted reference"
     # will need other types for performance ratio etc.
@@ -1363,8 +1363,8 @@ class JobResultMetadata(SPIBase):
   cell temperature.
 - monthly summary: Monthly total energy (Wh), plane of array insolation (Wh/m^2),
   effective insolation (Wh/m^2), and average daytime cell temperature.
-- actual vs expected energy: Monthly totals of actual energy (Wh), expected energy (Wh),
-  the difference (actual - expected) (Wh), and the ratio of actual / expected.
+- actual vs modeled energy: Monthly totals of actual energy (Wh), modeled energy (Wh),
+  the difference (actual - modeled) (Wh), and the ratio of actual / modeled.
 - weather adjusted performance: AC performance adjusted for differences in weather
   conditions at the level (system or inverter) given by  schema_path. Data has
   columns are time and performance.

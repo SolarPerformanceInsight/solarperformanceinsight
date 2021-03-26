@@ -161,7 +161,7 @@ def validate_dataframe(df: pd.DataFrame, columns: List[str]) -> Set[str]:
             status_code=400,
             detail="The following column(s) are not numeric: " + ", ".join(bad_types),
         )
-    return actual - expected
+    return actual - expected 
 
 
 def standardize_months(df: pd.DataFrame) -> pd.DataFrame:

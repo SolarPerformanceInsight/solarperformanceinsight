@@ -63,7 +63,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
         ),
         (
             dict(
-                calculate="expected performance",
+                calculate="modeled performance",
                 weather_granularity="system",
                 irradiance_type="standard",
                 temperature_type="air",
@@ -92,13 +92,13 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
         ),
         (
             dict(
-                compare="expected and actual performance",
+                compare="modeled and actual performance",
                 performance_granularity="system",
                 weather_granularity="system",
                 irradiance_type="standard",
                 temperature_type="air",
             ),
-            compute.compare_expected_and_actual,
+            compute.compare_modeled_and_actual,
             True,
         ),
         (
@@ -708,17 +708,17 @@ def test_run_performance_job(auth0_id, nocommit_transaction, mockup_modelchain):
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8
 
 
-def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
+def test_compare_modeled_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
     si = storage.StorageInterface(user=auth0_id)
     stored_job, save, df = mockup_modelchain
 
-    compute.compare_expected_and_actual(stored_job, si)
+    compute.compare_modeled_and_actual(stored_job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     assert len(reslist) == 4
 
     summary = reslist[-1]
-    assert summary.type == "actual vs expected energy"
+    assert summary.type == "actual vs modeled energy"
     iob = BytesIO(summary.data)
     iob.seek(0)
     summary_df = pd.read_feather(iob)
@@ -726,7 +726,7 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     ser = summary_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == "January"
-    assert (ser.loc["expected_energy"] - 2.0) < 1e-7
+    assert (ser.loc["modeled_energy"] - 2.0) < 1e-7
     assert ser.loc["actual_energy"] == 1.0
     assert (ser.loc["difference"] - -1.0) < 1e-7
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7

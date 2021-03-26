@@ -61,7 +61,7 @@ def lookup_job_compute_function(
     elif isinstance(
         job.definition.parameters, models.CompareExpectedActualJobParameters
     ):
-        return compare_expected_and_actual
+        return compare_modeled_and_actual
     elif isinstance(
         job.definition.parameters, models.ComparePredictedActualJobParameters
     ):
@@ -474,15 +474,15 @@ def _get_actual_monthly_energy(
     return actual_monthly_energy, months
 
 
-def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
-    expected, result_list = _calculate_performance(job, si)
+def compare_modeled_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+    modeled, result_list = _calculate_performance(job, si)
     actual_monthly_energy, months = _get_actual_monthly_energy(job, si)
-    diff = actual_monthly_energy - expected
-    ratio = actual_monthly_energy / expected
+    diff = actual_monthly_energy - modeled
+    ratio = actual_monthly_energy / modeled
     comparison_summary = pd.DataFrame(
         {
             "actual_energy": actual_monthly_energy,
-            "expected_energy": expected,
+            "modeled_energy": modeled,
             "difference": diff,
             "ratio": ratio,
         }
@@ -491,7 +491,7 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     comparison_summary.index = month_name_index
     result_list.append(
         DBResult(
-            schema_path="/", type="actual vs expected energy", data=comparison_summary
+            schema_path="/", type="actual vs modeled energy", data=comparison_summary
         )
     )
     save_results_to_db(job.object_id, result_list, si)
