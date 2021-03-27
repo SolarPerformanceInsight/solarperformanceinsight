@@ -340,7 +340,7 @@ class CECModuleParameters(PVLibBase):
                     if k not in ("gamma_r", "cells_in_series")
                 },
             )
-        except Exception:
+        except Exception:  # pragma: no cover
             raise ValueError(
                 "Unable to calculate single diode parameters from parameters supplied."
             )
