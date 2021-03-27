@@ -932,7 +932,7 @@ def mockup_reference_actual(mocker, system_id):
     def mockem(system, pred_params, actual_params):
         save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
         cat = pd.Timestamp.utcnow()
-        job_params = models.ComparePredictedActualJobParameters(
+        job_params = models.CompareReferenceActualJobParameters(
             system_id=system_id,
             time_parameters=dict(
                 start="2021-02-01T00:00:00-07:00",
@@ -1467,7 +1467,7 @@ def test_compare_reference_and_actual_leap_day_dropped(
     )
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
     cat = pd.Timestamp.utcnow()
-    job_params = models.ComparePredictedActualJobParameters(
+    job_params = models.CompareReferenceActualJobParameters(
         system_id=system_id,
         time_parameters=dict(
             start="2020-02-27T00:00:00-07:00",

@@ -1031,14 +1031,14 @@ class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
             self._weather_types = (JobDataTypeEnum.actual_weather,)
 
 
-class ExpectedActualEnum(str, Enum):
+class ModeledActualEnum(str, Enum):
     modeled_actual = "modeled and actual performance"
 
 
-class CompareExpectedActualJobParameters(CompareMixin, JobParametersBase):
+class CompareModeledActualJobParameters(CompareMixin, JobParametersBase):
     """Calculate and compare modeled to actual performance"""
 
-    compare: ExpectedActualEnum
+    compare: ModeledActualEnum
     _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
         (JobDataTypeEnum.actual_weather,)
     )
@@ -1078,25 +1078,25 @@ class ActualDataParams(CompareMixin):
         self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
-class PredictedDataEnum(str, Enum):
+class ReferenceDataEnum(str, Enum):
     weather_and_ac = "weather and AC performance"
     weather_and_ac_and_dc = "weather, AC, and DC performance"
     weather_only = "weather only"
 
 
-class PredictedDataParams(CompareMixin):
+class ReferenceDataParams(CompareMixin):
     """Parameters for the "reference" data series"""
 
-    data_available: PredictedDataEnum
+    data_available: ReferenceDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
     _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
     _model_chain_method: str = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.data_available == PredictedDataEnum.weather_and_ac:
+        if self.data_available == ReferenceDataEnum.weather_and_ac:
             self._performance_types = (JobDataTypeEnum.reference_performance,)
-        elif self.data_available == PredictedDataEnum.weather_and_ac_and_dc:
+        elif self.data_available == ReferenceDataEnum.weather_and_ac_and_dc:
             self._performance_types = (
                 JobDataTypeEnum.reference_performance,
                 JobDataTypeEnum.reference_performance_dc,
@@ -1109,7 +1109,7 @@ class PredictedDataParams(CompareMixin):
     def check_performance_granularity(cls, values):
         da = values.get("data_available")
         pg = values.get("performance_granularity")
-        if da == PredictedDataEnum.weather_only and pg is not None:
+        if da == ReferenceDataEnum.weather_only and pg is not None:
             raise ValueError(
                 "Performance granularity is invalid when not providing reference "
                 "performance"
@@ -1117,16 +1117,16 @@ class PredictedDataParams(CompareMixin):
         return values
 
 
-class PredictedActualEnum(str, Enum):
+class ReferenceActualEnum(str, Enum):
     reference_actual = "reference and actual performance"
 
 
-class ComparePredictedActualJobParameters(JobParametersBase):
+class CompareReferenceActualJobParameters(JobParametersBase):
     """Compare reference to actual performance"""
 
-    reference_data_parameters: PredictedDataParams
+    reference_data_parameters: ReferenceDataParams
     actual_data_parameters: ActualDataParams
-    compare: PredictedActualEnum
+    compare: ReferenceActualEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
@@ -1136,18 +1136,18 @@ class ComparePredictedActualJobParameters(JobParametersBase):
         return out
 
 
-class MonthlyPredictedActualEnum(str, Enum):
+class MonthlyReferenceActualEnum(str, Enum):
     monthly_reference_actual = "monthly reference and actual performance"
 
 
-class CompareMonthlyPredictedActualJobParameters(SPIBase):
+class CompareMonthlyReferenceActualJobParameters(SPIBase):
     """Compare reference to actual performance on a monthly time
     scale. Data is expected to be at the system level and include
     monthly insolation, energy, and average daytime temperature.
     """
 
     system_id: UUID
-    compare: MonthlyPredictedActualEnum
+    compare: MonthlyReferenceActualEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
@@ -1164,9 +1164,9 @@ class CompareMonthlyPredictedActualJobParameters(SPIBase):
 
 
 JobParametersType = Union[
-    ComparePredictedActualJobParameters,
-    CompareExpectedActualJobParameters,
-    CompareMonthlyPredictedActualJobParameters,
+    CompareReferenceActualJobParameters,
+    CompareModeledActualJobParameters,
+    CompareMonthlyReferenceActualJobParameters,
     CalculateWeatherAdjustedPRJobParameters,
     CalculatePerformanceJobParameters,
 ]

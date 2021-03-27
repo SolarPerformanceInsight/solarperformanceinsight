@@ -59,15 +59,15 @@ def lookup_job_compute_function(
     if isinstance(job.definition.parameters, models.CalculatePerformanceJobParameters):
         return run_performance_job
     elif isinstance(
-        job.definition.parameters, models.CompareExpectedActualJobParameters
+        job.definition.parameters, models.CompareModeledActualJobParameters
     ):
         return compare_modeled_and_actual
     elif isinstance(
-        job.definition.parameters, models.ComparePredictedActualJobParameters
+        job.definition.parameters, models.CompareReferenceActualJobParameters
     ):
         return compare_reference_and_actual
     elif isinstance(
-        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+        job.definition.parameters, models.CompareMonthlyReferenceActualJobParameters
     ):
         return compare_monthly_reference_and_actual
     return dummy_func  # pragma: no cover
@@ -579,7 +579,7 @@ def _calculate_weather_adjusted_reference_performance(
     job: models.StoredJob, si: storage.StorageInterface
 ) -> Tuple[List[DBResult], pd.Series, List[dt.datetime]]:
     missing_leap_days = set()
-    job_params: models.ComparePredictedActualJobParameters = (
+    job_params: models.CompareReferenceActualJobParameters = (
         job.definition.parameters  # type: ignore
     )
     time_params: models.JobTimeindex = job_params.time_parameters  # type: ignore
@@ -654,7 +654,7 @@ def _calculate_weather_adjusted_reference_performance(
                 "Currently unable to compare reference and actual performance for "
                 "PVsyst specified arrays."
             )
-        if data_available == models.PredictedDataEnum.weather_only:  # 2A-4
+        if data_available == models.ReferenceDataEnum.weather_only:  # 2A-4
             db_results, _ = process_single_modelchain(
                 chain, ref_weather, ref_model_method, tshift, i
             )

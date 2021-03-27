@@ -266,7 +266,7 @@ async def post_job_data(
     await file.close()
     utils.validate_dataframe(df, expected_columns)
     if isinstance(
-        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+        job.definition.parameters, models.CompareMonthlyReferenceActualJobParameters
     ):
         adjusted_df, data_stats = _adjust_monthly_series(df)
     else:
