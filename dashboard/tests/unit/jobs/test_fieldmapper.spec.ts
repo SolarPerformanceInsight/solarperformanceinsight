@@ -59,7 +59,24 @@ const monthlyComp = {
   metadata: testSystem.definition
 };
 
-const headers = ["timestamp", "global", "direct", "diffuse"];
+const headers = [
+  {
+    header: "timestamp",
+    header_index: 0
+  },
+  {
+    header: "global",
+    header_index: 1
+  },
+  {
+    header: "direct",
+    header_index: 2
+  },
+  {
+    header: "diffuse",
+    header_index: 3
+  }
+];
 
 const usedHeaders: Array<string> = [];
 
@@ -88,7 +105,7 @@ describe("Test field mapper", () => {
       expect(headerOptions).toHaveLength(headers.length + 1);
       expect(headerOptions.wrappers[0].text()).toBe("Not included");
       headerOptions.wrappers.slice(1).forEach(o => {
-        expect(headers.includes(o.text())).toBe(true);
+        expect(headers.map((x: any) => x.header).includes(o.text())).toBe(true);
       });
     });
   });
@@ -111,7 +128,7 @@ describe("Test field mapper", () => {
       expect(headerOptions).toHaveLength(headers.length + 1);
       expect(headerOptions.wrappers[0].text()).toBe("Not included");
       headerOptions.wrappers.slice(1).forEach(o => {
-        expect(headers.includes(o.text())).toBe(true);
+        expect(headers.map((x: any) => x.header).includes(o.text())).toBe(true);
       });
     });
   });
@@ -147,7 +164,7 @@ describe("Test field mapper", () => {
       expect(headerOptions).toHaveLength(headers.length + 1);
       expect(headerOptions.wrappers[0].text()).toBe("Not included");
       headerOptions.wrappers.slice(1).forEach(o => {
-        expect(headers.includes(o.text())).toBe(true);
+        expect(headers.map((x: any) => x.header).includes(o.text())).toBe(true);
       });
     });
   });
@@ -185,7 +202,7 @@ describe("Test field mapper", () => {
       expect(headerOptions).toHaveLength(headers.length + 1);
       expect(headerOptions.wrappers[0].text()).toBe("Not included");
       headerOptions.wrappers.slice(1).forEach(o => {
-        expect(headers.includes(o.text())).toBe(true);
+        expect(headers.map((x: any) => x.header).includes(o.text())).toBe(true);
       });
     });
   });
@@ -214,7 +231,7 @@ describe("Test field mapper", () => {
       expect(headerOptions).toHaveLength(headers.length + 1);
       expect(headerOptions.wrappers[0].text()).toBe("Not included");
       headerOptions.wrappers.slice(1).forEach(o => {
-        expect(headers.includes(o.text())).toBe(true);
+        expect(headers.map((x: any) => x.header).includes(o.text())).toBe(true);
       });
     });
   });

@@ -96,7 +96,8 @@ export default class TimeseriesPlot extends Vue {
       },
       yaxis: {
         title: "Value"
-      }
+      },
+      uirevision: "true"
     };
   }
   get plotDivId() {

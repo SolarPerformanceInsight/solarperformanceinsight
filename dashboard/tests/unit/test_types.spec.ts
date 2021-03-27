@@ -15,7 +15,8 @@ import {
 } from "@/types/Tracking";
 import {
   PVSystTemperatureParameters,
-  SAPMTemperatureParameters
+  SAPMTemperatureParameters,
+  NOCTSAMTemperatureParameters
 } from "@/types/TemperatureParameters";
 import { PVWattsLosses } from "@/types/Losses";
 
@@ -413,7 +414,7 @@ test("Empty pvarray init", () => {
   ).toBeTruthy();
   expect(pvarray.tracking instanceof FixedTrackingParameters).toBeTruthy();
   expect(
-    pvarray.temperature_model_parameters instanceof PVSystTemperatureParameters
+    pvarray.temperature_model_parameters instanceof NOCTSAMTemperatureParameters
   ).toBeTruthy();
   expect(pvarray.modules_per_string).toBe(1);
   expect(pvarray.strings).toBe(1);

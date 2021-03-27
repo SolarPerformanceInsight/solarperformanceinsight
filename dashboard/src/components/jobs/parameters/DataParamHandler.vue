@@ -150,6 +150,9 @@ export default class DataParamHandler extends Vue {
   display: grid;
   grid-template-rows: auto auto;
 }
+.grid-container > div:nth-child(2) {
+  padding-left: 1em;
+}
 .ml-1 {
   margin-left: 1em;
 }

@@ -1,13 +1,15 @@
 <template>
   <div class="temperature-parameters">
-    <label for="mountDefaults"><b>Defaults:</b></label>
-    <select @change="mounting" name="mountDefaults">
-      <option value="" selected>Manually Set Parameters</option>
-      <option v-for="k in mountOptions" :key="k" :name="k" :value="k">
-        {{ k }}
-      </option>
-    </select>
-    <div v-if="model == 'pvsyst' || model == 'sam'">
+    <div v-if="model != 'sam'">
+      <label for="mountDefaults"><b>Defaults:</b></label>
+      <select @change="mounting" name="mountDefaults">
+        <option value="" selected>Manually Set Parameters</option>
+        <option v-for="k in mountOptions" :key="k" :name="k" :value="k">
+          {{ k }}
+        </option>
+      </select>
+    </div>
+    <div v-if="model == 'pvsyst'">
       <model-field
         :parameters="parameters"
         :errors="errors"
@@ -53,6 +55,38 @@
         field-name="deltaT"
       />
     </div>
+    <div v-if="model == 'sam'">
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="noct"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="eta_m_ref"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="transmittance_absorptance"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="array_height"
+      />
+      <model-field
+        :parameters="parameters"
+        :errors="errors"
+        :definitions="definitions"
+        field-name="mount_standoff"
+      />
+    </div>
   </div>
 </template>
 
@@ -84,8 +118,10 @@ export default class TemperatureParametersView extends ModelBase {
 
   get apiComponentName() {
     let componentName: string;
-    if (this.model == "pvsyst" || this.model == "sam") {
+    if (this.model == "pvsyst") {
       componentName = "PVsystTemperatureParameters";
+    } else if (this.model == "sam") {
+      componentName = "NOCTSAMTemperatureParameters";
     } else {
       componentName = "SAPMTemperatureParameters";
     }

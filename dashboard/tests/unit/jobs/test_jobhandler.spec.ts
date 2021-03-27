@@ -402,7 +402,7 @@ describe("Test JobHandler", () => {
       running: "Running",
       complete: "Ready",
       queued: "Queued",
-      incomplete: "Calculation Not Submitted"
+      incomplete: "Data Required"
     };
     const handler = mount(JobHandler, {
       localVue,
@@ -415,30 +415,6 @@ describe("Test JobHandler", () => {
       handler.vm.$data.job.status.status = status;
       // @ts-expect-error
       expect(handler.vm.resultsStatus).toBe(expected[status]);
-    }
-  });
-  it("test submitstatus messages", async () => {
-    const propsData = {
-      jobId: testJob.object_id
-    };
-    const expected = {
-      prepared: "Ready For Calculation",
-      complete: "Submitted",
-      queued: "Submitted",
-      incomplete: "Data Upload Required"
-    };
-
-    const handler = mount(JobHandler, {
-      localVue,
-      propsData,
-      mocks,
-      router
-    });
-    await flushPromises();
-    for (const status in expected) {
-      handler.vm.$data.job.status.status = status;
-      // @ts-expect-error
-      expect(handler.vm.submitStatus).toBe(expected[status]);
     }
   });
   it("test job steps from job", async () => {
@@ -458,7 +434,6 @@ describe("Test JobHandler", () => {
     expect(handler.vm.jobSteps).toStrictEqual([
       "setup",
       "original weather data",
-      "submit",
       "results"
     ]);
   });
@@ -672,39 +647,12 @@ describe("Test JobHandler", () => {
 
     // @ts-expect-error
     handler.vm.setStep();
-    expect(handler.vm.$data.step).toBe("calculate");
+    expect(handler.vm.$data.step).toBe("results");
 
     handler.vm.$data.job.status.status = "complete";
 
     // @ts-expect-error
     handler.vm.setStep();
     expect(handler.vm.$data.step).toBe("results");
-  });
-  it("test compute flow", async () => {
-    const fetchJob = { ...testJob };
-    fetchJob.status = { status: "prepared", last_change: "2020-01-01T00:00Z" };
-    fetchJob.definition.parameters.calculate = "predicted performance";
-    mockJobResponse.json = jest.fn().mockResolvedValue(fetchJob);
-
-    const propsData = {
-      jobId: testJob.object_id
-    };
-    const handler = mount(JobHandler, {
-      localVue,
-      propsData,
-      mocks
-    });
-    await flushPromises();
-    const computeButton = handler.find("button#compute-job");
-    expect(computeButton.exists()).toBe(true);
-
-    const completeJob = { ...fetchJob };
-    completeJob.status.status = "complete";
-
-    computeButton.trigger("click");
-
-    await flushPromises();
-
-    expect(handler.findComponent(JobResults).exists()).toBe(true);
   });
 });

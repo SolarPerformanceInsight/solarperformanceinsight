@@ -34,7 +34,6 @@
     </slot>
     <div v-if="jobClass == 'compare' && this.dataType == 'predicted'">
       My predicted data includes:
-      <br />
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -45,7 +44,6 @@
           />
           weather only.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -55,7 +53,6 @@
           />
           weather and AC performance.
         </label>
-        <br />
         <label for="effective">
           <input
             @change="emitParams"
@@ -65,12 +62,10 @@
           />
           weather, AC, and DC performance.
         </label>
-        <br />
       </div>
     </div>
     <div v-if="data_available != 'weather only'" class="mt-1">
       I will provide performance data as:
-      <br />
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -81,7 +76,6 @@
           />
           one set for the entire system.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -91,12 +85,10 @@
           />
           one set for each inverter and its associated arrays.
         </label>
-        <br />
       </div>
     </div>
     <div class="my-1">
       My weather data file includes:
-      <br />
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -108,7 +100,6 @@
           global horizontal (GHI), direct normal (DNI), and diffuse horizontal
           (DHI) irradiance.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -119,7 +110,6 @@
           global plane of array (POA global), direct plane of array (POA
           direct), and diffuse plane of array (POA diffuse) irradiance.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -129,12 +119,10 @@
           />
           effective irradiance.
         </label>
-        <br />
       </div>
     </div>
     <div class="my-1">
       How should we determine cell temperature?
-      <br />
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -146,7 +134,6 @@
           Calculate cell temperature from irradiance, air temperature, and
           windspeed in my data.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -157,7 +144,6 @@
           Calculate cell temperature from module temperature and irradiance in
           my data.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -167,12 +153,10 @@
           />
           Cell temperature is included in my data.
         </label>
-        <br />
       </div>
     </div>
     <div class="my-1">
       I will provide weather data as:
-      <br />
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -183,7 +167,6 @@
           />
           one set for the entire system.
         </label>
-        <br />
 
         <label>
           <input
@@ -194,7 +177,6 @@
           />
           one set for each inverter and its associated arrays.
         </label>
-        <br />
         <label>
           <input
             @change="emitParams"
@@ -204,7 +186,6 @@
           />
           one set for each array.
         </label>
-        <br />
       </div>
     </div>
   </div>
@@ -292,11 +273,25 @@ export default class DataParams extends Vue {
   }
 }
 </script>
-<style>
+<style scoped>
 h2.data-type {
   text-transform: capitalize;
 }
 .data-parameters {
   grid-row: 1;
+}
+label {
+  display: block;
+  position: relative;
+  padding-left: 1.5em;
+  margin-top: 5px;
+  margin-bottom: tpx;
+}
+label input {
+  position: absolute;
+  left: 0;
+}
+input[type="radio"] {
+  margin: 0;
 }
 </style>
