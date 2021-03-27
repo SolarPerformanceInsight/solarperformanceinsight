@@ -1667,7 +1667,7 @@ def test_compare_predicted_and_expected(
     )
     assert ser["weather_adjusted_energy"] > 0
     assert "difference" in ser
-    assert 0.5 < ser["ratio"] < 1.9
+    assert 0.5 < ser["ratio"] < 2.0
 
 
 def test_compare_predicted_and_expected_leap_day_dropped(
