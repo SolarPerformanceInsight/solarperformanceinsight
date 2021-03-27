@@ -329,9 +329,16 @@ class CECModuleParameters(PVLibBase):
 
     @root_validator(skip_on_failure=True)
     def validate_diode_params(cls, values):
+
         try:
             pvlib.pvsystem.calcparams_cec(
-                effective_irradiance=1000, temp_cell=25, **values
+                effective_irradiance=1000,
+                temp_cell=25,
+                **{
+                    k: v
+                    for k, v in values.items()
+                    if k not in ("gamma_r", "cells_in_series")
+                },
             )
         except Exception:
             raise ValueError(
