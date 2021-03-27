@@ -5,12 +5,6 @@ Takes the following props that can be extracted from job metadata.
     - "module": requires that "module_temperature" be provided in the file.
     - "cell": requires that "cell_temperature" be provided in the file.
     - "air": requires that "temp_air" and "wind_speed" be provided".
-  - irradiance_type: string - Type of irradiance found in weather data. One of:
-    - "standard": requires "ghi", "dni", and "dhi" provided in the file.
-    - "poa": requires "poa_global", "poa_direct", and "poa_diffuse" provided in
-      the file.
-    - "effictive_irradiance": required "effective_irradiance" provided in the
-      file.
   - granularity: string: What part of the spec the weather data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -23,14 +17,19 @@ Takes the following props that can be extracted from job metadata.
   <div class="csv-upload">
     <slot>Upload your weather data</slot>
     <br />
-    <label for="header-line">CSV headers are on line:</label>
-    <input
-      id="header-line"
-      type="number"
-      step="1"
-      min="1"
-      @change="enforceDataStartOrder"
-      v-model.number="headerLine"
+    <label>
+      CSV headers are on line:
+      <input
+        id="header-line"
+        type="number"
+        step="1"
+        min="0"
+        @change="enforceDataStartOrder"
+        v-model.number="headerLine"
+      />
+    </label>
+    <help
+      helpText="The line number where headers are found in your CSV. For files without headers, set this value to 0."
     />
     <br />
     <label for="data-start-line">Data begins on line:</label>
@@ -43,7 +42,22 @@ Takes the following props that can be extracted from job metadata.
       v-model.number="dataStartLine"
     />
     <br />
-    <label for="csv-upload">Select a file with {{ dataType }}:</label>
+    <label for="csv-upload" class="mt-1">
+      Select a file with {{ dataType }} containing:
+    </label>
+    <ul>
+      <li>{{ timeParameterSummary }}</li>
+      <li>One {{ indexField }} field.</li>
+      <li>
+        The following variables for
+        <template v-if="granularity == 'system'">the</template>
+        <template v-else>each</template>
+        {{ granularity }}:
+        <ul>
+          <li v-for="req of requiredFieldSummary" :key="req">{{ req }}</li>
+        </ul>
+      </li>
+    </ul>
     <input
       id="csv-upload"
       type="file"
@@ -59,7 +73,7 @@ Takes the following props that can be extracted from job metadata.
       </div>
     </template>
     <template v-if="parsingErrors">
-      <div class="warning">
+      <div class="mt-1 warning">
         Errors encountered processing your csv.
         <ul>
           <li v-for="(error, i) of parsingErrors" :key="i">
@@ -70,7 +84,7 @@ Takes the following props that can be extracted from job metadata.
       </div>
     </template>
     <transition name="fade">
-      <div v-if="!processingFile && csv">
+      <div v-if="promptForMapping">
         <csv-preview
           :headers="headers"
           :csvData="csvPreview"
@@ -130,8 +144,9 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { System } from "@/types/System";
 
 import parseCSV from "@/utils/parseCSV";
-import mapToCSV from "@/utils/mapToCSV";
+import { mapToCSV, Mapping, CSVHeader } from "@/utils/mapToCSV";
 import { indexSystemFromSchemaPath } from "@/utils/schemaIndexing";
+import { getVariableDisplayName } from "@/utils/displayNames";
 
 import { addData } from "@/api/jobs";
 
@@ -145,15 +160,13 @@ interface HTMLInputEvent extends Event {
 
 @Component
 export default class CSVUpload extends Vue {
-  @Prop() jobId!: string;
-  @Prop() granularity!: string;
-  @Prop() irradiance_type!: string;
+  @Prop() job!: Record<string, any>;
   @Prop() system!: System;
   @Prop() temperature_type!: string;
   @Prop() data_objects!: Array<Record<string, any>>;
-  mapping!: Record<string, Record<string, Record<string, string>>>;
+  mapping!: Record<string, Record<string, Mapping>>;
   promptForMapping!: boolean;
-  headers!: Array<string>;
+  headers!: Array<CSVHeader>;
   csv!: string;
   csvData!: Array<Record<string, Array<string | number>>>;
   required!: Array<string>;
@@ -188,6 +201,9 @@ export default class CSVUpload extends Vue {
       currentSelection: null
     };
   }
+  get jobId() {
+    return this.job.object_id;
+  }
   get dataType() {
     return this.data_objects[0].definition.type;
   }
@@ -201,18 +217,28 @@ export default class CSVUpload extends Vue {
   get headerMapping() {
     // Special mapping of headers to expected variables for the csv preview
     const newMap: Record<string, any> = {};
-    for (const header of this.headers) {
-      newMap[header] = null;
-    }
+
     // Invert mappings so they are accessible by header
     for (const loc in this.mapping) {
       const mapping = this.mapping[loc];
       for (const variable in mapping) {
-        const header = mapping[variable].csv_header;
-        if (variable == this.indexField && newMap[this.indexField]) {
-          continue;
+        let header: string | number;
+        if (mapping[variable].csv_header) {
+          if (
+            mapping[variable].csv_header.header == "" ||
+            mapping[variable].csv_header.header
+          ) {
+            // @ts-expect-error
+            header = mapping[variable].csv_header.header;
+          } else {
+            header = mapping[variable].csv_header.header_index;
+            //header = `Column ${header_index}`;
+          }
+          if (variable == this.indexField && newMap[this.indexField]) {
+            continue;
+          }
+          newMap[header] = variable;
         }
-        newMap[header] = variable;
       }
     }
     return newMap;
@@ -225,26 +251,43 @@ export default class CSVUpload extends Vue {
       return "month";
     }
   }
+  get timeParameterSummary() {
+    if (this.dataType.includes("monthly")) {
+      return "Data for each month of the year.";
+    }
+    const timeParameters = this.job.definition.parameters.time_parameters;
+    const start = timeParameters.start;
+    const end = timeParameters.end;
+    const step = timeParameters.step / 60;
+    return `Data from ${start} to ${end} with ${step} minute${
+      step == 1 ? "" : "s"
+    } between data points.`;
+  }
+  get requiredFieldSummary() {
+    const nonIndexRequired = this.required.filter(x => x != this.indexField);
+    const displayNames = nonIndexRequired.map(x => getVariableDisplayName(x));
+    return displayNames;
+  }
   removeMetadata(csv: string) {
-    if (!(this.headerLine == 1 && this.dataStartLine == 2)) {
-      // Determine the characters used for line separation
-      const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
+    // Determine the characters used for line separation
+    const lineSep = csv.indexOf("\r") >= 0 ? "\r\n" : "\n";
 
-      // parse out header
-      let linesRead = 0;
-      let headerString = "";
+    // parse out header
+    let linesRead = 0;
+    let headerString = "";
 
-      // Read in a line as the header until we reach the header line defined
-      // by the user.
-      for (linesRead; linesRead < this.headerLine; linesRead++) {
-        headerString = csv.substring(0, csv.indexOf(lineSep));
-        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
-      }
+    // Read in a line as the header until we reach the header line defined
+    // by the user.
+    for (linesRead; linesRead < this.headerLine; linesRead++) {
+      headerString = csv.substring(0, csv.indexOf(lineSep));
+      csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+    }
 
-      // skip lines until we reach the start of data in the csv
-      for (linesRead; linesRead < this.dataStartLine; linesRead++) {
-        csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
-      }
+    // skip lines until we reach the start of data in the csv
+    for (linesRead; linesRead < this.dataStartLine - 1; linesRead++) {
+      csv = csv.substring(csv.indexOf(lineSep) + lineSep.length);
+    }
+    if (headerString.length > 0) {
       csv = headerString + lineSep + csv;
     }
     return csv;
@@ -262,7 +305,7 @@ export default class CSVUpload extends Vue {
     // Parse the csv into an object mapping csv-headers to arrays of column
     // data.
     csv = this.removeMetadata(csv);
-    const parsingResult = parseCSV(csv.trim());
+    const parsingResult = parseCSV(csv.trim(), this.headerLine != 0);
     if (parsingResult.errors.length > 0) {
       const errors: Record<string, any> = {};
       parsingResult.errors.forEach((error, index) => {
@@ -277,8 +320,47 @@ export default class CSVUpload extends Vue {
       });
       this.parsingErrors = errors;
     } else {
-      const headers = parsingResult.meta.fields;
-      if (headers && headers.length < this.totalMappings) {
+      let headers: Array<CSVHeader> = [];
+      if (this.headerLine == 0) {
+        // @ts-expect-error
+        headers = parsingResult.data[0].map((x: string, i: number) => {
+          return {
+            header_index: i
+          };
+        });
+      } else {
+        const csvHeaders = parsingResult.meta.fields;
+        if (csvHeaders !== undefined) {
+          let duplicates = csvHeaders.filter(
+            (header: string, index: number) => {
+              return csvHeaders.indexOf(header) != index;
+            }
+          );
+          duplicates = Array.from(new Set(duplicates));
+          if (duplicates.length > 0) {
+            this.parsingErrors = {
+              0: {
+                type: "Duplicate CSV Header",
+                message: `Cannot parse CSV with duplicate headers. Found duplicates: "${duplicates.join(
+                  '","'
+                )}".`
+              }
+            };
+          } else {
+            headers = csvHeaders.map((header: string, i: number) => {
+              return {
+                header: header,
+                header_index: i
+              };
+            });
+          }
+        }
+      }
+      if (
+        !this.parsingErrors &&
+        headers &&
+        headers.length < this.totalMappings
+      ) {
         // Handle case where CSV is parsable but does not contain enough data
         this.parsingErrors = {
           0: {
@@ -294,7 +376,8 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
           }
         };
         this.csvData = [{}];
-      } else {
+      }
+      if (this.parsingErrors == null) {
         this.csvData = parsingResult.data;
         this.headers = headers ? headers : [];
         this.promptForMapping = true;
@@ -346,7 +429,8 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       // TODO: handle this on a single loc basis instead of looping all at once
       this.uploadStatuses[dataObject.object_id].status = "uploading";
       const loc = dataObject.definition.schema_path;
-      const csv = mapToCSV(this.csvData, this.mapping[loc]);
+      const mapping = this.mapping[loc];
+      const csv = mapToCSV(this.csvData, mapping);
       const token = await this.$auth.getTokenSilently();
       const response = await addData(
         token,
@@ -387,6 +471,36 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       this.storeCSV(null);
     }
   }
+  get granularity() {
+    if (this.dataType.includes("monthly")) {
+      return "system";
+    } else {
+      let source: any;
+      if (
+        this.dataType.includes("original") ||
+        this.dataType.includes("predicted")
+      ) {
+        if ("predicted_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.predicted_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else if (this.dataType.includes("actual")) {
+        if ("actual_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.actual_data_parameters;
+        } else {
+          source = this.job.definition.parameters;
+        }
+      } else {
+        source = this.job.definition.parameters;
+      }
+      if (this.dataType.includes("performance")) {
+        return source.performance_granularity;
+      } else {
+        return source.weather_granularity;
+      }
+    }
+  }
 }
 </script>
 <style scoped>
@@ -405,5 +519,8 @@ ul.upload-statuses {
 #header-line,
 #data-start-line {
   width: 3em;
+}
+label {
+  display: inline-block;
 }
 </style>

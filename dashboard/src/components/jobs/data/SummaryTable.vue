@@ -8,6 +8,14 @@
         <tr>
           <th v-for="(header, i) of headers" :key="i">
             {{ displayName(header) }}
+            <template v-if="unitOptions[header] && unitOptions[header].length">
+              <select v-model="units[header]">
+                <option v-for="u of unitOptions[header]" :key="u" :value="u">
+                  {{ u }}
+                </option>
+              </select>
+            </template>
+            <template v-else-if="units[header]">[{{ units[header] }}]</template>
           </th>
         </tr>
 
@@ -24,9 +32,10 @@
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { getVariableDisplayName } from "@/utils/displayNames";
 import { getVariableUnits } from "@/utils/units";
+import { getUnitConverter, getUnitOptions } from "@/utils/unitConversion";
 
 import { Table } from "apache-arrow";
 
@@ -58,7 +67,23 @@ const formatFuncs = {
 @Component
 export default class SummaryTable extends Vue {
   @Prop() tableData!: Record<string, Table>;
+  units!: Record<string, string>;
+  unitOptions!: Record<string, Array<string>>;
 
+  data() {
+    return {
+      units: {},
+      unitOptions: {}
+    };
+  }
+  @Watch("headers")
+  initUnits() {
+    // fill units with default units for each header variable
+    for (const variable of this.headers) {
+      this.$set(this.units, variable, getVariableUnits(variable));
+      this.$set(this.unitOptions, variable, getUnitOptions(variable));
+    }
+  }
   get headers() {
     if ("actual vs weather adjusted reference" in this.tableData) {
       return [
@@ -88,14 +113,9 @@ export default class SummaryTable extends Vue {
       ];
     }
   }
+
   displayName(varName: string) {
-    const units = getVariableUnits(varName);
-    const name = getVariableDisplayName(varName);
-    if (units) {
-      return `${name} [${units}]`;
-    } else {
-      return name;
-    }
+    return getVariableDisplayName(varName);
   }
   get mergedTableData() {
     const data = [];
@@ -126,6 +146,13 @@ export default class SummaryTable extends Vue {
     }
   }
   formatValues(variable: string, value: string | number) {
+    const converter = getUnitConverter(
+      getVariableUnits(variable),
+      this.units[variable]
+    );
+    if (converter && typeof value == "number") {
+      value = converter(value);
+    }
     try {
       // @ts-expect-error
       return formatFuncs[variable](value);

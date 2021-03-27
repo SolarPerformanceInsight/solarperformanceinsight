@@ -56,7 +56,7 @@ Component that handles basic job/workflows.
         <button v-if="dataSteps.length == 0" class="jobtab" disabled>
           Upload Data
           <br />
-          <span class="step-status">{{ submitStatus }}</span>
+          <span class="step-status">{{ resultsStatus }}</span>
         </button>
         <template v-if="dataSteps.length > 0">
           <button
@@ -77,16 +77,6 @@ Component that handles basic job/workflows.
             <span class="step-status">{{ dataStepStatus[dataStep] }}</span>
           </button>
         </template>
-        <button
-          class="jobtab"
-          :disabled="!job"
-          :class="{ active: step == 'calculate' }"
-          @click="step = 'calculate'"
-        >
-          Submit Calculation
-          <br />
-          <span class="step-status">{{ submitStatus }}</span>
-        </button>
         <button
           class="jobtab"
           :disabled="!job"
@@ -118,11 +108,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'original weather data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Original Weather Data</b>
@@ -133,11 +121,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'original monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Original Weather Data</b>
@@ -148,11 +134,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'actual weather data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Weather Data</b>
@@ -163,11 +147,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'actual monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.weather_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Weather Data</b>
@@ -178,11 +160,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'predicted performance data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Predicted Performance</b>
@@ -193,11 +173,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'predicted monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Predicted Performance</b>
@@ -208,11 +186,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'expected performance data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Expected Performance</b>
@@ -223,11 +199,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'actual performance data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Performance</b>
@@ -238,11 +212,9 @@ Component that handles basic job/workflows.
           <template v-if="step == 'actual monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
-              :jobId="jobId"
+              :job="job"
               :temperature_type="jobParameters.temperature_type"
               :system="job.definition.system_definition"
-              :granularity="jobParameters.performance_granularity"
-              :irradiance_type="jobParameters.irradiance_type"
               :data_objects="filteredDataObjects(step)"
             >
               <b>Upload Actual Performance</b>
@@ -251,35 +223,10 @@ Component that handles basic job/workflows.
         </keep-alive>
         <!-- Performance upload step -->
         <keep-alive>
-          <!-- Calculation submission step -->
-          <template v-if="step == 'calculate'">
-            <div>
-              <h2>Submitted Timeseries</h2>
-              <p>
-                Below is a table of the submitted data. Data may be downloaded
-                using the buttons on the right. If this data looks correct,
-                click
-                <i>Compute</i>
-                below to start the calculation or analysis.
-              </p>
-              <timeseries-table :job="job" :dataObjects="dataObjects" />
-              <br />
-              <button
-                id="compute-job"
-                :disabled="jobStatus != 'prepared'"
-                @click="computeJob"
-              >
-                Compute
-              </button>
-              <span v-if="jobStatus != 'prepared'">
-                Data must be uploaded before computation.
-                <br />
-              </span>
-            </div>
-          </template>
-          <template v-else-if="step == 'results'">
+          <template v-if="step == 'results'">
             <job-results
               @reload-job="fetchJob"
+              @compute-job="computeJob"
               :job="job"
               :system="system"
             ></job-results>
@@ -381,7 +328,7 @@ export default class JobHandler extends Vue {
         }
         this.step = theStep;
       } else if (this.jobStatus == "prepared") {
-        this.step = "calculate";
+        this.step = "results";
       } else {
         this.step = "results";
       }
@@ -415,15 +362,6 @@ export default class JobHandler extends Vue {
 
   get jobParameters() {
     const params = this.job.definition.parameters;
-
-    // For monthly data, granularity is assumed to be system, but properties
-    // are not provid.
-    if (!("weather_granularity" in params)) {
-      params["weather_granularity"] = "system";
-    }
-    if (!("performance_granularity" in params)) {
-      params["performance_granularity"] = "system";
-    }
     return params;
   }
 
@@ -494,7 +432,7 @@ export default class JobHandler extends Vue {
     if (this.job) {
       // Add in data steps
       steps = steps.concat(this.dataSteps);
-      steps = steps.concat(["submit", "results"]);
+      steps = steps.concat(["results"]);
     }
     return steps;
   }
@@ -507,21 +445,6 @@ export default class JobHandler extends Vue {
     }
   }
 
-  get submitStatus() {
-    if (this.job) {
-      if (this.jobStatus == "incomplete") {
-        return "Data Upload Required";
-      } else if (this.jobStatus == "error") {
-        return "An error occurred";
-      } else if (this.jobStatus == "prepared") {
-        return "Ready For Calculation";
-      } else {
-        return "Submitted";
-      }
-    } else {
-      return "Calculation Setup Required";
-    }
-  }
   get resultsStatus() {
     if (this.job) {
       if (this.jobStatus == "running") {
@@ -533,7 +456,7 @@ export default class JobHandler extends Vue {
       } else if (this.jobStatus == "error") {
         return "An error occurred";
       } else {
-        return "Calculation Not Submitted";
+        return "Data Required";
       }
     } else {
       return "Calculation Setup Required";

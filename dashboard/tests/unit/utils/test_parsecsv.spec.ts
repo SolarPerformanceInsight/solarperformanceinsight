@@ -7,7 +7,7 @@ const testCSV = `a,b,c,d
 
 describe("Test parseCSV", () => {
   it("parse a csv", () => {
-    const result = parseCSV(testCSV);
+    const result = parseCSV(testCSV, true);
     expect(result.data).toEqual([
       { a: 1, b: 2, c: 3, d: 4 },
       { a: 5, b: 6, c: 7, d: 8 },
@@ -15,7 +15,7 @@ describe("Test parseCSV", () => {
     ]);
   });
   it("preview a csv", () => {
-    const result = parseCSV(testCSV, 2);
+    const result = parseCSV(testCSV, true, 2);
     expect(result.data).toEqual([
       { a: 1, b: 2, c: 3, d: 4 },
       { a: 5, b: 6, c: 7, d: 8 }
@@ -30,6 +30,15 @@ describe("Test parseCSV", () => {
         row: 0,
         type: "FieldMismatch"
       }
+    ]);
+  });
+  it("parse no header csv", () => {
+    const result = parseCSV(testCSV, false);
+    expect(result.data).toEqual([
+      ["a", "b", "c", "d"],
+      [1, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12]
     ]);
   });
 });

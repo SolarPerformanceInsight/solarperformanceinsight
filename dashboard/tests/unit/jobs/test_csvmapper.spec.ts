@@ -110,7 +110,24 @@ const testJob = {
   ]
 };
 
-const headers = ["timestamp", "global", "direct", "diffuse"];
+const headers = [
+  {
+    header: "timestamp",
+    header_index: 0
+  },
+  {
+    header: "global",
+    header_index: 1
+  },
+  {
+    header: "direct",
+    header_index: 2
+  },
+  {
+    header: "diffuse",
+    header_index: 3
+  }
+];
 
 // vue test setup
 const localVue = createLocalVue();
@@ -251,7 +268,7 @@ describe("Test CSV Mapper", () => {
     // @ts-expect-error
     expect(weatherHandler.vm.indexMapped).toBe(false);
     // @ts-expect-error
-    weatherHandler.vm.mapIndex({ target: { value: "timestamp" } });
+    weatherHandler.vm.mapIndex({ target: { value: 0 } });
     // @ts-expect-error
     expect(weatherHandler.vm.indexMapped).toBe(true);
   });
@@ -270,20 +287,34 @@ describe("Test CSV Mapper", () => {
     // @ts-expect-error
     weatherHandler.vm.updateMapping({
       loc: "/inverters/0/arrays/0",
-      ghi: { csv_header: "global" }
+      ghi: {
+        csv_header: {
+          header: "global",
+          header_index: 1
+        }
+      }
     });
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/inverters/0/arrays/0": {
-        ghi: { csv_header: "global" },
-        time: { csv_header: "" }
+        ghi: {
+          csv_header: {
+            header: "global",
+            header_index: 1
+          }
+        },
+        time: { csv_header: null }
       }
     });
     // @ts-expect-error
-    weatherHandler.vm.mapIndex({ target: { value: "timestamp" } });
+    weatherHandler.vm.mapIndex({
+      target: {
+        value: 0
+      }
+    });
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/inverters/0/arrays/0": {
-        ghi: { csv_header: "global" },
-        time: { csv_header: "timestamp" }
+        ghi: { csv_header: { header: "global", header_index: 1 } },
+        time: { csv_header: { header: "timestamp", header_index: 0 } }
       }
     });
   });
@@ -300,19 +331,15 @@ describe("Test CSV Mapper", () => {
       propsData
     });
     // @ts-expect-error
-    weatherHandler.vm.useHeader("global");
+    weatherHandler.vm.useHeader({ header: "global", header_index: 0 });
     // @ts-expect-error
-    weatherHandler.vm.useHeader("direct");
+    weatherHandler.vm.useHeader({ header: "direct", header_index: 1 });
     // @ts-expect-error
-    weatherHandler.vm.useHeader("diffuse");
-    expect(weatherHandler.vm.$data.usedHeaders).toEqual([
-      "global",
-      "direct",
-      "diffuse"
-    ]);
+    weatherHandler.vm.useHeader({ header: "diffuse", header_index: 2 });
+    expect(weatherHandler.vm.$data.usedHeaders).toEqual([0, 1, 2]);
     // @ts-expect-error
-    weatherHandler.vm.freeHeader("direct");
-    expect(weatherHandler.vm.$data.usedHeaders).toEqual(["global", "diffuse"]);
+    weatherHandler.vm.freeHeader({ header: "direct", header_index: 1 });
+    expect(weatherHandler.vm.$data.usedHeaders).toEqual([0, 2]);
   });
   it("test resetmapping", async () => {
     const propsData = {
@@ -334,13 +361,13 @@ describe("Test CSV Mapper", () => {
     expect(weatherHandler.vm.$data.mapping).toEqual({
       "/inverters/0/arrays/0": {
         ghi: { csv_header: "global" },
-        time: { csv_header: "" }
+        time: { csv_header: null }
       }
     });
     // @ts-expect-error
     weatherHandler.vm.resetMapping();
     expect(weatherHandler.vm.$data.mapping).toEqual({});
     expect(weatherHandler.vm.$data.usedHeaders).toEqual([]);
-    expect(weatherHandler.vm.$data.indexHeader).toEqual("");
+    expect(weatherHandler.vm.$data.indexHeader).toEqual(null);
   });
 });

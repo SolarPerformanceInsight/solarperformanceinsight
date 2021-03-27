@@ -104,6 +104,13 @@ export default class TimeseriesTable extends Vue {
   @Prop() job!: any;
   @Prop() dataObjects!: any;
   @Prop() resultObjects!: any;
+  showUploads!: boolean;
+
+  data() {
+    return {
+      showUploads: false
+    };
+  }
 
   get tableData() {
     const allData = [];

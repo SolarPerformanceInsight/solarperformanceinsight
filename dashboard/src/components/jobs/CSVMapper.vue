@@ -2,7 +2,7 @@
 component that handles the csv headers of one file and master mapping for the
 system.
 Takes the following props:
-  - headers: Array<string> - the csv headers to be mapped.
+  - headers: Array<CSVHeader> - the csv headers to be mapped.
   - granularity: string: What part of the spec the data is
     associated with. One of:
     - "system": System wide data in the file.
@@ -28,18 +28,18 @@ Takes the following props:
           column:
         </b>
         <select @change="mapIndex">
-          <option value="" disabled selected>
+          <option value="" disabled :selected="!indexHeader">
             Unmapped
           </option>
           <option
-            v-for="(u, i) in headers"
+            v-for="(header, i) in headers"
             :key="i"
-            :name="u"
-            :value="u"
-            :disabled="usedHeaders.includes(u)"
+            :name="header.header"
+            :value="header.header_index"
+            :disabled="usedHeaders.includes(header.header_index)"
           >
-            <template v-if="u == ''">column {{ i + 1 }}</template>
-            <template v-else>{{ u }}</template>
+            <template v-if="header.header">{{ header.header }}</template>
+            <template v-else>Column {{ i + 1 }}</template>
           </option>
         </select>
         <template v-if="!indexMapped">
@@ -114,6 +114,9 @@ Takes the following props:
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import { System } from "@/types/System";
 import FieldMapper from "@/components/jobs/FieldMapper.vue";
+
+import { CSVHeader } from "@/utils/mapToCSV";
+
 interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
@@ -121,16 +124,16 @@ Vue.component("field-mapper", FieldMapper);
 
 @Component
 export default class CSVMapper extends Vue {
-  @Prop() headers!: Array<string>;
+  @Prop() headers!: Array<CSVHeader>;
   @Prop() granularity!: string;
   @Prop() system!: System;
   @Prop() data_objects!: Array<Record<string, any>>;
   @Prop() indexField!: string;
   mapping!: Record<string, string>;
   componentValidity!: Record<string, boolean>;
-  usedHeaders!: Array<string>;
+  usedHeaders!: Array<number>;
   isValid!: boolean;
-  indexHeader!: string;
+  indexHeader!: CSVHeader | null;
 
   data() {
     return {
@@ -138,7 +141,7 @@ export default class CSVMapper extends Vue {
       componentValidity: {},
       usedHeaders: [],
       isValid: false,
-      indexHeader: "",
+      indexHeader: null,
       dataObjectDisplay: this.initDataObjectDisplay()
     };
   }
@@ -184,11 +187,13 @@ export default class CSVMapper extends Vue {
   get required() {
     return this.data_objects[0].definition.data_columns;
   }
-  useHeader(header: string) {
-    this.usedHeaders.push(header);
+  useHeader(header: CSVHeader) {
+    this.usedHeaders.push(header.header_index);
   }
-  freeHeader(header: string) {
-    this.usedHeaders.splice(this.usedHeaders.indexOf(header), 1);
+  freeHeader(header: CSVHeader | null) {
+    if (header) {
+      this.usedHeaders.splice(this.usedHeaders.indexOf(header.header_index), 1);
+    }
   }
   updateMapping(newMap: any) {
     // pop the index from the mapping
@@ -237,12 +242,14 @@ export default class CSVMapper extends Vue {
     return visibleMap;
   }
   get indexMapped() {
-    return this.indexHeader != "";
+    return this.indexHeader != null;
   }
   mapIndex(event: any) {
-    this.freeHeader(this.indexField);
-    const indexHeader = event.target.value;
+    this.freeHeader(this.indexHeader);
+    const index = event.target.value;
+    const indexHeader = this.headers[index];
     this.indexHeader = indexHeader;
+
     this.useHeader(this.indexHeader);
     for (const dataObject of this.data_objects) {
       const loc = dataObject.definition.schema_path;
@@ -252,7 +259,7 @@ export default class CSVMapper extends Vue {
         // @ts-expect-error
         this.mapping[loc][this.indexField] = indexMapping;
       } else {
-        const fieldMapping: Record<string, Record<string, string>> = {};
+        const fieldMapping: Record<string, Record<string, CSVHeader>> = {};
         fieldMapping[this.indexField] = indexMapping;
         // @ts-expect-error
         this.mapping[loc] = fieldMapping;
@@ -263,7 +270,7 @@ export default class CSVMapper extends Vue {
   }
   @Watch("headers", { deep: true })
   resetMapping() {
-    this.indexHeader = "";
+    this.indexHeader = null;
     this.usedHeaders = [];
     this.mapping = {};
   }

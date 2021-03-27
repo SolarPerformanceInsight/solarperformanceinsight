@@ -12,7 +12,7 @@
             maxlength="4"
             max="2037"
             min="1901"
-            placeholder="yyyy"
+            placeholder="YYYY"
             v-model="year"
           />
         </span>
@@ -23,7 +23,7 @@
             maxlength="2"
             min="1"
             max="12"
-            placeholder="mm"
+            placeholder="MM"
             v-model="month"
           />
         </span>
@@ -34,7 +34,7 @@
             maxlength="2"
             min="1"
             :max="dayMax"
-            placeholder="dd"
+            placeholder="DD"
             v-model="day"
           />
         </span>
@@ -70,8 +70,11 @@
       </span>
     </div>
     <help v-if="helpText" :helpText="helpText" />
-    <div v-if="currentDate && currentDate.invalid" class="warning-text inline">
-      {{ currentDate.invalid.explanation }}
+    <div
+      v-if="currentDate && currentDate.invalid"
+      class="warning-text ml-1 inline"
+    >
+      {{ cleanError(currentDate.invalid.explanation) }}
     </div>
   </div>
 </template>
@@ -120,6 +123,10 @@ export default class DatetimeField extends Vue {
   @Watch("currentDate")
   emitTimeParams() {
     this.$emit("update-datetime", this.currentDate);
+  }
+  cleanError(errorMessage: string) {
+    // remove extra unwanted text from error messages
+    return errorMessage.replace(/\(of type .*\)/, "");
   }
 }
 </script>

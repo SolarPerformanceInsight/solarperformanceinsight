@@ -5,6 +5,11 @@
       Tell us about the time index of your data files.
     </p>
     <p class="p-body">
+      Data files must contain at least 90% of the times defined by
+      this time index. Files missing more than 10% of the times will be
+      rejected.
+    </p>
+    <p class="p-body">
       <slot></slot>
     </p>
     <div class="timefield">
@@ -18,7 +23,7 @@
         <option v-for="tz in timezoneList" :key="tz">{{ tz }}</option>
       </select>
       <help
-        helpText="The timezone used in your data. If your data does not account for daylight savings, use the appropriate fixed-offset. (e.g. Etc/GMT+7)"
+        helpText="The timezone used in your data. If your data does not account for daylight savings, use the appropriate fixed-offset. For example, to specify year-round Mountain Standard Time, select Etc/GMT+7)"
       />
     </div>
     <div class="timefield">
@@ -51,7 +56,7 @@
     </div>
     <div v-if="errors">
       <ul>
-        <li v-for="(error, key) of errors" :key="key" class="warning-text">
+        <li v-for="(error, key) of errors" :key="key" class="warning-text ml-1">
           <b>{{ key }}:</b>
           {{ error }}
         </li>
@@ -128,8 +133,4 @@ export default class JobTimeParameters extends Vue {
   }
 }
 </script>
-<style scoped>
-.vdatetime {
-  display: inline-block;
-}
-</style>
+<style scoped></style>

@@ -9,16 +9,20 @@ Component for handling display/download of job results.
         <div v-if="summaryData">
           <summary-table :tableData="summaryData"></summary-table>
         </div>
-        <h2 class="data-summary">Results and Measurements</h2>
+        <h2 class="data-summary">Results</h2>
         <p>
-          Below is a table of the results of this calculation and user uploaded
-          measurements.
-          <timeseries-table
-            :job="job"
-            :resultObjects="results"
-            :dataObjects="job.data_objects"
-          />
+          This table contains the results of this calculation. Files can be
+          downloaded using the links to the right.
+          <timeseries-table :job="job" :resultObjects="orderedResults" />
         </p>
+        <details>
+          <summary>Uploaded Data</summary>
+          <p>
+            This table contains the data uploaded for this calculation. Files
+            can be downloaded using the links to the right.
+            <timeseries-table :job="job" :dataObjects="job.data_objects" />
+          </p>
+        </details>
         <h2 class="timeseries-header">Timeseries Results</h2>
         <div v-if="results">
           <custom-plot :resultObjects="results" :job="job" />
@@ -48,7 +52,8 @@ Component for handling display/download of job results.
         Calculation is complete. Results are loading.
       </template>
       <template v-else>
-        Calculation has not been submitted.
+        The calculation is missing required data. Processing will begin
+        once all data is uploaded.
       </template>
     </div>
   </div>
@@ -118,6 +123,9 @@ export default class JobResults extends Vue {
       // load results when complete
       this.initializeResults();
     } else {
+      if (jobStatus == "prepared") {
+        this.$emit("compute-job");
+      }
       // Wait 1 second and poll for status update
       this.timeout = setTimeout(this.awaitCompletion.bind(this, token), 1000);
     }
@@ -166,6 +174,18 @@ export default class JobResults extends Vue {
         result.definition.type.includes("vs")
       );
     });
+  }
+  get orderedResults() {
+    // Return results with any summary results bumped to the front
+    const summaryResults = this.results.filter(
+      (result: Record<string, any>) => {
+        return (
+          result.definition.type.includes("summary") ||
+          result.definition.type.includes("vs")
+        );
+      }
+    );
+    return summaryResults.concat(this.timeseriesResults);
   }
   async loadResults() {
     const token = await this.$auth.getTokenSilently();

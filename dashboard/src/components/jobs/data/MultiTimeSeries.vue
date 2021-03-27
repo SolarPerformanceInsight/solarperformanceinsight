@@ -96,7 +96,8 @@ export default class TimeseriesPlot extends Vue {
       },
       yaxis: {
         title: "Value"
-      }
+      },
+      uirevision: "true"
     };
   }
   get plotDivId() {
@@ -106,7 +107,6 @@ export default class TimeseriesPlot extends Vue {
     await Plotly.react(this.plotDivId, this.plotData, this.layout, this.config);
   }
   downloadData() {
-    // TODO: handle index issues?
     const csvData = this.plotData[0].x.map((time: string, i: number) => {
       const data = this.plotData.reduce(
         (current: Record<string, any>, traceData: Record<string, any>) => {
