@@ -304,5 +304,9 @@ describe("Test field mapper", () => {
 
     // @ts-expect-error
     expect(wrapper.vm.getDisplayName("time")).toBe("Timestamp");
+    // @ts-expect-error
+    expect(wrapper.vm.getDisplayName("effective_irradiance")).toBe(
+      "Effective Irradiance or Plane of Array Global Irradiance [W/m^2]"
+    );
   });
 });

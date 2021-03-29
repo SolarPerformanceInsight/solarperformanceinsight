@@ -141,7 +141,12 @@ export default class FieldMapper extends Vue {
     this.emitMapping();
   }
   getDisplayName(variable: string) {
-    const variableName = getVariableDisplayName(variable);
+    let variableName: string;
+    if (variable == "effective_irradiance") {
+      variableName = "Effective Irradiance or Plane of Array Global Irradiance";
+    } else {
+      variableName = getVariableDisplayName(variable);
+    }
     const units = getVariableUnits(variable);
     let displayName = variableName;
     if (units) {

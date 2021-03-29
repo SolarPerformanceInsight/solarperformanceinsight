@@ -53,7 +53,7 @@
           />
           weather and AC performance.
         </label>
-        <label for="effective">
+        <label>
           <input
             @change="emitParams"
             value="weather, AC, and DC performance"
@@ -117,7 +117,7 @@
             type="radio"
             v-model="irradiance_type"
           />
-          effective irradiance.
+          effective irradiance or plane of array global irradiance.
         </label>
       </div>
     </div>

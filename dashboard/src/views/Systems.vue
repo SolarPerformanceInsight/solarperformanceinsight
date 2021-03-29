@@ -60,6 +60,7 @@
                 params: { systemId: uuid }
               }"
               tag="button"
+              disabled
             >
               Calculate PR
             </router-link>

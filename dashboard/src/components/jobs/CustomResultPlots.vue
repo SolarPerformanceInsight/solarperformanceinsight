@@ -290,7 +290,7 @@ export default class CustomPlots extends Vue {
   cleanDataType(dataType: string) {
     // strip out unwanted redundant data type information
     if (dataType.includes("performance data")) {
-      return dataType.replace("performance data", "");
+      return dataType.replace(" performance data", "");
     }
     if (dataType == "weather adjusted performance") {
       return "weather adjusted predicted";

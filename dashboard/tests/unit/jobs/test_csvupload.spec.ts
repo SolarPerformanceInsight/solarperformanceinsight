@@ -214,4 +214,40 @@ describe("Test CSV Upload", () => {
         "\r\n1,2,3,4,5"
     );
   });
+
+  it("Test requiredFieldSummary", async () => {
+    const dos = [
+      {
+        object_id: "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
+        object_type: "job_data",
+        created_at: "2020-12-11T19:52:00+00:00",
+        modified_at: "2020-12-11T19:52:00+00:00",
+        definition: {
+          schema_path: "/inverters/0/arrays/0",
+          type: "original weather data",
+          present: false,
+          data_columns: ["time", "effective_irradiance", "module_temperature"]
+        }
+      }
+    ];
+    const propsData = {
+      job: testJob,
+      granularity: testJob.definition.parameters.weather_granularity,
+      irradiance_type: testJob.definition.parameters.irradiance_type,
+      temperature_type: testJob.definition.parameters.temperature_type,
+      system: testJob.definition.system_definition,
+      data_objects: dos
+    };
+    const csvUpload = mount(CSVUpload, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(csvUpload.vm.requiredFieldSummary).toEqual([
+      "Effective Irradiance or Plane of Array Global Irradiance",
+      "Module Temperature"
+    ]);
+  });
 });
