@@ -147,11 +147,11 @@ def test_calculate_reference_job(timeindex, system_def, system_id):
         ),
     )
     assert set(job._data_items.keys()) == {
-        ("/inverters/0/arrays/0", models.JobDataTypeEnum.original_weather),
+        ("/inverters/0/arrays/0", models.JobDataTypeEnum.reference_weather),
     }
     assert job._model_chain_method == "run_model_from_poa"
     assert job._data_items[
-        ("/inverters/0/arrays/0", "original weather data")
+        ("/inverters/0/arrays/0", "reference weather data")
     ]._data_cols == [
         "time",
         "poa_global",
@@ -280,7 +280,7 @@ def test_compare_reference_actual_job_2A1(timeindex, system_def, system_id):
         "temp_air",
         "wind_speed",
     ]
-    assert job._data_items[("/", "original weather data")]._data_cols == [
+    assert job._data_items[("/", "reference weather data")]._data_cols == [
         "time",
         "poa_global",
         "poa_direct",
@@ -336,7 +336,7 @@ def test_compare_reference_actual_job_2A2(timeindex, system_def, system_id):
         "poa_diffuse",
         "module_temperature",
     ]
-    assert job._data_items[("/", "original weather data")]._data_cols == [
+    assert job._data_items[("/", "reference weather data")]._data_cols == [
         "time",
         "ghi",
         "dni",
@@ -369,7 +369,7 @@ def test_compare_reference_actual_job_2A3(system_def, system_id):
         "total_poa_insolation",
         "average_daytime_cell_temperature",
     ]
-    assert job._data_items[("/", "original monthly weather data")]._data_cols == [
+    assert job._data_items[("/", "reference monthly weather data")]._data_cols == [
         "month",
         "total_poa_insolation",
         "average_daytime_cell_temperature",
@@ -414,7 +414,7 @@ def test_compare_reference_actual_job_2A4(timeindex, system_def, system_id):
         "poa_diffuse",
         "module_temperature",
     ]
-    assert job._data_items[("/inverters/0", "original weather data")]._data_cols == [
+    assert job._data_items[("/inverters/0", "reference weather data")]._data_cols == [
         "time",
         "ghi",
         "dni",
@@ -557,7 +557,7 @@ def test_jobtimeindex_validation(start, end, step, tz):
         models.JobTimeindex(start=start, end=end, step=step, timezone=tz)
 
 
-@pytest.mark.parametrize("type_", ("original weather data", "actual weather data"))
+@pytest.mark.parametrize("type_", ("reference weather data", "actual weather data"))
 @pytest.mark.parametrize(
     "irr,temp,expected",
     (
@@ -610,7 +610,7 @@ def test_jobdataitem_columns_others():
         "actual performance data",
     ):
         models.JobDataItem.from_types("/", type_)._data_cols == ["time", "performance"]
-    for type_ in ("actual monthly weather data", "original monthly weather data"):
+    for type_ in ("actual monthly weather data", "reference monthly weather data"):
         models.JobDataItem.from_types("/", type_)._data_cols == [
             "time",
             "total_poa_insolation",

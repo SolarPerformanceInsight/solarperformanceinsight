@@ -99,7 +99,7 @@ def generate_job_weather_data(
     job: models.StoredJob,
     si: storage.StorageInterface,
     types=(
-        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.reference_weather,
         models.JobDataTypeEnum.actual_weather,
     ),
     weather_granularity=None,
@@ -601,7 +601,7 @@ def _calculate_weather_adjusted_reference_performance(
     ref_weather_gen = generate_job_weather_data(
         job,
         si,
-        types=(models.JobDataTypeEnum.original_weather,),
+        types=(models.JobDataTypeEnum.reference_weather,),
         weather_granularity=job_params.reference_data_parameters.weather_granularity,
     )
     actual_weather_gen = generate_job_weather_data(
@@ -764,7 +764,7 @@ def compare_monthly_reference_and_actual(
     data_ids_by_type = {do.definition.type: do.object_id for do in job.data_objects}
     ref_weather = _get_data(
         job.object_id,
-        data_ids_by_type[models.JobDataTypeEnum.monthly_original_weather],
+        data_ids_by_type[models.JobDataTypeEnum.monthly_reference_weather],
         si,
     )
     actual_weather = _get_data(
@@ -774,7 +774,7 @@ def compare_monthly_reference_and_actual(
     )
     ref_perf = _get_data(
         job.object_id,
-        data_ids_by_type[models.JobDataTypeEnum.monthly_original_performance],
+        data_ids_by_type[models.JobDataTypeEnum.monthly_reference_performance],
         si,
     )["total_energy"]
     actual_perf = _get_data(

@@ -271,7 +271,7 @@ async def post_job_data(
         adjusted_df, data_stats = _adjust_monthly_series(df)
     else:
         allow_time_shift = data_obj.definition.type in (
-            models.JobDataTypeEnum.original_weather,
+            models.JobDataTypeEnum.reference_weather,
             models.JobDataTypeEnum.reference_performance,
             models.JobDataTypeEnum.reference_performance_dc,
         )

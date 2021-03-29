@@ -872,16 +872,16 @@ class TemperatureTypeEnum(str, Enum):
 
 
 class JobDataTypeEnum(str, Enum):
-    original_weather = "original weather data"
+    reference_weather = "reference weather data"
     actual_weather = "actual weather data"
     reference_performance = "reference performance data"
     reference_performance_dc = "reference DC performance data"
     modeled_performance = "modeled performance data"
     actual_performance = "actual performance data"
     monthly_actual_weather = "actual monthly weather data"
-    monthly_original_weather = "original monthly weather data"
+    monthly_reference_weather = "reference monthly weather data"
     monthly_actual_performance = "actual monthly performance data"
-    monthly_original_performance = "reference monthly performance data"
+    monthly_reference_performance = "reference monthly performance data"
 
 
 class JobDataItem(SPIBase):
@@ -905,7 +905,7 @@ class JobDataItem(SPIBase):
         cols = [
             "time",
         ]
-        if type_ in (JobDataTypeEnum.original_weather, JobDataTypeEnum.actual_weather):
+        if type_ in (JobDataTypeEnum.reference_weather, JobDataTypeEnum.actual_weather):
             if irradiance_type == IrradianceTypeEnum.effective:
                 cols += ["effective_irradiance"]
             elif irradiance_type == IrradianceTypeEnum.poa:
@@ -927,7 +927,7 @@ class JobDataItem(SPIBase):
             cols += ["performance"]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_weather,
-            JobDataTypeEnum.monthly_original_weather,
+            JobDataTypeEnum.monthly_reference_weather,
         ):
             cols = [
                 "month",
@@ -936,7 +936,7 @@ class JobDataItem(SPIBase):
             ]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_performance,
-            JobDataTypeEnum.monthly_original_performance,
+            JobDataTypeEnum.monthly_reference_performance,
         ):
             cols = ["month", "total_energy"]
         out = cls(schema_path=schema_path, type=type_, **kwargs)
@@ -1026,7 +1026,7 @@ class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
     def __init__(self, **data):
         super().__init__(**data)
         if self.calculate == CalculateEnum.reference_performance:
-            self._weather_types = (JobDataTypeEnum.original_weather,)
+            self._weather_types = (JobDataTypeEnum.reference_weather,)
         else:
             self._weather_types = (JobDataTypeEnum.actual_weather,)
 
@@ -1089,7 +1089,7 @@ class ReferenceDataParams(CompareMixin):
 
     data_available: ReferenceDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
-    _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
+    _weather_types = PrivateAttr((JobDataTypeEnum.reference_weather,))
     _model_chain_method: str = PrivateAttr()
 
     def __init__(self, **data):
@@ -1155,9 +1155,9 @@ class CompareMonthlyReferenceActualJobParameters(SPIBase):
         return {
             ("/", jt): JobDataItem.from_types(schema_path="/", type_=jt)
             for jt in (
-                JobDataTypeEnum.monthly_original_weather,
+                JobDataTypeEnum.monthly_reference_weather,
                 JobDataTypeEnum.monthly_actual_weather,
-                JobDataTypeEnum.monthly_original_performance,
+                JobDataTypeEnum.monthly_reference_performance,
                 JobDataTypeEnum.monthly_actual_performance,
             )
         }
@@ -1277,7 +1277,7 @@ class StoredJob(StoredObject):
                         "modified_at": "2020-12-11T19:52:00+00:00",
                         "definition": {
                             "schema_path": "/inverters/0/arrays/0",
-                            "type": "original weather data",
+                            "type": "reference weather data",
                             "present": False,
                             "data_columns": [
                                 "time",

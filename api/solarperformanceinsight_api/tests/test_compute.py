@@ -142,9 +142,9 @@ def insert_monthly_data(
     auth0_id,
     nocommit_transaction,
     monthly_weather_actuals_id,
-    monthly_weather_original_id,
+    monthly_weather_reference_id,
     monthly_perf_actuals_id,
-    monthly_perf_original_id,
+    monthly_perf_reference_id,
 ):
     si = storage.StorageInterface(user=auth0_id)
     months = calendar.month_name[1:]
@@ -169,8 +169,8 @@ def insert_monthly_data(
         for did, df in [
             (monthly_weather_actuals_id, weatherdf),
             (monthly_perf_actuals_id, energydf),
-            (monthly_weather_original_id, ref_weather),
-            (monthly_perf_original_id, ref_energy),
+            (monthly_weather_reference_id, ref_weather),
+            (monthly_perf_reference_id, ref_energy),
         ]:
             iob = BytesIO()
             df.to_feather(iob)
@@ -1016,7 +1016,7 @@ def mockup_reference_actual(mocker, system_id):
                     data[ids[i]] *= 3
             elif type_ == models.JobDataTypeEnum.actual_weather:
                 data[ids[i]] = weather[cols].copy()
-            elif type_ == models.JobDataTypeEnum.original_weather:
+            elif type_ == models.JobDataTypeEnum.reference_weather:
                 data[ids[i]] = weather[cols].copy() * 0.94
 
         def _get_data(job_id, data_id, si):
@@ -1545,7 +1545,7 @@ def test_compare_reference_and_actual_leap_day_dropped(
                 },
                 index=index,
             )
-        elif type_ == models.JobDataTypeEnum.original_weather:
+        elif type_ == models.JobDataTypeEnum.reference_weather:
             data[ids[i]] = weather[cols].copy()
 
     def _get_data(job_id, data_id, si):
