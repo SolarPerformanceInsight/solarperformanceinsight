@@ -169,7 +169,7 @@ describe("test user", () => {
       picture: "http://www.photobucket.com/rickvacation",
       updated_at: "2222-22-22T22:22:22-10:00"
     };
-    const modeled = {
+    const expected = {
       sub: "auth0|somestuff",
       provider: "auth0",
       id: "somestuff",
@@ -179,7 +179,7 @@ describe("test user", () => {
       updated_at: "2222-22-22T22:22:22-10:00"
     };
     const instance = new User(user);
-    expect(instance).toEqual(modeled);
+    expect(instance).toEqual(expected);
   });
   it("instantiate a user object from falsey", () => {
     // @ts-expect-error
