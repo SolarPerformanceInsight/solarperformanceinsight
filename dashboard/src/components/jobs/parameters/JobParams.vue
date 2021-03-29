@@ -44,7 +44,7 @@
                       jobTypeParams.compare.includes('reference')
                   "
                 >
-                  Predicted data may be provided for a different year from the
+                  Reference data may be provided for a different year from the
                   time index described below. SPI will attempt to shift
                   reference data by full years to match the index. The timestep
                   and the month, day, and time of the start and end of the

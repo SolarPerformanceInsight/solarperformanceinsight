@@ -152,7 +152,7 @@ describe("Test CSV Mapper", () => {
 
     const inverter = testJob.definition.system_definition.inverters[0];
     const array = inverter.arrays[0];
-    const modeledMetadata = {
+    const expectedMetadata = {
       parent: inverter,
       ...array
     };
@@ -160,7 +160,7 @@ describe("Test CSV Mapper", () => {
     expect(weatherHandler.vm.toMap).toEqual([
       {
         data_object: testJob.data_objects[0],
-        metadata: modeledMetadata
+        metadata: expectedMetadata
       }
     ]);
 

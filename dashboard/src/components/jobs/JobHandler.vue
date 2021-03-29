@@ -165,7 +165,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Predicted Performance</b>
+              <b>Upload Reference Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
@@ -178,7 +178,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Predicted Performance</b>
+              <b>Upload Reference Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
@@ -191,7 +191,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Expected Performance</b>
+              <b>Upload Modeled Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
