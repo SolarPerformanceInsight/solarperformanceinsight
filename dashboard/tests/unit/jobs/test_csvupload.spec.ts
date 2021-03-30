@@ -77,7 +77,7 @@ const testJob = {
     },
     parameters: {
       system_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-      calculate: "predicted performance",
+      calculate: "reference performance",
       time_parameters: {
         start: "2020-01-01T00:00:00+00:00",
         end: "2020-12-31T23:59:59+00:00",
@@ -101,7 +101,7 @@ const testJob = {
       modified_at: "2020-12-11T19:52:00+00:00",
       definition: {
         schema_path: "/inverters/0/arrays/0",
-        type: "original weather data",
+        type: "reference weather data",
         present: false,
         data_columns: [
           "time",

@@ -487,10 +487,10 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
       let source: any;
       if (
         this.dataType.includes("original") ||
-        this.dataType.includes("predicted")
+        this.dataType.includes("reference")
       ) {
-        if ("predicted_data_parameters" in this.job.definition.parameters) {
-          source = this.job.definition.parameters.predicted_data_parameters;
+        if ("reference_data_parameters" in this.job.definition.parameters) {
+          source = this.job.definition.parameters.reference_data_parameters;
         } else {
           source = this.job.definition.parameters;
         }

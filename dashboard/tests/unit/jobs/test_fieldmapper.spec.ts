@@ -31,7 +31,7 @@ const comp = {
     modified_at: "2020-12-11T19:52:00+00:00",
     definition: {
       schema_path: "/",
-      type: "original weather data",
+      type: "reference weather data",
       present: false,
       data_columns: ["time", "ghi", "dni", "dhi"]
     }
@@ -47,7 +47,7 @@ const monthlyComp = {
     modified_at: "2020-12-11T19:52:00+00:00",
     definition: {
       schema_path: "/",
-      type: "original monthly weather data",
+      type: "reference monthly weather data",
       present: false,
       data_columns: [
         "month",

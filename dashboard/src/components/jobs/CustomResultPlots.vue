@@ -293,7 +293,7 @@ export default class CustomPlots extends Vue {
       return dataType.replace(" performance data", "");
     }
     if (dataType == "weather adjusted performance") {
-      return "weather adjusted predicted";
+      return "weather adjusted reference";
     }
     return dataType;
   }

@@ -9,23 +9,23 @@
         <div class="ml-1 mt-1">
           <input
             @change="emitParams"
-            id="predicted-performance"
-            value="predicted performance"
+            id="reference-performance"
+            value="reference performance"
             type="radio"
             v-model="calculate"
           />
-          <label for="predicted-performance">
+          <label for="reference-performance">
             weather data provided when the system was designed.
           </label>
           <br />
           <input
             @change="emitParams"
-            id="expected-performance"
-            value="expected performance"
+            id="modeled-performance"
+            value="modeled performance"
             type="radio"
             v-model="calculate"
           />
-          <label for="expected-performance">
+          <label for="modeled-performance">
             actual weather data during system operation.
           </label>
           <br />
@@ -44,7 +44,7 @@ export default class CalculateJobParams extends Vue {
 
   data() {
     return {
-      calculate: "predicted performance"
+      calculate: "reference performance"
     };
   }
   mounted() {

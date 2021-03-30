@@ -5,7 +5,7 @@
       string value as expected by the REST API.
       Example: 
         {
-          calculate: "predicted performance" 
+          calculate: "reference performance"
         }
 
   Emits a `new-data-params` event that contains an object that should be merged into
@@ -18,7 +18,7 @@
       }
     Or:
       {
-        predicted_data_parameters: {
+        reference_data_parameters: {
           data_available: "weather only",
           weather_granularity: "system",
           irradiance_type: "standard",
@@ -112,25 +112,25 @@ export default class DataParamHandler extends Vue {
       return [];
     }
     if (this.jobClass == "calculate") {
-      if (this.jobTypeParams["calculate"] == "predicted performance") {
-        return ["predicted"];
+      if (this.jobTypeParams["calculate"] == "reference performance") {
+        return ["reference"];
       } else {
-        return ["expected"];
+        return ["modeled"];
       }
     } else if (this.jobClass == "compare") {
-      if (this.jobTypeParams["compare"] == "expected and actual performance") {
-        // Single set of "data parameters" for both expected and actual performance
+      if (this.jobTypeParams["compare"] == "modeled and actual performance") {
+        // Single set of "data parameters" for both modeled and actual performance
         return ["all_data"];
       } else if (
-        this.jobTypeParams["compare"] == "predicted and actual performance"
+        this.jobTypeParams["compare"] == "reference and actual performance"
       ) {
-        return ["actual", "predicted"];
+        return ["actual", "reference"];
       } else {
-        return ["expected", "predicted"];
+        return ["modeled", "reference"];
       }
     } else {
       // Calculate PR, may need to be updated, required actual weather, actual performance
-      // optionally provides "expected" modelled performance.
+      // optionally provides "modeled" modeled performance.
       return ["all_data"];
     }
   }

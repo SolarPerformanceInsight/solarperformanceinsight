@@ -59,17 +59,17 @@ def lookup_job_compute_function(
     if isinstance(job.definition.parameters, models.CalculatePerformanceJobParameters):
         return run_performance_job
     elif isinstance(
-        job.definition.parameters, models.CompareExpectedActualJobParameters
+        job.definition.parameters, models.CompareModeledActualJobParameters
     ):
-        return compare_expected_and_actual
+        return compare_modeled_and_actual
     elif isinstance(
-        job.definition.parameters, models.ComparePredictedActualJobParameters
+        job.definition.parameters, models.CompareReferenceActualJobParameters
     ):
-        return compare_predicted_and_actual
+        return compare_reference_and_actual
     elif isinstance(
-        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+        job.definition.parameters, models.CompareMonthlyReferenceActualJobParameters
     ):
-        return compare_monthly_predicted_and_actual
+        return compare_monthly_reference_and_actual
     return dummy_func  # pragma: no cover
 
 
@@ -99,7 +99,7 @@ def generate_job_weather_data(
     job: models.StoredJob,
     si: storage.StorageInterface,
     types=(
-        models.JobDataTypeEnum.original_weather,
+        models.JobDataTypeEnum.reference_weather,
         models.JobDataTypeEnum.actual_weather,
     ),
     weather_granularity=None,
@@ -474,15 +474,15 @@ def _get_actual_monthly_energy(
     return actual_monthly_energy, months
 
 
-def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterface):
-    expected, result_list = _calculate_performance(job, si)
+def compare_modeled_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+    modeled, result_list = _calculate_performance(job, si)
     actual_monthly_energy, months = _get_actual_monthly_energy(job, si)
-    diff = actual_monthly_energy - expected
-    ratio = actual_monthly_energy / expected
+    diff = actual_monthly_energy - modeled
+    ratio = actual_monthly_energy / modeled
     comparison_summary = pd.DataFrame(
         {
             "actual_energy": actual_monthly_energy,
-            "expected_energy": expected,
+            "modeled_energy": modeled,
             "difference": diff,
             "ratio": ratio,
         }
@@ -491,7 +491,7 @@ def compare_expected_and_actual(job: models.StoredJob, si: storage.StorageInterf
     comparison_summary.index = month_name_index
     result_list.append(
         DBResult(
-            schema_path="/", type="actual vs expected energy", data=comparison_summary
+            schema_path="/", type="actual vs modeled energy", data=comparison_summary
         )
     )
     save_results_to_db(job.object_id, result_list, si)
@@ -575,11 +575,11 @@ def _get_missing_leap_days(dfs: List[pd.DataFrame]) -> Set[dt.datetime]:
     return out
 
 
-def _calculate_weather_adjusted_predicted_performance(
+def _calculate_weather_adjusted_reference_performance(
     job: models.StoredJob, si: storage.StorageInterface
 ) -> Tuple[List[DBResult], pd.Series, List[dt.datetime]]:
     missing_leap_days = set()
-    job_params: models.ComparePredictedActualJobParameters = (
+    job_params: models.CompareReferenceActualJobParameters = (
         job.definition.parameters  # type: ignore
     )
     time_params: models.JobTimeindex = job_params.time_parameters  # type: ignore
@@ -590,10 +590,10 @@ def _calculate_weather_adjusted_predicted_performance(
         name="performance",
     )
     total_ref_pac.index.name = "time"  # type: ignore
-    data_available = job_params.predicted_data_parameters.data_available
+    data_available = job_params.reference_data_parameters.data_available
     tshift = time_params.step / 2
     adjust = partial(_adjust_frame, tshift=tshift)
-    ref_model_method = job_params.predicted_data_parameters._model_chain_method
+    ref_model_method = job_params.reference_data_parameters._model_chain_method
     actual_model_method = job_params.actual_data_parameters._model_chain_method
     # model chain for each inverter
     chains = construct_modelchains(job.definition.system_definition)
@@ -601,8 +601,8 @@ def _calculate_weather_adjusted_predicted_performance(
     ref_weather_gen = generate_job_weather_data(
         job,
         si,
-        types=(models.JobDataTypeEnum.original_weather,),
-        weather_granularity=job_params.predicted_data_parameters.weather_granularity,
+        types=(models.JobDataTypeEnum.reference_weather,),
+        weather_granularity=job_params.reference_data_parameters.weather_granularity,
     )
     actual_weather_gen = generate_job_weather_data(
         job,
@@ -613,17 +613,17 @@ def _calculate_weather_adjusted_predicted_performance(
     ref_pac_gen = generate_job_performance_data(
         job,
         si,
-        types=[models.JobDataTypeEnum.predicted_performance],
+        types=[models.JobDataTypeEnum.reference_performance],
         performance_granularity=(
-            job_params.predicted_data_parameters.performance_granularity
+            job_params.reference_data_parameters.performance_granularity
         ),
     )
     ref_pdc_gen = generate_job_performance_data(
         job,
         si,
-        types=[models.JobDataTypeEnum.predicted_performance_dc],
+        types=[models.JobDataTypeEnum.reference_performance_dc],
         performance_granularity=(
-            job_params.predicted_data_parameters.performance_granularity
+            job_params.reference_data_parameters.performance_granularity
         ),
     )
     results_list = []
@@ -651,10 +651,10 @@ def _calculate_weather_adjusted_predicted_performance(
         ]
         if any([g is None for g in gammas]):
             raise TypeError(
-                "Currently unable to compare predicted and actual performance for "
+                "Currently unable to compare reference and actual performance for "
                 "PVsyst specified arrays."
             )
-        if data_available == models.PredictedDataEnum.weather_only:  # 2A-4
+        if data_available == models.ReferenceDataEnum.weather_only:  # 2A-4
             db_results, _ = process_single_modelchain(
                 chain, ref_weather, ref_model_method, tshift, i
             )
@@ -723,12 +723,12 @@ def _calculate_weather_adjusted_predicted_performance(
     return results_list, total_ref_pac, list(missing_leap_days)
 
 
-def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInterface):
+def compare_reference_and_actual(job: models.StoredJob, si: storage.StorageInterface):
     (
         results_list,
         total_ref_pac,
         missing_leap_days,
-    ) = _calculate_weather_adjusted_predicted_performance(job, si)
+    ) = _calculate_weather_adjusted_reference_performance(job, si)
     actual_monthly_energy, months = _get_actual_monthly_energy(
         job, si, missing_leap_days
     )
@@ -758,13 +758,13 @@ def compare_predicted_and_actual(job: models.StoredJob, si: storage.StorageInter
     save_results_to_db(job.object_id, results_list, si)
 
 
-def compare_monthly_predicted_and_actual(
+def compare_monthly_reference_and_actual(
     job: models.StoredJob, si: storage.StorageInterface
 ):
     data_ids_by_type = {do.definition.type: do.object_id for do in job.data_objects}
     ref_weather = _get_data(
         job.object_id,
-        data_ids_by_type[models.JobDataTypeEnum.monthly_original_weather],
+        data_ids_by_type[models.JobDataTypeEnum.monthly_reference_weather],
         si,
     )
     actual_weather = _get_data(
@@ -774,7 +774,7 @@ def compare_monthly_predicted_and_actual(
     )
     ref_perf = _get_data(
         job.object_id,
-        data_ids_by_type[models.JobDataTypeEnum.monthly_original_performance],
+        data_ids_by_type[models.JobDataTypeEnum.monthly_reference_performance],
         si,
     )["total_energy"]
     actual_perf = _get_data(
@@ -790,7 +790,7 @@ def compare_monthly_predicted_and_actual(
     gammas = [arr.module_parameters._gamma for inv in inverters for arr in inv.arrays]
     if any([g is None for g in gammas]):
         raise TypeError(
-            "Currently unable to compare predicted and actual performance for "
+            "Currently unable to compare reference and actual performance for "
             "PVsyst specified arrays."
         )
 

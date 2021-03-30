@@ -7,16 +7,16 @@
 
   Props:
     jobClass: string - One of "calculate", "compare", or "calculatepr"
-    dataType: string - The type of data being collected, one of "predicted", "actual", "expected",
+    dataType: string - The type of data being collected, one of "reference", "actual", "modeled",
       or "all_data". Ignored for "calculate" job class. The "all_data" option is used to display a
       single set of parameter fields for a compare job.
 
 
   Emits a new-data-params event with an object of the form: 
     {
-      type: "predicted_data_params",
+      type: "reference_data_params",
       params: {
-        data_available(only for predicted in compare usecases),
+        data_available(only for reference in compare usecases),
         weather_granularity,
         irradiance_type,
         temperature_type,
@@ -32,8 +32,8 @@
     <slot>
       <h2 class="data-type" v-if="jobClass != 'calculate'">{{ dataType }}</h2>
     </slot>
-    <div v-if="jobClass == 'compare' && this.dataType == 'predicted'">
-      My predicted data includes:
+    <div v-if="jobClass == 'compare' && this.dataType == 'reference'">
+      My reference data includes:
       <div class="ml-1 mt-1">
         <label>
           <input
@@ -216,7 +216,7 @@ export default class DataParams extends Vue {
   created() {
     if (this.jobClass == "compare") {
       this.data_available = "weather and AC performance";
-      if (this.dataType == "predicted" || this.dataType == "actual") {
+      if (this.dataType == "reference" || this.dataType == "actual") {
         this.temperature_type = "cell";
         this.irradiance_type = "poa";
       }
@@ -233,11 +233,11 @@ export default class DataParams extends Vue {
       // calculate use case never includes performance data
       type = "data_parameters";
     } else {
-      if (this.dataType == "predicted") {
-        // Compare use cases using predicted data require the user to declare
+      if (this.dataType == "reference") {
+        // Compare use cases using reference data require the user to declare
         // if their data includes performance data, if it does they are expected to
         // provide the granularity of that data
-        type = "predicted_data_parameters";
+        type = "reference_data_parameters";
         extraParameters.data_available = this.data_available;
         if (this.data_available.includes("performance")) {
           extraParameters.performance_granularity = this.performance_granularity;
