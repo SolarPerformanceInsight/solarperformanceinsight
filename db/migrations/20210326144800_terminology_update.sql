@@ -39,6 +39,9 @@ begin
   update job_data set type = 'reference performance data' where type = 'predicted performance data';
   update job_data set type = 'reference DC performance data' where type = 'predicted DC performance data';
   update job_data set type = 'reference monthly performance data' where type = 'predicted monthly performance data';
+  update job_data set type = 'reference monthly weather data' where type = 'original monthly weather data';
+
+  update job_data set type = 'reference weather data' where type = 'original weather data';
   update job_data set type = 'modeled performance data' where type = 'expected performance data';
 
   -- ensure jobs added in add_example_data 1 and 3 retain their modified_at time
