@@ -112,7 +112,7 @@ const testJob = {
       modified_at: "2020-12-11T19:52:00+00:00",
       definition: {
         schema_path: "/inverters/0/arrays/0",
-        type: "original weather data",
+        type: "reference weather data",
         present: false,
         data_columns: [
           "time",
@@ -218,14 +218,14 @@ describe("Test JobHandler", () => {
     expect(handler.vm.jobParameters.calculate).toEqual("reference performance");
     expect(
       // @ts-expect-error
-      handler.vm.filteredDataObjects("original weather data")
+      handler.vm.filteredDataObjects("reference weather data")
     ).toEqual(testJob.data_objects);
     expect(
       // @ts-expect-error
       handler.vm.filteredDataObjects("reference performance data")
     ).toEqual([]);
     expect(handler.findComponent(CSVUpload).exists()).toBe(true);
-    expect(handler.find("b").text()).toBe("Upload Original Weather Data");
+    expect(handler.find("b").text()).toBe("Upload Reference Weather Data");
   });
   it("test job not found", async () => {
     mockJobResponse.ok = false;
@@ -433,7 +433,7 @@ describe("Test JobHandler", () => {
     // @ts-expect-error
     expect(handler.vm.jobSteps).toStrictEqual([
       "setup",
-      "original weather data",
+      "reference weather data",
       "results"
     ]);
   });
@@ -464,7 +464,7 @@ describe("Test JobHandler", () => {
         modified_at: "2020-12-11T19:52:00+00:00",
         definition: {
           schema_path: "/inverters/0/arrays/0",
-          type: "original weather data",
+          type: "reference weather data",
           present: false,
           data_columns: [
             "time",
@@ -509,14 +509,14 @@ describe("Test JobHandler", () => {
 
     // @ts-expect-error
     expect(handler.vm.dataStepStatus).toStrictEqual({
-      "original weather data": "Needs data",
+      "reference weather data": "Needs data",
       "actual weather data": "Needs data"
     });
 
     data_objects[0].definition.present = true;
     // @ts-expect-error
     expect(handler.vm.dataStepStatus).toStrictEqual({
-      "original weather data": "Complete",
+      "reference weather data": "Complete",
       "actual weather data": "Needs data"
     });
     // @ts-expect-error
@@ -582,7 +582,7 @@ describe("Test JobHandler", () => {
         modified_at: "2020-12-11T19:52:00+00:00",
         definition: {
           schema_path: "/inverters/0/arrays/0",
-          type: "original weather data",
+          type: "reference weather data",
           present: false,
           data_columns: [
             "time",
@@ -628,7 +628,7 @@ describe("Test JobHandler", () => {
     // @ts-expect-error
     handler.vm.setStep();
 
-    expect(handler.vm.$data.step).toBe("original weather data");
+    expect(handler.vm.$data.step).toBe("reference weather data");
 
     data_objects[0].definition.present = true;
 

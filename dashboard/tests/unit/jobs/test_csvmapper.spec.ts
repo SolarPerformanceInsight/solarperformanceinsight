@@ -96,7 +96,7 @@ const testJob = {
       modified_at: "2020-12-11T19:52:00+00:00",
       definition: {
         schema_path: "/inverters/0/arrays/0",
-        type: "original weather data",
+        type: "reference weather data",
         present: false,
         data_columns: [
           "time",
@@ -182,7 +182,7 @@ describe("Test CSV Mapper", () => {
         modified_at: "2020-12-11T19:52:00+00:00",
         definition: {
           schema_path: "/inverters/0",
-          type: "original weather data",
+          type: "reference weather data",
           present: false,
           data_columns: [
             "time",
@@ -222,7 +222,7 @@ describe("Test CSV Mapper", () => {
         modified_at: "2020-12-11T19:52:00+00:00",
         definition: {
           schema_path: "/",
-          type: "original weather data",
+          type: "reference weather data",
           present: false,
           data_columns: [
             "time",

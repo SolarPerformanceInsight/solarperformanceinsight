@@ -105,7 +105,7 @@ Component that handles basic job/workflows.
           -->
         <keep-alive>
           <!-- Weather upload step -->
-          <template v-if="step == 'original weather data'">
+          <template v-if="step == 'reference weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -113,12 +113,12 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Original Weather Data</b>
+              <b>Upload Reference Weather Data</b>
             </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'original monthly weather data'">
+          <template v-if="step == 'reference monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -126,7 +126,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Original Weather Data</b>
+              <b>Upload Reference Weather Data</b>
             </csv-upload>
           </template>
         </keep-alive>
