@@ -732,20 +732,6 @@ def test_compare_modeled_and_actual(mockup_modelchain, auth0_id, nocommit_transa
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7
 
 
-def test_compare_monthly_reference_and_actual_pvsyst(
-    mocker, auth0_id, nocommit_transaction, insert_monthly_data, monthlypa_job_id
-):
-    si = storage.StorageInterface(user=auth0_id)
-    with si.start_transaction() as st:
-        job = st.get_job(monthlypa_job_id)
-    assert isinstance(
-        job.definition.system_definition.inverters[0].arrays[0].module_parameters,
-        models.PVsystModuleParameters,
-    )
-    with pytest.raises(TypeError):
-        compute.compare_monthly_reference_and_actual(job, si)
-
-
 @pytest.fixture()
 def pvwatts_system():
     sysdict = deepcopy(models.SYSTEM_EXAMPLE)
@@ -782,40 +768,6 @@ def pvwatts_system():
     return models.PVSystem(**sysdict)
 
 
-def test_compare_monthly_reference_and_actual(
-    mocker,
-    auth0_id,
-    nocommit_transaction,
-    insert_monthly_data,
-    monthlypa_job_id,
-    pvwatts_system,
-):
-    si = storage.StorageInterface(user=auth0_id)
-    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
-
-    with si.start_transaction() as st:
-        job = st.get_job(monthlypa_job_id)
-    job.definition.system_definition = pvwatts_system
-    compute.compare_monthly_reference_and_actual(job, si)
-    assert save.call_count == 1
-    reslist = save.call_args[0][1]
-    assert len(reslist) == 1
-
-    summary = reslist[0]
-    assert summary.type == "actual vs weather adjusted reference"
-    iob = BytesIO(summary.data)
-    iob.seek(0)
-    summary_df = pd.read_feather(iob)
-    assert len(summary_df.index) == 12
-    ser = summary_df.iloc[6]
-    assert len(ser) == 5
-    assert ser.loc["month"] == "July"
-    assert ser.loc["actual_energy"] == 60000
-    assert ser.loc["weather_adjusted_energy"] == 56250.375  # 56249.625 pre GH190
-    assert ser.loc["difference"] == 3749.625  # 3750.375 pre GH190
-    assert (ser.loc["ratio"] - 1.0666738) < 1e-10  # no difference with GH190
-
-
 @pytest.fixture(params=list(models.TemperatureTypeEnum))
 def temp_type(request):
     return request.param
@@ -845,7 +797,7 @@ def perf_gran(request):
         ("weather, AC, and DC performance", "inverter"),
     )
 )
-def pred_params(irr_type, temp_type, weather_gran, request):
+def ref_params(irr_type, temp_type, weather_gran, request):
     if request.param[0] == "weather only":
         return dict(
             irradiance_type=irr_type,
@@ -927,9 +879,54 @@ def cec_system(sandia_inverter):
     return models.PVSystem(**sysdict)
 
 
+@pytest.mark.parametrize("syst", ["pvwatts", "cec", "pvsyst"])
+def test_compare_monthly_reference_and_actual(
+    mocker,
+    auth0_id,
+    nocommit_transaction,
+    insert_monthly_data,
+    monthlypa_job_id,
+    pvwatts_system,
+    cec_system,
+    pvsyst_system,
+    syst,
+):
+    si = storage.StorageInterface(user=auth0_id)
+    save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
+
+    with si.start_transaction() as st:
+        job = st.get_job(monthlypa_job_id)
+    if syst == "pvwatts":
+        job.definition.system_definition = pvwatts_system
+    elif syst == "cec":
+        job.definition.system_definition = cec_system
+    else:
+        job.definition.system_definition = pvsyst_system
+    compute.compare_monthly_reference_and_actual(job, si)
+    assert save.call_count == 1
+    reslist = save.call_args[0][1]
+    assert len(reslist) == 1
+
+    summary = reslist[0]
+    assert summary.type == "actual vs weather adjusted reference"
+    iob = BytesIO(summary.data)
+    iob.seek(0)
+    summary_df = pd.read_feather(iob)
+    assert len(summary_df.index) == 12
+    ser = summary_df.iloc[6]
+    assert len(ser) == 5
+    assert ser.loc["month"] == "July"
+    assert ser.loc["actual_energy"] == 60000
+    # 56249.625 pre GH190
+    np.testing.assert_allclose(ser.loc["weather_adjusted_energy"], 56250.375, atol=0.2)
+    # 3750.375 pre GH190
+    np.testing.assert_allclose(ser.loc["difference"], 3749.625, atol=0.2)
+    np.testing.assert_allclose(ser.loc["ratio"], 1.066667, atol=1e-5)
+
+
 @pytest.fixture()
 def mockup_reference_actual(mocker, system_id):
-    def mockem(system, pred_params, actual_params):
+    def mockem(system, ref_params, actual_params):
         save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
         cat = pd.Timestamp.utcnow()
         job_params = models.CompareReferenceActualJobParameters(
@@ -941,7 +938,7 @@ def mockup_reference_actual(mocker, system_id):
                 timezone="Etc/GMT+7",
             ),
             compare="reference and actual performance",
-            reference_data_parameters=pred_params,
+            reference_data_parameters=ref_params,
             actual_data_parameters=actual_params,
         )
         index = job_params.time_parameters._time_range
@@ -1028,16 +1025,16 @@ def mockup_reference_actual(mocker, system_id):
     return mockem
 
 
-def test_compare_reference_and_actual(
+def test_compare_reference_and_actual_pvwatts(
     mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     pvwatts_system,
-    pred_params,
+    ref_params,
     actual_params,
 ):
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_reference_actual(pvwatts_system, pred_params, actual_params)
+    job, save = mockup_reference_actual(pvwatts_system, ref_params, actual_params)
     compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
@@ -1079,7 +1076,7 @@ def test_compare_reference_and_actual_precise(
     nocommit_transaction,
     pvwatts_system,
 ):
-    pred_params = dict(
+    ref_params = dict(
         irradiance_type="standard",
         temperature_type="air",
         weather_granularity="system",
@@ -1092,7 +1089,7 @@ def test_compare_reference_and_actual_precise(
         performance_granularity="system",
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_reference_actual(pvwatts_system, pred_params, actual_params)
+    job, save = mockup_reference_actual(pvwatts_system, ref_params, actual_params)
     compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
@@ -1126,6 +1123,7 @@ def test_compare_reference_and_actual_precise(
     assert (ser.loc["ratio"] - 0.8512503) < 1e-8  # 0.84922683 pre GH190
 
 
+@pytest.mark.parametrize("syst", ["cec", "pvsyst"])
 @pytest.mark.parametrize(
     "data_available,pg",
     (
@@ -1134,50 +1132,16 @@ def test_compare_reference_and_actual_precise(
         ("weather, AC, and DC performance", "inverter"),
     ),
 )
-def test_compare_reference_and_actual_pvsyst(
+def test_compare_reference_and_actual_other_modules(
     mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     pvsyst_system,
-    temp_type,
-    pg,
-    data_available,
-):
-    actual_params = dict(
-        irradiance_type="poa",
-        temperature_type="cell",
-        weather_granularity="system",
-        performance_granularity="inverter",
-    )
-    pred_params = dict(
-        irradiance_type="standard",
-        temperature_type=temp_type,
-        weather_granularity="system",
-        performance_granularity=pg,
-        data_available=data_available,
-    )
-    si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_reference_actual(pvsyst_system, pred_params, actual_params)
-    with pytest.raises(TypeError):  # pvlib#1190
-        compute.compare_reference_and_actual(job, si)
-
-
-@pytest.mark.parametrize(
-    "data_available,pg",
-    (
-        ("weather only", None),
-        ("weather and AC performance", "inverter"),
-        ("weather, AC, and DC performance", "inverter"),
-    ),
-)
-def test_compare_reference_and_actual_cec(
-    mockup_reference_actual,
-    auth0_id,
-    nocommit_transaction,
     cec_system,
     temp_type,
     pg,
     data_available,
+    syst,
 ):
     actual_params = dict(
         irradiance_type="poa",
@@ -1185,7 +1149,7 @@ def test_compare_reference_and_actual_cec(
         weather_granularity="system",
         performance_granularity="inverter",
     )
-    pred_params = dict(
+    ref_params = dict(
         irradiance_type="standard",
         temperature_type=temp_type,
         weather_granularity="system",
@@ -1193,7 +1157,8 @@ def test_compare_reference_and_actual_cec(
         data_available=data_available,
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_reference_actual(cec_system, pred_params, actual_params)
+    system = pvsyst_system if syst == "pvsyst" else cec_system
+    job, save = mockup_reference_actual(system, ref_params, actual_params)
     compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
@@ -1237,14 +1202,14 @@ def test_compare_reference_and_actual_cec_module_temp_as_expected(
         weather_granularity="system",
         performance_granularity="inverter",
     )
-    pred_params = dict(
+    ref_params = dict(
         irradiance_type="standard",
         temperature_type="module",
         weather_granularity="system",
         data_available="weather only",
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_reference_actual(cec_system, pred_params, actual_params)
+    job, save = mockup_reference_actual(cec_system, ref_params, actual_params)
     compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
@@ -1459,7 +1424,7 @@ def test_compare_reference_and_actual_leap_day_dropped(
         weather_granularity="system",
         performance_granularity="inverter",
     )
-    pred_params = dict(
+    ref_params = dict(
         irradiance_type="standard",
         temperature_type="module",
         weather_granularity="system",
@@ -1476,7 +1441,7 @@ def test_compare_reference_and_actual_leap_day_dropped(
             timezone="Etc/GMT+7",
         ),
         compare="reference and actual performance",
-        reference_data_parameters=pred_params,
+        reference_data_parameters=ref_params,
         actual_data_parameters=actual_params,
     )
     index = job_params.time_parameters._time_range

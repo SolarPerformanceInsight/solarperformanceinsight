@@ -5,6 +5,7 @@ from typing import Union, List, Optional, Any, Tuple, Dict
 
 import pandas as pd
 import pvlib  # type: ignore
+from pvlib.ivtools.sdm import pvsyst_temperature_coeff  # type: ignore
 from pydantic import BaseModel, Field, PrivateAttr, validator, root_validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID
@@ -203,7 +204,25 @@ class PVsystModuleParameters(PVLibBase):
         gt=0,
     )
     _modelchain_dc_model: str = PrivateAttr("pvsyst")
-    _gamma: Optional[float] = PrivateAttr(None)
+    _gamma: float = PrivateAttr()
+
+    @root_validator(skip_on_failure=True)
+    def validate_diode_params(cls, values):
+        # and set _gamma here since it could raise an error with bad params
+        err = ValueError(
+            "Unable to calculate single diode parameters from parameters supplied."
+        )
+        try:
+            pvlib.pvsystem.calcparams_pvsyst(
+                effective_irradiance=1000, temp_cell=25, **values
+            )
+        except Exception:
+            raise err
+        try:
+            cls._gamma = pvsyst_temperature_coeff(**values)
+        except Exception:
+            raise err
+        return values
 
 
 class PVWattsModuleParameters(PVLibBase):
@@ -311,6 +330,25 @@ class CECModuleParameters(PVLibBase):
     def __init__(self, **data):
         super().__init__(**data)
         self._gamma = self.gamma_r / 100
+
+    @root_validator(skip_on_failure=True)
+    def validate_diode_params(cls, values):
+
+        try:
+            pvlib.pvsystem.calcparams_cec(
+                effective_irradiance=1000,
+                temp_cell=25,
+                **{
+                    k: v
+                    for k, v in values.items()
+                    if k not in ("gamma_r", "cells_in_series")
+                },
+            )
+        except Exception:  # pragma: no cover
+            raise ValueError(
+                "Unable to calculate single diode parameters from parameters supplied."
+            )
+        return values
 
     def pvlib_dict(self):
         """Convert to a dict pvlib understands for `module_parameters` by removing

@@ -6,6 +6,7 @@ import re
 
 from hypothesis import given, example, assume
 from hypothesis.strategies import floats, booleans, composite, from_regex
+from numpy.testing import assert_allclose
 import pandas as pd
 from pydantic import BaseModel, ValidationError
 import pytest
@@ -711,7 +712,7 @@ def test_array_gamma(system_def):
     )
     arrd = deepcopy(system_def.inverters[0].arrays[0].dict())
     mod = models.PVArray(**arrd)
-    assert mod.module_parameters._gamma is None  # PVsyst
+    assert_allclose(mod.module_parameters._gamma, -5.359e-3, atol=1e-7)
 
     arrd["module_parameters"] = cec
     mod = models.PVArray(**arrd)
@@ -720,3 +721,36 @@ def test_array_gamma(system_def):
     arrd["module_parameters"] = {"pdc0": 100, "gamma_pdc": -0.328}
     mod = models.PVArray(**arrd)
     assert mod.module_parameters._gamma == -3.28e-3
+
+
+@pytest.mark.parametrize("gr", [0, 0.1])
+def test_pvsyst_bad_params(gr):
+    params = dict(
+        alpha_sc=0,
+        gamma_ref=gr,
+        mu_gamma=0,
+        I_L_ref=0,
+        I_o_ref=0,
+        R_sh_ref=0,
+        R_sh_0=0,
+        R_s=0,
+        cells_in_series=0,
+    )
+    with pytest.raises(ValidationError) as exc:
+        models.PVsystModuleParameters(**params)
+    assert "single diode parameters" in exc.value.errors()[0]["msg"]
+
+
+def test_cec_bad_params():
+    params = dict(
+        alpha_sc=0,
+        a_ref=0,
+        I_L_ref=float("inf"),
+        I_o_ref=float("nan"),
+        R_sh_ref=0,
+        R_s=0,
+        cells_in_series=0,
+        gamma_r=0,
+    )
+    # seems equations don't lend themselves to failure
+    models.CECModuleParameters(**params)
