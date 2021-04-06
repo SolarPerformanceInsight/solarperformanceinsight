@@ -70,6 +70,10 @@ def lookup_job_compute_function(
         job.definition.parameters, models.CompareMonthlyReferenceActualJobParameters
     ):
         return compare_monthly_reference_and_actual
+    elif isinstance(
+        job.definition.parameters, models.CompareReferenceModeledJobParameters
+    ):
+        return compare_reference_and_modeled
     return dummy_func  # pragma: no cover
 
 
@@ -331,7 +335,15 @@ def process_single_modelchain(
 
 
 def _calculate_performance(
-    job: models.StoredJob, si: storage.StorageInterface
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    weather_types: Tuple[models.JobDataTypeEnum, ...] = (
+        models.JobDataTypeEnum.reference_weather,
+        models.JobDataTypeEnum.actual_weather,
+    ),
+    weather_granularity: Optional[models.WeatherGranularityEnum] = None,
+    run_model_method: Optional[str] = None,
+    missing_leap_days: List[dt.datetime] = [],
 ) -> Tuple[pd.Series, List[DBResult]]:
     """Compute the performance, and other modeling variables, for the Job and
     store the inverter level performance, total system performance, array level weather,
@@ -352,7 +364,8 @@ def _calculate_performance(
         index=job_time_range,
     )
     summary.index.name = "time"  # type: ignore
-    run_model_method: str = job.definition._model_chain_method  # type: ignore
+    if run_model_method is None:
+        run_model_method = job.definition._model_chain_method
     # compute solar position at the middle of the interval
     # positive value assumes left (beginning) label convention
     tshift = time_params.step / 2
@@ -366,9 +379,13 @@ def _calculate_performance(
     # Weather data is shifted right by half the interval length and
     # process_single_modelchain shifts the results back to original labels
     # so that solar position used for modeling is midpoint of interval
-    for i, weather_data in enumerate(generate_job_weather_data(job, si)):
+    for i, weather_data in enumerate(
+        generate_job_weather_data(
+            job, si, types=weather_types, weather_granularity=weather_granularity
+        )
+    ):
         db_results, array_summary = process_single_modelchain(
-            chains[i], weather_data, run_model_method, tshift, i
+            chains[i], weather_data, run_model_method, tshift, i  # type: ignore
         )
         result_list += db_results
         summary += array_summary  # type: ignore
@@ -381,8 +398,10 @@ def _calculate_performance(
     # average zenith
     daytime = summary.pop("zenith") < 87.0  # type: ignore
     daytime.name = "daytime_flag"  # type: ignore
-    # index of data actually uploaded
-    input_data_range = daytime.dropna().index
+    # index of data actually uploaded - any leap days that shouldn't be in the summaries
+    input_data_range = daytime.dropna().index.difference(
+        pd.DatetimeIndex(missing_leap_days)  # type: ignore
+    )
     # months in output according to job time range
     months = job_time_range.month.unique().sort_values()  # type: ignore
 
@@ -576,7 +595,11 @@ def _get_missing_leap_days(dfs: List[pd.DataFrame]) -> Set[dt.datetime]:
 
 
 def _calculate_weather_adjusted_reference_performance(
-    job: models.StoredJob, si: storage.StorageInterface
+    job: models.StoredJob,
+    si: storage.StorageInterface,
+    actual_data_parameters: Union[
+        None, models.ActualDataParams, models.ModeledDataParams
+    ] = None,
 ) -> Tuple[List[DBResult], pd.Series, List[dt.datetime]]:
     missing_leap_days = set()
     job_params: models.CompareReferenceActualJobParameters = (
@@ -594,7 +617,9 @@ def _calculate_weather_adjusted_reference_performance(
     tshift = time_params.step / 2
     adjust = partial(_adjust_frame, tshift=tshift)
     ref_model_method = job_params.reference_data_parameters._model_chain_method
-    actual_model_method = job_params.actual_data_parameters._model_chain_method
+    if actual_data_parameters is None:
+        actual_data_parameters = job_params.actual_data_parameters
+    actual_model_method = actual_data_parameters._model_chain_method
     # model chain for each inverter
     chains = construct_modelchains(job.definition.system_definition)
     # generators at inverter level that return tuples of data at the array level
@@ -608,7 +633,7 @@ def _calculate_weather_adjusted_reference_performance(
         job,
         si,
         types=(models.JobDataTypeEnum.actual_weather,),
-        weather_granularity=job_params.actual_data_parameters.weather_granularity,
+        weather_granularity=actual_data_parameters.weather_granularity,
     )
     ref_pac_gen = generate_job_performance_data(
         job,
@@ -715,7 +740,7 @@ def _calculate_weather_adjusted_reference_performance(
         )
         missing_leap_days |= _get_missing_leap_days(ref_weather)
 
-    return results_list, total_ref_pac, list(missing_leap_days)
+    return results_list, total_ref_pac, sorted(missing_leap_days)
 
 
 def compare_reference_and_actual(job: models.StoredJob, si: storage.StorageInterface):
@@ -819,3 +844,54 @@ def compare_monthly_reference_and_actual(
         data=comparison_summary,
     )
     save_results_to_db(job.object_id, [result], si)
+
+
+def compare_reference_and_modeled(job: models.StoredJob, si: storage.StorageInterface):
+    job_params: models.CompareReferenceModeledJobParameters = (
+        job.definition.parameters  # type: ignore
+    )
+    job_time_range = job_params.time_parameters._time_range
+
+    (
+        ref_results,
+        total_ref_pac,
+        missing_leap_days,
+    ) = _calculate_weather_adjusted_reference_performance(
+        job, si, actual_data_parameters=job_params.modeled_data_parameters
+    )
+    # inefficient as it runs the model chain for each inverter
+    # twice for modeled. once above and once below
+    modeled_monthly_energy, results_list = _calculate_performance(
+        job,
+        si,
+        weather_types=(models.JobDataTypeEnum.actual_weather,),
+        weather_granularity=job_params.modeled_data_parameters.weather_granularity,
+        run_model_method=job_params.modeled_data_parameters._model_chain_method,
+        missing_leap_days=missing_leap_days,
+    )
+    results_list += ref_results
+    months = job_time_range.month.unique().sort_values()  # type: ignore
+    ref_energy = total_ref_pac.resample("1h").mean()  # type: ignore
+    ref_monthly_energy = (
+        ref_energy.groupby(ref_energy.index.month).sum().reindex(months)
+    )
+    diff = modeled_monthly_energy - ref_monthly_energy
+    ratio = modeled_monthly_energy / ref_monthly_energy
+    comparison_summary = pd.DataFrame(
+        {
+            "modeled_energy": modeled_monthly_energy,
+            "weather_adjusted_energy": ref_monthly_energy,
+            "difference": diff,
+            "ratio": ratio,
+        }
+    )
+    month_name_index = pd.Index([calendar.month_name[i] for i in months], name="month")
+    comparison_summary.index = month_name_index
+    results_list.append(
+        DBResult(
+            schema_path="/",
+            type="modeled vs weather adjusted reference",
+            data=comparison_summary,
+        )
+    )
+    save_results_to_db(job.object_id, results_list, si)

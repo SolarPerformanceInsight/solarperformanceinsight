@@ -1201,8 +1201,41 @@ class CompareMonthlyReferenceActualJobParameters(SPIBase):
         }
 
 
+class ModeledDataParams(CalculateMixin):
+    """Parameters for the "modeled" data series"""
+
+    _weather_types = PrivateAttr((JobDataTypeEnum.actual_weather,))
+    _model_chain_method: str = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
+
+
+class ReferenceModeledEnum(str, Enum):
+    reference_modeled = "reference and modeled performance"
+
+
+class CompareReferenceModeledJobParameters(JobParametersBase):
+    """Compare reference to modeled performance"""
+
+    reference_data_parameters: ReferenceDataParams
+    modeled_data_parameters: ModeledDataParams
+    compare: ReferenceModeledEnum
+
+    def _construct_data_items(
+        self, system_definition: PVSystem
+    ) -> Dict[Tuple[str, JobDataTypeEnum], JobDataItem]:
+        out = self.reference_data_parameters._construct_data_items(system_definition)
+        out.update(
+            self.modeled_data_parameters._construct_data_items(system_definition)
+        )
+        return out
+
+
 JobParametersType = Union[
     CompareReferenceActualJobParameters,
+    CompareReferenceModeledJobParameters,
     CompareModeledActualJobParameters,
     CompareMonthlyReferenceActualJobParameters,
     CalculateWeatherAdjustedPRJobParameters,
@@ -1387,6 +1420,7 @@ class JobResultTypeEnum(str, Enum):
     actual_vs_modeled = "actual vs modeled energy"
     weather_adjusted_performance = "weather adjusted performance"
     actual_vs_adjusted_reference = "actual vs weather adjusted reference"
+    modeled_vs_adjusted_reference = "modeled vs weather adjusted reference"
     # will need other types for performance ratio etc.
 
 
@@ -1409,6 +1443,9 @@ class JobResultMetadata(SPIBase):
 - actual vs adjusted reference: Monthly totals of actual energy (Wh), weather adjusted
   reference energy (Wh), the difference (actual - reference) (Wh), and the ratio of
   actual / reference.
+- modeled vs adjusted reference: Monthly totals of modeled energy (Wh), weather
+  adjusted  reference energy (Wh), the difference (modeled - reference) (Wh), and
+  the ratio of modeled / reference.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will

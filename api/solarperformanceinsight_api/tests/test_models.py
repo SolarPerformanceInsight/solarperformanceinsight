@@ -434,6 +434,147 @@ def test_compare_reference_actual_job_2A4(timeindex, system_def, system_id):
         models.Job(system_definition=system_def, parameters=bad_params)
 
 
+def test_compare_reference_modeled_job_2B1(timeindex, system_def, system_id):
+    # UC 2B-1
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="reference and modeled performance",
+            modeled_data_parameters=dict(
+                irradiance_type="standard",
+                temperature_type="air",
+                weather_granularity="system",
+            ),
+            reference_data_parameters=dict(
+                data_available="weather, AC, and DC performance",
+                irradiance_type="poa",
+                temperature_type="module",
+                weather_granularity="system",
+                performance_granularity="system",
+            ),
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 4
+    assert job._model_chain_method is None
+    assert job._data_items[("/", "actual weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/", "reference weather data")]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/", "reference performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+    assert job._data_items[("/", "reference DC performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_compare_reference_modeled_job_2B2(timeindex, system_def, system_id):
+    # UC 2B-2
+    timedict, timeind = timeindex
+    job = models.Job(
+        system_definition=system_def,
+        parameters=dict(
+            compare="reference and modeled performance",
+            modeled_data_parameters=dict(
+                irradiance_type="poa",
+                temperature_type="module",
+                weather_granularity="array",
+            ),
+            reference_data_parameters=dict(
+                data_available="weather and AC performance",
+                irradiance_type="standard",
+                temperature_type="air",
+                weather_granularity="system",
+                performance_granularity="system",
+            ),
+            time_parameters=timedict,
+            system_id=system_id,
+        ),
+    )
+    assert len(job._data_items) == 3
+    assert job._model_chain_method is None
+    assert job._data_items[
+        ("/inverters/0/arrays/0", "actual weather data")
+    ]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/", "reference weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    assert job._data_items[("/", "reference performance data")]._data_cols == [
+        "time",
+        "performance",
+    ]
+
+
+def test_compare_reference_modeled_job_2B3(timeindex, system_def, system_id):
+    # UC 2B-3
+    timedict, timeind = timeindex
+    param_dict = dict(
+        compare="reference and modeled performance",
+        modeled_data_parameters=dict(
+            irradiance_type="poa",
+            temperature_type="module",
+            weather_granularity="system",
+        ),
+        reference_data_parameters=dict(
+            data_available="weather only",
+            irradiance_type="standard",
+            temperature_type="air",
+            weather_granularity="inverter",
+        ),
+        time_parameters=timedict,
+        system_id=system_id,
+    )
+    job = models.Job(system_definition=system_def, parameters=param_dict)
+    assert len(job._data_items) == 2
+    assert job._model_chain_method is None
+    assert job._data_items[("/", "actual weather data")]._data_cols == [
+        "time",
+        "poa_global",
+        "poa_direct",
+        "poa_diffuse",
+        "module_temperature",
+    ]
+    assert job._data_items[("/inverters/0", "reference weather data")]._data_cols == [
+        "time",
+        "ghi",
+        "dni",
+        "dhi",
+        "temp_air",
+        "wind_speed",
+    ]
+    bad_params = param_dict.copy()
+    bad_params["reference_data_parameters"]["performance_granularity"] = "system"
+    with pytest.raises(ValidationError):
+        models.Job(system_definition=system_def, parameters=bad_params)
+
+
 @pytest.mark.parametrize(
     "start,end,tz,exp",
     (
