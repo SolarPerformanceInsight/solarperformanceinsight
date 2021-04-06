@@ -139,7 +139,7 @@ def weatherpr_job_id():
 
 
 @pytest.fixture(scope="module")
-def predvsactual_job_id():
+def refvsactual_job_id():
     return "1ece4f7a-76c2-11eb-afc5-f4939feddd82"
 
 

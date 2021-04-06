@@ -658,7 +658,7 @@ def test_list_status_of_jobs(
     complete_job_id,
     other_job_id,
     weatherpr_job_id,
-    predvsactual_job_id,
+    refvsactual_job_id,
     monthlypa_job_id,
 ):
     out = job_managment_interface.list_status_of_jobs()
@@ -667,7 +667,7 @@ def test_list_status_of_jobs(
         other_job_id: "created",
         complete_job_id: "complete",
         weatherpr_job_id: "created",
-        predvsactual_job_id: "created",
+        refvsactual_job_id: "created",
         monthlypa_job_id: "created",
     }
 

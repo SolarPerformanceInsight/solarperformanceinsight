@@ -769,7 +769,7 @@ def test_post_job_data_monthly_missing_col(
 def test_post_job_shifted_reference_data(
     client,
     nocommit_transaction,
-    predvsactual_job_id,
+    refvsactual_job_id,
     reference_perf_job_data_id,
     index,
     missing,
@@ -781,7 +781,7 @@ def test_post_job_shifted_reference_data(
     df.to_feather(iob)
     iob.seek(0)
     response = client.post(
-        f"/jobs/{predvsactual_job_id}/data/{reference_perf_job_data_id}",
+        f"/jobs/{refvsactual_job_id}/data/{reference_perf_job_data_id}",
         files={
             "file": (
                 "job_data.arrow",
@@ -798,7 +798,7 @@ def test_post_job_shifted_reference_data(
     assert rjson["number_of_missing_values"] == {
         c: 0 for c in df.columns if c != "time"
     }
-    job_resp = client.get(f"/jobs/{predvsactual_job_id}")
+    job_resp = client.get(f"/jobs/{refvsactual_job_id}")
     data_obj = list(
         filter(
             lambda x: x["object_id"] == reference_perf_job_data_id,
@@ -812,7 +812,7 @@ def test_post_job_shifted_reference_data(
 def test_post_job_cant_shift_actual_data(
     client,
     nocommit_transaction,
-    predvsactual_job_id,
+    refvsactual_job_id,
     actual_perf_job_data_id,
 ):
     iob = BytesIO()
@@ -823,7 +823,7 @@ def test_post_job_cant_shift_actual_data(
     df.to_feather(iob)
     iob.seek(0)
     response = client.post(
-        f"/jobs/{predvsactual_job_id}/data/{actual_perf_job_data_id}",
+        f"/jobs/{refvsactual_job_id}/data/{actual_perf_job_data_id}",
         files={
             "file": (
                 "job_data.arrow",
@@ -836,7 +836,7 @@ def test_post_job_cant_shift_actual_data(
 
 
 def test_post_job_shift_no_good(
-    client, nocommit_transaction, predvsactual_job_id, reference_perf_job_data_id
+    client, nocommit_transaction, refvsactual_job_id, reference_perf_job_data_id
 ):
     iob = BytesIO()
     index = pd.date_range(
@@ -846,7 +846,7 @@ def test_post_job_shift_no_good(
     df.to_feather(iob)
     iob.seek(0)
     response = client.post(
-        f"/jobs/{predvsactual_job_id}/data/{reference_perf_job_data_id}",
+        f"/jobs/{refvsactual_job_id}/data/{reference_perf_job_data_id}",
         files={
             "file": (
                 "job_data.arrow",

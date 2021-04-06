@@ -975,17 +975,17 @@ def _data_mock(job, ids, mocker):
             data[ids[i]] = perf.copy()
             if sp == "/":
                 data[ids[i]] *= 3
-        elif type_ == models.JobDataTypeEnum.predicted_performance:
+        elif type_ == models.JobDataTypeEnum.reference_performance:
             data[ids[i]] = perf.copy() * 0.9
             if sp == "/":
                 data[ids[i]] *= 3
-        elif type_ == models.JobDataTypeEnum.predicted_performance_dc:
+        elif type_ == models.JobDataTypeEnum.reference_performance_dc:
             data[ids[i]] = perf.copy() * 0.98
             if sp == "/":
                 data[ids[i]] *= 3
         elif type_ == models.JobDataTypeEnum.actual_weather:
             data[ids[i]] = weather[cols].copy()
-        elif type_ == models.JobDataTypeEnum.original_weather:
+        elif type_ == models.JobDataTypeEnum.reference_weather:
             data[ids[i]] = weather[cols].copy() * 0.94
 
     def _get_data(job_id, data_id, si):
@@ -1039,9 +1039,9 @@ def make_mock_job(mocker, system_id):
 
 
 @pytest.fixture()
-def mockup_predicted_actual(make_mock_job, system_id):
+def mockup_reference_actual(make_mock_job, system_id):
     def mockem(system, pred_params, actual_params):
-        job_params = models.ComparePredictedActualJobParameters(
+        job_params = models.CompareReferenceActualJobParameters(
             system_id=system_id,
             time_parameters=dict(
                 start="2021-02-01T00:00:00-07:00",
@@ -1049,8 +1049,8 @@ def mockup_predicted_actual(make_mock_job, system_id):
                 step="30:00",
                 timezone="Etc/GMT+7",
             ),
-            compare="predicted and actual performance",
-            predicted_data_parameters=pred_params,
+            compare="reference and actual performance",
+            reference_data_parameters=pred_params,
             actual_data_parameters=actual_params,
         )
         return make_mock_job(system, job_params)
@@ -1597,9 +1597,9 @@ def test_compare_reference_and_actual_leap_day_dropped(
 
 
 @pytest.fixture()
-def mockup_predicted_expected(make_mock_job, system_id):
-    def mockem(system, pred_params, expected_params):
-        job_params = models.ComparePredictedExpectedJobParameters(
+def mockup_reference_modeled(make_mock_job, system_id):
+    def mockem(system, pred_params, modeled_params):
+        job_params = models.CompareReferenceModeledJobParameters(
             system_id=system_id,
             time_parameters=dict(
                 start="2021-02-01T00:00:00-07:00",
@@ -1607,9 +1607,9 @@ def mockup_predicted_expected(make_mock_job, system_id):
                 step="30:00",
                 timezone="Etc/GMT+7",
             ),
-            compare="predicted and expected performance",
-            predicted_data_parameters=pred_params,
-            expected_data_parameters=expected_params,
+            compare="reference and modeled performance",
+            reference_data_parameters=pred_params,
+            modeled_data_parameters=modeled_params,
         )
         return make_mock_job(system, job_params)
 
@@ -1617,7 +1617,7 @@ def mockup_predicted_expected(make_mock_job, system_id):
 
 
 @pytest.fixture()
-def expected_params(irr_type, temp_type, weather_gran, perf_gran):
+def modeled_params(irr_type, temp_type, weather_gran, perf_gran):
     return dict(
         irradiance_type=irr_type,
         temperature_type=temp_type,
@@ -1625,24 +1625,24 @@ def expected_params(irr_type, temp_type, weather_gran, perf_gran):
     )
 
 
-def test_compare_predicted_and_expected(
-    mockup_predicted_expected,
+def test_compare_reference_and_modeled(
+    mockup_reference_modeled,
     auth0_id,
     nocommit_transaction,
     pvwatts_system,
     pred_params,
-    expected_params,
+    modeled_params,
 ):
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_expected(pvwatts_system, pred_params, expected_params)
-    compute.compare_predicted_and_expected(job, si)
+    job, save = mockup_reference_modeled(pvwatts_system, pred_params, modeled_params)
+    compute.compare_reference_and_modeled(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     if (
-        job.definition.parameters.predicted_data_parameters.data_available
+        job.definition.parameters.reference_data_parameters.data_available
         == "weather only"
     ):
-        # 2 weather adj, 1 summary, 3 inv, 2 array  + 8 expected
+        # 2 weather adj, 1 summary, 3 inv, 2 array  + 8 modeled
         assert len(reslist) == 16
     else:
         assert len(reslist) == 11
@@ -1652,7 +1652,7 @@ def test_compare_predicted_and_expected(
     )
 
     summary = reslist[-1]
-    assert summary.type == "expected vs weather adjusted reference"
+    assert summary.type == "modeled vs weather adjusted reference"
     iob = BytesIO(summary.data)
     iob.seek(0)
     summary_df = pd.read_feather(iob)
@@ -1661,8 +1661,8 @@ def test_compare_predicted_and_expected(
     assert len(ser) == 5
     assert ser.loc["month"] == "February"
     assert (
-        abs(ser["expected_energy"] - ser["weather_adjusted_energy"])
-        / ser["expected_energy"]
+        abs(ser["modeled_energy"] - ser["weather_adjusted_energy"])
+        / ser["modeled_energy"]
         < 2
     )
     assert ser["weather_adjusted_energy"] > 0
@@ -1670,14 +1670,14 @@ def test_compare_predicted_and_expected(
     assert 0.5 < ser["ratio"] < 2.0
 
 
-def test_compare_predicted_and_expected_leap_day_dropped(
+def test_compare_reference_and_modeled_leap_day_dropped(
     auth0_id,
     nocommit_transaction,
     cec_system,
     mocker,
     system_id,
 ):
-    expected_params = dict(
+    modeled_params = dict(
         irradiance_type="poa",
         temperature_type="cell",
         weather_granularity="system",
@@ -1690,7 +1690,7 @@ def test_compare_predicted_and_expected_leap_day_dropped(
     )
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
     cat = pd.Timestamp.utcnow()
-    job_params = models.ComparePredictedExpectedJobParameters(
+    job_params = models.CompareReferenceModeledJobParameters(
         system_id=system_id,
         time_parameters=dict(
             start="2020-02-01T00:00:00-07:00",
@@ -1698,9 +1698,9 @@ def test_compare_predicted_and_expected_leap_day_dropped(
             step="30:00",
             timezone="Etc/GMT+7",
         ),
-        compare="predicted and expected performance",
-        predicted_data_parameters=pred_params,
-        expected_data_parameters=expected_params,
+        compare="reference and modeled performance",
+        reference_data_parameters=pred_params,
+        modeled_data_parameters=modeled_params,
     )
     index = job_params.time_parameters._time_range
     index.name = "time"
@@ -1752,7 +1752,7 @@ def test_compare_predicted_and_expected_leap_day_dropped(
     data = {}
     for i, ((sp, type_), di) in enumerate(job._data_items.items()):
         cols = set(di._data_cols) - {"time"}
-        if type_ == models.JobDataTypeEnum.predicted_performance:
+        if type_ == models.JobDataTypeEnum.reference_performance:
             data[ids[i]] = pd.DataFrame({"performance": 4000.0}, index=index)
         elif type_ == models.JobDataTypeEnum.actual_weather:
             data[ids[i]] = pd.DataFrame(
@@ -1765,7 +1765,7 @@ def test_compare_predicted_and_expected_leap_day_dropped(
                 index=index,
             ).mul((index.dayofyear == 60).astype(int), axis=0)
             # zero expect leap day
-        elif type_ == models.JobDataTypeEnum.original_weather:
+        elif type_ == models.JobDataTypeEnum.reference_weather:
             data[ids[i]] = weather[cols].copy()
 
     def _get_data(job_id, data_id, si):
@@ -1774,13 +1774,13 @@ def test_compare_predicted_and_expected_leap_day_dropped(
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
 
     si = storage.StorageInterface(user=auth0_id)
-    compute.compare_predicted_and_expected(stored_job, si)
+    compute.compare_reference_and_modeled(stored_job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
 
     summary = reslist[-1]
-    assert summary.type == "expected vs weather adjusted reference"
+    assert summary.type == "modeled vs weather adjusted reference"
     iob = BytesIO(summary.data)
     iob.seek(0)
     summary_df = pd.read_feather(iob)
-    assert (summary_df["expected_energy"] < 0).all()
+    assert (summary_df["modeled_energy"] < 0).all()
