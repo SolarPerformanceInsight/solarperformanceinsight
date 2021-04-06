@@ -24,6 +24,7 @@
       field-name="longitude"
     />
     <model-field
+      @change="elevationError = null"
       :parameters="parameters"
       :errors="errors"
       :definitions="definitions"
@@ -37,6 +38,7 @@
         Look Up Elevation
       </button>
     </model-field>
+    <span class="warning-text" v-if="elevationError">{{ elevationError }}</span>
     <inverters-view :inverters="parameters.inverters" :model="model" />
   </div>
 </template>
@@ -55,7 +57,13 @@ export default class SystemView extends ModelBase {
   @Prop({ default: false }) exists!: boolean;
   @Prop() parameters!: System;
   @Prop() model!: string;
+  elevationError!: string | null;
 
+  data() {
+    return {
+      elevationError: null
+    };
+  }
   mounted() {
     // reset the value used for producing unique field ids
     resetIndex();
@@ -76,10 +84,18 @@ export default class SystemView extends ModelBase {
   lookupElevation() {
     /* istanbul ignore next */
     getElevation(this.parameters.latitude, this.parameters.longitude)
-      .then((elevation: number) => (this.parameters.elevation = elevation))
-      .catch(error => console.log(error.message));
+      .then((elevation: number) => {
+        this.parameters.elevation = elevation;
+        this.elevationError = null;
+      })
+      .catch(() => {
+        this.elevationError =
+          "Elevation information could not be found. Lookup service is only available for sites in the United States.";
+        this.validate(this.parameters);
+      });
   }
   extraValidation() {
+    let valid = true;
     if (!this.exists) {
       const existingSystems = Object.values(this.$store.state.systems).map(
         // @ts-expect-error
@@ -91,11 +107,12 @@ export default class SystemView extends ModelBase {
         this.extraErrors[
           "name"
         ] = `System with name "${this.parameters.name}" already exists.`;
-        return false;
+        valid = false;
+      } else {
+        delete this.extraErrors["name"];
       }
-      delete this.extraErrors["name"];
     }
-    return true;
+    return valid;
   }
 }
 </script>

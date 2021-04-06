@@ -144,7 +144,7 @@ def predvsactual_job_id():
 
 
 @pytest.fixture(scope="module")
-def predicted_perf_job_data_id():
+def reference_perf_job_data_id():
     return "4eb8697c-76c3-11eb-afc5-f4939feddd82"
 
 
@@ -169,12 +169,12 @@ def monthly_perf_actuals_id():
 
 
 @pytest.fixture(scope="module")
-def monthly_weather_original_id():
+def monthly_weather_reference_id():
     return "71431620-76c5-11eb-8fae-f4939feddd82"
 
 
 @pytest.fixture(scope="module")
-def monthly_perf_original_id():
+def monthly_perf_reference_id():
     return "7101c33c-76c5-11eb-8fae-f4939feddd82"
 
 
@@ -188,7 +188,7 @@ def job_data_ids():
 
 @pytest.fixture()
 def job_params():
-    return models.CompareExpectedActualJobParameters(**models.JOB_PARAMS_EXAMPLE)
+    return models.CompareModeledActualJobParameters(**models.JOB_PARAMS_EXAMPLE)
 
 
 @pytest.fixture()

@@ -194,7 +194,7 @@ def test_convert_job_data_bad_type():
 def new_job(system_id):
     return models.CalculatePerformanceJobParameters(
         system_id=system_id,
-        calculate="expected performance",
+        calculate="modeled performance",
         time_parameters=models.JobTimeindex(
             start="2020-01-01T00:00:00+00:00",
             end="2020-12-31T23:59:59+00:00",
@@ -766,11 +766,11 @@ def test_post_job_data_monthly_missing_col(
         ),
     ],
 )
-def test_post_job_shifted_predicted_data(
+def test_post_job_shifted_reference_data(
     client,
     nocommit_transaction,
     predvsactual_job_id,
-    predicted_perf_job_data_id,
+    reference_perf_job_data_id,
     index,
     missing,
     extra,
@@ -781,7 +781,7 @@ def test_post_job_shifted_predicted_data(
     df.to_feather(iob)
     iob.seek(0)
     response = client.post(
-        f"/jobs/{predvsactual_job_id}/data/{predicted_perf_job_data_id}",
+        f"/jobs/{predvsactual_job_id}/data/{reference_perf_job_data_id}",
         files={
             "file": (
                 "job_data.arrow",
@@ -801,7 +801,7 @@ def test_post_job_shifted_predicted_data(
     job_resp = client.get(f"/jobs/{predvsactual_job_id}")
     data_obj = list(
         filter(
-            lambda x: x["object_id"] == predicted_perf_job_data_id,
+            lambda x: x["object_id"] == reference_perf_job_data_id,
             job_resp.json()["data_objects"],
         )
     )[0]
@@ -836,7 +836,7 @@ def test_post_job_cant_shift_actual_data(
 
 
 def test_post_job_shift_no_good(
-    client, nocommit_transaction, predvsactual_job_id, predicted_perf_job_data_id
+    client, nocommit_transaction, predvsactual_job_id, reference_perf_job_data_id
 ):
     iob = BytesIO()
     index = pd.date_range(
@@ -846,7 +846,7 @@ def test_post_job_shift_no_good(
     df.to_feather(iob)
     iob.seek(0)
     response = client.post(
-        f"/jobs/{predvsactual_job_id}/data/{predicted_perf_job_data_id}",
+        f"/jobs/{predvsactual_job_id}/data/{reference_perf_job_data_id}",
         files={
             "file": (
                 "job_data.arrow",

@@ -41,10 +41,10 @@ import { Table } from "apache-arrow";
 
 /*  Maps variables to the type of result to find the variable in.*/
 const headerMap: Record<string, string> = {
-  actual_energy: "actual vs expected energy",
-  expected_energy: "actual vs expected energy",
-  difference: "actual vs expected energy",
-  ratio: "actual vs expected energy",
+  actual_energy: "actual vs modeled energy",
+  modeled_energy: "actual vs modeled energy",
+  difference: "actual vs modeled energy",
+  ratio: "actual vs modeled energy",
   plane_of_array_insolation: "monthly summary",
   effective_insolation: "monthly summary",
   total_energy: "monthly summary",
@@ -55,7 +55,7 @@ const headerMap: Record<string, string> = {
 const formatFuncs = {
   actual_energy: (x: number) => x.toFixed(0),
   weather_adjusted_energy: (x: number) => x.toFixed(0),
-  expected_energy: (x: number) => x.toFixed(0),
+  modeled_energy: (x: number) => x.toFixed(0),
   difference: (x: number) => x.toFixed(0),
   ratio: (x: number) => (x * 100).toFixed(1),
   plane_of_array_insolation: (x: number) => x.toFixed(0),
@@ -93,11 +93,11 @@ export default class SummaryTable extends Vue {
         "difference",
         "ratio"
       ];
-    } else if ("actual vs expected energy" in this.tableData) {
+    } else if ("actual vs modeled energy" in this.tableData) {
       return [
         "month",
         "actual_energy",
-        "expected_energy",
+        "modeled_energy",
         "difference",
         "ratio",
         "plane_of_array_insolation",

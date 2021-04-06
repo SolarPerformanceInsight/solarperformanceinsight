@@ -30,6 +30,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
     <label class="field_label" :id="titleId">{{ title }}:</label>
 
     <input
+      @change="emitChange"
       v-if="inputType == 'number'"
       type="number"
       :id="fieldId"
@@ -39,6 +40,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
       v-model.number="parameters[fieldName]"
     />
     <input
+      @change="emitChange"
       v-if="inputType == 'integer'"
       :id="fieldId"
       :aria-labelledby="titleId"
@@ -50,6 +52,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
       <label>
         True:
         <input
+          @change="emitChange"
           type="radio"
           :id="fieldId + '_true'"
           :value="true"
@@ -60,6 +63,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
       <label>
         False:
         <input
+          @change="emitChange"
           type="radio"
           :id="fieldId + '_false'"
           :value="false"
@@ -70,6 +74,7 @@ e.g. For the PVWatts Inverter Parameter schema, the pdc0 field can be rendered
     </template>
 
     <input
+      @change="emitChange"
       v-if="inputType == 'string'"
       :id="fieldId"
       :aria-labelledby="titleId"
@@ -120,6 +125,9 @@ export default class ModelField extends Vue {
   }
   get helpId() {
     return `${this.fieldId}_help`;
+  }
+  emitChange(event: any) {
+    this.$emit("change", event);
   }
 }
 </script>

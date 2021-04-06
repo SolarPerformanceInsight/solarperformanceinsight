@@ -251,7 +251,7 @@ async def post_job_data(
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.DataParsingStats:
     """Upload specified data for the job. If the upload is of
-    predicted/original weather or performance, an attempt will be made to
+    reference/original weather or performance, an attempt will be made to
     shift the data by whole years to match the time range specified for
     the job. Use this functionality with caution."""
     read_fnc = utils.verify_content_type(file.content_type)
@@ -266,14 +266,14 @@ async def post_job_data(
     await file.close()
     utils.validate_dataframe(df, expected_columns)
     if isinstance(
-        job.definition.parameters, models.CompareMonthlyPredictedActualJobParameters
+        job.definition.parameters, models.CompareMonthlyReferenceActualJobParameters
     ):
         adjusted_df, data_stats = _adjust_monthly_series(df)
     else:
         allow_time_shift = data_obj.definition.type in (
-            models.JobDataTypeEnum.original_weather,
-            models.JobDataTypeEnum.predicted_performance,
-            models.JobDataTypeEnum.predicted_performance_dc,
+            models.JobDataTypeEnum.reference_weather,
+            models.JobDataTypeEnum.reference_performance,
+            models.JobDataTypeEnum.reference_performance_dc,
         )
         adjusted_df, data_stats = _adjust_standard_timeseries(
             job, df, expected_columns, allow_time_shift

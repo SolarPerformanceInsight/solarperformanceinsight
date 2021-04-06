@@ -5,9 +5,8 @@
       Tell us about the time index of your data files.
     </p>
     <p class="p-body">
-      Data files must contain at least 90% of the times defined by
-      this time index. Files missing more than 10% of the times will be
-      rejected.
+      Data files must contain at least 90% of the times defined by this time
+      index. Files missing more than 10% of the times will be rejected.
     </p>
     <p class="p-body">
       <slot></slot>

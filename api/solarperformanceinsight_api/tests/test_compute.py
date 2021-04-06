@@ -53,7 +53,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
     [
         (
             dict(
-                calculate="predicted performance",
+                calculate="reference performance",
                 weather_granularity="system",
                 irradiance_type="standard",
                 temperature_type="air",
@@ -63,7 +63,7 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
         ),
         (
             dict(
-                calculate="expected performance",
+                calculate="modeled performance",
                 weather_granularity="system",
                 irradiance_type="standard",
                 temperature_type="air",
@@ -73,8 +73,8 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
         ),
         (
             dict(
-                compare="predicted and actual performance",
-                predicted_data_parameters=dict(
+                compare="reference and actual performance",
+                reference_data_parameters=dict(
                     data_available="weather only",
                     weather_granularity="system",
                     irradiance_type="standard",
@@ -87,41 +87,41 @@ def test_run_job_job_fail(job_id, auth0_id, mocker, msg, nocommit_transaction):
                     performance_granularity="system",
                 ),
             ),
-            compute.compare_predicted_and_actual,
+            compute.compare_reference_and_actual,
             True,
         ),
         (
             dict(
-                compare="predicted and expected performance",
-                predicted_data_parameters=dict(
+                compare="reference and modeled performance",
+                reference_data_parameters=dict(
                     data_available="weather only",
                     weather_granularity="system",
                     irradiance_type="standard",
                     temperature_type="air",
                 ),
-                expected_data_parameters=dict(
+                modeled_data_parameters=dict(
                     weather_granularity="system",
                     irradiance_type="standard",
                     temperature_type="air",
                 ),
             ),
-            compute.compare_predicted_and_expected,
+            compute.compare_reference_and_modeled,
             True,
         ),
         (
             dict(
-                compare="expected and actual performance",
+                compare="modeled and actual performance",
                 performance_granularity="system",
                 weather_granularity="system",
                 irradiance_type="standard",
                 temperature_type="air",
             ),
-            compute.compare_expected_and_actual,
+            compute.compare_modeled_and_actual,
             True,
         ),
         (
-            dict(compare="monthly predicted and actual performance"),
-            compute.compare_monthly_predicted_and_actual,
+            dict(compare="monthly reference and actual performance"),
+            compute.compare_monthly_reference_and_actual,
             False,
         ),
     ],
@@ -160,9 +160,9 @@ def insert_monthly_data(
     auth0_id,
     nocommit_transaction,
     monthly_weather_actuals_id,
-    monthly_weather_original_id,
+    monthly_weather_reference_id,
     monthly_perf_actuals_id,
-    monthly_perf_original_id,
+    monthly_perf_reference_id,
 ):
     si = storage.StorageInterface(user=auth0_id)
     months = calendar.month_name[1:]
@@ -187,8 +187,8 @@ def insert_monthly_data(
         for did, df in [
             (monthly_weather_actuals_id, weatherdf),
             (monthly_perf_actuals_id, energydf),
-            (monthly_weather_original_id, ref_weather),
-            (monthly_perf_original_id, ref_energy),
+            (monthly_weather_reference_id, ref_weather),
+            (monthly_perf_reference_id, ref_energy),
         ]:
             iob = BytesIO()
             df.to_feather(iob)
@@ -496,7 +496,7 @@ def test_generate_job_performance_data_inverter(stored_job, auth0_id, mocker):
         if i == 1:
             ndo.definition.type = "actual performance data"
         else:
-            ndo.definition.type = "predicted performance data"
+            ndo.definition.type = "reference performance data"
         new_do.append(ndo)
     inv = deepcopy(stored_job.definition.system_definition.inverters[0])
     stored_job.definition.system_definition.inverters = [inv, inv, inv]
@@ -506,7 +506,7 @@ def test_generate_job_performance_data_inverter(stored_job, auth0_id, mocker):
         si,
         [
             models.JobDataTypeEnum.actual_performance,
-            models.JobDataTypeEnum.predicted_performance,
+            models.JobDataTypeEnum.reference_performance,
         ],
         "inverter",
     )
@@ -533,7 +533,7 @@ def test_generate_job_performance_data_empty(stored_job, auth0_id, mocker):
         compute.generate_job_performance_data(
             stored_job,
             si,
-            [models.JobDataTypeEnum.predicted_performance_dc],
+            [models.JobDataTypeEnum.reference_performance_dc],
             "inverter",
         )
     )
@@ -726,17 +726,17 @@ def test_run_performance_job(auth0_id, nocommit_transaction, mockup_modelchain):
     assert abs(ser.loc["plane_of_array_insolation"] - 1.0) < 1e-8
 
 
-def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
+def test_compare_modeled_and_actual(mockup_modelchain, auth0_id, nocommit_transaction):
     si = storage.StorageInterface(user=auth0_id)
     stored_job, save, df = mockup_modelchain
 
-    compute.compare_expected_and_actual(stored_job, si)
+    compute.compare_modeled_and_actual(stored_job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     assert len(reslist) == 4
 
     summary = reslist[-1]
-    assert summary.type == "actual vs expected energy"
+    assert summary.type == "actual vs modeled energy"
     iob = BytesIO(summary.data)
     iob.seek(0)
     summary_df = pd.read_feather(iob)
@@ -744,13 +744,13 @@ def test_compare_expected_and_actual(mockup_modelchain, auth0_id, nocommit_trans
     ser = summary_df.iloc[0]
     assert len(ser) == 5
     assert ser.loc["month"] == "January"
-    assert (ser.loc["expected_energy"] - 2.0) < 1e-7
+    assert (ser.loc["modeled_energy"] - 2.0) < 1e-7
     assert ser.loc["actual_energy"] == 1.0
     assert (ser.loc["difference"] - -1.0) < 1e-7
     assert (ser.loc["ratio"] - 1.0 / 2.0) < 1e-7
 
 
-def test_compare_monthly_predicted_and_actual_pvsyst(
+def test_compare_monthly_reference_and_actual_pvsyst(
     mocker, auth0_id, nocommit_transaction, insert_monthly_data, monthlypa_job_id
 ):
     si = storage.StorageInterface(user=auth0_id)
@@ -761,7 +761,7 @@ def test_compare_monthly_predicted_and_actual_pvsyst(
         models.PVsystModuleParameters,
     )
     with pytest.raises(TypeError):
-        compute.compare_monthly_predicted_and_actual(job, si)
+        compute.compare_monthly_reference_and_actual(job, si)
 
 
 @pytest.fixture()
@@ -800,7 +800,7 @@ def pvwatts_system():
     return models.PVSystem(**sysdict)
 
 
-def test_compare_monthly_predicted_and_actual(
+def test_compare_monthly_reference_and_actual(
     mocker,
     auth0_id,
     nocommit_transaction,
@@ -814,7 +814,7 @@ def test_compare_monthly_predicted_and_actual(
     with si.start_transaction() as st:
         job = st.get_job(monthlypa_job_id)
     job.definition.system_definition = pvwatts_system
-    compute.compare_monthly_predicted_and_actual(job, si)
+    compute.compare_monthly_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     assert len(reslist) == 1
@@ -1058,8 +1058,8 @@ def mockup_predicted_actual(make_mock_job, system_id):
     return mockem
 
 
-def test_compare_predicted_and_actual(
-    mockup_predicted_actual,
+def test_compare_reference_and_actual(
+    mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     pvwatts_system,
@@ -1067,12 +1067,12 @@ def test_compare_predicted_and_actual(
     actual_params,
 ):
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(pvwatts_system, pred_params, actual_params)
-    compute.compare_predicted_and_actual(job, si)
+    job, save = mockup_reference_actual(pvwatts_system, pred_params, actual_params)
+    compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     if (
-        job.definition.parameters.predicted_data_parameters.data_available
+        job.definition.parameters.reference_data_parameters.data_available
         == "weather only"
     ):
         # 2 weather adj, 1 summary, 3 inv, 2 array
@@ -1103,8 +1103,8 @@ def test_compare_predicted_and_actual(
     assert 0.5 < ser["ratio"] < 1.8
 
 
-def test_compare_predicted_and_actual_precise(
-    mockup_predicted_actual,
+def test_compare_reference_and_actual_precise(
+    mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     pvwatts_system,
@@ -1122,12 +1122,12 @@ def test_compare_predicted_and_actual_precise(
         performance_granularity="system",
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(pvwatts_system, pred_params, actual_params)
-    compute.compare_predicted_and_actual(job, si)
+    job, save = mockup_reference_actual(pvwatts_system, pred_params, actual_params)
+    compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     if (
-        job.definition.parameters.predicted_data_parameters.data_available
+        job.definition.parameters.reference_data_parameters.data_available
         == "weather only"
     ):
         # 2 weather adj, 1 summary, 3 inv, 2 array
@@ -1164,8 +1164,8 @@ def test_compare_predicted_and_actual_precise(
         ("weather, AC, and DC performance", "inverter"),
     ),
 )
-def test_compare_predicted_and_actual_pvsyst(
-    mockup_predicted_actual,
+def test_compare_reference_and_actual_pvsyst(
+    mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     pvsyst_system,
@@ -1187,9 +1187,9 @@ def test_compare_predicted_and_actual_pvsyst(
         data_available=data_available,
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(pvsyst_system, pred_params, actual_params)
+    job, save = mockup_reference_actual(pvsyst_system, pred_params, actual_params)
     with pytest.raises(TypeError):  # pvlib#1190
-        compute.compare_predicted_and_actual(job, si)
+        compute.compare_reference_and_actual(job, si)
 
 
 @pytest.mark.parametrize(
@@ -1200,8 +1200,8 @@ def test_compare_predicted_and_actual_pvsyst(
         ("weather, AC, and DC performance", "inverter"),
     ),
 )
-def test_compare_predicted_and_actual_cec(
-    mockup_predicted_actual,
+def test_compare_reference_and_actual_cec(
+    mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     cec_system,
@@ -1223,8 +1223,8 @@ def test_compare_predicted_and_actual_cec(
         data_available=data_available,
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
-    compute.compare_predicted_and_actual(job, si)
+    job, save = mockup_reference_actual(cec_system, pred_params, actual_params)
+    compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
     if data_available == "weather only":
@@ -1255,8 +1255,8 @@ def test_compare_predicted_and_actual_cec(
     assert "ratio" in ser
 
 
-def test_compare_predicted_and_actual_cec_module_temp_as_expected(
-    mockup_predicted_actual,
+def test_compare_reference_and_actual_cec_module_temp_as_expected(
+    mockup_reference_actual,
     auth0_id,
     nocommit_transaction,
     cec_system,
@@ -1274,8 +1274,8 @@ def test_compare_predicted_and_actual_cec_module_temp_as_expected(
         data_available="weather only",
     )
     si = storage.StorageInterface(user=auth0_id)
-    job, save = mockup_predicted_actual(cec_system, pred_params, actual_params)
-    compute.compare_predicted_and_actual(job, si)
+    job, save = mockup_reference_actual(cec_system, pred_params, actual_params)
+    compute.compare_reference_and_actual(job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
 
@@ -1476,7 +1476,7 @@ def test_get_missing_leap_days(inp, exp):
     assert out == exp
 
 
-def test_compare_predicted_and_actual_leap_day_dropped(
+def test_compare_reference_and_actual_leap_day_dropped(
     auth0_id,
     nocommit_transaction,
     cec_system,
@@ -1497,7 +1497,7 @@ def test_compare_predicted_and_actual_leap_day_dropped(
     )
     save = mocker.patch("solarperformanceinsight_api.compute.save_results_to_db")
     cat = pd.Timestamp.utcnow()
-    job_params = models.ComparePredictedActualJobParameters(
+    job_params = models.CompareReferenceActualJobParameters(
         system_id=system_id,
         time_parameters=dict(
             start="2020-02-27T00:00:00-07:00",
@@ -1505,8 +1505,8 @@ def test_compare_predicted_and_actual_leap_day_dropped(
             step="30:00",
             timezone="Etc/GMT+7",
         ),
-        compare="predicted and actual performance",
-        predicted_data_parameters=pred_params,
+        compare="reference and actual performance",
+        reference_data_parameters=pred_params,
         actual_data_parameters=actual_params,
     )
     index = job_params.time_parameters._time_range
@@ -1563,7 +1563,7 @@ def test_compare_predicted_and_actual_leap_day_dropped(
             data[ids[i]] = pd.DataFrame(
                 {"performance": 1000 * (index.dayofyear == 60).astype(int)}, index=index
             )  # zero expect on leap day
-        elif type_ == models.JobDataTypeEnum.predicted_performance:
+        elif type_ == models.JobDataTypeEnum.reference_performance:
             data[ids[i]] = pd.DataFrame({"performance": 4000.0}, index=index)
         elif type_ == models.JobDataTypeEnum.actual_weather:
             data[ids[i]] = pd.DataFrame(
@@ -1575,7 +1575,7 @@ def test_compare_predicted_and_actual_leap_day_dropped(
                 },
                 index=index,
             )
-        elif type_ == models.JobDataTypeEnum.original_weather:
+        elif type_ == models.JobDataTypeEnum.reference_weather:
             data[ids[i]] = weather[cols].copy()
 
     def _get_data(job_id, data_id, si):
@@ -1584,7 +1584,7 @@ def test_compare_predicted_and_actual_leap_day_dropped(
     mocker.patch("solarperformanceinsight_api.compute._get_data", new=_get_data)
 
     si = storage.StorageInterface(user=auth0_id)
-    compute.compare_predicted_and_actual(stored_job, si)
+    compute.compare_reference_and_actual(stored_job, si)
     assert save.call_count == 1
     reslist = save.call_args[0][1]
 

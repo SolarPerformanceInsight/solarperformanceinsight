@@ -19,7 +19,7 @@ export const variableUnits: Record<string, string> = {
   effective_insolation: "Wh/m^2",
   average_daytime_cell_temperature: "C",
   actual_energy: "Wh",
-  expected_energy: "Wh",
+  modeled_energy: "Wh",
   difference: "Wh",
   ratio: "%",
   weather_adjusted_energy: "Wh"

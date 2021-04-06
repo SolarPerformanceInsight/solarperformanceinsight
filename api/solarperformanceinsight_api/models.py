@@ -872,16 +872,16 @@ class TemperatureTypeEnum(str, Enum):
 
 
 class JobDataTypeEnum(str, Enum):
-    original_weather = "original weather data"
+    reference_weather = "reference weather data"
     actual_weather = "actual weather data"
-    predicted_performance = "predicted performance data"
-    predicted_performance_dc = "predicted DC performance data"
-    expected_performance = "expected performance data"
+    reference_performance = "reference performance data"
+    reference_performance_dc = "reference DC performance data"
+    modeled_performance = "modeled performance data"
     actual_performance = "actual performance data"
     monthly_actual_weather = "actual monthly weather data"
-    monthly_original_weather = "original monthly weather data"
+    monthly_reference_weather = "reference monthly weather data"
     monthly_actual_performance = "actual monthly performance data"
-    monthly_original_performance = "predicted monthly performance data"
+    monthly_reference_performance = "reference monthly performance data"
 
 
 class JobDataItem(SPIBase):
@@ -905,7 +905,7 @@ class JobDataItem(SPIBase):
         cols = [
             "time",
         ]
-        if type_ in (JobDataTypeEnum.original_weather, JobDataTypeEnum.actual_weather):
+        if type_ in (JobDataTypeEnum.reference_weather, JobDataTypeEnum.actual_weather):
             if irradiance_type == IrradianceTypeEnum.effective:
                 cols += ["effective_irradiance"]
             elif irradiance_type == IrradianceTypeEnum.poa:
@@ -919,15 +919,15 @@ class JobDataItem(SPIBase):
             else:
                 cols += ["temp_air", "wind_speed"]
         elif type_ in (
-            JobDataTypeEnum.predicted_performance,
+            JobDataTypeEnum.reference_performance,
             JobDataTypeEnum.actual_performance,
-            JobDataTypeEnum.expected_performance,
-            JobDataTypeEnum.predicted_performance_dc,
+            JobDataTypeEnum.modeled_performance,
+            JobDataTypeEnum.reference_performance_dc,
         ):
             cols += ["performance"]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_weather,
-            JobDataTypeEnum.monthly_original_weather,
+            JobDataTypeEnum.monthly_reference_weather,
         ):
             cols = [
                 "month",
@@ -936,7 +936,7 @@ class JobDataItem(SPIBase):
             ]
         elif type_ in (
             JobDataTypeEnum.monthly_actual_performance,
-            JobDataTypeEnum.monthly_original_performance,
+            JobDataTypeEnum.monthly_reference_performance,
         ):
             cols = ["month", "total_energy"]
         out = cls(schema_path=schema_path, type=type_, **kwargs)
@@ -1014,8 +1014,8 @@ class CompareMixin(CalculateMixin):
 
 
 class CalculateEnum(str, Enum):
-    predicted_performance = "predicted performance"
-    expected_performance = "expected performance"
+    reference_performance = "reference performance"
+    modeled_performance = "modeled performance"
 
 
 class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
@@ -1025,20 +1025,20 @@ class CalculatePerformanceJobParameters(CalculateMixin, JobParametersBase):
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.calculate == CalculateEnum.predicted_performance:
-            self._weather_types = (JobDataTypeEnum.original_weather,)
+        if self.calculate == CalculateEnum.reference_performance:
+            self._weather_types = (JobDataTypeEnum.reference_weather,)
         else:
             self._weather_types = (JobDataTypeEnum.actual_weather,)
 
 
-class ExpectedActualEnum(str, Enum):
-    expected_actual = "expected and actual performance"
+class ModeledActualEnum(str, Enum):
+    modeled_actual = "modeled and actual performance"
 
 
-class CompareExpectedActualJobParameters(CompareMixin, JobParametersBase):
-    """Calculate and compare expected to actual performance"""
+class CompareModeledActualJobParameters(CompareMixin, JobParametersBase):
+    """Calculate and compare modeled to actual performance"""
 
-    compare: ExpectedActualEnum
+    compare: ModeledActualEnum
     _weather_types: Tuple[JobDataTypeEnum, ...] = PrivateAttr(
         (JobDataTypeEnum.actual_weather,)
     )
@@ -1078,28 +1078,28 @@ class ActualDataParams(CompareMixin):
         self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
-class PredictedDataEnum(str, Enum):
+class ReferenceDataEnum(str, Enum):
     weather_and_ac = "weather and AC performance"
     weather_and_ac_and_dc = "weather, AC, and DC performance"
     weather_only = "weather only"
 
 
-class PredictedDataParams(CompareMixin):
+class ReferenceDataParams(CompareMixin):
     """Parameters for the "reference" data series"""
 
-    data_available: PredictedDataEnum
+    data_available: ReferenceDataEnum
     performance_granularity: Optional[PerformanceGranularityEnum]  # type: ignore
-    _weather_types = PrivateAttr((JobDataTypeEnum.original_weather,))
+    _weather_types = PrivateAttr((JobDataTypeEnum.reference_weather,))
     _model_chain_method: str = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.data_available == PredictedDataEnum.weather_and_ac:
-            self._performance_types = (JobDataTypeEnum.predicted_performance,)
-        elif self.data_available == PredictedDataEnum.weather_and_ac_and_dc:
+        if self.data_available == ReferenceDataEnum.weather_and_ac:
+            self._performance_types = (JobDataTypeEnum.reference_performance,)
+        elif self.data_available == ReferenceDataEnum.weather_and_ac_and_dc:
             self._performance_types = (
-                JobDataTypeEnum.predicted_performance,
-                JobDataTypeEnum.predicted_performance_dc,
+                JobDataTypeEnum.reference_performance,
+                JobDataTypeEnum.reference_performance_dc,
             )
         else:
             self._performance_types = ()
@@ -1109,45 +1109,45 @@ class PredictedDataParams(CompareMixin):
     def check_performance_granularity(cls, values):
         da = values.get("data_available")
         pg = values.get("performance_granularity")
-        if da == PredictedDataEnum.weather_only and pg is not None:
+        if da == ReferenceDataEnum.weather_only and pg is not None:
             raise ValueError(
-                "Performance granularity is invalid when not providing predicted "
+                "Performance granularity is invalid when not providing reference "
                 "performance"
             )
         return values
 
 
-class PredictedActualEnum(str, Enum):
-    predicted_actual = "predicted and actual performance"
+class ReferenceActualEnum(str, Enum):
+    reference_actual = "reference and actual performance"
 
 
-class ComparePredictedActualJobParameters(JobParametersBase):
-    """Compare predicted to actual performance"""
+class CompareReferenceActualJobParameters(JobParametersBase):
+    """Compare reference to actual performance"""
 
-    predicted_data_parameters: PredictedDataParams
+    reference_data_parameters: ReferenceDataParams
     actual_data_parameters: ActualDataParams
-    compare: PredictedActualEnum
+    compare: ReferenceActualEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
     ) -> Dict[Tuple[str, JobDataTypeEnum], JobDataItem]:
-        out = self.predicted_data_parameters._construct_data_items(system_definition)
+        out = self.reference_data_parameters._construct_data_items(system_definition)
         out.update(self.actual_data_parameters._construct_data_items(system_definition))
         return out
 
 
-class MonthlyPredictedActualEnum(str, Enum):
-    monthly_predicted_actual = "monthly predicted and actual performance"
+class MonthlyReferenceActualEnum(str, Enum):
+    monthly_reference_actual = "monthly reference and actual performance"
 
 
-class CompareMonthlyPredictedActualJobParameters(SPIBase):
-    """Compare predicted to actual performance on a monthly time
+class CompareMonthlyReferenceActualJobParameters(SPIBase):
+    """Compare reference to actual performance on a monthly time
     scale. Data is expected to be at the system level and include
     monthly insolation, energy, and average daytime temperature.
     """
 
     system_id: UUID
-    compare: MonthlyPredictedActualEnum
+    compare: MonthlyReferenceActualEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
@@ -1155,16 +1155,16 @@ class CompareMonthlyPredictedActualJobParameters(SPIBase):
         return {
             ("/", jt): JobDataItem.from_types(schema_path="/", type_=jt)
             for jt in (
-                JobDataTypeEnum.monthly_original_weather,
+                JobDataTypeEnum.monthly_reference_weather,
                 JobDataTypeEnum.monthly_actual_weather,
-                JobDataTypeEnum.monthly_original_performance,
+                JobDataTypeEnum.monthly_reference_performance,
                 JobDataTypeEnum.monthly_actual_performance,
             )
         }
 
 
-class ExpectedDataParams(CalculateMixin):
-    """Parameters for the "expected" data series"""
+class ModeledDataParams(CalculateMixin):
+    """Parameters for the "modeled" data series"""
 
     _weather_types = PrivateAttr((JobDataTypeEnum.actual_weather,))
     _model_chain_method: str = PrivateAttr()
@@ -1174,39 +1174,39 @@ class ExpectedDataParams(CalculateMixin):
         self._model_chain_method = MODEL_CHAIN_METHOD_MAP[self.irradiance_type]
 
 
-class PredictedExpectedEnum(str, Enum):
-    predicted_expected = "predicted and expected performance"
+class ReferenceModeledEnum(str, Enum):
+    reference_modeled = "reference and modeled performance"
 
 
-class ComparePredictedExpectedJobParameters(JobParametersBase):
-    """Compare predicted to expected performance"""
+class CompareReferenceModeledJobParameters(JobParametersBase):
+    """Compare reference to modeled performance"""
 
-    predicted_data_parameters: PredictedDataParams
-    expected_data_parameters: ExpectedDataParams
-    compare: PredictedExpectedEnum
+    reference_data_parameters: ReferenceDataParams
+    modeled_data_parameters: ModeledDataParams
+    compare: ReferenceModeledEnum
 
     def _construct_data_items(
         self, system_definition: PVSystem
     ) -> Dict[Tuple[str, JobDataTypeEnum], JobDataItem]:
-        out = self.predicted_data_parameters._construct_data_items(system_definition)
+        out = self.reference_data_parameters._construct_data_items(system_definition)
         out.update(
-            self.expected_data_parameters._construct_data_items(system_definition)
+            self.modeled_data_parameters._construct_data_items(system_definition)
         )
         return out
 
 
 JobParametersType = Union[
-    ComparePredictedActualJobParameters,
-    ComparePredictedExpectedJobParameters,
-    CompareExpectedActualJobParameters,
-    CompareMonthlyPredictedActualJobParameters,
+    CompareReferenceActualJobParameters,
+    CompareReferenceModeledJobParameters,
+    CompareModeledActualJobParameters,
+    CompareMonthlyReferenceActualJobParameters,
     CalculateWeatherAdjustedPRJobParameters,
     CalculatePerformanceJobParameters,
 ]
 
 JOB_PARAMS_EXAMPLE = dict(
     system_id=SYSTEM_ID,
-    compare="expected and actual performance",
+    compare="modeled and actual performance",
     time_parameters=dict(
         start="2020-01-01T00:00:00+00:00",
         end="2020-12-31T23:59:59+00:00",
@@ -1310,7 +1310,7 @@ class StoredJob(StoredObject):
                         "modified_at": "2020-12-11T19:52:00+00:00",
                         "definition": {
                             "schema_path": "/inverters/0/arrays/0",
-                            "type": "original weather data",
+                            "type": "reference weather data",
                             "present": False,
                             "data_columns": [
                                 "time",
@@ -1360,7 +1360,7 @@ class DataParsingStats(SPIBase):
     missing_times: List[dt.datetime] = Field(
         ...,
         description=(
-            "Times that were expected based on the job time parameters "
+            "Times that were modeled based on the job time parameters "
             "but missing from the upload."
         ),
     )
@@ -1379,10 +1379,10 @@ class JobResultTypeEnum(str, Enum):
     error = "error message"
     monthy_summary = "monthly summary"
     daytime_flag = "daytime flag"
-    actual_vs_expected = "actual vs expected energy"
+    actual_vs_modeled = "actual vs modeled energy"
     weather_adjusted_performance = "weather adjusted performance"
     actual_vs_adjusted_reference = "actual vs weather adjusted reference"
-    expected_vs_adjusted_reference = "expected vs weather adjusted reference"
+    modeled_vs_adjusted_reference = "modeled vs weather adjusted reference"
     # will need other types for performance ratio etc.
 
 
@@ -1397,17 +1397,17 @@ class JobResultMetadata(SPIBase):
   cell temperature.
 - monthly summary: Monthly total energy (Wh), plane of array insolation (Wh/m^2),
   effective insolation (Wh/m^2), and average daytime cell temperature.
-- actual vs expected energy: Monthly totals of actual energy (Wh), expected energy (Wh),
-  the difference (actual - expected) (Wh), and the ratio of actual / expected.
+- actual vs modeled energy: Monthly totals of actual energy (Wh), modeled energy (Wh),
+  the difference (actual - modeled) (Wh), and the ratio of actual / modeled.
 - weather adjusted performance: AC performance adjusted for differences in weather
   conditions at the level (system or inverter) given by  schema_path. Data has
   columns are time and performance.
 - actual vs adjusted reference: Monthly totals of actual energy (Wh), weather adjusted
   reference energy (Wh), the difference (actual - reference) (Wh), and the ratio of
   actual / reference.
-- expected vs adjusted reference: Monthly totals of expected energy (Wh), weather
-  adjusted  reference energy (Wh), the difference (expected - reference) (Wh), and
-  the ratio of expected / reference.
+- modeled vs adjusted reference: Monthly totals of modeled energy (Wh), weather
+  adjusted  reference energy (Wh), the difference (modeled - reference) (Wh), and
+  the ratio of modeled / reference.
 - daytime flag: boolean, 1 if the timestamp is day-time defined as the when the
   solar zenith for the midpoint of the interval is < 87.0 degrees.
 - error message: The result could not be computed. The result for this object will
