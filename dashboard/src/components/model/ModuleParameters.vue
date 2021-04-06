@@ -91,6 +91,7 @@
         @parameters-selected="showBrowser = false"
         @cancel-selection="showBrowser = false"
         v-if="showBrowser"
+        browserType="module"
         :componentName="apiComponentName"
       />
       <model-field

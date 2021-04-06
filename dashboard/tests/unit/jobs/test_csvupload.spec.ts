@@ -77,7 +77,7 @@ const testJob = {
     },
     parameters: {
       system_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-      calculate: "predicted performance",
+      calculate: "reference performance",
       time_parameters: {
         start: "2020-01-01T00:00:00+00:00",
         end: "2020-12-31T23:59:59+00:00",
@@ -101,7 +101,7 @@ const testJob = {
       modified_at: "2020-12-11T19:52:00+00:00",
       definition: {
         schema_path: "/inverters/0/arrays/0",
-        type: "original weather data",
+        type: "reference weather data",
         present: false,
         data_columns: [
           "time",
@@ -213,5 +213,41 @@ describe("Test CSV Upload", () => {
       testJob.data_objects[0].definition.data_columns.join(",") +
         "\r\n1,2,3,4,5"
     );
+  });
+
+  it("Test requiredFieldSummary", async () => {
+    const dos = [
+      {
+        object_id: "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
+        object_type: "job_data",
+        created_at: "2020-12-11T19:52:00+00:00",
+        modified_at: "2020-12-11T19:52:00+00:00",
+        definition: {
+          schema_path: "/inverters/0/arrays/0",
+          type: "original weather data",
+          present: false,
+          data_columns: ["time", "effective_irradiance", "module_temperature"]
+        }
+      }
+    ];
+    const propsData = {
+      job: testJob,
+      granularity: testJob.definition.parameters.weather_granularity,
+      irradiance_type: testJob.definition.parameters.irradiance_type,
+      temperature_type: testJob.definition.parameters.temperature_type,
+      system: testJob.definition.system_definition,
+      data_objects: dos
+    };
+    const csvUpload = mount(CSVUpload, {
+      localVue,
+      propsData,
+      mocks
+    });
+    await flushPromises();
+    // @ts-expect-error
+    expect(csvUpload.vm.requiredFieldSummary).toEqual([
+      "Effective Irradiance or Plane of Array Global Irradiance",
+      "Module Temperature"
+    ]);
   });
 });

@@ -9,40 +9,40 @@
         <div class="ml-1 mt-1">
           <input
             @change="emitParams"
-            id="predicted-and-actual-performance"
-            value="predicted and actual performance"
+            id="reference-and-actual-performance"
+            value="reference and actual performance"
             type="radio"
             v-model="compare"
           />
-          <label for="predicted-and-actual-performance">
-            predicted performance to actual performance.
+          <label for="reference-and-actual-performance">
+            reference performance to actual performance.
           </label>
           <br />
           <input
             @change="emitParams"
-            id="expected-and-actual-performance"
-            value="expected and actual performance"
+            id="modeled-and-actual-performance"
+            value="modeled and actual performance"
             type="radio"
             v-model="compare"
           />
-          <label for="expected-and-actual-performance">
-            expected performance to actual performance.
+          <label for="modeled-and-actual-performance">
+            modeled performance to actual performance.
           </label>
           <br />
           <input
             @change="emitParams"
-            id="predicted-and-expected-performance"
-            value="predicted and expected performance"
+            id="reference-and-modeled-performance"
+            value="reference and modeled performance"
             type="radio"
             v-model="compare"
             disabled="true"
           />
-          <label class="greyed" for="predicted-and-expected-performance">
-            predicted performance to expected performance.
+          <label class="greyed" for="reference-and-modeled-performance">
+            reference performance to modeled performance.
           </label>
           <br />
         </div>
-        <div v-if="containsPredicted">
+        <div v-if="containsReference">
           <p>What is the time resolution of your data?</p>
           <div class="ml-1 mt-1">
             <input
@@ -81,7 +81,7 @@ export default class CompareJobParams extends Vue {
 
   data() {
     return {
-      compare: "predicted and actual performance",
+      compare: "reference and actual performance",
       timeResolution: "leHourly"
     };
   }
@@ -92,20 +92,19 @@ export default class CompareJobParams extends Vue {
     let params = {
       compare: this.compare
     };
-    if (this.containsPredicted && this.timeResolution == "monthly") {
+    if (this.containsReference && this.timeResolution == "monthly") {
       params = {
         compare: `monthly ${this.compare}`
       };
     }
     this.$emit("new-job-type-params", params);
   }
-  get containsPredicted() {
-    return this.compare.includes("predicted");
+  get containsReference() {
+    return this.compare.includes("reference");
   }
   @Watch("compare")
   ensureValidTimeResolution() {
-    // Ensure that if we're not working with
-    if (!this.containsPredicted) {
+    if (!this.containsReference) {
       this.timeResolution = "leHourly";
     }
   }

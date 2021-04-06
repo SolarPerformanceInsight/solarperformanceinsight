@@ -83,9 +83,9 @@ const resultVariables: Record<string, Array<string>> = {
     "effective_insolation",
     "average_daytime_cell_temperature"
   ],
-  "actual vs expected energy": [
+  "actual vs modeled energy": [
     "actual_energy",
-    "expected_energy",
+    "modeled_energy",
     "difference",
     "ratio"
   ],

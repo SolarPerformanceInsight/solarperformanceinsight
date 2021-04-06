@@ -52,8 +52,8 @@ Component for handling display/download of job results.
         Calculation is complete. Results are loading.
       </template>
       <template v-else>
-        The calculation is missing required data. Processing will begin
-        once all data is uploaded.
+        The calculation is missing required data. Processing will begin once all
+        data is uploaded.
       </template>
     </div>
   </div>

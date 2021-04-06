@@ -9,7 +9,7 @@ Component that handles basic job/workflows.
            - Job setup state: No job exists. Display generic "calculate",
                "compare" or "calculate pr" header"
            - Job exists: We have the type of job, display a more descriptive
-               page header e.g. "Compare predicted and expected performance"
+               page header e.g. "Compare reference and modeled performance"
        -->
       <h1 class="job-handler-title">
         <template v-if="jobClass == 'calculate'">
@@ -105,7 +105,7 @@ Component that handles basic job/workflows.
           -->
         <keep-alive>
           <!-- Weather upload step -->
-          <template v-if="step == 'original weather data'">
+          <template v-if="step == 'reference weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -113,12 +113,12 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Original Weather Data</b>
+              <b>Upload Reference Weather Data</b>
             </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'original monthly weather data'">
+          <template v-if="step == 'reference monthly weather data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -126,7 +126,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Original Weather Data</b>
+              <b>Upload Reference Weather Data</b>
             </csv-upload>
           </template>
         </keep-alive>
@@ -157,7 +157,7 @@ Component that handles basic job/workflows.
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'predicted performance data'">
+          <template v-if="step == 'reference performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -165,12 +165,12 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Predicted Performance</b>
+              <b>Upload Reference Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'predicted monthly performance data'">
+          <template v-if="step == 'reference monthly performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -178,12 +178,12 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Predicted Performance</b>
+              <b>Upload Reference Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
         <keep-alive>
-          <template v-if="step == 'expected performance data'">
+          <template v-if="step == 'modeled performance data'">
             <csv-upload
               @data-uploaded="handleData"
               :job="job"
@@ -191,7 +191,7 @@ Component that handles basic job/workflows.
               :system="job.definition.system_definition"
               :data_objects="filteredDataObjects(step)"
             >
-              <b>Upload Expected Performance</b>
+              <b>Upload Modeled Performance</b>
             </csv-upload>
           </template>
         </keep-alive>
