@@ -209,15 +209,19 @@ class PVsystModuleParameters(PVLibBase):
     @root_validator(skip_on_failure=True)
     def validate_diode_params(cls, values):
         # and set _gamma here since it could raise an error with bad params
+        err = ValueError(
+            "Unable to calculate single diode parameters from parameters supplied."
+        )
         try:
             pvlib.pvsystem.calcparams_pvsyst(
                 effective_irradiance=1000, temp_cell=25, **values
             )
+        except Exception:
+            raise err
+        try:
             cls._gamma = pvsyst_temperature_coeff(**values)
         except Exception:
-            raise ValueError(
-                "Unable to calculate single diode parameters from parameters supplied."
-            )
+            raise err
         return values
 
 
