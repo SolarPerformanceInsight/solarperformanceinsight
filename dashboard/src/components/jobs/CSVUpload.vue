@@ -495,8 +495,15 @@ ${this.granularity == "system" ? "the" : "each"} ${this.granularity}).`
           source = this.job.definition.parameters;
         }
       } else if (this.dataType.includes("actual")) {
+        // Check for actual data parameters to find granularity. If they don't
+        // exist, we may be producing modeled performance from actual weather
+        // so get granularity from modeled data parameters.
         if ("actual_data_parameters" in this.job.definition.parameters) {
           source = this.job.definition.parameters.actual_data_parameters;
+        } else if (
+          "modeled_data_parameters" in this.job.definition.parameters
+        ) {
+          source = this.job.definition.parameters.modeled_data_parameters;
         } else {
           source = this.job.definition.parameters;
         }

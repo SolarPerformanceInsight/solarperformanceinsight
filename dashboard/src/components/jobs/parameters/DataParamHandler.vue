@@ -138,8 +138,22 @@ export default class DataParamHandler extends Vue {
     this.$emit("new-data-params", this.parameters);
   }
   @Watch("jobTypeParams", { deep: true })
-  resetParameters() {
-    this.parameters = {};
+  resetParameters(newParams: Record<string, any>) {
+    if (newParams["compare"] == "modeled and actual performance") {
+      this.parameters = {};
+    } else {
+      // Keep reference data parameters around if it already exists. Otherwise,
+      // Vue will reuse the component and the parameters will not be emitted.
+      if ("reference_data_parameters" in this.parameters) {
+        this.parameters = {
+          reference_data_parameters: this.parameters[
+            "reference_data_parameters"
+          ]
+        };
+      } else {
+        this.parameters = {};
+      }
+    }
   }
 }
 </script>

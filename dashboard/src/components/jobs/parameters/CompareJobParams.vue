@@ -35,9 +35,8 @@
             value="reference and modeled performance"
             type="radio"
             v-model="compare"
-            disabled="true"
           />
-          <label class="greyed" for="reference-and-modeled-performance">
+          <label for="reference-and-modeled-performance">
             reference performance to modeled performance.
           </label>
           <br />

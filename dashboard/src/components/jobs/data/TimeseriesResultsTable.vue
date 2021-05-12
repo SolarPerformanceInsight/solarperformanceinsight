@@ -96,6 +96,12 @@ const resultVariables: Record<string, Array<string>> = {
     "difference",
     "ratio"
   ],
+  "modeled vs weather adjusted reference": [
+    "modeled_energy",
+    "weather_adjusted_energy",
+    "difference",
+    "ratio"
+  ],
   "daytime flag": ["daytime_flag"]
 };
 
@@ -137,7 +143,7 @@ export default class TimeseriesTable extends Vue {
             present: true
           });
         } catch {
-          console.log("Result failure: ", JSON.stringify(resultType));
+          console.error("Result failure: ", JSON.stringify(resultType));
         }
       }
     }
