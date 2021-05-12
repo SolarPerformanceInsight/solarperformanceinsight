@@ -143,7 +143,7 @@ export default class TimeseriesTable extends Vue {
             present: true
           });
         } catch {
-          console.error("Result failure: ", JSON.stringify(resultType));
+          console.log("Result failure: ", JSON.stringify(resultType));
         }
       }
     }

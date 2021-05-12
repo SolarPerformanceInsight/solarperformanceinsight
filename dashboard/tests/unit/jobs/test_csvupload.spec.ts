@@ -250,4 +250,46 @@ describe("Test CSV Upload", () => {
       "Module Temperature"
     ]);
   });
+  it("Test modeled vs ref", async () => {
+    const dos = [
+      {
+        object_id: "ecaa5a40-43ac-11eb-a75d-f4939feddd82",
+        object_type: "job_data",
+        created_at: "2020-12-11T19:52:00+00:00",
+        modified_at: "2020-12-11T19:52:00+00:00",
+        definition: {
+          schema_path: "/",
+          type: "actual weather data",
+          present: false,
+          data_columns: ["time", "effective_irradiance", "module_temperature"]
+        }
+      }
+    ];
+    const theJob = {
+      ...testJob,
+      data_objects: dos,
+    };
+    // @ts-expect-error
+    theJob.definition.parameters.modeled_data_parameters = {
+      irradiance_type: "standard",
+      temperature_type: "air",
+      weather_granularity: "system"
+    };
+
+    const propsData = {
+      job: theJob,
+      granularity: testJob.definition.parameters.weather_granularity,
+      irradiance_type: testJob.definition.parameters.irradiance_type,
+      temperature_type: testJob.definition.parameters.temperature_type,
+      system: testJob.definition.system_definition,
+      data_objects: dos
+    };
+    const csvUpload = mount(CSVUpload, {
+      localVue,
+      propsData,
+      mocks
+    });
+    // @ts-expect-error
+    expect(csvUpload.vm.granularity).toBe("system");
+  });
 });
