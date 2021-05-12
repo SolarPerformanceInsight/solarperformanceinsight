@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import { StoredSystem } from "../types/System";
 
 export const actions = {

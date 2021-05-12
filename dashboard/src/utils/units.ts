@@ -1,4 +1,3 @@
-// TODO: Fix
 export const variableUnits: Record<string, string> = {
   ghi: "W/m^2",
   dhi: "W/m^2",

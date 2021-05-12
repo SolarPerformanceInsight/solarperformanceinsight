@@ -1,4 +1,4 @@
-import { getUnitConverter } from "@/utils/unitConversion";
+import { getUnitConverter, getUnitOptions } from "@/utils/unitConversion";
 
 describe("Test power conversion", () => {
   it("kW => W", () => {
@@ -100,5 +100,18 @@ describe("Test power conversion", () => {
       // @ts-expect-error
       expect(converter(results[0])).toBeCloseTo(results[1]);
     }
+  });
+  it("Wh/m^2 => kWh/m^2", () => {
+    const converter = getUnitConverter("Wh/m^2", "kWh/m^2");
+    // @ts-expect-error
+    expect(converter(1000)).toBeCloseTo(1);
+  });
+  it("null converter", () => {
+    const converter = getUnitConverter("W", "W");
+    expect(converter).toBe(null);
+  });
+  it("getUnitOptions", () => {
+    const unitOpts = getUnitOptions("performance");
+    expect(unitOpts).toEqual(["W", "kW", "MW", "GW"]);
   });
 });
