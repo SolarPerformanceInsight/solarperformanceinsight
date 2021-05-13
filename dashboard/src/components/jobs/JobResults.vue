@@ -5,14 +5,18 @@ Component for handling display/download of job results.
   <div v-if="job">
     <div v-if="results">
       <div v-if="jobStatus == 'complete'" class="job-results">
+        <!--
+          Display correct summary header, for compare usecases sometimes both 
+          "Monthly Summary" and as "vs" result type are included
+         -->
         <template v-if="jobType == 'compare'">
-          <h2 v-if="'actual_data_parameters' in job.definition.parameters">
-            Actual vs Weather Adjusted Reference Performance
+          <h2 v-if="'actual vs weather adjusted reference' in summaryData">
+            Actual vs. Weather Adjusted Reference Performance
           </h2>
           <h2
-            v-else-if="'modeled_data_parameters' in job.definition.parameters"
+            v-else-if="'modeled vs weather adjusted reference' in summaryData"
           >
-            Modeled vs Weather Adjusted Reference Performance
+            Modeled vs. Weather Adjusted Reference Performance
           </h2>
           <h2 class="monthly-summary" v-else>Monthly Summary</h2>
         </template>
