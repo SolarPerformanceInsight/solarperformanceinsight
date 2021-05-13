@@ -267,7 +267,7 @@ describe("Test CSV Upload", () => {
     ];
     const theJob = {
       ...testJob,
-      data_objects: dos,
+      data_objects: dos
     };
     // @ts-expect-error
     theJob.definition.parameters.modeled_data_parameters = {

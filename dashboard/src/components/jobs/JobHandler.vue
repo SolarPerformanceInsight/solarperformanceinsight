@@ -227,6 +227,7 @@ Component that handles basic job/workflows.
             <job-results
               @reload-job="fetchJob"
               @compute-job="computeJob"
+              :jobType="jobClass"
               :job="job"
               :system="system"
             ></job-results>

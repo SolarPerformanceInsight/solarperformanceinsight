@@ -5,7 +5,20 @@ Component for handling display/download of job results.
   <div v-if="job">
     <div v-if="results">
       <div v-if="jobStatus == 'complete'" class="job-results">
-        <h2 class="monthly-summary">Monthly Summary</h2>
+        <template v-if="jobType == 'compare'">
+          <h2 v-if="'actual_data_parameters' in job.definition.parameters">
+            Actual vs Weather Adjusted Reference Performance
+          </h2>
+          <h2
+            v-else-if="'modeled_data_parameters' in job.definition.parameters"
+          >
+            Modeled vs Weather Adjusted Reference Performance
+          </h2>
+          <h2 class="monthly-summary" v-else>Monthly Summary</h2>
+        </template>
+        <template v-else>
+          <h2 class="monthly-summary">Monthly Summary</h2>
+        </template>
         <div v-if="summaryData">
           <summary-table :tableData="summaryData"></summary-table>
         </div>
@@ -81,6 +94,7 @@ Vue.component("timeseries-table", TimeseriesTable);
 export default class JobResults extends Vue {
   @Prop() job!: Record<string, any>;
   @Prop() system!: System;
+  @Prop() jobType!: string;
   loading!: boolean;
   selected!: string;
   results!: Array<Record<string, any>>;
