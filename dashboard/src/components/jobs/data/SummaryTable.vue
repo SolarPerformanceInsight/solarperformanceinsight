@@ -39,7 +39,9 @@ import { getUnitConverter, getUnitOptions } from "@/utils/unitConversion";
 
 import { Table } from "apache-arrow";
 
-/*  Maps variables to the type of result to find the variable in.*/
+/*
+ * Maps variables to the types of result to find the variable in.
+ */
 const headerMap: Record<string, string> = {
   actual_energy: "actual vs modeled energy",
   modeled_energy: "actual vs modeled energy",
@@ -93,6 +95,14 @@ export default class SummaryTable extends Vue {
         "difference",
         "ratio"
       ];
+    } else if ("modeled vs weather adjusted reference" in this.tableData) {
+      return [
+        "month",
+        "modeled_energy",
+        "weather_adjusted_energy",
+        "difference",
+        "ratio"
+      ];
     } else if ("actual vs modeled energy" in this.tableData) {
       return [
         "month",
@@ -119,7 +129,12 @@ export default class SummaryTable extends Vue {
   }
   get mergedTableData() {
     const data = [];
-    const firstKey = Object.keys(this.tableData)[0];
+    let firstKey: string;
+    if ("modeled vs weather adjusted reference" in this.tableData) {
+      firstKey = "modeled vs weather adjusted reference";
+    } else {
+      firstKey = Object.keys(this.tableData)[0];
+    }
     if (firstKey) {
       data.push(this.tableData[firstKey].getColumn("month"));
       this.headers.forEach((header: string) => {
@@ -128,11 +143,11 @@ export default class SummaryTable extends Vue {
         }
         let dataType = firstKey;
 
-        // Jobs with 'actual vs weather adjusted reference' results do
+        // Jobs with 'weather adjusted reference' results do
         // not contain any other monthly summary data to be merged and
         // contain overlapping fields, so just access expected headers
         // directly.
-        if (dataType != "actual vs weather adjusted reference") {
+        if (!dataType.includes("weather adjusted reference")) {
           dataType = headerMap[header];
         }
         const dataTable = this.tableData[dataType];

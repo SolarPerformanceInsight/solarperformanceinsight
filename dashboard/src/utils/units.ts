@@ -1,4 +1,3 @@
-// TODO: Fix
 export const variableUnits: Record<string, string> = {
   ghi: "W/m^2",
   dhi: "W/m^2",
@@ -25,7 +24,11 @@ export const variableUnits: Record<string, string> = {
   weather_adjusted_energy: "Wh"
 };
 
+const unitless = ["time", "month"];
 export function getVariableUnits(variable: string) {
+  if (unitless.includes(variable)) {
+    return "";
+  }
   const variableName = variableUnits[variable];
   if (variableName) {
     return variableName;

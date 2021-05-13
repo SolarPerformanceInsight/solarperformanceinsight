@@ -584,7 +584,6 @@ describe("Test DataParams", () => {
     expect(wrapper.vm.parameters).toEqual({
       type: "modeled_data_parameters",
       parameters: {
-        performance_granularity: "system",
         ...base_parameters
       }
     });
@@ -614,7 +613,6 @@ describe("Test DataParams", () => {
     expect(wrapper.vm.parameters).toEqual({
       type: "data_parameters",
       parameters: {
-        performance_granularity: "system",
         ...base_parameters
       }
     });

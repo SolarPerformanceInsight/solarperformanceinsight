@@ -96,6 +96,12 @@ const resultVariables: Record<string, Array<string>> = {
     "difference",
     "ratio"
   ],
+  "modeled vs weather adjusted reference": [
+    "modeled_energy",
+    "weather_adjusted_energy",
+    "difference",
+    "ratio"
+  ],
   "daytime flag": ["daytime_flag"]
 };
 

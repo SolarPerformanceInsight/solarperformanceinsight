@@ -32,7 +32,7 @@
     <slot>
       <h2 class="data-type" v-if="jobClass != 'calculate'">{{ dataType }}</h2>
     </slot>
-    <div v-if="jobClass == 'compare' && this.dataType == 'reference'">
+    <div v-if="jobClass == 'compare' && dataType == 'reference'">
       My reference data includes:
       <div class="ml-1 mt-1">
         <label>
@@ -64,7 +64,10 @@
         </label>
       </div>
     </div>
-    <div v-if="data_available != 'weather only'" class="mt-1">
+    <div
+      v-if="data_available != 'weather only' && dataType != 'modeled'"
+      class="mt-1"
+    >
       I will provide performance data as:
       <div class="ml-1 mt-1">
         <label>
@@ -248,7 +251,6 @@ export default class DataParams extends Vue {
         } else {
           type = `${this.dataType}_data_parameters`;
         }
-        extraParameters.performance_granularity = this.performance_granularity;
       }
     }
     const params: Record<string, string | Record<string, string>> = {
@@ -260,7 +262,10 @@ export default class DataParams extends Vue {
         ...extraParameters
       }
     };
-    if (this.data_available.includes("performance")) {
+    if (
+      this.data_available.includes("performance") &&
+      this.dataType != "modeled"
+    ) {
       // @ts-expect-error
       params.parameters[
         "performance_granularity"
