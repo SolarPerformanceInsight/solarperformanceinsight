@@ -110,7 +110,7 @@ library that can automatically refresh the tokens is
 
     openapi_schema["info"]["contact"] = {
         "name": "Solar Performance Insight Team",
-        "email": "info@solarperformanceinsight.org",
+        "email": "techsupport@solarunitedneighbors.org",
         "url": "https://github.com/solarperformanceinsight/solarperformanceinsight-api",
     }
     openapi_schema["info"]["license"] = {
