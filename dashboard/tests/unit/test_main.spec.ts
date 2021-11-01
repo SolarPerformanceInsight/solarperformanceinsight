@@ -9,8 +9,7 @@ describe("Test main by hitting home", () => {
     expect(unauthHome).toBeTruthy();
     // @ts-expect-error
     expect(unauthHome.textContent.trim()).toEqual(
-      `Welcome to the solarperformance insight dashboard. Other information
-      about the project.`
+      `Welcome to the solarperformance insight dashboard.`
     );
   });
 });
