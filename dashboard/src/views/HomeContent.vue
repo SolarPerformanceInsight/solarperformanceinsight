@@ -2,8 +2,7 @@
   <div class="home-content">
     <div v-if="!$auth.isAuthenticated" class="unauth-home">
       <p>
-        Welcome to the solarperformance insight dashboard. Other information
-        about the project.
+        Welcome to the solarperformance insight dashboard.
       </p>
     </div>
     <div v-if="$auth.isAuthenticated" class="auth-home">
